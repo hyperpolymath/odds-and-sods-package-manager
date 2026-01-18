@@ -35,10 +35,13 @@ pub fn post_json(base: &str, path: &str, token: Option<&str>, body: &str, opts: 
             .send();
 
         match resp {
-            Ok(resp) if resp.status().is_success() => return Ok(()),
             Ok(resp) => {
+                let status = resp.status();
+                if status.is_success() {
+                    return Ok(());
+                }
                 if attempt + 1 == attempts {
-                    return Err(anyhow::anyhow!("http error: {}", resp.status()));
+                    return Err(anyhow::anyhow!("http error: {status}"));
                 }
             }
             Err(err) => {

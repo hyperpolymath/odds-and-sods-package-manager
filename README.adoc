@@ -30,6 +30,14 @@ Primary hub (opm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu
 
 `opm` is the missing glue: a Rust CLI that orchestrates publish, audit, and federation workflows across these services.
 
+== Configuration
+
+Config search order:
+
+1. `$OPM_CONFIG`
+2. `./opm.toml`
+3. `~/.config/opm/opm.toml`
+
 == Repositories
 
 Local root: `/var/mnt/eclipse/repos`  |  Remote: `https://github.com/hyperpolymath/<name>`

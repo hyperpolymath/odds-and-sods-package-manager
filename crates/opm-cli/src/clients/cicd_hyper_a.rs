@@ -5,6 +5,6 @@ use anyhow::Result;
 use crate::clients::http;
 
 pub fn publish(path: &str, base_url: &str, token: Option<&str>, opts: &http::HttpOptions) -> Result<()> {
-    let body = format!("{\"path\":\"{path}\"}");
+    let body = serde_json::json!({ "path": path }).to_string();
     http::post_json(base_url, "/publish", token, &body, opts)
 }

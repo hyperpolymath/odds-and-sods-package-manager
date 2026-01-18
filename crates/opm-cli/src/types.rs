@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: PMPL-1.0
 
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

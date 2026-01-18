@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use mockito::Server;
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -24,7 +24,7 @@ fn audit_hits_pipeline_endpoints() {
     );
     file.write_all(cfg.as_bytes()).expect("write config");
 
-    let mut cmd = Command::cargo_bin("opm").expect("binary builds");
+    let mut cmd = cargo_bin_cmd!("opm");
     cmd.env("OPM_CONFIG", file.path());
     cmd.arg("audit").arg("example-lib");
     cmd.assert().success();
