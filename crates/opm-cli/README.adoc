@@ -1,0 +1,10 @@
+= opm CLI
+:revdate: 2026-01-18
+
+Rust CLI placeholder for the OPM federation.
+
+Subcommands (stub):
+
+- `opm publish <path>`
+- `opm audit <package>`
+- `opm status`

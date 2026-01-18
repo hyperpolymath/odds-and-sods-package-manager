@@ -1,0 +1,9 @@
+= Trust Pipeline
+:revdate: 2026-01-18
+
+Pipeline stages:
+
+- claim-forge: provenance (GPG + OpenTimestamps)
+- checky-monkey: 8-dimension analysis + CUBS
+- palimpsest-license: license sign/verify/audit
+- oikos: sustainability and health scoring

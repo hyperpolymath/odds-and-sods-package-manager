@@ -1,0 +1,14 @@
+= Stewardship
+:revdate: 2026-01-18
+
+== Council
+
+- Establish policy and arbitration for federation disputes
+- Maintain trust pipeline standards
+- Approve changes to verification guarantees
+
+== Voting
+
+- Quorum: 3 maintainers
+- Majority required for policy changes
+- Unanimous required for trust pipeline downgrades

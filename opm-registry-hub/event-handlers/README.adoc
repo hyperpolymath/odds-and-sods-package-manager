@@ -1,0 +1,10 @@
+= Event Handlers
+:revdate: 2026-01-18
+
+Stub for opm registry event handlers. Expected event types:
+
+- package-published
+- security-advisory
+- deprecation-notice
+- maintainer-change
+- compatibility-break
