@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: PMPL-1.0
+
 use clap::{Parser, Subcommand};
+
+mod wiring;
 
 #[derive(Parser)]
 #[command(name = "opm")]
@@ -19,15 +23,9 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Publish { path } => {
-            println!("publish pipeline (stub) for {path}");
-        }
-        Commands::Audit { package } => {
-            println!("audit pipeline (stub) for {package}");
-        }
-        Commands::Status => {
-            println!("opm status (stub)");
-        }
+        Commands::Publish { path } => wiring::publish(&path)?,
+        Commands::Audit { package } => wiring::audit(&package)?,
+        Commands::Status => wiring::status()?,
     }
 
     Ok(())

@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: PMPL-1.0
+= OPM Architecture
+:revdate: 2026-01-18
+
+== Overview
+
+OPM is a federated package manager that composes existing hyperpolymath services into a single CLI and registry hub.
+
+== Federation map
+
+[literal]
+....
+                    opm-registry-hub (Primary)
+    ┌──────────────────────────────────────────────────────────┐
+    │  registry-manifest.json   Package & mirror registry      │
+    │  trust-pipeline/          Validation workflows           │
+    │  event-handlers/          Inter-package communication    │
+    └──────────────────────────────────────────────────────────┘
+                                    │
+                 package-published / security-advisory events
+                                    │
+        ┌───────────┬───────────────┼───────────────┬───────────┐
+        ▼           ▼               ▼               ▼           ▼
+    ┌────────┐ ┌──────────┐  ┌──────────┐   ┌──────────┐  ┌─────────┐
+    │ GitLab │ │ Codeberg │  │ corp.io  │   │ uni.edu  │  │ Radicle │
+    │ mirror │ │ mirror   │  │ private  │   │ academic │  │   P2P   │
+    └────────┘ └──────────┘  └──────────┘   └──────────┘  └─────────┘
+....
+
+== Event types
+
+[source,yaml]
+----
+communication:
+  event_types:
+    - package-published
+    - security-advisory
+    - deprecation-notice
+    - maintainer-change
+    - compatibility-break
+
+  propagation:
+    security-advisory:
+      priority: critical
+      immediate: true
+      notify_all_dependents: true
+----
+
+== Integration layers
+
+- Verification: proven (Idris2)
+- Manifests: nickel-config-reporter + hybrid-automation-router + protocol-squisher + scaffoldia
+- Trust pipeline: checky-monkey + claim-forge + palimpsest-license + oikos
+- Registry: cicd-hyper-a + http-capability-gateway
+- Federation: git-private-farm + Radicle + IPFS
+- Bots: rhodibot, seambot, echidnabot, robot-repo-automaton
+
+== CLI orchestration
+
+The `opm` CLI coordinates publish/audit/status calls into the trust pipeline and registry.
