@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-pub fn attest(_path: &str) -> Result<()> {
-    // TODO: call claim-forge service (GPG + OpenTimestamps)
-    Ok(())
+use crate::clients::http;
+
+pub fn attest(path: &str, base_url: &str, token: Option<&str>) -> Result<()> {
+    let body = format!("{{\"path\":\"{path}\"}}");
+    http::post_json(base_url, "/attest", token, &body)
 }

@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-pub fn score(_package: &str) -> Result<()> {
-    // TODO: call oikos sustainability scoring
-    Ok(())
+use crate::clients::http;
+
+pub fn score(package: &str, base_url: &str, token: Option<&str>) -> Result<()> {
+    let body = format!("{\"package\":\"{package}\"}");
+    http::post_json(base_url, "/score", token, &body)
 }

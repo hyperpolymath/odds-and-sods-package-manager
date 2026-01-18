@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-pub fn analyze(_path: &str) -> Result<()> {
-    // TODO: call checky-monkey (8-dimension analysis + CUBS)
-    Ok(())
+use crate::clients::http;
+
+pub fn analyze(path: &str, base_url: &str, token: Option<&str>) -> Result<()> {
+    let body = format!("{\"path\":\"{path}\"}");
+    http::post_json(base_url, "/analyze", token, &body)
 }

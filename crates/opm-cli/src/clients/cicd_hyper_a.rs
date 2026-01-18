@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-pub fn publish(_path: &str) -> Result<()> {
-    // TODO: call cicd-hyper-a registry write
-    Ok(())
+use crate::clients::http;
+
+pub fn publish(path: &str, base_url: &str, token: Option<&str>) -> Result<()> {
+    let body = format!("{\"path\":\"{path}\"}");
+    http::post_json(base_url, "/publish", token, &body)
 }

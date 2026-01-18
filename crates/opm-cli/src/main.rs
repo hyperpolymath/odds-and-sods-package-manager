@@ -3,6 +3,7 @@
 use clap::{Parser, Subcommand};
 
 mod clients;
+mod config;
 mod types;
 mod wiring;
 

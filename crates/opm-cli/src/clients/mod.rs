@@ -5,3 +5,4 @@ pub mod checky_monkey;
 pub mod palimpsest_license;
 pub mod cicd_hyper_a;
 pub mod oikos;
+pub mod http;

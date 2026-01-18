@@ -2,7 +2,9 @@
 
 use anyhow::Result;
 
-pub fn audit(_path: &str) -> Result<()> {
-    // TODO: call palimpsest-license audit/sign
-    Ok(())
+use crate::clients::http;
+
+pub fn audit(path: &str, base_url: &str, token: Option<&str>) -> Result<()> {
+    let body = format!("{\"path\":\"{path}\"}");
+    http::post_json(base_url, "/audit", token, &body)
 }

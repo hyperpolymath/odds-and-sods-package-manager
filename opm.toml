@@ -1,0 +1,19 @@
+[claim_forge]
+base_url = "http://127.0.0.1:7001"
+# token = ""
+
+[checky_monkey]
+base_url = "http://127.0.0.1:7002"
+# token = ""
+
+[palimpsest_license]
+base_url = "http://127.0.0.1:7003"
+# token = ""
+
+[cicd_hyper_a]
+base_url = "http://127.0.0.1:7004"
+# token = ""
+
+[oikos]
+base_url = "http://127.0.0.1:7005"
+# token = ""

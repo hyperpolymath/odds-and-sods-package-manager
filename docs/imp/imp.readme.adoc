@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: PMPL-1.0
+= IMP Artifacts
+:revdate: 2026-01-18
+
+- `IMP.adoc` — protocol overview
+- `imp.schema.json` — draft schema
