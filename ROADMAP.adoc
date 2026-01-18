@@ -2,12 +2,18 @@
 = OPM Roadmap
 :revdate: 2026-01-18
 
+== Current status
+
+Scaffold complete with CLI wiring stubs, registry schemas, and IMP drafts. Next: real service contracts and publish/audit orchestration.
+
 == v0.0.1 — Scaffold
 
-- [ ] Repo skeleton aligned to RSR template
-- [ ] `opm` CLI placeholder (Rust crate layout)
-- [ ] CI lint + format stubs
-- [ ] Federation event types documented
+- [x] Repo skeleton aligned to RSR template
+- [x] `opm` CLI placeholder (Rust crate layout)
+- [x] CLI HTTP wiring + config search
+- [x] Registry schemas + examples
+- [x] IMP draft docs + schema
+- [x] Tests with mocked endpoints
 
 == v0.1.0 — MVP wiring
 

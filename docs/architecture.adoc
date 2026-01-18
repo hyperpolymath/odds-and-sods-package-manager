@@ -6,6 +6,14 @@
 
 OPM is a federated package manager that composes existing hyperpolymath services into a single CLI and registry hub.
 
+== Current state
+
+- CLI wiring stubs implemented (HTTP + config)
+- Registry schemas + examples present
+- IMP draft documentation + schema present
+
+Next: formalize service contracts and wire live endpoints.
+
 == Federation map
 
 [literal]
