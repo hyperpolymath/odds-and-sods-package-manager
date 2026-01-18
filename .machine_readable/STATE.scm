@@ -1,39 +1,29 @@
-;; SPDX-License-Identifier: AGPL-3.0-or-later
-;; STATE.scm - Project state for rsr-template-repo
-;; Media-Type: application/vnd.state+scm
+;; SPDX-License-Identifier: PMPL-1.0
+;; STATE.scm - Project state for odds-and-sods-package-manager
 
 (state
   (metadata
     (version "0.0.1")
     (schema-version "1.0")
-    (created "2026-01-03")
-    (updated "2026-01-03")
-    (project "rsr-template-repo")
-    (repo "github.com/hyperpolymath/rsr-template-repo"))
+    (created "2026-01-18")
+    (updated "2026-01-18")
+    (project "odds-and-sods-package-manager")
+    (repo "hyperpolymath/odds-and-sods-package-manager"))
 
   (project-context
-    (name "rsr-template-repo")
-    (tagline "")
-    (tech-stack ()))
+    (name "Odds-and-sods Package Manager")
+    (tagline "Federated package manager with formal verification")
+    (tech-stack ("Rust" "Idris2" "Nickel" "Haskell" "Elixir")))
 
   (current-position
-    (phase "initial")
-    (overall-completion 0)
-    (components ())
-    (working-features ()))
-
-  (route-to-mvp
-    (milestones ()))
-
-  (blockers-and-issues
-    (critical)
-    (high)
-    (medium)
-    (low))
-
-  (critical-next-actions
-    (immediate)
-    (this-week)
-    (this-month))
-
-  (session-history ()))
+    (phase "scaffold")
+    (overall-completion 10)
+    (working-features
+      ("Repo scaffold"
+       "CLI stubs + HTTP wiring"
+       "Registry schemas + examples"
+       "IMP docs draft"))
+    (next-work
+      ("Define real service contracts"
+       "Implement publish/audit orchestration"
+       "Stabilize IMP schema"))))

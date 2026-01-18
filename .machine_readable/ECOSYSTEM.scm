@@ -1,20 +1,29 @@
-;; SPDX-License-Identifier: AGPL-3.0-or-later
-;; ECOSYSTEM.scm - Ecosystem position for rsr-template-repo
+;; SPDX-License-Identifier: PMPL-1.0
+;; ECOSYSTEM.scm - Ecosystem position for odds-and-sods-package-manager
 ;; Media-Type: application/vnd.ecosystem+scm
 
 (ecosystem
   (version "1.0")
-  (name "rsr-template-repo")
-  (type "")
-  (purpose "")
+  (name "odds-and-sods-package-manager")
+  (type "federated-package-manager")
+  (purpose "Verified, federated package distribution across ecosystems")
 
   (position-in-ecosystem
-    (category "")
-    (subcategory "")
-    (unique-value ()))
+    (category "package-management")
+    (subcategory "federation")
+    (unique-value ("formal-verification" "trust-pipeline" "multi-forge-sync")))
 
-  (related-projects ())
+  (related-projects
+    ("proven" "checky-monkey" "claim-forge" "palimpsest-license"
+     "nickel-config-reporter" "hybrid-automation-router" "protocol-squisher"
+     "scaffoldia" "cicd-hyper-a" "http-capability-gateway" "git-private-farm"
+     "oikos" "rhodibot" "seambot" "echidnabot" "robot-repo-automaton"))
 
-  (what-this-is ())
+  (what-this-is
+    ("Federated package manager"
+     "Verification-first distribution pipeline"
+     "Registry hub and CLI orchestration"))
 
-  (what-this-is-not ()))
+  (what-this-is-not
+    ("Single-ecosystem package manager"
+     "Centralized registry without federation")))

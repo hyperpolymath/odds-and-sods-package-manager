@@ -1,17 +1,22 @@
-;; SPDX-License-Identifier: AGPL-3.0-or-later
-;; META.scm - Meta-level information for rsr-template-repo
+;; SPDX-License-Identifier: PMPL-1.0
+;; META.scm - Meta-level information for odds-and-sods-package-manager
 ;; Media-Type: application/meta+scheme
 
 (meta
-  (architecture-decisions ())
+  (architecture-decisions
+    ("Federated hub with event-driven mirroring")
+    ("Verification-first pipeline with proven/Idris2")
+    ("Trust scoring via checky-monkey + oikos"))
 
   (development-practices
-    (code-style ())
+    (code-style ("Rust + AsciiDoc + Scheme metadata"))
     (security
       (principle "Defense in depth"))
-    (testing ())
+    (testing ("CLI integration tests with mocked endpoints"))
     (versioning "SemVer")
     (documentation "AsciiDoc")
-    (branching "main for stable"))
+    (branching "main"))
 
-  (design-rationale ()))
+  (design-rationale
+    ("Maximize supply-chain integrity across language ecosystems")
+    ("Enable decentralised distribution without single-fork dependence")))

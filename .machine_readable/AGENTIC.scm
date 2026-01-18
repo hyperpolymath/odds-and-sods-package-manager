@@ -1,16 +1,16 @@
-;; SPDX-License-Identifier: AGPL-3.0-or-later
-;; AGENTIC.scm - AI agent interaction patterns for rsr-template-repo
+;; SPDX-License-Identifier: PMPL-1.0
+;; AGENTIC.scm - AI agent interaction patterns for odds-and-sods-package-manager
 
 (define agentic-config
   `((version . "1.0.0")
-    (claude-code
-      ((model . "claude-opus-4-5-20251101")
-       (tools . ("read" "edit" "bash" "grep" "glob"))
-       (permissions . "read-all")))
+    (codex
+      ((model . "gpt-5")
+       (tools . ("read" "edit" "bash" "rg"))
+       (permissions . "workspace-write")))
     (patterns
       ((code-review . "thorough")
        (refactoring . "conservative")
-       (testing . "comprehensive")))
+       (testing . "integration")))
     (constraints
-      ((languages . ())
+      ((languages . ("Rust" "Idris2" "Nickel" "Haskell" "Elixir"))
        (banned . ("typescript" "go" "python" "makefile"))))))

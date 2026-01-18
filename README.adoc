@@ -38,6 +38,19 @@ Config search order:
 2. `./opm.toml`
 3. `~/.config/opm/opm.toml`
 
+== Where to pick up
+
+- CLI code: `crates/opm-cli/` (HTTP wiring stubs + tests)
+- Registry hub stubs: `opm-registry-hub/` (schemas + examples)
+- Architecture: `docs/architecture.adoc`
+- IMP drafts: `docs/imp/`
+
+Next work typically continues in:
+
+- `crates/opm-cli/src/clients/http.rs` (real service contracts)
+- `opm-registry-hub/` (event handlers + trust pipeline)
+- `docs/imp/` (formal schema and normalization rules)
+
 == Repositories
 
 Local root: `/var/mnt/eclipse/repos`  |  Remote: `https://github.com/hyperpolymath/<name>`
