@@ -1,0 +1,8 @@
+{
+  "path": "./dist/example-lib",
+  "manifest": {
+    "name": "example-lib",
+    "version": "1.2.3",
+    "license": "MIT"
+  }
+}

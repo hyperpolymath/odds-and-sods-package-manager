@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PMPL-1.0
 
 use serde::Deserialize;
+use std::fs;
+use std::path::Path;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServiceConfig {
@@ -41,5 +43,11 @@ impl OpmConfig {
                 token: None,
             },
         }
+    }
+
+    pub fn load_from(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        let data = fs::read_to_string(path)?;
+        let cfg = toml::from_str(&data)?;
+        Ok(cfg)
     }
 }
