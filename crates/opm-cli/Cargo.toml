@@ -15,3 +15,5 @@ reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
 [dev-dependencies]
 assert_cmd = "2"
+mockito = "1"
+tempfile = "3"

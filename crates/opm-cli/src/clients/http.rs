@@ -3,9 +3,20 @@
 use anyhow::{Context, Result};
 use reqwest::blocking::Client;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use std::time::Duration;
 
-pub fn post_json(base: &str, path: &str, token: Option<&str>, body: &str) -> Result<()> {
-    let client = Client::new();
+#[derive(Debug, Clone)]
+pub struct HttpOptions {
+    pub timeout_ms: u64,
+    pub retries: u32,
+    pub backoff_ms: u64,
+}
+
+pub fn post_json(base: &str, path: &str, token: Option<&str>, body: &str, opts: &HttpOptions) -> Result<()> {
+    let client = Client::builder()
+        .timeout(Duration::from_millis(opts.timeout_ms))
+        .build()
+        .context("http client")?;
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
@@ -15,16 +26,29 @@ pub fn post_json(base: &str, path: &str, token: Option<&str>, body: &str) -> Res
     }
 
     let url = format!("{}{}", base.trim_end_matches('/'), path);
-    let resp = client
-        .post(url)
-        .headers(headers)
-        .body(body.to_string())
-        .send()
-        .context("opm http post")?;
+    let attempts = opts.retries.saturating_add(1);
+    for attempt in 0..attempts {
+        let resp = client
+            .post(url.clone())
+            .headers(headers.clone())
+            .body(body.to_string())
+            .send();
 
-    if !resp.status().is_success() {
-        return Err(anyhow::anyhow!("http error: {}", resp.status()));
+        match resp {
+            Ok(resp) if resp.status().is_success() => return Ok(()),
+            Ok(resp) => {
+                if attempt + 1 == attempts {
+                    return Err(anyhow::anyhow!("http error: {}", resp.status()));
+                }
+            }
+            Err(err) => {
+                if attempt + 1 == attempts {
+                    return Err(anyhow::anyhow!("http error: {err}"));
+                }
+            }
+        }
+
+        std::thread::sleep(Duration::from_millis(opts.backoff_ms * (attempt as u64 + 1)));
     }
-
     Ok(())
 }

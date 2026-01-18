@@ -2,6 +2,11 @@
 base_url = "http://127.0.0.1:7001"
 # token = ""
 
+[http]
+timeout_ms = 3000
+retries = 2
+backoff_ms = 200
+
 [checky_monkey]
 base_url = "http://127.0.0.1:7002"
 # token = ""
