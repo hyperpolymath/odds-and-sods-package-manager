@@ -1,6 +1,7 @@
 = odds-and-sods-package-manager (opm)
 :revdate: 2026-01-18
 
+image:https://img.shields.io/badge/Deno-Inside-000000?style=flat&logo=deno[Deno Inside]
 image:https://img.shields.io/badge/Idris-Inside-1f6feb?style=flat[Idris Inside]
 image:https://img.shields.io/badge/License-PMPL--1.0-0b7285?style=flat[PMPL-1.0]
 
@@ -26,9 +27,21 @@ Primary hub (opm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu
 - maintainer-change
 - compatibility-break
 
-== CLI goal
+== Quick start
 
-`opm` is the missing glue: a Rust CLI that orchestrates publish, audit, and federation workflows across these services.
+[source,bash]
+----
+# Run directly
+deno task opm status
+
+# Or install globally
+deno install --allow-read --allow-env --allow-net -n opm cli/main.ts
+
+# Then use
+opm publish ./my-package
+opm audit @scope/package
+opm status
+----
 
 == Configuration
 
@@ -38,18 +51,98 @@ Config search order:
 2. `./opm.toml`
 3. `~/.config/opm/opm.toml`
 
+Example `opm.toml`:
+
+[source,toml]
+----
+[http]
+timeout_ms = 3000
+retries = 2
+backoff_ms = 200
+
+[claim_forge]
+base_url = "http://127.0.0.1:7001"
+# token = "optional-bearer-token"
+
+[checky_monkey]
+base_url = "http://127.0.0.1:7002"
+
+[palimpsest_license]
+base_url = "http://127.0.0.1:7003"
+
+[cicd_hyper_a]
+base_url = "http://127.0.0.1:7004"
+
+[oikos]
+base_url = "http://127.0.0.1:7005"
+----
+
+== Verified code via proven
+
+OPM uses the https://github.com/hyperpolymath/proven[proven] library for mathematically verified operations:
+
+- **SafeUrl** - URL validation for service configurations
+- **SafeJson** - Safe JSON parsing for API responses
+- **Result type** - Crash-free error handling
+
+All critical path operations use formally verified code from proven's Idris 2 core.
+
+== Project structure
+
+[source]
+----
+cli/                    # Deno CLI source
+├── main.ts             # Entry point with arg parsing
+├── config.ts           # Config loading (TOML)
+├── http.ts             # HTTP client with retries
+├── wiring.ts           # Command orchestration
+├── types.ts            # TypeScript types
+└── clients/            # Service client stubs
+    ├── claim_forge.ts
+    ├── checky_monkey.ts
+    ├── palimpsest_license.ts
+    ├── cicd_hyper_a.ts
+    └── oikos.ts
+
+opm-registry-hub/       # Registry hub stubs
+├── schemas/            # JSON schemas
+├── event-handlers/     # Event processing
+└── trust-pipeline/     # Trust scoring
+
+docs/                   # Documentation
+├── architecture.adoc
+└── imp/                # IMP draft specs
+----
+
 == Where to pick up
 
-- CLI code: `crates/opm-cli/` (HTTP wiring stubs + tests)
+- CLI code: `cli/` (HTTP wiring stubs + tests)
 - Registry hub stubs: `opm-registry-hub/` (schemas + examples)
 - Architecture: `docs/architecture.adoc`
 - IMP drafts: `docs/imp/`
 
 Next work typically continues in:
 
-- `crates/opm-cli/src/clients/http.rs` (real service contracts)
+- `cli/clients/*.ts` (real service contracts)
 - `opm-registry-hub/` (event handlers + trust pipeline)
 - `docs/imp/` (formal schema and normalization rules)
+
+== Development
+
+[source,bash]
+----
+# Type check
+deno task check
+
+# Run tests
+deno task test
+
+# Lint
+deno task lint
+
+# Format
+deno task fmt
+----
 
 == Repositories
 

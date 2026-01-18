@@ -4,16 +4,16 @@
 
 == Current status
 
-Scaffold complete with CLI wiring stubs, registry schemas, and IMP drafts. Next: real service contracts and publish/audit orchestration.
+Scaffold complete with Deno CLI, registry schemas, and IMP drafts. Next: real service contracts and publish/audit orchestration.
 
 == v0.0.1 — Scaffold
 
 - [x] Repo skeleton aligned to RSR template
-- [x] `opm` CLI placeholder (Rust crate layout)
+- [x] `opm` CLI (Deno with @std/cli)
 - [x] CLI HTTP wiring + config search
 - [x] Registry schemas + examples
 - [x] IMP draft docs + schema
-- [x] Tests with mocked endpoints
+- [x] Service client stubs (claim-forge, checky-monkey, oikos, etc.)
 
 == v0.1.0 — MVP wiring
 
