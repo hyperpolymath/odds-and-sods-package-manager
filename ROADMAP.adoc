@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: PMPL-1.0
+= OPM Roadmap
+:revdate: 2026-01-18
+
+== v0.0.1 — Scaffold
+
+- [ ] Repo skeleton aligned to RSR template
+- [ ] `opm` CLI placeholder (Rust crate layout)
+- [ ] CI lint + format stubs
+- [ ] Federation event types documented
+
+== v0.1.0 — MVP wiring
+
+- [ ] `opm publish` pipeline: claim-forge → checky-monkey → cicd-hyper-a
+- [ ] Manifest ingestion via nickel-config-reporter + HAR (IMP)
+- [ ] Minimal registry read/write API via http-capability-gateway
+- [ ] First property tests via echidnabot
+
+== v1.0.0 — Stable core
+
+- [ ] Full trust pipeline (8-dimension scoring, licensing audit)
+- [ ] Dependency resolution with sustainability scoring (oikos)
+- [ ] Federation sync via git-private-farm + Radicle + IPFS
+- [ ] Verified safe operations via proven bindings
+
+== v10.0.0 — Federated scale
+
+- [ ] Cross-forge governance and stewardship council
+- [ ] Fully automated ecosystem health monitoring and remediation
+- [ ] Multi-region registry hubs with failover and audit guarantees
+- [ ] Verified multi-language package operations across full bindings set

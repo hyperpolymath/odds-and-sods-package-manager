@@ -1,0 +1,43 @@
+= odds-and-sods-package-manager (opm)
+:revdate: 2026-01-18
+
+image:https://img.shields.io/badge/Idris-Inside-1f6feb?style=flat[Idris Inside]
+image:https://img.shields.io/badge/License-PMPL--1.0-0b7285?style=flat[PMPL-1.0]
+
+A federated, multi-language package manager with formal verification, a multi-dimensional trust pipeline, and automated ecosystem health monitoring.
+
+== Scope
+
+OPM wires together the hyperpolymath ecosystem into a single user-facing CLI and federation hub.
+
+- Verification & logic: `proven` (Idris2)
+- Trust pipeline: `checky-monkey`, `claim-forge`, `palimpsest-license`, `oikos`
+- Manifests & ingestion: `nickel-config-reporter`, `hybrid-automation-router`, `protocol-squisher`, `scaffoldia`
+- Registry & federation: `cicd-hyper-a`, `http-capability-gateway`, `git-private-farm`, Radicle, IPFS
+- Bot ecosystem: `rhodibot`, `seambot`, `echidnabot`, `robot-repo-automaton`
+
+== Federation architecture
+
+Primary hub (opm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu plus Radicle P2P, with event propagation for:
+
+- package-published
+- security-advisory (critical, immediate, notify dependents)
+- deprecation-notice
+- maintainer-change
+- compatibility-break
+
+== CLI goal
+
+`opm` is the missing glue: a Rust CLI that orchestrates publish, audit, and federation workflows across these services.
+
+== Repositories
+
+Local root: `/var/mnt/eclipse/repos`  |  Remote: `https://github.com/hyperpolymath/<name>`
+
+== License
+
+This repo uses the Palimpsest-MPL license (PMPL-1.0) from `palimpsest-license`.
+
+== Status
+
+See `ROADMAP.adoc` for phase-by-phase milestones.
