@@ -2,6 +2,8 @@
 
 use clap::{Parser, Subcommand};
 
+mod clients;
+mod types;
 mod wiring;
 
 #[derive(Parser)]

@@ -1,0 +1,12 @@
+{
+  "event_type": "security-advisory",
+  "package": "example-lib",
+  "version": "1.2.3",
+  "timestamp": "2026-01-18T00:20:00Z",
+  "data": {
+    "cve": "CVE-2026-0001",
+    "severity": "critical",
+    "url": "https://example.org/advisories/CVE-2026-0001",
+    "notify_all_dependents": true
+  }
+}

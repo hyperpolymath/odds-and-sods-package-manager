@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: PMPL-1.0
+= Internal Manifest Protocol (IMP)
+:revdate: 2026-01-18
+
+== Purpose
+
+IMP is the canonical, normalized manifest used by OPM to bridge Cargo.toml, package.json, and other formats.
+
+== Required fields
+
+- name
+- version
+- license
+- dependencies
+- provenance
+
+== Source formats
+
+- Cargo.toml (Rust)
+- package.json (JS/TS)
+- mix.exs (Elixir)
+- pyproject.toml (Python)
+
+== Pipeline
+
+1. nickel-config-reporter validates incoming manifests against contract
+2. hybrid-automation-router normalizes into IMP
+3. protocol-squisher handles cross-language edges

@@ -2,20 +2,22 @@
 
 use anyhow::Result;
 
+use crate::clients;
+
 pub fn publish(path: &str) -> Result<()> {
     println!("opm publish (stub) for {path}");
-    println!("- claim-forge: provenance");
-    println!("- checky-monkey: 8-dimension analysis");
-    println!("- palimpsest-license: audit/sign");
-    println!("- cicd-hyper-a: registry write");
+    clients::claim_forge::attest(path)?;
+    clients::checky_monkey::analyze(path)?;
+    clients::palimpsest_license::audit(path)?;
+    clients::cicd_hyper_a::publish(path)?;
     Ok(())
 }
 
 pub fn audit(package: &str) -> Result<()> {
     println!("opm audit (stub) for {package}");
-    println!("- claim-forge: provenance check");
-    println!("- checky-monkey: scoring");
-    println!("- oikos: sustainability");
+    clients::claim_forge::attest(package)?;
+    clients::checky_monkey::analyze(package)?;
+    clients::oikos::score(package)?;
     Ok(())
 }
 
