@@ -1,6 +1,6 @@
 # Security Policy
 
-<!-- 
+<!--
 ============================================================================
 TEMPLATE INSTRUCTIONS (delete this block before publishing)
 ============================================================================
@@ -18,7 +18,8 @@ Optional: Remove sections that don't apply (e.g., PGP if you don't use it)
 ============================================================================
 -->
 
-We take security seriously. We appreciate your efforts to responsibly disclose vulnerabilities and will make every effort to acknowledge your contributions.
+We take security seriously. We appreciate your efforts to responsibly disclose vulnerabilities and
+will make every effort to acknowledge your contributions.
 
 ## Table of Contents
 
@@ -38,9 +39,11 @@ We take security seriously. We appreciate your efforts to responsibly disclose v
 
 ### Preferred Method: GitHub Security Advisories
 
-The preferred method for reporting security vulnerabilities is through GitHub's Security Advisory feature:
+The preferred method for reporting security vulnerabilities is through GitHub's Security Advisory
+feature:
 
-1. Navigate to [Report a Vulnerability](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new)
+1. Navigate to
+   [Report a Vulnerability](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new)
 2. Click **"Report a vulnerability"**
 3. Complete the form with as much detail as possible
 4. Submit — we'll receive a private notification
@@ -56,11 +59,11 @@ This method ensures:
 
 If you cannot use GitHub Security Advisories, you may email us directly:
 
-| | |
-|---|---|
-| **Email** | {{SECURITY_EMAIL}} |
-| **PGP Key** | [Download Public Key]({{PGP_KEY_URL}}) |
-| **Fingerprint** | `{{PGP_FINGERPRINT}}` |
+|                 |                                        |
+| --------------- | -------------------------------------- |
+| **Email**       | {{SECURITY_EMAIL}}                     |
+| **PGP Key**     | [Download Public Key]({{PGP_KEY_URL}}) |
+| **Fingerprint** | `{{PGP_FINGERPRINT}}`                  |
 
 ```bash
 # Import our PGP key
@@ -73,7 +76,8 @@ gpg --fingerprint {{SECURITY_EMAIL}}
 gpg --armor --encrypt --recipient {{SECURITY_EMAIL}} report.txt
 ```
 
-> **⚠️ Important:** Do not report security vulnerabilities through public GitHub issues, pull requests, discussions, or social media.
+> **⚠️ Important:** Do not report security vulnerabilities through public GitHub issues, pull
+> requests, discussions, or social media.
 
 ---
 
@@ -92,7 +96,8 @@ A good vulnerability report helps us understand and reproduce the issue quickly.
 
 - **Proof of concept**: Code, scripts, or screenshots demonstrating the vulnerability
 - **Attack scenario**: Realistic attack scenario showing exploitability
-- **CVSS score**: Your assessment of severity (use [CVSS 3.1 Calculator](https://www.first.org/cvss/calculator/3.1))
+- **CVSS score**: Your assessment of severity (use
+  [CVSS 3.1 Calculator](https://www.first.org/cvss/calculator/3.1))
 - **CWE ID**: Common Weakness Enumeration identifier if known
 - **Suggested fix**: If you have ideas for remediation
 - **References**: Links to related vulnerabilities, research, or advisories
@@ -101,39 +106,50 @@ A good vulnerability report helps us understand and reproduce the issue quickly.
 
 ```markdown
 ## Summary
+
 [One-sentence description of the vulnerability]
 
 ## Vulnerability Type
+
 [e.g., SQL Injection, XSS, SSRF, Path Traversal, etc.]
 
 ## Affected Component
+
 [File path, function name, API endpoint, etc.]
 
 ## Affected Versions
+
 [Version range or specific commits]
 
 ## Severity Assessment
+
 - CVSS 3.1 Score: [X.X]
 - CVSS Vector: [CVSS:3.1/AV:X/AC:X/PR:X/UI:X/S:X/C:X/I:X/A:X]
 
 ## Description
+
 [Detailed technical description]
 
 ## Steps to Reproduce
+
 1. [First step]
 2. [Second step]
 3. [...]
 
 ## Proof of Concept
+
 [Code, curl commands, screenshots, etc.]
 
 ## Impact
+
 [What can an attacker achieve?]
 
 ## Suggested Remediation
+
 [Optional: your ideas for fixing]
 
 ## References
+
 [Links to related issues, CVEs, research]
 ```
 
@@ -143,15 +159,16 @@ A good vulnerability report helps us understand and reproduce the issue quickly.
 
 We commit to the following response times:
 
-| Stage | Timeframe | Description |
-|-------|-----------|-------------|
-| **Initial Response** | 48 hours | We acknowledge receipt and confirm we're investigating |
-| **Triage** | 7 days | We assess severity, confirm the vulnerability, and estimate timeline |
-| **Status Update** | Every 7 days | Regular updates on remediation progress |
-| **Resolution** | 90 days | Target for fix development and release (complex issues may take longer) |
-| **Disclosure** | 90 days | Public disclosure after fix is available (coordinated with you) |
+| Stage                | Timeframe    | Description                                                             |
+| -------------------- | ------------ | ----------------------------------------------------------------------- |
+| **Initial Response** | 48 hours     | We acknowledge receipt and confirm we're investigating                  |
+| **Triage**           | 7 days       | We assess severity, confirm the vulnerability, and estimate timeline    |
+| **Status Update**    | Every 7 days | Regular updates on remediation progress                                 |
+| **Resolution**       | 90 days      | Target for fix development and release (complex issues may take longer) |
+| **Disclosure**       | 90 days      | Public disclosure after fix is available (coordinated with you)         |
 
-> **Note:** These are targets, not guarantees. Complex vulnerabilities may require more time. We'll communicate openly about any delays.
+> **Note:** These are targets, not guarantees. Complex vulnerabilities may require more time. We'll
+> communicate openly about any delays.
 
 ---
 
@@ -265,7 +282,8 @@ If you conduct security research in accordance with this policy:
 - ✅ We will not initiate legal action against you
 - ✅ We will not report your activity to law enforcement
 - ✅ We will work with you in good faith to resolve issues
-- ✅ We consider your research authorised under the Computer Fraud and Abuse Act (CFAA), UK Computer Misuse Act, and similar laws
+- ✅ We consider your research authorised under the Computer Fraud and Abuse Act (CFAA), UK Computer
+  Misuse Act, and similar laws
 - ✅ We waive any potential claim against you for circumvention of security controls
 
 ### Good Faith Requirements
@@ -279,7 +297,8 @@ To qualify for safe harbour, you must:
 - Not exploit vulnerabilities beyond proof-of-concept
 - Not use vulnerabilities for profit (beyond bug bounties where offered)
 
-> **⚠️ Important:** This safe harbour does not extend to third-party systems. Always check their policies before testing.
+> **⚠️ Important:** This safe harbour does not extend to third-party systems. Always check their
+> policies before testing.
 
 ---
 
@@ -289,7 +308,8 @@ We believe in recognising security researchers who help us improve.
 
 ### Hall of Fame
 
-Researchers who report valid vulnerabilities will be acknowledged in our [Security Acknowledgments](SECURITY-ACKNOWLEDGMENTS.md) (unless they prefer anonymity).
+Researchers who report valid vulnerabilities will be acknowledged in our
+[Security Acknowledgments](SECURITY-ACKNOWLEDGMENTS.md) (unless they prefer anonymity).
 
 Recognition includes:
 
@@ -311,7 +331,8 @@ Recognition includes:
 - ❌ Hardware or swag
 - ❌ Paid security research contracts
 
-> **Note:** We're a community project with limited resources. Your contributions help everyone who uses this software.
+> **Note:** We're a community project with limited resources. Your contributions help everyone who
+> uses this software.
 
 ---
 
@@ -322,27 +343,28 @@ Recognition includes:
 To stay informed about security updates:
 
 - **Watch this repository**: Click "Watch" → "Custom" → Select "Security alerts"
-- **GitHub Security Advisories**: Published at [Security Advisories](https://github.com/{{OWNER}}/{{REPO}}/security/advisories)
+- **GitHub Security Advisories**: Published at
+  [Security Advisories](https://github.com/{{OWNER}}/{{REPO}}/security/advisories)
 - **Release notes**: Security fixes noted in [CHANGELOG](CHANGELOG.md)
 
 ### Update Policy
 
-| Severity | Response |
-|----------|----------|
-| **Critical/High** | Patch release as soon as fix is ready |
-| **Medium** | Included in next scheduled release (or earlier) |
-| **Low** | Included in next scheduled release |
+| Severity          | Response                                        |
+| ----------------- | ----------------------------------------------- |
+| **Critical/High** | Patch release as soon as fix is ready           |
+| **Medium**        | Included in next scheduled release (or earlier) |
+| **Low**           | Included in next scheduled release              |
 
 ### Supported Versions
 
 <!-- Adjust this table to match your actual version support policy -->
 
-| Version | Supported | Notes |
-|---------|-----------|-------|
-| `main` branch | ✅ Yes | Latest development |
-| Latest release | ✅ Yes | Current stable |
-| Previous minor release | ✅ Yes | Security fixes backported |
-| Older versions | ❌ No | Please upgrade |
+| Version                | Supported | Notes                     |
+| ---------------------- | --------- | ------------------------- |
+| `main` branch          | ✅ Yes    | Latest development        |
+| Latest release         | ✅ Yes    | Current stable            |
+| Previous minor release | ✅ Yes    | Security fixes backported |
+| Older versions         | ❌ No     | Please upgrade            |
 
 ---
 
@@ -381,11 +403,11 @@ When using {{PROJECT_NAME}}, we recommend:
 
 ## Contact
 
-| Purpose | Contact |
-|---------|---------|
-| **Security issues** | [Report via GitHub](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new) or {{SECURITY_EMAIL}} |
-| **General questions** | [GitHub Discussions](https://github.com/{{OWNER}}/{{REPO}}/discussions) |
-| **Other enquiries** | See [README](README.md) for contact information |
+| Purpose               | Contact                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Security issues**   | [Report via GitHub](https://github.com/{{OWNER}}/{{REPO}}/security/advisories/new) or {{SECURITY_EMAIL}} |
+| **General questions** | [GitHub Discussions](https://github.com/{{OWNER}}/{{REPO}}/discussions)                                  |
+| **Other enquiries**   | See [README](README.md) for contact information                                                          |
 
 ---
 
@@ -399,7 +421,7 @@ This security policy may be updated from time to time. Significant changes will 
 
 ---
 
-*Thank you for helping keep {{PROJECT_NAME}} and its users safe.* 🛡️
+_Thank you for helping keep {{PROJECT_NAME}} and its users safe._ 🛡️
 
 ---
 

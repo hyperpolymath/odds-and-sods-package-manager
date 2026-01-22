@@ -1,0 +1,467 @@
+= OPM Service Contracts
+:revdate: 2026-01-18
+:toc: left
+:toclevels: 3
+
+This document describes the API contracts for the trust pipeline services that OPM integrates with.
+
+== Overview
+
+OPM orchestrates five backend services to provide a complete package management experience with multi-dimensional trust scoring:
+
+[cols="1,2,1,1"]
+|===
+| Service | Purpose | Status | Transport
+
+| *oikos*
+| Ecosystem sustainability analysis
+| Active
+| REST API
+
+| *cicd-hyper-a*
+| Registry and CI/CD pipeline hub
+| Active
+| REST API
+
+| *claim-forge*
+| Attestation generation
+| CLI-only
+| CLI / Service wrapper
+
+| *palimpsest-license*
+| License analysis
+| CLI-only
+| CLI / Service wrapper
+
+| *checky-monkey*
+| Code verification
+| In development
+| REST API (planned)
+|===
+
+== Oikos - Ecosystem Sustainability Analysis
+
+=== Endpoints
+
+[cols="1,2,3"]
+|===
+| Method | Path | Description
+
+| POST | `/analysis/repository` | Analyze repository sustainability
+| GET | `/analysis/repository/{url}` | Get analysis results
+| POST | `/analysis/diff` | Analyze changes between refs
+| GET | `/health` | Service health check
+|===
+
+=== Sustainability Scores
+
+Oikos provides 8-dimension sustainability scoring (0-100):
+
+* *maintainability* - Code complexity, modularity, technical debt
+* *documentation* - README quality, API docs, inline comments
+* *testCoverage* - Test coverage percentage, test quality
+* *communityHealth* - Contributors, responsiveness, governance
+* *securityPosture* - Known vulnerabilities, security practices
+* *dependencyHealth* - Dependency freshness, vulnerability exposure
+* *releaseMaturity* - Versioning, changelog quality, release cadence
+* *codeQuality* - Linting, formatting, static analysis results
+
+=== Request Example
+
+[source,json]
+----
+{
+  "repositoryUrl": "https://github.com/hyperpolymath/example",
+  "branch": "main",
+  "commitSha": "abc123def456"
+}
+----
+
+=== Response Example
+
+[source,json]
+----
+{
+  "repositoryUrl": "https://github.com/hyperpolymath/example",
+  "analyzedAt": "2026-01-18T12:00:00Z",
+  "overallScore": 78,
+  "scores": {
+    "maintainability": 85,
+    "documentation": 72,
+    "testCoverage": 80,
+    "communityHealth": 65,
+    "securityPosture": 90,
+    "dependencyHealth": 75,
+    "releaseMaturity": 70,
+    "codeQuality": 87
+  },
+  "recommendations": [
+    "Consider adding more inline documentation",
+    "Update stale dependencies"
+  ],
+  "risks": [
+    {
+      "severity": "medium",
+      "category": "dependency",
+      "description": "3 dependencies have known vulnerabilities",
+      "remediation": "Run npm audit fix"
+    }
+  ]
+}
+----
+
+== CICD-Hyper-A - Registry and Pipeline Hub
+
+=== Endpoints
+
+[cols="1,2,3"]
+|===
+| Method | Path | Description
+
+| POST | `/packages/publish` | Publish a package
+| GET | `/packages/{name}` | Get package info
+| GET | `/packages/{name}/{version}` | Get specific version
+| POST | `/validate` | Validate manifest against rulesets
+| GET | `/rulesets` | List available rulesets
+| GET | `/rulesets/{id}` | Get specific ruleset
+|===
+
+=== Publish Request
+
+Publishing requires:
+1. Valid package manifest
+2. Attestations from claim-forge
+3. Passing ruleset validation
+
+[source,json]
+----
+{
+  "manifest": {
+    "name": "@scope/package",
+    "version": "1.0.0",
+    "description": "Package description",
+    "license": "PMPL-1.0",
+    "repository": "https://github.com/org/repo",
+    "authors": ["Author Name"],
+    "keywords": ["opm", "package"],
+    "dependencies": {
+      "@other/dep": "^2.0.0"
+    }
+  },
+  "tarballUrl": "https://registry.opm.dev/tarballs/...",
+  "attestations": [
+    {
+      "type": "claim-forge",
+      "uri": "https://attestations.opm.dev/...",
+      "digest": "sha256:..."
+    }
+  ]
+}
+----
+
+=== Federation Status
+
+After publishing, packages are federated to:
+
+* GitHub (releases)
+* GitLab (packages)
+* Codeberg (releases)
+* Radicle (P2P)
+* IPFS (content-addressed)
+
+[source,json]
+----
+{
+  "packageName": "@scope/package",
+  "version": "1.0.0",
+  "syncedAt": "2026-01-18T12:00:00Z",
+  "targets": {
+    "github": { "synced": true, "url": "https://github.com/..." },
+    "gitlab": { "synced": true, "url": "https://gitlab.com/..." },
+    "codeberg": { "synced": true, "url": "https://codeberg.org/..." },
+    "radicle": { "synced": true },
+    "ipfs": { "synced": false, "error": "Gateway timeout" }
+  }
+}
+----
+
+== Claim-Forge - Attestation Generation
+
+=== Overview
+
+Claim-forge generates cryptographic attestations for artifacts. The upstream implementation is an Ada CLI tool. OPM supports two integration modes:
+
+1. *Service mode*: HTTP API via claim-forge-service wrapper
+2. *CLI mode*: Direct invocation of claim-forge binary
+
+=== Claim Types
+
+* `build-provenance` - SLSA build attestation
+* `source-attestation` - Source code verification
+* `vulnerability-scan` - Security scan results
+* `license-compliance` - License analysis attestation
+* `code-review` - Code review attestation
+
+=== Service API
+
+[cols="1,2,3"]
+|===
+| Method | Path | Description
+
+| POST | `/attest` | Generate attestation
+| POST | `/verify` | Verify attestation
+| GET | `/attestations/{id}` | Get attestation by ID
+| GET | `/claim-types` | List supported claim types
+|===
+
+=== Attestation Request
+
+[source,json]
+----
+{
+  "artifactPath": "/path/to/artifact.tar.gz",
+  "artifactDigest": "sha256:...",
+  "claimType": "build-provenance",
+  "metadata": {
+    "builder": "deno",
+    "version": "1.40.0"
+  }
+}
+----
+
+=== CLI Usage
+
+[source,bash]
+----
+# Generate attestation
+claim-forge attest --type build-provenance --artifact ./package.tar.gz --output ./attestation.json
+
+# Verify attestation
+claim-forge verify --attestation ./attestation.json --artifact ./package.tar.gz
+----
+
+== Checky-Monkey - Code Verification
+
+=== Overview
+
+Checky-monkey orchestrates multiple verification strategies:
+
+* *property-tests* - QuickCheck/fast-check style testing
+* *fuzz-testing* - AFL/libFuzzer-based fuzzing
+* *type-checking* - Static type analysis
+* *formal-verification* - Proof-based verification (via proven/Idris)
+* *mutation-testing* - Code mutation coverage
+
+NOTE: The REST API is currently in development. This documents the planned contract.
+
+=== Endpoints
+
+[cols="1,2,3"]
+|===
+| Method | Path | Description
+
+| POST | `/verify` | Submit verification request
+| GET | `/verify/{requestId}` | Get verification status
+| POST | `/verify/{requestId}/cancel` | Cancel verification
+| GET | `/verification-types` | List supported types
+| GET | `/health` | Service health
+|===
+
+=== Verification Request
+
+[source,json]
+----
+{
+  "repositoryUrl": "https://github.com/org/repo",
+  "commitSha": "abc123def456",
+  "verificationTypes": ["property-tests", "fuzz-testing"],
+  "timeout": 3600
+}
+----
+
+=== Verification Response
+
+[source,json]
+----
+{
+  "requestId": "req-123",
+  "status": "completed",
+  "startedAt": "2026-01-18T12:00:00Z",
+  "completedAt": "2026-01-18T12:30:00Z",
+  "results": [
+    {
+      "type": "property-tests",
+      "passed": true,
+      "coverage": 85.5,
+      "findings": [],
+      "duration": 120
+    },
+    {
+      "type": "fuzz-testing",
+      "passed": false,
+      "coverage": 72.3,
+      "findings": [
+        {
+          "severity": "high",
+          "category": "crash",
+          "location": {
+            "file": "src/parser.ts",
+            "line": 42
+          },
+          "message": "Null pointer dereference on malformed input",
+          "suggestion": "Add input validation"
+        }
+      ],
+      "duration": 1680
+    }
+  ]
+}
+----
+
+== Palimpsest-License - License Analysis
+
+=== Overview
+
+Palimpsest-license performs SPDX license detection and compatibility analysis. Like claim-forge, it's primarily a CLI/spec project with optional service wrapper.
+
+=== Service API
+
+[cols="1,2,3"]
+|===
+| Method | Path | Description
+
+| POST | `/analyze` | Analyze artifact licenses
+| POST | `/compatibility` | Check license compatibility
+| GET | `/licenses` | List known SPDX licenses
+| GET | `/licenses/{spdxId}` | Get license info
+|===
+
+=== Analysis Request
+
+[source,json]
+----
+{
+  "artifactPath": "/path/to/project",
+  "includeTransitive": true,
+  "targetLicense": "PMPL-1.0"
+}
+----
+
+=== Analysis Response
+
+[source,json]
+----
+{
+  "analyzedAt": "2026-01-18T12:00:00Z",
+  "detectedLicenses": [
+    {
+      "spdxId": "MIT",
+      "confidence": 0.95,
+      "locations": ["LICENSE", "package.json"],
+      "source": "license-file"
+    },
+    {
+      "spdxId": "Apache-2.0",
+      "confidence": 0.88,
+      "locations": ["vendor/lib/LICENSE"],
+      "source": "file-header"
+    }
+  ],
+  "compatibility": {
+    "compatible": true,
+    "targetLicense": "PMPL-1.0",
+    "conflicts": []
+  },
+  "obligations": [
+    {
+      "license": "MIT",
+      "obligation": "Include copyright notice",
+      "type": "notice"
+    }
+  ],
+  "risks": [
+    {
+      "severity": "low",
+      "license": "Apache-2.0",
+      "risk": "Patent clause may affect derived works",
+      "recommendation": "Review Apache-2.0 patent terms"
+    }
+  ]
+}
+----
+
+=== CLI Usage
+
+[source,bash]
+----
+# Analyze licenses
+palimpsest-license analyze ./project --transitive
+
+# Check compatibility
+palimpsest-license check MIT Apache-2.0
+----
+
+== Error Handling
+
+All services return errors in a consistent format:
+
+[source,json]
+----
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid manifest: missing required field 'name'",
+    "details": {
+      "field": "name",
+      "constraint": "required"
+    }
+  }
+}
+----
+
+Common error codes:
+
+* `VALIDATION_ERROR` - Invalid request payload
+* `NOT_FOUND` - Resource not found
+* `UNAUTHORIZED` - Missing or invalid token
+* `RATE_LIMITED` - Too many requests
+* `INTERNAL_ERROR` - Server error
+
+== Authentication
+
+All services support Bearer token authentication:
+
+[source]
+----
+Authorization: Bearer <token>
+----
+
+Tokens are configured per-service in `opm.toml`:
+
+[source,toml]
+----
+[claim_forge]
+base_url = "http://127.0.0.1:7001"
+token = "your-token-here"
+----
+
+== Client Libraries
+
+TypeScript clients are available in `cli/clients/`:
+
+[source,typescript]
+----
+import { OikosClient } from "./clients/oikos.ts";
+import { CicdHyperAClient } from "./clients/cicd_hyper_a.ts";
+import { ClaimForgeClient, ClaimForgeCli } from "./clients/claim_forge.ts";
+import { CheckyMonkeyClient } from "./clients/checky_monkey.ts";
+import { PalimpsestClient, PalimpsestCli } from "./clients/palimpsest_license.ts";
+
+// HTTP service client
+const oikos = new OikosClient(config.baseUrl, config.token, httpOpts);
+const result = await oikos.analyzeRepository({ repositoryUrl: "..." });
+
+// CLI fallback for services without HTTP wrapper
+const claimCli = new ClaimForgeCli("/usr/local/bin/claim-forge");
+const attestation = await claimCli.attest("./artifact.tar.gz", "build-provenance");
+----

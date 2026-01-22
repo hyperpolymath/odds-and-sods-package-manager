@@ -1,50 +1,38 @@
 # Clone the repository
-git clone https://{{FORGE}}/{{OWNER}}/{{REPO}}.git
-cd {{REPO}}
+
+git clone https://{{FORGE}}/{{OWNER}}/{{REPO}}.git cd {{REPO}}
 
 # Using Nix (recommended for reproducibility)
+
 nix develop
 
 # Or using toolbox/distrobox
-toolbox create {{REPO}}-dev
-toolbox enter {{REPO}}-dev
+
+toolbox create {{REPO}}-dev toolbox enter {{REPO}}-dev
+
 # Install dependencies manually
 
 # Verify setup
-just check   # or: cargo check / mix compile / etc.
-just test    # Run test suite
-```
 
+just check # or: cargo check / mix compile / etc. just test # Run test suite
+
+```
 ### Repository Structure
 ```
-{{REPO}}/
-├── src/                 # Source code (Perimeter 1-2)
-├── lib/                 # Library code (Perimeter 1-2)
-├── extensions/          # Extensions (Perimeter 2)
-├── plugins/             # Plugins (Perimeter 2)
-├── tools/               # Tooling (Perimeter 2)
-├── docs/                # Documentation (Perimeter 3)
-│   ├── architecture/    # ADRs, specs (Perimeter 2)
-│   └── proposals/       # RFCs (Perimeter 3)
-├── examples/            # Examples (Perimeter 3)
-├── spec/                # Spec tests (Perimeter 3)
-├── tests/               # Test suite (Perimeter 2-3)
-├── .well-known/         # Protocol files (Perimeter 1-3)
-├── .github/             # GitHub config (Perimeter 1)
-│   ├── ISSUE_TEMPLATE/
-│   └── workflows/
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md      # This file
-├── GOVERNANCE.md
-├── LICENSE
-├── MAINTAINERS.md
-├── README.adoc
-├── SECURITY.md
-├── flake.nix            # Nix flake (Perimeter 1)
-└── justfile             # Task runner (Perimeter 1)
-```
 
+{{REPO}}/ ├── src/ # Source code (Perimeter 1-2) ├── lib/ # Library code (Perimeter 1-2) ├──
+extensions/ # Extensions (Perimeter 2) ├── plugins/ # Plugins (Perimeter 2) ├── tools/ # Tooling
+(Perimeter 2) ├── docs/ # Documentation (Perimeter 3) │ ├── architecture/ # ADRs, specs
+(Perimeter 2) │ └── proposals/ # RFCs (Perimeter 3) ├── examples/ # Examples (Perimeter 3) ├── spec/
+
+# Spec tests (Perimeter 3) ├── tests/ # Test suite (Perimeter 2-3) ├── .well-known/ # Protocol files
+
+(Perimeter 1-3) ├── .github/ # GitHub config (Perimeter 1) │ ├── ISSUE_TEMPLATE/ │ └── workflows/
+├── CHANGELOG.md ├── CODE_OF_CONDUCT.md ├── CONTRIBUTING.md # This file ├── GOVERNANCE.md ├──
+LICENSE ├── MAINTAINERS.md ├── README.adoc ├── SECURITY.md ├── flake.nix # Nix flake (Perimeter 1)
+└── justfile # Task runner (Perimeter 1)
+
+```
 ---
 
 ## How to Contribute
@@ -97,18 +85,17 @@ Look for issues labelled:
 
 ### Branch Naming
 ```
-docs/short-description       # Documentation (P3)
-test/what-added              # Test additions (P3)
-feat/short-description       # New features (P2)
-fix/issue-number-description # Bug fixes (P2)
-refactor/what-changed        # Code improvements (P2)
-security/what-fixed          # Security fixes (P1-2)
-```
 
+docs/short-description # Documentation (P3) test/what-added # Test additions (P3)
+feat/short-description # New features (P2) fix/issue-number-description # Bug fixes (P2)
+refactor/what-changed # Code improvements (P2) security/what-fixed # Security fixes (P1-2)
+
+```
 ### Commit Messages
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
+
 <type>(<scope>): <description>
 
 [optional body]

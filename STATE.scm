@@ -1,68 +1,81 @@
-;; SPDX-License-Identifier: PMPL-1.0
-;; STATE.scm - Project state for odds-and-sods-package-manager
+;;; STATE.scm — AI Conversation Checkpoint File
+;;; SPDX-License-Identifier: PMPL-1.0
 
-(state
-  (metadata
-    (version "0.1.0")
-    (schema-version "1.0")
-    (created "2025-01-17")
-    (updated "2026-01-18")
-    (project "odds-and-sods-package-manager")
-    (repo "hyperpolymath/odds-and-sods-package-manager"))
+(define state
+  '((metadata
+      (format-version . "2.0")
+      (schema-version . "2025-12-08")
+      (created-at . "2025-01-17T00:00:00Z")
+      (last-updated . "2026-01-18T12:30:00Z")
+      (generator . "Claude/STATE-system"))
 
-  (project-context
-    (name "OPM - Odds-and-sods Package Manager")
-    (tagline "Federated multi-language package manager with trust pipeline")
-    (tech-stack ("deno" "typescript" "proven/idris2")))
+    (user
+      (name . "Jonathan D.A. Jewell")
+      (roles . ("Maintainer" "Architect"))
+      (preferences
+        (languages-preferred . ("Elixir" "Rust" "ReScript"))
+        (languages-avoid . ("Python" "Go"))
+        (tools-preferred . ("Deno" "Nix" "Guix"))
+        (values . ("FOSS" "federation" "trust-verification"))))
 
-  (current-position
-    (phase "scaffold")
-    (overall-completion 15)
-    (components
-      (cli
-        (status "scaffold")
-        (completion 20)
-        (notes "Deno CLI with subcommands: publish, audit, status"))
-      (registry-hub
-        (status "scaffold")
-        (completion 10)
-        (notes "Schema stubs and event handlers"))
-      (trust-pipeline
-        (status "planned")
-        (completion 5)
-        (notes "Client stubs for claim-forge, checky-monkey, oikos")))
-    (working-features
-      ("CLI argument parsing"
-       "Config file search (OPM_CONFIG, ./opm.toml, ~/.config/opm/)"
-       "HTTP client with retries and backoff"
-       "Service client stubs")))
+    (session
+      (conversation-id . "2026-01-18-elixir-tests")
+      (started-at . "2026-01-18T11:00:00Z")
+      (messages-used . 50)
+      (messages-remaining . 50)
+      (token-limit-reached . #f))
 
-  (route-to-mvp
-    (milestone "v0.1.0 - MVP wiring"
-      (items
-        ("opm publish pipeline: claim-forge → checky-monkey → cicd-hyper-a"
-         "Manifest ingestion via nickel-config-reporter"
-         "Registry read/write API via http-capability-gateway"
-         "Property tests via echidnabot")))
-    (milestone "v1.0.0 - Stable core"
-      (items
-        ("Full trust pipeline (8-dimension scoring)"
-         "Dependency resolution with sustainability scoring"
-         "Federation sync via git-private-farm + Radicle + IPFS"))))
+    (focus
+      (current-project . "OPM Elixir CLI")
+      (current-phase . "Testing & Polish")
+      (deadline . #f)
+      (blocking-projects . ()))
 
-  (blockers-and-issues
-    (critical ())
-    (high ())
-    (medium
-      ("Service contracts not yet defined"
-       "Registry API schema incomplete"))
-    (low ()))
+    (projects
+      ((name . "OPM Elixir CLI")
+       (status . "in-progress")
+       (completion . 85)
+       (category . "package-manager")
+       (phase . "testing")
+       (dependencies . ())
+       (blockers . ())
+       (next . ("Live registry testing" "Documentation"))
+       (chat-reference . "2026-01-18-elixir-tests")
+       (notes . "136 tests passing, lockfile complete"))
 
-  (critical-next-actions
-    (immediate
-      ("Wire real service contracts in clients/"))
-    (this-week
-      ("Define publish pipeline orchestration"
-       "Add integration tests with mock services"))
-    (this-month
-      ("Connect to live trust pipeline services"))))
+      ((name . "OPM ReScript CLI")
+       (status . "paused")
+       (completion . 50)
+       (category . "package-manager")
+       (phase . "scaffold")
+       (dependencies . ())
+       (blockers . ())
+       (next . ())
+       (chat-reference . #f)
+       (notes . "Original implementation, service clients defined"))
+
+      ((name . "OPM Rust Crates")
+       (status . "paused")
+       (completion . 20)
+       (category . "package-manager")
+       (phase . "scaffold")
+       (dependencies . ())
+       (blockers . ())
+       (next . ())
+       (chat-reference . #f)
+       (notes . "Crate stubs only")))
+
+    (critical-next
+      ("Test with live npm/cargo/hex registries"
+       "Clean up compiler warnings"
+       "Add CLI documentation"))
+
+    (issues
+      ((id . "ISSUE-001")
+       (severity . "medium")
+       (title . "Trust services not deployed")
+       (description . "Connection refused from Oikos, CheckyMonkey, etc.")
+       (workaround . "CLI fallbacks handle gracefully")
+       (status . "documented")))
+
+    (context-notes . "Elixir port functional with 136 tests. Lockfile, transactions, integration tests complete.")))

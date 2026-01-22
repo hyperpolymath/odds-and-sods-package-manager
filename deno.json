@@ -3,35 +3,38 @@
   "name": "@hyperpolymath/opm",
   "version": "0.1.0",
   "license": "PMPL-1.0",
-  "exports": "./cli/main.ts",
+  "exports": "./cli/Main.res.js",
   "tasks": {
-    "dev": "deno run --allow-read --allow-env --allow-net cli/main.ts",
-    "opm": "deno run --allow-read --allow-env --allow-net cli/main.ts",
+    "build": "npx rescript build",
+    "build:watch": "npx rescript build -w",
+    "clean": "npx rescript clean",
+    "dev": "npx rescript build && deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
+    "opm": "deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
     "test": "deno test --allow-read --allow-env --allow-net",
-    "lint": "deno lint",
+    "lint": "deno lint cli/*.res.js cli/clients/*.res.js",
     "fmt": "deno fmt",
-    "check": "deno check cli/main.ts"
+    "check": "npx rescript build"
   },
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.0",
     "@std/path": "jsr:@std/path@^1.0.0",
     "@std/toml": "jsr:@std/toml@^1.0.0",
-    "@proven/": "../proven/bindings/deno/"
-  },
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true
+    "@proven/": "../proven/bindings/deno/",
+    "@rescript/core": "npm:@rescript/core@^1.0.0"
   },
   "fmt": {
     "useTabs": false,
     "lineWidth": 100,
     "indentWidth": 2,
-    "singleQuote": false
+    "singleQuote": false,
+    "exclude": ["*.res", "*.resi"]
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
-    }
+      "tags": ["recommended"],
+      "exclude": ["prefer-const", "no-case-declarations", "no-unused-vars"]
+    },
+    "exclude": ["*.res", "*.resi"]
   }
 }

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-<!-- 
+<!--
 ============================================================================
 TEMPLATE INSTRUCTIONS (delete this block before publishing)
 ============================================================================
@@ -22,11 +22,18 @@ Review and customise:
 
 ## Our Pledge
 
-We as members, contributors, and leaders pledge to make participation in {{PROJECT_NAME}} a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, colour, religion, or sexual identity and orientation.
+We as members, contributors, and leaders pledge to make participation in {{PROJECT_NAME}} a
+harassment-free experience for everyone, regardless of age, body size, visible or invisible
+disability, ethnicity, sex characteristics, gender identity and expression, level of experience,
+education, socio-economic status, nationality, personal appearance, race, caste, colour, religion,
+or sexual identity and orientation.
 
-We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and
+healthy community.
 
-We recognise that a thriving open source community requires **psychological safety** — an environment where people can contribute, ask questions, make mistakes, and learn without fear of ridicule or retaliation.
+We recognise that a thriving open source community requires **psychological safety** — an
+environment where people can contribute, ask questions, make mistakes, and learn without fear of
+ridicule or retaliation.
 
 ---
 
@@ -37,6 +44,7 @@ We recognise that a thriving open source community requires **psychological safe
 The following behaviours contribute to a positive environment:
 
 **Communication**
+
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
 - Giving and gracefully accepting constructive feedback
@@ -44,6 +52,7 @@ The following behaviours contribute to a positive environment:
 - Communicating clearly and patiently, especially with newcomers
 
 **Collaboration**
+
 - Focusing on what is best for the community
 - Showing empathy and kindness toward other community members
 - Being collaborative rather than competitive
@@ -51,6 +60,7 @@ The following behaviours contribute to a positive environment:
 - Celebrating others' contributions and successes
 
 **Professionalism**
+
 - Accepting responsibility and apologising to those affected by our mistakes
 - Learning from the experience and avoiding repetition
 - Respecting others' time and attention
@@ -58,6 +68,7 @@ The following behaviours contribute to a positive environment:
 - Following project guidelines and conventions
 
 **Accessibility**
+
 - Using plain language and avoiding unnecessary jargon
 - Providing alt text for images and transcripts for audio/video
 - Being patient with those using assistive technologies
@@ -69,6 +80,7 @@ The following behaviours contribute to a positive environment:
 The following behaviours are considered harassment and are unacceptable:
 
 **Harassment**
+
 - The use of sexualised language or imagery, and sexual attention or advances of any kind
 - Trolling, insulting or derogatory comments, and personal or political attacks
 - Public or private harassment
@@ -77,12 +89,14 @@ The following behaviours are considered harassment and are unacceptable:
 - Sustained disruption of talks, events, or online discussions
 
 **Discrimination**
+
 - Discriminatory jokes and language
 - Posting or threatening to post others' personally identifying information ("doxing")
 - Advocating for, or encouraging, any of the above behaviour
 - Microaggressions — subtle, often unintentional, discriminatory comments or actions
 
 **Professional Misconduct**
+
 - Publishing others' private information without explicit permission
 - Misrepresenting affiliation or contributions
 - Plagiarism or claiming credit for others' work
@@ -94,8 +108,10 @@ The following behaviours are considered harassment and are unacceptable:
 Some situations require judgement. When uncertain:
 
 - **Intent vs Impact**: Good intentions do not excuse harmful impact. Focus on making things right.
-- **Power Dynamics**: Those with more power (maintainers, employers, experienced contributors) must be especially mindful of their impact.
-- **Cultural Differences**: What's acceptable varies by culture. When in doubt, err on the side of caution and ask.
+- **Power Dynamics**: Those with more power (maintainers, employers, experienced contributors) must
+  be especially mindful of their impact.
+- **Cultural Differences**: What's acceptable varies by culture. When in doubt, err on the side of
+  caution and ask.
 - **Humour**: Jokes at others' expense are rarely funny to everyone. Punch up, not down.
 
 ---
@@ -105,6 +121,7 @@ Some situations require judgement. When uncertain:
 This Code of Conduct applies within all community spaces, including:
 
 **Online Spaces**
+
 - Repository discussions, issues, and pull/merge requests
 - Project chat channels (Matrix, Discord, Slack, IRC)
 - Mailing lists and forums
@@ -112,12 +129,13 @@ This Code of Conduct applies within all community spaces, including:
 - Video calls and virtual meetings
 
 **In-Person Spaces**
+
 - Conferences, meetups, and events
 - Workshops and training sessions
 - Any gathering where you represent the project
 
-**Representation**
-This Code of Conduct also applies when an individual is officially representing the community in public spaces. Examples include:
+**Representation** This Code of Conduct also applies when an individual is officially representing
+the community in public spaces. Examples include:
 
 - Using an official project email address
 - Posting via an official social media account
@@ -130,15 +148,16 @@ This Code of Conduct also applies when an individual is officially representing 
 
 ### Reporting
 
-If you experience or witness unacceptable behaviour, or have any other concerns, please report it as soon as possible.
+If you experience or witness unacceptable behaviour, or have any other concerns, please report it as
+soon as possible.
 
 **How to Report**
 
-| Method | Details | Best For |
-|--------|---------|----------|
-| **Email** | {{CONDUCT_EMAIL}} | Detailed reports, sensitive matters |
-| **Private Message** | Contact any maintainer directly | Quick questions, minor issues |
-| **Anonymous Form** | [Link to form if available] | When you need anonymity |
+| Method              | Details                         | Best For                            |
+| ------------------- | ------------------------------- | ----------------------------------- |
+| **Email**           | {{CONDUCT_EMAIL}}               | Detailed reports, sensitive matters |
+| **Private Message** | Contact any maintainer directly | Quick questions, minor issues       |
+| **Anonymous Form**  | [Link to form if available]     | When you need anonymity             |
 
 **What to Include**
 
@@ -183,9 +202,11 @@ The {{CONDUCT_TEAM}} will follow these guidelines in determining consequences:
 
 ### 1. Correction
 
-**Community Impact**: Use of inappropriate language or other behaviour deemed unprofessional or unwelcome.
+**Community Impact**: Use of inappropriate language or other behaviour deemed unprofessional or
+unwelcome.
 
-**Consequence**: A private, written warning providing clarity around the nature of the violation and an explanation of why the behaviour was inappropriate. A public apology may be requested.
+**Consequence**: A private, written warning providing clarity around the nature of the violation and
+an explanation of why the behaviour was inappropriate. A public apology may be requested.
 
 **Duration**: Immediate
 
@@ -193,21 +214,30 @@ The {{CONDUCT_TEAM}} will follow these guidelines in determining consequences:
 
 **Community Impact**: A violation through a single incident or series of actions.
 
-**Consequence**: A warning with consequences for continued behaviour. No interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, for a specified period. This includes avoiding interactions in community spaces as well as external channels like social media. Violating these terms may lead to a temporary or permanent ban.
+**Consequence**: A warning with consequences for continued behaviour. No interaction with the people
+involved, including unsolicited interaction with those enforcing the Code of Conduct, for a
+specified period. This includes avoiding interactions in community spaces as well as external
+channels like social media. Violating these terms may lead to a temporary or permanent ban.
 
 **Duration**: 1-4 weeks
 
 ### 3. Temporary Ban
 
-**Community Impact**: A serious violation of community standards, including sustained inappropriate behaviour.
+**Community Impact**: A serious violation of community standards, including sustained inappropriate
+behaviour.
 
-**Consequence**: A temporary ban from any sort of interaction or public communication with the community for a specified period. No public or private interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this period. Violating these terms may lead to a permanent ban.
+**Consequence**: A temporary ban from any sort of interaction or public communication with the
+community for a specified period. No public or private interaction with the people involved,
+including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this
+period. Violating these terms may lead to a permanent ban.
 
 **Duration**: 1-6 months
 
 ### 4. Permanent Ban
 
-**Community Impact**: Demonstrating a pattern of violation of community standards, including sustained inappropriate behaviour, harassment of an individual, or aggression toward or disparagement of classes of individuals.
+**Community Impact**: Demonstrating a pattern of violation of community standards, including
+sustained inappropriate behaviour, harassment of an individual, or aggression toward or
+disparagement of classes of individuals.
 
 **Consequence**: A permanent ban from any sort of public interaction within the community.
 
@@ -217,12 +247,12 @@ The {{CONDUCT_TEAM}} will follow these guidelines in determining consequences:
 
 For contributors with elevated access (Perimeter 2 or 1):
 
-| Level | Additional Consequence |
-|-------|----------------------|
-| Correction | Noted in contributor record |
-| Warning | Access privileges may be temporarily reduced |
+| Level         | Additional Consequence                         |
+| ------------- | ---------------------------------------------- |
+| Correction    | Noted in contributor record                    |
+| Warning       | Access privileges may be temporarily reduced   |
 | Temporary Ban | Access reduced to Perimeter 3 for ban duration |
-| Permanent Ban | All access revoked |
+| Permanent Ban | All access revoked                             |
 
 ---
 
@@ -256,6 +286,7 @@ If you believe an enforcement decision was made in error:
 We are committed to supporting those who report violations:
 
 **We Will**
+
 - Believe and take all reports seriously
 - Respect your privacy and confidentiality preferences
 - Keep you informed of progress (if you wish)
@@ -263,6 +294,7 @@ We are committed to supporting those who report violations:
 - Provide resources if you need support
 
 **We Will Not**
+
 - Require you to confront the person directly
 - Dismiss reports without investigation
 - Reveal your identity without consent
@@ -276,17 +308,20 @@ We are committed to supporting those who report violations:
 Beyond enforcement, we actively work to prevent issues:
 
 **Onboarding**
+
 - All contributors are expected to read this Code of Conduct
 - Perimeter 2 applicants must confirm they've read and understood it
 - Maintainers receive additional training on enforcement
 
 **Culture**
+
 - We model the behaviour we expect
 - We intervene early when we see potential issues
 - We thank people for positive contributions
 - We create opportunities for diverse voices
 
 **Review**
+
 - This Code of Conduct is reviewed annually
 - Community feedback is welcomed
 - Changes are communicated clearly
@@ -320,7 +355,8 @@ If you have questions about this Code of Conduct:
 
 **Be kind. Be respectful. Be collaborative.**
 
-We're all here because we care about this project. Let's make it a place where everyone can do their best work.
+We're all here because we care about this project. Let's make it a place where everyone can do their
+best work.
 
 ---
 

@@ -6,7 +6,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 6 * * 1'  # Weekly on Monday
+    - cron: "0 6 * * 1" # Weekly on Monday
   workflow_dispatch:
 
 permissions: read-all
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-      id-token: write  # For OIDC
+      id-token: write # For OIDC
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
         with:

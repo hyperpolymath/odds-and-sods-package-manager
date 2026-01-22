@@ -1,7 +1,8 @@
 = odds-and-sods-package-manager (opm)
 :revdate: 2026-01-18
 
-image:https://img.shields.io/badge/Deno-Inside-000000?style=flat&logo=deno[Deno Inside]
+image:https://img.shields.io/badge/ReScript-Inside-e6484f?style=flat&logo=rescript[ReScript Inside]
+image:https://img.shields.io/badge/Deno-Runtime-000000?style=flat&logo=deno[Deno Runtime]
 image:https://img.shields.io/badge/Idris-Inside-1f6feb?style=flat[Idris Inside]
 image:https://img.shields.io/badge/License-PMPL--1.0-0b7285?style=flat[PMPL-1.0]
 
@@ -31,11 +32,14 @@ Primary hub (opm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu
 
 [source,bash]
 ----
+# Build ReScript
+deno task build
+
 # Run directly
 deno task opm status
 
 # Or install globally
-deno install --allow-read --allow-env --allow-net -n opm cli/main.ts
+deno install --allow-read --allow-env --allow-net --allow-run -n opm cli/Main.res.js
 
 # Then use
 opm publish ./my-package
@@ -91,18 +95,18 @@ All critical path operations use formally verified code from proven's Idris 2 co
 
 [source]
 ----
-cli/                    # Deno CLI source
-├── main.ts             # Entry point with arg parsing
-├── config.ts           # Config loading (TOML)
-├── http.ts             # HTTP client with retries
-├── wiring.ts           # Command orchestration
-├── types.ts            # TypeScript types
-└── clients/            # Service client stubs
-    ├── claim_forge.ts
-    ├── checky_monkey.ts
-    ├── palimpsest_license.ts
-    ├── cicd_hyper_a.ts
-    └── oikos.ts
+cli/                    # ReScript CLI source (compiles to JS for Deno)
+├── Main.res            # Entry point with arg parsing
+├── Config.res          # Config loading (TOML)
+├── Http.res            # HTTP client with retries
+├── Wiring.res          # Command orchestration
+├── Types.res           # ReScript types
+└── clients/            # Service clients
+    ├── Oikos.res
+    ├── CicdHyperA.res
+    ├── ClaimForge.res
+    ├── CheckyMonkey.res
+    └── Palimpsest.res
 
 opm-registry-hub/       # Registry hub stubs
 ├── schemas/            # JSON schemas
@@ -111,19 +115,43 @@ opm-registry-hub/       # Registry hub stubs
 
 docs/                   # Documentation
 ├── architecture.adoc
+├── service-contracts.adoc
 └── imp/                # IMP draft specs
 ----
 
 == Where to pick up
 
-- CLI code: `cli/` (HTTP wiring stubs + tests)
+- CLI code: `cli/` (ReScript clients + type contracts)
+- Service contracts: `docs/service-contracts.adoc`
 - Registry hub stubs: `opm-registry-hub/` (schemas + examples)
 - Architecture: `docs/architecture.adoc`
 - IMP drafts: `docs/imp/`
 
+== Manifest ingestion pipeline
+
+Before `opm publish` hits the trust pipeline the CLI now:
+
+1. **Locates and validates** the manifest via Nickel when `nickel-config-reporter` is installed (`nickel-config-reporter validate ...`).
+2. **Normalizes** the manifest through `Opm.Imp`, emitting the IMP payload described in `docs/imp/imp.schema.json`.
+3. **Stages** the IMP JSON for HAR by writing `/tmp/opm-har-ingest/<package>.imp.json`, so HAR can route the normalized manifest through its agents.
+
+This keeps the publish flow aligned with the documented Nickel + HAR pipeline even before every service is online.
+
+== Minimal http-capability-gateway API
+
+`Opm.RegistryGateway` now exposes a tiny HTTP surface that mirrors the `http-capability-gateway` story:
+
+* `POST /packages/publish` accepts `{ "manifest": <manifest>, "imp": <imp>, "digest": "sha256:..." }` and records the package in memory for downstream consumers while the HAR queue keeps the federation path fed.
+* `GET /packages/:name` returns the stored manifest, IMP payload, digest, and `published_at`.
+* The server listens on port `4050` by default and responds with JSON; every successful ingest automatically publishes through this gateway so the HTTP API stays in sync with the staged IMP files.
+
+== Seam analysis helper
+
+Run `mix run scripts/seam_analysis.exs` to ingest several synthetic manifests against the CLI and registry gateway, verifying the HAR staging files and gateway responses while printing timing metrics and digests. This provides the “hardcore seam” trace you asked for without needing to manually craft manifests.
+
 Next work typically continues in:
 
-- `cli/clients/*.ts` (real service contracts)
+- `cli/Wiring.res` (publish pipeline orchestration)
 - `opm-registry-hub/` (event handlers + trust pipeline)
 - `docs/imp/` (formal schema and normalization rules)
 
@@ -131,13 +159,22 @@ Next work typically continues in:
 
 [source,bash]
 ----
+# Build ReScript
+deno task build
+
+# Build in watch mode
+deno task build:watch
+
+# Clean build artifacts
+deno task clean
+
 # Type check
 deno task check
 
 # Run tests
 deno task test
 
-# Lint
+# Lint compiled JS
 deno task lint
 
 # Format
