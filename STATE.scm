@@ -77,11 +77,11 @@
        (notes . "Tauri 2.0 hybrid app with ReScript TEA UI, type-safe routing, 100% Elixir backend reuse. Full source code completed: Route.res, App.res, TauriFFI.res, configuration files.")))
 
     (critical-next
-      ("Tag v1.0.0 release in Git"
-       "Create GitHub release with artifacts"
-       "Publish to Hex.pm package registry"
+      ("Complete mobile wrapper: Rust Tauri commands + Phoenix API"
+       "Test mobile app on desktop (Linux/macOS/Windows)"
+       "Begin v1.1 real-world testing (express, phoenix, tokio)"
        "Deploy trust services to staging environment"
-       "Write installation guides for deb/rpm/brew"))
+       "Publish to Hex.pm package registry"))
 
     (accomplishments
       ((session . "2026-01-23-mobile-wrapper")
