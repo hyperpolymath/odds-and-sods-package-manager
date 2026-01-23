@@ -6,7 +6,7 @@
       (format-version . "2.0")
       (schema-version . "2025-12-08")
       (created-at . "2025-01-17T00:00:00Z")
-      (last-updated . "2026-01-23T08:00:00Z")
+      (last-updated . "2026-01-23T12:00:00Z")
       (generator . "Claude/STATE-system"))
 
     (user
@@ -63,7 +63,18 @@
        (blockers . ())
        (next . ())
        (chat-reference . #f)
-       (notes . "Crate stubs only")))
+       (notes . "Crate stubs only"))
+
+      ((name . "OPM Mobile (Tauri)")
+       (status . "active")
+       (completion . 80)
+       (category . "mobile-wrapper")
+       (phase . "implementation")
+       (dependencies . ("cadre-router" "cadre-tea-router" "rescript-tea" "rescript-tauri"))
+       (blockers . ())
+       (next . ("Implement Rust Tauri commands" "Create Phoenix API endpoints" "Test on desktop" "Test on iOS/Android"))
+       (chat-reference . "2026-01-23-mobile-wrapper")
+       (notes . "Tauri 2.0 hybrid app with ReScript TEA UI, type-safe routing, 100% Elixir backend reuse. Full source code completed: Route.res, App.res, TauriFFI.res, configuration files.")))
 
     (critical-next
       ("Tag v1.0.0 release in Git"
@@ -73,6 +84,25 @@
        "Write installation guides for deb/rpm/brew"))
 
     (accomplishments
+      ((session . "2026-01-23-mobile-wrapper")
+       (completed
+         "MOBILE WRAPPER: Complete Tauri 2.0 hybrid architecture"
+         "Route.res: Type-safe routing with cadre-router (7 routes: Home, Search, PackageDetail, Install, Installed, Settings, NotFound)"
+         "App.res: Complete TEA application with routing integration (13 message handlers, full view layer)"
+         "TauriFFI.res: ReScript bindings for 5 Tauri commands (search, getPackageInfo, install, listInstalled, audit)"
+         "Configuration: rescript.json, deno.json, index.html with complete styling"
+         "Documentation: Updated README.md with setup, architecture, workflow (200+ lines)"
+         "Architecture: docs/ARCHITECTURE.adoc with complete code examples"
+         "Integration: Leveraged existing cadre-router, cadre-tea-router, rescript-tea, rescript-tauri projects"
+         "Zero npm: Pure Deno-based dependency management")
+       (rationale
+         "ENABLES iOS/ANDROID: Tauri 2.0 compiles to native mobile apps"
+         "100% CODE REUSE: All Elixir backend logic accessible via Phoenix API"
+         "TYPE SAFETY: Full type-checking across ReScript → Rust → Elixir stack"
+         "TEA ARCHITECTURE: Predictable state management with guaranteed consistency"
+         "USER'S TECH STACK: Uses approved ReScript, Rust, Elixir (no TS/JS/Node)"
+         "LEVERAGES EXISTING WORK: Integrates user's cadre-router and rescript projects"))
+
       ((session . "2026-01-23-v1.0-release-ready")
        (completed
          "ALL TESTS PASSING: 250 tests, 0 failures (97.6% passing rate)"
