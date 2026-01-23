@@ -6,6 +6,7 @@ defmodule Opm.Registries.Pypi do
   """
 
   alias Opm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://pypi.org/pypi"
 
@@ -19,14 +20,17 @@ defmodule Opm.Registries.Pypi do
       "#{@base_url}/#{URI.encode(name)}/#{version}/json"
     end
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         {:ok, parse_package(body)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
         {:error, :not_found}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, %{status: status}} ->
         {:error, "PyPI returned status #{status}"}
 
       {:error, reason} ->
@@ -60,8 +64,8 @@ defmodule Opm.Registries.Pypi do
   def exists?(name) do
     url = "#{@base_url}/#{URI.encode(name)}/json"
 
-    case Req.head(url, receive_timeout: 5_000) do
-      {:ok, %{status: 200}} -> true
+    case VerifiedHttp.get(url, receive_timeout: 5_000) do
+      {:ok, _response} -> true
       _ -> false
     end
   end
@@ -72,13 +76,16 @@ defmodule Opm.Registries.Pypi do
   def versions(name) do
     url = "#{@base_url}/#{URI.encode(name)}/json"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         releases = body["releases"] || %{}
         versions = Map.keys(releases) |> Enum.sort(&version_compare/2)
         {:ok, versions}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
         {:error, :not_found}
 
       {:error, reason} ->

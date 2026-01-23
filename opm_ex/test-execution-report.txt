@@ -1,0 +1,803 @@
+Compiling 1 file (.ex)
+    warning: the following clause will never match:
+
+        {:error, %{status: 404}}
+
+    because it attempts to match on the result of:
+
+        Opm.Http.get_json(client, <<"/verification/", to_string(request_id)::binary>>)
+
+    which has type:
+
+        dynamic({:error, binary()} or {:ok, term()})
+
+    typing violation found at:
+    │
+ 69 │       {:error, %{status: 404}} ->
+    │       ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ lib/opm/clients/checky_monkey.ex:69: Opm.Clients.CheckyMonkey.get_verification_status/2
+
+     warning: variable "state" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 135 │   defp try_versions(state, package_name, [], _forth, constraints) do
+     │                     ~~~~~
+     │
+     └─ lib/opm/resolver.ex:135:21: Opm.Resolver.try_versions/5
+
+     warning: the underscored variable "_package_name" is used after being set. A leading underscore indicates that the value of the variable should be ignored. If this is intended please rename the variable to remove the underscore
+     │
+ 359 │     constraints = Map.get(state.constraints, _package_name, [])
+     │                                              ~
+     │
+     └─ lib/opm/resolver.ex:359:46: Opm.Resolver.infer_forth/2
+
+     warning: clauses with the same name and arity (number of arguments) should be grouped together, "defp run/1" was previously defined (lib/opm/cli.ex:146)
+     │
+ 709 │   defp run({:pin, package, version, _opts}) do
+     │        ~
+     │
+     └─ lib/opm/cli.ex:709:8
+
+     warning: unknown key .metadata in expression:
+
+         pkg.metadata
+
+     the given type does not have the given key:
+
+         dynamic(%Opm.Types.ResolvedPackage{
+           package: term(),
+           version: term(),
+           forth: :nimble,
+           registry_url: binary(),
+           tarball_url: term(),
+           checksum: nil,
+           manifest: %Opm.Types.ManifestFormat{
+             name: term(),
+             version: term(),
+             description: term(),
+             license: term(),
+             homepage: term(),
+             repository: term(),
+             source_forth: :nimble,
+             raw_manifest: map(),
+             authors: empty_list(),
+             keywords: empty_list(),
+             dependencies: term(),
+             dev_dependencies: empty_map(),
+             optional_dependencies: empty_map(),
+             peer_dependencies: empty_map(),
+             bin: empty_map(),
+             scripts: empty_map()
+           },
+           checksum_algo: :sha256,
+           attestations: empty_list(),
+           resolved_deps: empty_list()
+         })
+
+     where "pkg" was given the type:
+
+         # type: dynamic(%Opm.Types.ResolvedPackage{
+           forth: :nimble,
+           registry_url: binary(),
+           checksum: nil,
+           manifest: %Opm.Types.ManifestFormat{
+             source_forth: :nimble,
+             raw_manifest: map(),
+             authors: empty_list(),
+             keywords: empty_list(),
+             dev_dependencies: empty_map(),
+             optional_dependencies: empty_map(),
+             peer_dependencies: empty_map(),
+             bin: empty_map(),
+             scripts: empty_map()
+           },
+           checksum_algo: :sha256,
+           attestations: empty_list(),
+           resolved_deps: empty_list()
+         })
+         # from: lib/opm/registries/nimble.ex
+         {:ok, pkg}
+
+     typing violation found at:
+     │
+ 135 │         versions = pkg.metadata["versions"] || [pkg.version]
+     │                        ~~~~~~~~
+     │
+     └─ lib/opm/registries/nimble.ex:135:24: Opm.Registries.Nimble.versions/1
+
+     warning: the following clause will never match:
+
+         {:ok, %{status: :failed, error: error}}
+
+     because it attempts to match on the result of:
+
+         Opm.Clients.CheckyMonkey.get_verification_status(client, request_id)
+
+     which has type:
+
+         dynamic(
+           {:error, term()} or
+             {:ok, %Opm.Types.CheckyMonkeyResponse{status: :completed or :failed or :queued or :running}}
+         )
+
+     typing violation found at:
+     │
+ 269 │       {:ok, %{status: :failed, error: error}} ->
+     │       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ lib/opm/wiring.ex:269: Opm.Wiring.do_poll_verification/4
+
+Generated opm app
+Running ExUnit with seed: 215446, max_cases: 16
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+  9 │     property "always rejects URLs without schemes" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:9: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 18 │     property "always rejects non-string inputs" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:18: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 24 │     property "always rejects localhost variants" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:24: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 34 │     property "always rejects private IP ranges" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:34: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 50 │     property "always rejects unsupported schemes" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:50: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 59 │     property "accepts valid http/https URLs to public domains" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:59: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 80 │     property "preserves original URL in validated struct" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/url_property_test.exs:80: Opm.Verified.UrlPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 101 │     property "roundtrip: validate -> to_string returns original" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/url_property_test.exs:101: Opm.Verified.UrlPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+  9 │     property "rejects non-string inputs" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:9: Opm.Verified.JsonPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 15 │     property "rejects payloads larger than 10MB" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:15: Opm.Verified.JsonPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 21 │     property "roundtrip: encode -> decode preserves simple values" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:21: Opm.Verified.JsonPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 41 │     property "roundtrip: encode -> decode preserves maps" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:41: Opm.Verified.JsonPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 70 │     property "rejects deeply nested structures" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:70: Opm.Verified.JsonPropertyTest (module)
+
+  ⠋ Loading....  ⠙ Loading...    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 87 │     property "accepts valid JSON arrays" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/json_property_test.exs:87: Opm.Verified.JsonPropertyTest (module)
+
+.  ⠹ Loading....  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 107 │     property "handles empty structures" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/json_property_test.exs:107: Opm.Verified.JsonPropertyTest (module)
+
+  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 135 │     property "always returns string when successful" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/json_property_test.exs:135: Opm.Verified.JsonPropertyTest (module)
+
+  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 148 │     property "encoded JSON is valid and decodable" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/json_property_test.exs:148: Opm.Verified.JsonPropertyTest (module)
+
+  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading....  ⠧ Loading....  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading....  ⠏ Loading...     warning: variable "task_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 413 │       task_id = "test-task-#{System.system_time(:second)}"
+     │       ~~~~~~~
+     │
+     └─ test/integration/e2e_test.exs:413:7: Opm.Integration.E2ETest."test HAR Integration agentic adapter submits HAR tasks"/1
+
+  ⠋ Loading...  ⠙ Loading...  ⠹ Loading...  ⠸ Loading...  ⠼ Loading...  ⠴ Loading...  ⠦ Loading...  ⠧ Loading...  ⠇ Loading...  ⠏ Loading...  ✓ Done!                    
+..  Progress: [██████████████████████████████] 100% 100B/100B 0B/s   .
+.  Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0% 0B/100B 0B/s   ....     warning: variable "test_dir" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 421 │     test "HAR agents process tasks", %{test_dir: test_dir} do
+     │                                                  ~~~~~~~~
+     │
+     └─ test/integration/e2e_test.exs:421:50: Opm.Integration.E2ETest."test HAR Integration HAR agents process tasks"/1
+
+..  Rolling back installation...
+    ✓ Removed file: created_file.txt
+  ✓ Rollback complete
+.    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+  9 │     property "preserves {:ok, _} structure" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:9: Opm.Verified.ResultPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 16 │     property "doubles values in ok results" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:16: Opm.Verified.ResultPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 23 │     property "preserves errors unchanged" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:23: Opm.Verified.ResultPropertyTest (module)
+
+  Rolling back installation...
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 30 │     property "function not called on errors" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:30: Opm.Verified.ResultPropertyTest (module)
+
+    ✓ Removed directory: /tmp/opm_rollback_788053/created_dir
+  ✓ Rollback complete
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 41 │     property "composition: map(map(x, f), g) == map(x, g ∘ f)" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:41: Opm.Verified.ResultPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 61 │     property "chains ok results" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:61: Opm.Verified.ResultPropertyTest (module)
+
+.    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 72 │     property "short-circuits on first error" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:72: Opm.Verified.ResultPropertyTest (module)
+
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 83 │     property "preserves initial error" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:83: Opm.Verified.ResultPropertyTest (module)
+
+  Transaction completed - skipping rollback
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 93 │     property "monad left identity: and_then({:ok, a}, f) == f(a)" do
+    │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/verified/result_property_test.exs:93: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 104 │     property "monad right identity: and_then(m, &{:ok, &1}) == m" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:104: Opm.Verified.ResultPropertyTest (module)
+
+..     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 113 │     property "returns value for {:ok, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:113: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 120 │     property "returns default for {:error, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:120: Opm.Verified.ResultPropertyTest (module)
+
+  Rolling back installation...
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 127 │     property "default not evaluated for ok results" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:127: Opm.Verified.ResultPropertyTest (module)
+
+    ✓ Removed symlink: link
+  ✓ Rollback complete
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 142 │     property "is_ok? returns true for {:ok, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:142: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 148 │     property "is_ok? returns false for {:error, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:148: Opm.Verified.ResultPropertyTest (module)
+
+.     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 154 │     property "is_error? returns false for {:ok, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:154: Opm.Verified.ResultPropertyTest (module)
+
+..     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 160 │     property "is_error? returns true for {:error, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:160: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 166 │     property "is_ok? and is_error? are complementary" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:166: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 181 │     property "returns value for {:ok, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:181: Opm.Verified.ResultPropertyTest (module)
+
+     warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+     │
+ 188 │     property "raises for {:error, _}" do
+     │     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ test/opm/verified/result_property_test.exs:188: Opm.Verified.ResultPropertyTest (module)
+
+  Progress: [███████████████░░░░░░░░░░░░░░░] 50% 50B/100B 0B/s   ...  [1/3] Step 1
+..  Progress: [██████████████████████████████] 100% 100B/100B 0B/s   .
+.  Progress: [██████████████████████████████] 100% 100B/100B 9.8KB/s   .  [1/2] Step 1
+.  [2/2] Step 2
+    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+  9 │   property "IMP normalization succeeds for manifests with required fields" do
+    │   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/imp_property_test.exs:9: Opm.ImpPropertyTest (module)
+
+.  [2/2] Step 3
+.  ⠋ Loading....    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 21 │   property "IMP normalization rejects missing required fields" do
+    │   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/imp_property_test.exs:21: Opm.ImpPropertyTest (module)
+
+.  Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0% 0B/0B 0B/s   ..    warning: ExUnit.Case.register_test/4 is deprecated. Use register_test/6 instead
+    │
+ 30 │   property "IMP normalization rejects manifests with zero dependencies" do
+    │   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    │
+    └─ test/opm/imp_property_test.exs:30: Opm.ImpPropertyTest (module)
+
+.......................     warning: variable "dangerous_default" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 130 │         dangerous_default = fn -> raise "Should not be called" end
+     │         ~
+     │
+     └─ test/opm/verified/result_property_test.exs:130:9: Opm.Verified.ResultPropertyTest."property Result.unwrap_or/2 properties default not evaluated for ok results"/1
+
+........................................................................................     warning: Opm.Registries.Registry.fetch_package/3 is undefined or private. Did you mean:
+
+         * fetch/2
+         * fetch/3
+         * fetch_all/1
+         * fetch_all/2
+         * fetch_all/3
+
+     │
+ 357 │       case Registry.fetch_package(:npm, "lodash", "latest") do
+     │                     ~
+     │
+     └─ test/integration/e2e_test.exs:357:21: Opm.Integration.E2ETest."test Registry Adapters npm adapter fetches real package"/1
+     └─ test/integration/e2e_test.exs:370:21: Opm.Integration.E2ETest."test Registry Adapters hex adapter fetches real package"/1
+     └─ test/integration/e2e_test.exs:383:21: Opm.Integration.E2ETest."test Error Handling handles package not found gracefully"/1
+
+    warning: Opm.Clients.ClaimForge.generate/2 is undefined or private. Did you mean:
+
+        * cli_generate_spdx/1
+        * generate_attestation/2
+
+    │
+ 72 │       case ClaimForge.generate(client, request) do
+    │                       ~
+    │
+    └─ test/integration/trust_pipeline_test.exs:72:23: Opm.Integration.TrustPipelineTest."test ClaimForge attestation generation generates attestation for valid artifact"/1
+    └─ test/integration/trust_pipeline_test.exs:96:23: Opm.Integration.TrustPipelineTest."test ClaimForge attestation generation handles service unavailable gracefully"/1
+    └─ test/integration/trust_pipeline_test.exs:318:39: Opm.Integration.TrustPipelineTest."test Full trust pipeline flow complete publish workflow"/1
+
+     warning: Opm.Clients.CheckyMonkey.submit/2 is undefined or private. Did you mean:
+
+         * submit_verification/2
+
+     │
+ 119 │       case CheckyMonkey.submit(client, request) do
+     │                         ~
+     │
+     └─ test/integration/trust_pipeline_test.exs:119:25: Opm.Integration.TrustPipelineTest."test CheckyMonkey verification submits verification request"/1
+     └─ test/integration/trust_pipeline_test.exs:355:42: Opm.Integration.TrustPipelineTest."test Full trust pipeline flow complete publish workflow"/1
+
+     warning: Opm.Clients.CheckyMonkey.status/2 is undefined or private
+     │
+ 134 │       case CheckyMonkey.status(client, request_id) do
+     │                         ~
+     │
+     └─ test/integration/trust_pipeline_test.exs:134:25: Opm.Integration.TrustPipelineTest."test CheckyMonkey verification polls verification status"/1
+     └─ test/integration/trust_pipeline_test.exs:152:25: Opm.Integration.TrustPipelineTest."test CheckyMonkey verification handles async polling timeout"/1
+
+     warning: comparison between distinct types found:
+
+         left != right
+
+     given types:
+
+         dynamic(%Opm.Types.LicenseCompatibility{}) != nil
+
+     where "left" (context ExUnit.Assertions) was given the type:
+
+         # type: dynamic(%Opm.Types.LicenseCompatibility{})
+         # from: test/integration/trust_pipeline_test.exs:177
+         left = response.compatibility
+
+     where "right" (context ExUnit.Assertions) was given the type:
+
+         # type: nil
+         # from: test/integration/trust_pipeline_test.exs:177
+         right = nil
+
+     While Elixir can compare across all types, you are comparing across types which are always disjoint, and the result is either always true or always false
+
+     typing violation found at:
+     │
+ 177 │           assert response.compatibility != nil
+     │                                         ~
+     │
+     └─ test/integration/trust_pipeline_test.exs:177:41: Opm.Integration.TrustPipelineTest."test Palimpsest license analysis analyzes license compatibility"/1
+
+.  [DRY RUN] Would remove package cache: 2.67 MB
+..Checking for unused dependencies...
+
+No unused dependencies found
+
+Note: Autoremove requires dependency tracking which is not yet implemented
+.✓ Pinned get-pin-test-958 to version 4.0.0
+.✓ Pinned another-package to current version
+..Checking for unused dependencies...
+
+No unused dependencies found
+
+Note: Autoremove requires dependency tracking which is not yet implemented
+.✓ Pinned to-unpin to version 2.0.0
+✓ Unpinned to-unpin
+.......✓ Pinned list-test-659 to version 3.0.0
+..✓ Pinned check-pinned to version 1.0.0
+..✓ Pinned test-package to version 1.0.0
+.
+07:49:45.311 [warning] retry: got exception, will retry in 0ms, 2 attempts left
+
+07:49:45.319 [warning] ** (Req.TransportError) connection refused
+
+07:49:45.320 [warning] retry: got exception, will retry in 200ms, 1 attempt left
+
+07:49:45.320 [warning] ** (Req.TransportError) connection refused
+.
+07:49:45.524 [warning] retry: got exception, will retry in 0ms, 2 attempts left
+
+07:49:45.524 [warning] ** (Req.TransportError) connection refused
+
+07:49:45.525 [warning] retry: got exception, will retry in 200ms, 1 attempt left
+
+07:49:45.525 [warning] ** (Req.TransportError) connection refused
+..✓ Pinned integration-test-pkg-460 to version 1.0.0
+✓ Unpinned integration-test-pkg-460
+..
+07:49:45.737 [warning] retry: got exception, will retry in 0ms, 2 attempts left
+
+07:49:45.737 [warning] ** (Req.TransportError) connection refused
+
+07:49:45.738 [warning] retry: got exception, will retry in 200ms, 1 attempt left
+
+07:49:45.738 [warning] ** (Req.TransportError) connection refused
+......  Rolling back installation...
+    ✓ Removed file: file.txt
+    ✓ Removed directory: /tmp/opm_integ_917763/pkg
+  ✓ Rollback complete
+.  Transaction completed - skipping rollback
+.....*******
+07:49:45.963 [warning] retry: got exception, will retry in 0ms, 1 attempt left
+
+07:49:45.963 [warning] ** (Req.TransportError) connection refused
+
+
+  1) test ClaimForge attestation generation handles service unavailable gracefully (Opm.Integration.TrustPipelineTest)
+     test/integration/trust_pipeline_test.exs:84
+     ** (UndefinedFunctionError) function Opm.Clients.ClaimForge.generate/2 is undefined or private. Did you mean:
+
+         * cli_generate_spdx/1
+         * generate_attestation/2
+
+     code: case ClaimForge.generate(client, request) do
+     stacktrace:
+       (opm 0.1.0) Opm.Clients.ClaimForge.generate(%Opm.Clients.ClaimForge{client: %Req.Request{method: :get, url: URI.parse(""), headers: %{"authorization" => ["Bearer tes*******"]}, body: nil, options: %{retry: :transient, connect_options: [timeout: 5000, protocols: [:http1, :http2]], receive_timeout: 5000, base_url: "http://localhost:9999", retry_delay: #Function<0.7403050/1 in Opm.Http.build_client/2>, max_retries: 1}, halted: false, adapter: &Req.Steps.run_finch/1, request_steps: [put_user_agent: &Req.Steps.put_user_agent/1, compressed: &Req.Steps.compressed/1, encode_body: &Req.Steps.encode_body/1, put_base_url: &Req.Steps.put_base_url/1, auth: &Req.Steps.auth/1, put_params: &Req.Steps.put_params/1, put_path_params: &Req.Steps.put_path_params/1, put_range: &Req.Steps.put_range/1, cache: &Req.Steps.cache/1, put_plug: &Req.Steps.put_plug/1, compress_body: &Req.Steps.compress_body/1, checksum: &Req.Steps.checksum/1, put_aws_sigv4: &Req.Steps.put_aws_sigv4/1], response_steps: [retry: &Req.Steps.retry/1, handle_http_errors: &Req.Steps.handle_http_errors/1, redirect: &Req.Steps.redirect/1, http_digest: &Req.Steps.handle_http_digest/1, decompress_body: &Req.Steps.decompress_body/1, verify_checksum: &Req.Steps.verify_checksum/1, decode_body: &Req.Steps.decode_body/1, output: &Req.Steps.output/1], error_steps: [retry: &Req.Steps.retry/1], private: %{}}, base_url: "http://localhost:9999"}, %Opm.Types.ClaimForgeRequest{artifact_path: "/tmp/test-package.tar.gz", artifact_digest: "sha256:abc123", claim_type: :build_provenance, metadata: nil})
+       test/integration/trust_pipeline_test.exs:96: (test)
+
+.
+
+  2) test Palimpsest license analysis detects license conflicts (Opm.Integration.TrustPipelineTest)
+     test/integration/trust_pipeline_test.exs:186
+     ** (KeyError) key :palimpsest_license not found in:
+
+         %{
+           http: %Opm.Types.HttpConfig{timeout_ms: 5000, retries: 1, backoff_ms: 100},
+           claim_forge: %Opm.Types.ServiceConfig{
+             base_url: "http://localhost:7001",
+             token: "test-token"
+           },
+           checky_monkey: %Opm.Types.ServiceConfig{
+             base_url: "http://localhost:7002",
+             token: "test-token"
+           },
+           cicd_hyper_a: %Opm.Types.ServiceConfig{
+             base_url: "http://localhost:7005",
+             token: "test-token"
+           },
+           oikos: %Opm.Types.ServiceConfig{
+             base_url: "http://localhost:7004",
+             token: "test-token"
+           },
+           palimpsest: %Opm.Types.ServiceConfig{
+             base_url: "http://localhost:7003",
+             token: "test-token"
+           }
+         }
+
+     Did you mean:
+
+         * :palimpsest
+
+     code: client = Palimpsest.new(configs.palimpsest_license, configs.http)
+     stacktrace:
+       test/integration/trust_pipeline_test.exs:189: (test)
+
+...
+
+  3) test CheckyMonkey verification handles async polling timeout (Opm.Integration.TrustPipelineTest)
+     test/integration/trust_pipeline_test.exs:147
+     ** (UndefinedFunctionError) function Opm.Clients.CheckyMonkey.status/2 is undefined or private
+     code: case CheckyMonkey.status(client, "nonexistent") do
+     stacktrace:
+       (opm 0.1.0) Opm.Clients.CheckyMonkey.status(%Opm.Clients.CheckyMonkey{client: %Req.Request{method: :get, url: URI.parse(""), headers: %{"authorization" => ["Bearer tes*******"]}, body: nil, options: %{retry: :transient, connect_options: [timeout: 100, protocols: [:http1, :http2]], receive_timeout: 100, base_url: "http://localhost:7002", retry_delay: #Function<0.7403050/1 in Opm.Http.build_client/2>, max_retries: 1}, halted: false, adapter: &Req.Steps.run_finch/1, request_steps: [put_user_agent: &Req.Steps.put_user_agent/1, compressed: &Req.Steps.compressed/1, encode_body: &Req.Steps.encode_body/1, put_base_url: &Req.Steps.put_base_url/1, auth: &Req.Steps.auth/1, put_params: &Req.Steps.put_params/1, put_path_params: &Req.Steps.put_path_params/1, put_range: &Req.Steps.put_range/1, cache: &Req.Steps.cache/1, put_plug: &Req.Steps.put_plug/1, compress_body: &Req.Steps.compress_body/1, checksum: &Req.Steps.checksum/1, put_aws_sigv4: &Req.Steps.put_aws_sigv4/1], response_steps: [retry: &Req.Steps.retry/1, handle_http_errors: &Req.Steps.handle_http_errors/1, redirect: &Req.Steps.redirect/1, http_digest: &Req.Steps.handle_http_digest/1, decompress_body: &Req.Steps.decompress_body/1, verify_checksum: &Req.Steps.verify_checksum/1, decode_body: &Req.Steps.decode_body/1, output: &Req.Steps.output/1], error_steps: [retry: &Req.Steps.retry/1], private: %{}}}, "nonexistent")
+       test/integration/trust_pipeline_test.exs:152: (test)
+
+*********
+07:49:45.981 [info] Publishing event: security_advisory for test-package@1.0.0
+*......
+07:49:45.983 [debug] Would POST to cicd-hyper-a /events: %{data: %{version: "1.0.0", description: "Test security advisory", severity: "high", package: "test-package", cve_id: "CVE-2024-TEST"}, timestamp: "2026-01-23T07:49:45.981359Z", version: "1.0.0", package: "test-package", event_type: "security_advisory"}
+
+07:49:45.983 [info] Event published successfully: evt_bc64598ba0145d427df1dd0ad5a82b5c
+......
+
+  4) test Error Handling handles package not found gracefully (Opm.Integration.E2ETest)
+     test/integration/e2e_test.exs:382
+     ** (UndefinedFunctionError) function Opm.Registries.Registry.fetch_package/3 is undefined or private. Did you mean:
+
+         * fetch/2
+         * fetch/3
+         * fetch_all/1
+         * fetch_all/2
+         * fetch_all/3
+
+     code: case Registry.fetch_package(:npm, "this-package-definitely-does-not-exist-12345", "latest") do
+     stacktrace:
+       (opm 0.1.0) Opm.Registries.Registry.fetch_package(:npm, "this-package-definitely-does-not-exist-12345", "latest")
+       test/integration/e2e_test.exs:383: (test)
+
+.
+
+  5) test Version Constraint Parsing parses Cargo constraints correctly (Opm.Integration.E2ETest)
+     test/integration/e2e_test.exs:311
+     ** (MatchError) no match of right hand side value:
+
+         {:error, "Invalid version in caret constraint: 1.0"}
+
+     code: {:ok, constraint} = VersionConstraint.parse("^1.0", :semver)
+     stacktrace:
+       test/integration/e2e_test.exs:315: (test)
+
+......
+
+  6) test Cross-Registry Resolution resolves dependencies from multiple registries (Opm.Integration.E2ETest)
+     test/integration/e2e_test.exs:149
+     ** (BadMapError) expected a map, got:
+
+         {"4.17.23",
+          %Opm.Types.ResolvedPackage{
+            package: "lodash",
+            version: "4.17.23",
+            forth: :npm,
+            registry_url: "https://registry.npmjs.org",
+            tarball_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.23.tgz",
+            checksum: "f113b0378386103be4f6893388c73d0bde7f2c5a",
+            manifest: %Opm.Types.ManifestFormat{
+              name: "lodash",
+              version: "4.17.23",
+              description: "Lodash modular utilities.",
+              license: "MIT",
+              homepage: "https://lodash.com/",
+              repository: "https://github.com/lodash/lodash",
+              source_forth: :npm,
+              raw_manifest: %{
+                "_hasShrinkwrap" => false,
+                "_id" => "lodash@4.17.23",
+                "_nodeVersion" => "24.12.0",
+                "_npmOperationalInternal" => %{
+                  "host" => "s3://npm-registry-packages-npm-production",
+                  "tmp" => "tmp/lodash_4.17.23_1769016592634_0.5246474886851962"
+                },
+                "_npmUser" => %{
+                  "email" => "john.david.dalton@gmail.com",
+                  "name" => "jdalton"
+                },
+                "_npmVersion" => "11.6.2",
+                "author" => %{
+                  "email" => "john.david.dalton@gmail.com",
+                  "name" => "John-David Dalton"
+                },
+                "bugs" => %{"url" => "https://github.com/lodash/lodash/issues"},
+                "contributors" => [
+                  %{
+                    "email" => "john.david.dalton@gmail.com",
+                    "name" => "John-David Dalton"
+                  },
+                  %{"email" => "mathias@qiwi.be", "name" => "Mathias Bynens"}
+                ],
+                "description" => "Lodash modular utilities.",
+                "directories" => %{},
+                "dist" => %{
+                  "fileCount" => 1051,
+                  "integrity" => "sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==",
+                  "shasum" => "f113b0378386103be4f6893388c73d0bde7f2c5a",
+                  "signatures" => [
+                    %{
+                      "keyid" => "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+                      "sig" => "MEUCIA2uTQrC5HukcLw3blPe1wLDQP/X7t9qj267Vepz1pPqAiEAnKyy+j1OB7IBdcl7+Pmm7eXtY2wiOy2SoMD5Fh2PKR4="
+                    }
+                  ],
+                  "tarball" => "https://registry.npmjs.org/lodash/-/lodash-4.17.23.tgz",
+                  "unpackedSize" => 1411664
+                },
+                "gitHead" => "835a537f36ee2fd5fb7f524e213ff9ba2d8698f8",
+                "homepage" => "https://lodash.com/",
+                "icon" => "https://lodash.com/icon.svg",
+                "keywords" => ["modules", "stdlib", "util"],
+                "license" => "MIT",
+                "main" => "lodash.js",
+                "maintainers" => [
+                  %{"email" => "mathias@qiwi.be", "name" => "mathias"},
+                  %{"email" => "john.david.dalton@gmail.com", "name" => "jdalton"},
+                  %{"email" => "benjamin@dev.ofcr.se", "name" => "bnjmnt4n"}
+                ],
+                "name" => "lodash",
+                "repository" => %{
+                  "type" => "git",
+                  "url" => "git+https://github.com/lodash/lodash.git"
+                },
+                "scripts" => %{
+                  "test" => "echo \"See https://travis-ci.org/lodash-archive/lodash-cli for testing details.\""
+                },
+                "version" => "4.17.23"
+              },
+              authors: ["John-David Dalton", "mathias", "jdalton", "bnjmnt4n"],
+              keywords: ["modules", "stdlib", "util"],
+              dependencies: %{},
+              dev_dependencies: %{},
+              optional_dependencies: %{},
+              peer_dependencies: %{},
+              bin: %{},
+              scripts: %{
+                "test" => "echo \"See https://travis-ci.org/lodash-archive/lodash-cli for testing details.\""
+              }
+            },
+            checksum_algo: :sha1,
+            attestations: [],
+            resolved_deps: []
+          }}
+
+     code: if lodash, do: assert(lodash.forth == :npm)
+     stacktrace:
+       test/integration/e2e_test.exs:164: (test)
+
+.....warning: Range.new/2 and first..last default to a step of -1 when last < first. Use Range.new(first, last, -1) or first..last//-1, or pass 1 if that was your intention
+  (stream_data 0.6.0) lib/stream_data.ex:1723: anonymous fn/3 in StreamData.power_of_two_with_zero/1
+  (stream_data 0.6.0) lib/stream_data.ex:203: StreamData.call/3
+  (stream_data 0.6.0) lib/stream_data.ex:283: anonymous fn/4 in StreamData.float_in_0_to_1/1
+  (stream_data 0.6.0) lib/stream_data.ex:203: anonymous fn/4 in StreamData.call/3
+  (elixir 1.19.4) lib/enum.ex:1820: anonymous fn/3 in Enum.map_reduce/3
+  (elixir 1.19.4) lib/enum.ex:4562: Enum.reduce_range/5
+  (elixir 1.19.4) lib/enum.ex:2524: Enum.map_reduce/3
+  (stream_data 0.6.0) lib/stream_data.ex:217: StreamData.call/3
+  (stream_data 0.6.0) lib/stream_data.ex:283: anonymous fn/4 in StreamData.positive_float_without_bounds/0
+  (stream_data 0.6.0) lib/stream_data.ex:203: anonymous fn/3 in StreamData.bind_filter/5
+  (stream_data 0.6.0) lib/stream_data/lazy_tree.ex:36: StreamData.LazyTree.map/2
+  (stream_data 0.6.0) lib/stream_data.ex:393: StreamData.bind_filter/5
+  (stream_data 0.6.0) lib/stream_data.ex:360: anonymous fn/5 in StreamData.bind_filter/3
+  (stream_data 0.6.0) lib/stream_data.ex:203: StreamData.call/3
+  (stream_data 0.6.0) lib/stream_data.ex:283: anonymous fn/4 in StreamData.float/1
+  (stream_data 0.6.0) lib/stream_data.ex:203: anonymous fn/3 in StreamData.bind_filter/5
+  (stream_data 0.6.0) lib/stream_data/lazy_tree.ex:36: StreamData.LazyTree.map/2
+
+....................................
+Finished in 4.3 seconds (1.9s async, 2.4s sync)
+1 doctest, 40 properties, 232 tests, 6 failures, 17 skipped

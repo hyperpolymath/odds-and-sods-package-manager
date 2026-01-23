@@ -9,11 +9,12 @@ defmodule Opm.Package.Installer do
 
   alias Opm.Package.Downloader
   alias Opm.Package.Transaction
-  alias Opm.Registries.Registry
   alias Opm.Federation
   alias Opm.Trust.Pipeline
   alias Opm.Validation
   alias Opm.Errors
+  alias Opm.Resolver
+  alias Opm.Lockfile
 
   @user_install_dir Path.expand("~/.local/share/opm/packages")
   @system_install_dir "/usr/local/share/opm/packages"
@@ -106,24 +107,115 @@ defmodule Opm.Package.Installer do
   # Internal functions
 
   defp do_install(forth, package_name, version, scope, dry_run) do
-    # Fetch package info
-    IO.puts("  Resolving #{package_name}...")
-    case Registry.fetch(forth, package_name, version) do
-      {:ok, package} ->
-        IO.puts("  Found: #{package.package}@#{package.version}")
+    # Build root dependency for resolver
+    root_dep = %{
+      name: package_name,
+      constraint: if(version == "latest", do: "*", else: version),
+      forth: forth
+    }
 
-        # Run trust pipeline
+    IO.puts("  Resolving dependencies for #{package_name}...")
+
+    case Resolver.resolve([root_dep], forth: forth) do
+      {:ok, resolution} ->
+        # Resolution successful - we have a map of package_name => {version, ResolvedPackage}
+        packages_to_install = Map.values(resolution)
+        IO.puts("  Resolved #{length(packages_to_install)} package(s)")
+
+        # Show dependency tree
+        Enum.each(packages_to_install, fn {version, pkg} ->
+          IO.puts("    - #{pkg.package}@#{version}")
+        end)
+
         IO.puts("")
-        IO.puts("  Running trust checks...")
 
-        {:ok, trust_result} = Pipeline.verify(package)
-        handle_trust_result(trust_result, package, scope, dry_run)
-
-      {:error, :not_found} ->
-        {:error, Errors.format(Errors.package_not_found(package_name, forth))}
+        # Install all packages in resolution order
+        # TODO: Sort topologically to install dependencies before dependents
+        install_resolved_packages(packages_to_install, scope, dry_run)
 
       {:error, reason} ->
-        {:error, Errors.format(Errors.download_failed(package_name, reason))}
+        IO.puts("  ✗ Dependency resolution failed:")
+        IO.puts("    #{reason}")
+        {:error, Errors.format({:resolver, reason, "Check version constraints"})}
+    end
+  end
+
+  defp install_resolved_packages(packages, scope, dry_run) do
+    # Install each package
+    results =
+      Enum.map(packages, fn {version, package} ->
+        IO.puts("")
+        IO.puts("Installing #{package.package}@#{version}...")
+
+        # Run trust pipeline
+        IO.puts("  Running trust checks...")
+        {:ok, trust_result} = Pipeline.verify(package)
+
+        case handle_trust_result(trust_result, package, scope, dry_run) do
+          {:ok, _} -> {:ok, package}
+          {:ok, :dry_run} -> {:ok, :dry_run}
+          {:error, reason} -> {:error, {package.package, reason}}
+        end
+      end)
+
+    # Check if any failed
+    failed = Enum.filter(results, fn r -> match?({:error, _}, r) end)
+
+    if failed != [] do
+      {:error, format_install_failures(failed)}
+    else
+      # Update lockfile with resolved packages
+      update_lockfile_with_resolution(packages)
+      {:ok, :all_installed}
+    end
+  end
+
+  defp format_install_failures(failed) do
+    failures =
+      Enum.map(failed, fn {:error, {pkg, reason}} ->
+        "  - #{pkg}: #{reason}"
+      end)
+      |> Enum.join("\n")
+
+    "Failed to install packages:\n#{failures}"
+  end
+
+  defp update_lockfile_with_resolution(packages) do
+    # Read existing lockfile or create new
+    lockfile =
+      case Lockfile.read() do
+        {:ok, lf} -> lf
+        {:error, :not_found} -> Lockfile.new()
+        {:error, _} -> Lockfile.new()
+      end
+
+    # Add each package to lockfile
+    updated_lockfile =
+      Enum.reduce(packages, lockfile, fn {version, pkg}, acc ->
+        dep_names = Map.keys(pkg.manifest.dependencies || %{})
+
+        Lockfile.add_package(acc, %{
+          name: pkg.package,
+          version: version,
+          forth: pkg.forth,
+          checksum: pkg.checksum,
+          checksum_algo: pkg.checksum_algo,
+          source_url: pkg.tarball_url,
+          dependencies: dep_names
+        })
+      end)
+
+    # Write lockfile
+    case Lockfile.write(updated_lockfile) do
+      {:ok, _path} ->
+        IO.puts("")
+        IO.puts("Updated opm.lock")
+        :ok
+
+      {:error, reason} ->
+        IO.puts("")
+        IO.puts("⚠ Failed to update lockfile: #{reason}")
+        :ok
     end
   end
 

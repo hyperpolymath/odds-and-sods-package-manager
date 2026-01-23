@@ -1,0 +1,402 @@
+# SPDX-License-Identifier: PMPL-1.0
+defmodule Opm.Resolver do
+  @moduledoc """
+  Dependency resolution engine using a PubGrub-inspired algorithm.
+
+  Resolves package dependencies across multiple registries, handling:
+  - Version constraints (semver, Python, exact)
+  - Transitive dependencies
+  - Conflict detection
+  - Cross-registry resolution
+
+  Based on PubGrub algorithm (used by Cargo, pip, Poetry):
+  https://github.com/dart-lang/pub/blob/master/doc/solver.md
+  """
+
+  alias Opm.VersionConstraint
+  alias Opm.Registries.Registry
+  alias Opm.Types.{ResolvedPackage, ManifestFormat}
+
+  require Logger
+
+  @type package_name :: String.t()
+  @type version_string :: String.t()
+  @type forth_type :: atom()
+
+  @type dependency :: %{
+          name: package_name(),
+          constraint: String.t(),
+          forth: forth_type() | nil
+        }
+
+  @type resolution :: %{
+          package_name() => {version_string(), ResolvedPackage.t()}
+        }
+
+  @type conflict :: %{
+          package: package_name(),
+          version: version_string(),
+          required_by: [package_name()],
+          conflicting_constraints: [String.t()]
+        }
+
+  # =============================================================================
+  # Public API
+  # =============================================================================
+
+  @doc """
+  Resolve dependencies for a root package.
+
+  Returns {:ok, resolution} with a map of package_name => {version, ResolvedPackage}
+  or {:error, conflict} describing the first unresolvable conflict.
+
+  ## Options
+
+  - `:sustainability_preference` - Prefer packages with higher oikos scores (default: false)
+  - `:max_depth` - Maximum dependency tree depth (default: 50)
+  - `:include_dev` - Include dev dependencies (default: false)
+
+  ## Examples
+
+      iex> root_deps = [%{name: "express", constraint: "^4.0.0", forth: :npm}]
+      iex> Resolver.resolve(root_deps, forth: :npm)
+      {:ok, %{"express" => {"4.18.2", %ResolvedPackage{}}, ...}}
+  """
+  def resolve(root_dependencies, opts \\ []) do
+    forth = Keyword.get(opts, :forth, :npm)
+    max_depth = Keyword.get(opts, :max_depth, 50)
+    include_dev = Keyword.get(opts, :include_dev, false)
+    sustainability = Keyword.get(opts, :sustainability_preference, false)
+
+    state = %{
+      # Resolved packages: package_name => {version, ResolvedPackage}
+      resolved: %{},
+      # Active constraints: package_name => [{constraint, required_by}]
+      constraints: %{},
+      # Visited nodes to prevent cycles
+      visited: MapSet.new(),
+      # Configuration
+      forth: forth,
+      max_depth: max_depth,
+      include_dev: include_dev,
+      sustainability: sustainability,
+      # Current recursion depth
+      depth: 0
+    }
+
+    # Convert root dependencies to constraints
+    state =
+      Enum.reduce(root_dependencies, state, fn dep, acc ->
+        add_constraint(acc, dep.name, dep.constraint, dep.forth || forth, "root")
+      end)
+
+    # Start resolution
+    case do_resolve(state) do
+      {:ok, final_state} ->
+        {:ok, final_state.resolved}
+
+      error ->
+        error
+    end
+  end
+
+  # =============================================================================
+  # Resolution Algorithm
+  # =============================================================================
+
+  defp do_resolve(state) do
+    # Find next unresolved package
+    case next_unresolved(state) do
+      nil ->
+        # All packages resolved!
+        {:ok, state}
+
+      {package_name, constraints} ->
+        # Fetch available versions
+        forth = infer_forth(state, package_name)
+
+        case fetch_available_versions(package_name, forth) do
+          {:ok, versions} ->
+            # Filter versions that satisfy all constraints
+            valid_versions = filter_valid_versions(versions, constraints)
+
+            # Sort by preference (newest first, or by sustainability)
+            sorted_versions = sort_versions(valid_versions, state.sustainability)
+
+            # Try each version until one succeeds
+            try_versions(state, package_name, sorted_versions, forth, constraints)
+
+          {:error, reason} ->
+            {:error, format_fetch_error(package_name, forth, reason)}
+        end
+    end
+  end
+
+  defp try_versions(state, package_name, [], _forth, constraints) do
+    # No valid versions found
+    {:error, format_no_valid_version(package_name, constraints)}
+  end
+
+  defp try_versions(state, package_name, [version | rest], forth, constraints) do
+    # Check depth limit
+    if state.depth >= state.max_depth do
+      {:error,
+       "Maximum dependency depth (#{state.max_depth}) exceeded. Possible circular dependency involving #{package_name}."}
+    else
+      # Try to resolve with this version
+      case resolve_with_version(state, package_name, version, forth) do
+        {:ok, new_state} ->
+          # Continue resolving remaining packages
+          do_resolve(new_state)
+
+        {:conflict, _reason} ->
+          # Backtrack and try next version
+          try_versions(state, package_name, rest, forth, constraints)
+
+        {:error, reason} ->
+          # Hard error, propagate up
+          {:error, reason}
+      end
+    end
+  end
+
+  defp resolve_with_version(state, package_name, version, forth) do
+    # Check for cycles
+    key = "#{package_name}@#{version}"
+
+    if MapSet.member?(state.visited, key) do
+      {:conflict, "Circular dependency detected: #{key}"}
+    else
+      # Fetch package metadata
+      case Registry.fetch(forth, package_name, version) do
+        {:ok, resolved_pkg} ->
+          # Add to resolved set
+          new_state = %{
+            state
+            | resolved: Map.put(state.resolved, package_name, {version, resolved_pkg}),
+              visited: MapSet.put(state.visited, key),
+              depth: state.depth + 1
+          }
+
+          # Add constraints from dependencies
+          deps = extract_dependencies(resolved_pkg.manifest, state.include_dev)
+
+          new_state_with_constraints =
+            Enum.reduce(deps, new_state, fn dep, acc ->
+              add_constraint(acc, dep.name, dep.constraint, dep.forth, package_name)
+            end)
+
+          # Check if new constraints conflict with existing resolutions
+          case check_conflicts(new_state_with_constraints) do
+            :ok ->
+              {:ok, %{new_state_with_constraints | depth: state.depth + 1}}
+
+            {:conflict, reason} ->
+              {:conflict, reason}
+          end
+
+        {:error, :not_found} ->
+          {:conflict, "Package #{package_name}@#{version} not found in #{forth} registry"}
+
+        {:error, reason} ->
+          {:error, "Failed to fetch #{package_name}@#{version}: #{reason}"}
+      end
+    end
+  end
+
+  # =============================================================================
+  # Constraint Management
+  # =============================================================================
+
+  defp add_constraint(state, package_name, constraint_str, forth, required_by) do
+    constraints = Map.get(state.constraints, package_name, [])
+    new_entry = {constraint_str, required_by, forth}
+    updated_constraints = [new_entry | constraints]
+
+    %{state | constraints: Map.put(state.constraints, package_name, updated_constraints)}
+  end
+
+  defp check_conflicts(state) do
+    # Check if any resolved package violates new constraints
+    Enum.reduce_while(state.resolved, :ok, fn {pkg_name, {version, _resolved}}, _acc ->
+      constraints = Map.get(state.constraints, pkg_name, [])
+
+      # Parse version
+      case Version.parse(version) do
+        {:ok, _parsed_version} ->
+          # Check if version satisfies all constraints
+          violating =
+            Enum.reject(constraints, fn {constraint_str, _required_by, _forth} ->
+              case VersionConstraint.parse(constraint_str, :semver) do
+                {:ok, constraint} ->
+                  VersionConstraint.satisfies?(version, constraint)
+
+                {:error, _} ->
+                  # Can't parse constraint, assume satisfied
+                  true
+              end
+            end)
+
+          if violating == [] do
+            {:cont, :ok}
+          else
+            {:halt,
+             {:conflict,
+              format_constraint_violation(pkg_name, version, violating)}}
+          end
+
+        :error ->
+          {:cont, :ok}
+      end
+    end)
+  end
+
+  # =============================================================================
+  # Version Selection
+  # =============================================================================
+
+  defp next_unresolved(state) do
+    # Find a package that has constraints but is not yet resolved
+    state.constraints
+    |> Enum.reject(fn {pkg_name, _} -> Map.has_key?(state.resolved, pkg_name) end)
+    |> Enum.min_by(fn {_pkg_name, constraints} -> length(constraints) end, fn -> nil end)
+  end
+
+  defp fetch_available_versions(package_name, forth) do
+    # Fetch all versions from registry
+    case Registry.versions(forth, package_name) do
+      {:ok, versions} when is_list(versions) ->
+        {:ok, versions}
+
+      {:ok, _other} ->
+        # Registry might return package metadata instead of version list
+        # Try fetching "latest"
+        case Registry.fetch(forth, package_name, "latest") do
+          {:ok, pkg} -> {:ok, [pkg.version]}
+          error -> error
+        end
+
+      error ->
+        error
+    end
+  end
+
+  defp filter_valid_versions(versions, constraints) do
+    Enum.filter(versions, fn version ->
+      Enum.all?(constraints, fn {constraint_str, _required_by, _forth} ->
+        case VersionConstraint.parse(constraint_str, :semver) do
+          {:ok, constraint} ->
+            VersionConstraint.satisfies?(version, constraint)
+
+          {:error, _} ->
+            # Can't parse constraint, skip validation
+            true
+        end
+      end)
+    end)
+  end
+
+  defp sort_versions(versions, _sustainability_preference = false) do
+    # Sort by semver (newest first)
+    Enum.sort(versions, fn v1, v2 ->
+      case {Version.parse(v1), Version.parse(v2)} do
+        {{:ok, ver1}, {:ok, ver2}} ->
+          Version.compare(ver1, ver2) == :gt
+
+        _ ->
+          v1 >= v2
+      end
+    end)
+  end
+
+  defp sort_versions(versions, _sustainability_preference = true) do
+    # TODO: Fetch oikos scores and sort by sustainability
+    # For now, fall back to version sorting
+    sort_versions(versions, false)
+  end
+
+  # =============================================================================
+  # Dependency Extraction
+  # =============================================================================
+
+  defp extract_dependencies(%ManifestFormat{} = manifest, include_dev) do
+    runtime_deps =
+      Enum.map(manifest.dependencies, fn {name, constraint} ->
+        %{
+          name: to_string(name),
+          constraint: to_string(constraint),
+          forth: manifest.source_forth
+        }
+      end)
+
+    dev_deps =
+      if include_dev and manifest.dev_dependencies do
+        Enum.map(manifest.dev_dependencies, fn {name, constraint} ->
+          %{
+            name: to_string(name),
+            constraint: to_string(constraint),
+            forth: manifest.source_forth
+          }
+        end)
+      else
+        []
+      end
+
+    runtime_deps ++ dev_deps
+  end
+
+  defp extract_dependencies(_manifest, _include_dev) do
+    # Handle cases where manifest is not in expected format
+    []
+  end
+
+  # =============================================================================
+  # Helpers
+  # =============================================================================
+
+  defp infer_forth(state, _package_name) do
+    # Try to infer forth from constraints
+    constraints = Map.get(state.constraints, _package_name, [])
+
+    forth_from_constraints =
+      Enum.find_value(constraints, fn {_constraint, _required_by, forth} ->
+        forth
+      end)
+
+    forth_from_constraints || state.forth
+  end
+
+  # =============================================================================
+  # Error Formatting
+  # =============================================================================
+
+  defp format_fetch_error(package_name, forth, reason) do
+    "Failed to fetch versions for #{package_name} from @#{forth}: #{inspect(reason)}"
+  end
+
+  defp format_no_valid_version(package_name, constraints) do
+    constraint_descriptions =
+      Enum.map(constraints, fn {constraint_str, required_by, _forth} ->
+        "  - #{constraint_str} (required by #{required_by})"
+      end)
+      |> Enum.join("\n")
+
+    """
+    Could not find a version of #{package_name} that satisfies all constraints:
+    #{constraint_descriptions}
+    """
+  end
+
+  defp format_constraint_violation(package_name, version, violating) do
+    violations =
+      Enum.map(violating, fn {constraint_str, required_by, _forth} ->
+        "  - #{constraint_str} (required by #{required_by})"
+      end)
+      |> Enum.join("\n")
+
+    """
+    Version #{version} of #{package_name} violates constraints:
+    #{violations}
+    """
+  end
+end

@@ -1,0 +1,278 @@
+// SPDX-License-Identifier: PMPL-1.0
+= Adding Language Adapters to OPM
+:revdate: 2026-01-23
+:toc: left
+:toclevels: 3
+
+This guide explains how to add support for new programming languages and their package ecosystems to OPM.
+
+== Overview
+
+OPM supports multiple package ecosystems through a unified registry adapter pattern. Each language or ecosystem gets its own adapter module that implements a common interface.
+
+=== Current Adapters
+
+[cols="1,1,2"]
+|===
+| Language | Registry | Module
+
+| JavaScript/Node.js
+| npm
+| `Opm.Registries.Npm`
+
+| Rust
+| Crates.io
+| `Opm.Registries.Crates`
+
+| Elixir/Erlang
+| Hex.pm
+| `Opm.Registries.Hex`
+
+| Python
+| PyPI
+| `Opm.Registries.Pypi`
+|===
+
+== Registry Adapter Categories
+
+OPM recognizes three types of package ecosystems:
+
+=== 1. Centralized Registry (HTTP API)
+
+**Examples:** npm, Crates.io, Hex, PyPI, RubyGems, Maven Central
+
+**Characteristics:**
+- REST API for package metadata
+- Hosted package tarballs
+- Version listing and search
+- Well-defined JSON responses
+
+**Implementation:** Straightforward HTTP client
+
+=== 2. Git-Based (Decentralized)
+
+**Examples:** Idris2, Agda, Mercury, Factor, most theorem provers
+
+**Characteristics:**
+- Packages distributed as git repositories
+- No central package server
+- Versions tracked via git tags/branches
+- May have curated package lists (e.g., ALIRE index for Ada)
+
+**Implementation:** Git adapter + optional curated index
+
+=== 3. Manual/Legacy (No Package Manager)
+
+**Examples:** ATS, Clean, Io, legacy Forth libraries
+
+**Characteristics:**
+- Manual downloads from project websites
+- FTP servers, university pages, SourceForge
+- Inconsistent versioning
+- May require web scraping
+
+**Implementation:** Agentic adapter with HAR integration
+
+== Adapter Interface
+
+All registry adapters MUST implement this behavior:
+
+[source,elixir]
+----
+defmodule Opm.Registries.YourRegistry do
+  @moduledoc """
+  Registry adapter for [Language/Ecosystem Name].
+  [Brief description of the ecosystem and its package distribution model]
+  """
+
+  alias Opm.Types.{ResolvedPackage, ManifestFormat}
+
+  @doc """
+  Fetch package metadata from the registry.
+  Returns package info with dependencies, version, download URL, etc.
+  """
+  @spec fetch_package(String.t(), String.t()) ::
+    {:ok, ResolvedPackage.t()} | {:error, term()}
+  def fetch_package(name, version \\ "latest")
+
+  @doc """
+  Search for packages by query string.
+  Returns list of matching packages.
+  """
+  @spec search(String.t(), keyword()) ::
+    {:ok, [ResolvedPackage.t()]} | {:error, term()}
+  def search(query, opts \\ [])
+
+  @doc """
+  Check if a package exists in the registry.
+  Fast existence check without fetching full metadata.
+  """
+  @spec exists?(String.t()) :: boolean()
+  def exists?(name)
+
+  @doc """
+  List all available versions for a package.
+  Returns versions in descending order (newest first).
+  """
+  @spec versions(String.t()) :: {:ok, [String.t()]} | {:error, term()}
+  def versions(name)
+end
+----
+
+== Implementation Guide
+
+=== Step 1: Create the Adapter Module
+
+Create a new file in `opm_ex/lib/opm/registries/`:
+
+[source,elixir]
+----
+# opm_ex/lib/opm/registries/nimble.ex
+# SPDX-License-Identifier: PMPL-1.0
+defmodule Opm.Registries.Nimble do
+  @moduledoc """
+  Nimble Package Directory adapter for Nim packages.
+  https://nimble.directory/
+  """
+
+  alias Opm.Types.{ResolvedPackage, ManifestFormat}
+
+  @base_url "https://nimble.directory"
+
+  def fetch_package(name, version \\ "latest") do
+    # Implementation
+  end
+
+  def search(query, opts \\ []) do
+    # Implementation
+  end
+
+  def exists?(name) do
+    # Implementation
+  end
+
+  def versions(name) do
+    # Implementation
+  end
+end
+----
+
+=== Step 2: Register the Adapter
+
+Add your adapter to the registry dispatcher in `opm_ex/lib/opm/registries/registry.ex`:
+
+[source,elixir]
+----
+defmodule Opm.Registries.Registry do
+  alias Opm.Registries.{Npm, Crates, Hex, Pypi, Nimble}
+
+  @registry_modules %{
+    npm: Npm,
+    cargo: Crates,
+    crates: Crates,
+    hex: Hex,
+    elixir: Hex,
+    pypi: Pypi,
+    python: Pypi,
+    nimble: Nimble,  # ← Add this line
+    nim: Nimble      # ← Alias for convenience
+  }
+
+  # ... rest of module
+end
+----
+
+=== Step 3: Write Tests
+
+Create tests in `opm_ex/test/opm/registries/`:
+
+[source,elixir]
+----
+# opm_ex/test/opm/registries/nimble_test.exs
+# SPDX-License-Identifier: PMPL-1.0
+defmodule Opm.Registries.NimbleTest do
+  use ExUnit.Case, async: true
+
+  alias Opm.Registries.Nimble
+
+  @moduletag :external_api
+
+  describe "fetch_package/2" do
+    test "fetches a real package" do
+      assert {:ok, pkg} = Nimble.fetch_package("jester", "latest")
+      assert pkg.name == "jester"
+      assert is_binary(pkg.version)
+      assert is_map(pkg.dependencies)
+    end
+
+    test "returns error for non-existent package" do
+      assert {:error, :not_found} =
+        Nimble.fetch_package("this-does-not-exist-xyz")
+    end
+  end
+
+  describe "search/2" do
+    test "searches packages" do
+      assert {:ok, results} = Nimble.search("http")
+      assert is_list(results)
+      assert length(results) > 0
+    end
+  end
+
+  describe "exists?/1" do
+    test "returns true for existing package" do
+      assert Nimble.exists?("jester") == true
+    end
+
+    test "returns false for non-existent package" do
+      assert Nimble.exists?("this-does-not-exist-xyz") == false
+    end
+  end
+end
+----
+
+== Adapter Patterns
+
+=== Pattern A: REST API Registry
+
+For npm, Hex, PyPI-style registries with HTTP APIs.
+
+=== Pattern B: Git-Based Registry
+
+For Idris2, Agda-style decentralized ecosystems.
+
+=== Pattern C: Agentic/Manual
+
+For legacy systems requiring web scraping or manual intervention.
+
+See implementation examples in existing adapter modules.
+
+== Metadata Conventions
+
+Each `ResolvedPackage` should include:
+
+[source,elixir]
+----
+%ResolvedPackage{
+  name: "package-name",
+  version: "1.0.0",
+  description: "Package description",
+  license: "MIT",
+  repository: "https://github.com/...",
+  dependencies: %{"dep1" => "^1.0"},
+  metadata: %{
+    "registry" => "registry-name",
+    "language" => "language-name",
+    "versions" => ["1.0.0", "0.9.0"]
+  }
+}
+----
+
+== Contributing
+
+When contributing a new language adapter:
+
+1. Implement the adapter following this guide
+2. Add comprehensive tests
+3. Update documentation
+4. Submit PR with example usage

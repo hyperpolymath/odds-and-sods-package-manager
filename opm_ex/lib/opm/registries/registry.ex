@@ -6,7 +6,7 @@ defmodule Opm.Registries.Registry do
   Includes caching for improved performance.
   """
 
-  alias Opm.Registries.{Npm, Crates, Hex, Pypi}
+  alias Opm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic}
   alias Opm.Cache
 
   @registry_modules %{
@@ -16,7 +16,13 @@ defmodule Opm.Registries.Registry do
     hex: Hex,
     elixir: Hex,
     pypi: Pypi,
-    python: Pypi
+    python: Pypi,
+    nimble: Nimble,
+    nim: Nimble,
+    idris2: Idris2,
+    idris: Idris2,
+    git: Git,
+    agentic: Agentic
   }
 
   @doc """
@@ -169,6 +175,28 @@ defmodule Opm.Registries.Registry do
     |> Map.keys()
     |> Enum.uniq()
     |> Enum.sort()
+  end
+
+  @doc """
+  Check if a registry is available/supported.
+
+  ## Examples
+
+      iex> Registry.available?(:npm)
+      true
+
+      iex> Registry.available?(:unknown)
+      false
+  """
+  def available?(forth) when is_atom(forth) do
+    Map.has_key?(@registry_modules, forth)
+  end
+
+  def available?(forth) when is_binary(forth) do
+    case safe_to_atom(forth) do
+      nil -> false
+      atom -> available?(atom)
+    end
   end
 
   # Helpers

@@ -6,7 +6,30 @@ image:https://img.shields.io/badge/Deno-Runtime-000000?style=flat&logo=deno[Deno
 image:https://img.shields.io/badge/Idris-Inside-1f6feb?style=flat[Idris Inside]
 image:https://img.shields.io/badge/License-PMPL--1.0-0b7285?style=flat[PMPL-1.0]
 
-A federated, multi-language package manager with formal verification, a multi-dimensional trust pipeline, and automated ecosystem health monitoring.
+A federated, multi-language package manager with formal verification, a multi-dimensional trust pipeline, automated ecosystem health monitoring, and agentic package discovery for obscure languages.
+
+**Now supports:** npm, Crates.io, Hex, PyPI, Nimble (Nim), Idris2, and any git-based package ecosystem. Includes HAR integration for agentic discovery of packages from legacy sites, university repos, and unmaintained projects.
+
+== Supported Ecosystems
+
+**Centralized Registries** (HTTP API):
+- **npm** (JavaScript/Node.js) - https://npmjs.com
+- **Crates.io** (Rust) - https://crates.io
+- **Hex** (Elixir/Erlang) - https://hex.pm
+- **PyPI** (Python) - https://pypi.org
+- **Nimble** (Nim) - https://nimble.directory
+
+**Git-Based** (Decentralized):
+- **Idris2** - Curated packages + agentic discovery
+- **Any git repository** - Generic git adapter for languages without registries
+
+**Agentic Discovery** (via HAR):
+- Legacy project sites, university repositories, FTP servers
+- Automated GitHub/GitLab search across all languages
+- Web scraping for unmaintained packages
+- Interactive user assistance when automation fails
+
+See `docs/adding-language-adapters.adoc` for adding new languages.
 
 == Scope
 

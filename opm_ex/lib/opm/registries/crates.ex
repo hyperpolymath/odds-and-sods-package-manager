@@ -6,6 +6,7 @@ defmodule Opm.Registries.Crates do
   """
 
   alias Opm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://crates.io/api/v1"
   @download_base "https://static.crates.io/crates"
@@ -19,8 +20,8 @@ defmodule Opm.Registries.Crates do
   def fetch_package(name, version \\ "latest") do
     url = "#{@base_url}/crates/#{URI.encode(name)}"
 
-    case Req.get(url, headers: @headers, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
+      {:ok, body} ->
         crate = body["crate"]
         versions = body["versions"] || []
 
@@ -33,10 +34,13 @@ defmodule Opm.Registries.Crates do
         version_info = Enum.find(versions, fn v -> v["num"] == target_version end)
         {:ok, parse_crate(crate, version_info, target_version)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
         {:error, :not_found}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, %{status: status}} ->
         {:error, "crates.io returned status #{status}"}
 
       {:error, reason} ->
@@ -51,12 +55,12 @@ defmodule Opm.Registries.Crates do
     limit = Keyword.get(opts, :limit, 20)
     url = "#{@base_url}/crates?q=#{URI.encode(query)}&per_page=#{limit}"
 
-    case Req.get(url, headers: @headers, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
+      {:ok, body} ->
         crates = body["crates"] || []
         {:ok, Enum.map(crates, &parse_search_result/1)}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: status}} ->
         {:error, "crates.io search returned status #{status}"}
 
       {:error, reason} ->
@@ -70,8 +74,8 @@ defmodule Opm.Registries.Crates do
   def exists?(name) do
     url = "#{@base_url}/crates/#{URI.encode(name)}"
 
-    case Req.head(url, headers: @headers, receive_timeout: 5_000) do
-      {:ok, %{status: 200}} -> true
+    case VerifiedHttp.get(url, headers: @headers, receive_timeout: 5_000) do
+      {:ok, _response} -> true
       _ -> false
     end
   end
@@ -82,12 +86,15 @@ defmodule Opm.Registries.Crates do
   def versions(name) do
     url = "#{@base_url}/crates/#{URI.encode(name)}/versions"
 
-    case Req.get(url, headers: @headers, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
+      {:ok, body} ->
         versions = body["versions"] || []
         {:ok, Enum.map(versions, & &1["num"]) |> Enum.reject(&is_nil/1)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
         {:error, :not_found}
 
       {:error, reason} ->
@@ -101,12 +108,15 @@ defmodule Opm.Registries.Crates do
   def dependencies(name, version) do
     url = "#{@base_url}/crates/#{URI.encode(name)}/#{version}/dependencies"
 
-    case Req.get(url, headers: @headers, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
+      {:ok, body} ->
         deps = body["dependencies"] || []
         {:ok, parse_dependencies(deps)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
         {:error, :not_found}
 
       {:error, reason} ->

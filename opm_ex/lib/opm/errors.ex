@@ -25,6 +25,8 @@ defmodule Opm.Errors do
           | :security
           | :internal
 
+  @type error_severity :: :hard_fail | :soft_fail | :warning
+
   @type opm_error :: {error_category(), String.t(), String.t() | nil}
 
   @doc """
@@ -146,6 +148,70 @@ defmodule Opm.Errors do
     {:security, "No attestations found for '#{package}'",
      "This package has no signed attestations. Proceed with caution"}
   end
+
+  # =============================================================================
+  # Error Severity Classification
+  # =============================================================================
+
+  @doc """
+  Classify error severity for trust pipeline decisions.
+
+  Returns:
+  - `:hard_fail` - Block installation completely
+  - `:soft_fail` - Warn but allow with degraded trust
+  - `:warning` - Inform user but proceed normally
+  """
+  @spec classify_severity(atom() | {atom(), term()}) :: error_severity()
+  def classify_severity(error_type)
+
+  # HARD_FAIL - Block installation
+  def classify_severity(:license_conflict), do: :hard_fail
+  def classify_severity(:signature_verification_failed), do: :hard_fail
+  def classify_severity(:attestation_invalid), do: :hard_fail
+  def classify_severity(:checksum_mismatch), do: :hard_fail
+  def classify_severity(:malware_detected), do: :hard_fail
+  def classify_severity(:untrusted_source), do: :hard_fail
+  def classify_severity({:license_conflict, _}), do: :hard_fail
+  def classify_severity({:checksum_mismatch, _}), do: :hard_fail
+
+  # SOFT_FAIL - Warn but allow with degraded trust
+  def classify_severity(:checky_monkey_timeout), do: :soft_fail
+  def classify_severity(:oikos_unreachable), do: :soft_fail
+  def classify_severity(:claim_forge_unavailable), do: :soft_fail
+  def classify_severity(:palimpsest_unavailable), do: :soft_fail
+  def classify_severity(:cicd_hyper_a_unavailable), do: :soft_fail
+  def classify_severity(:network_error), do: :soft_fail
+  def classify_severity(:service_timeout), do: :soft_fail
+  def classify_severity(:attestation_fetch_failed), do: :soft_fail
+  def classify_severity({:network_error, _}), do: :soft_fail
+  def classify_severity({:service_timeout, _}), do: :soft_fail
+
+  # WARNING - Inform user but proceed
+  def classify_severity(:low_sustainability_score), do: :warning
+  def classify_severity(:dev_dependency_issue), do: :warning
+  def classify_severity(:optional_dep_unavailable), do: :warning
+  def classify_severity(:missing_documentation), do: :warning
+  def classify_severity(:no_attestations), do: :warning
+  def classify_severity(:outdated_dependency), do: :warning
+  def classify_severity(:missing_tests), do: :warning
+  def classify_severity({:low_sustainability_score, _}), do: :warning
+
+  # Default: treat unknown as hard fail (conservative)
+  def classify_severity(_unknown), do: :hard_fail
+
+  @doc """
+  Check if an error should block installation.
+  """
+  def should_block?(error_type) do
+    classify_severity(error_type) == :hard_fail
+  end
+
+  @doc """
+  Get a user-friendly description of error severity.
+  """
+  def severity_description(:hard_fail), do: "CRITICAL - Installation blocked"
+  def severity_description(:soft_fail), do: "WARNING - Degraded trust, proceeding"
+  def severity_description(:warning), do: "INFO - Potential issue detected"
 
   @doc """
   Configuration errors.

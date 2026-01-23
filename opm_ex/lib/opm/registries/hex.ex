@@ -6,6 +6,7 @@ defmodule Opm.Registries.Hex do
   """
 
   alias Opm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://hex.pm/api"
   @repo_url "https://repo.hex.pm"
@@ -16,8 +17,8 @@ defmodule Opm.Registries.Hex do
   def fetch_package(name, version \\ "latest") do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         releases = body["releases"] || []
 
         target_version = if version == "latest" do
@@ -32,10 +33,13 @@ defmodule Opm.Registries.Hex do
         release = Enum.find(releases, fn r -> r["version"] == target_version end)
         {:ok, parse_package(body, release, target_version)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
         {:error, :not_found}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, %{status: status}} ->
         {:error, "hex.pm returned status #{status}"}
 
       {:error, reason} ->
@@ -50,14 +54,14 @@ defmodule Opm.Registries.Hex do
     limit = Keyword.get(opts, :limit, 20)
     url = "#{@base_url}/packages?search=#{URI.encode(query)}&page=1&per_page=#{limit}"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} when is_list(body) ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} when is_list(body) ->
         {:ok, Enum.map(body, &parse_search_result/1)}
 
-      {:ok, %{status: 200, body: _}} ->
+      {:ok, _body} ->
         {:ok, []}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: status}} ->
         {:error, "hex.pm search returned status #{status}"}
 
       {:error, reason} ->
@@ -71,8 +75,8 @@ defmodule Opm.Registries.Hex do
   def exists?(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
 
-    case Req.head(url, receive_timeout: 5_000) do
-      {:ok, %{status: 200}} -> true
+    case VerifiedHttp.get(url, receive_timeout: 5_000) do
+      {:ok, _response} -> true
       _ -> false
     end
   end
@@ -83,12 +87,15 @@ defmodule Opm.Registries.Hex do
   def versions(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         releases = body["releases"] || []
         {:ok, Enum.map(releases, & &1["version"]) |> Enum.reject(&is_nil/1)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
         {:error, :not_found}
 
       {:error, reason} ->

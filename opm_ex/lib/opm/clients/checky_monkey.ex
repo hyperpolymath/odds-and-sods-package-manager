@@ -59,6 +59,22 @@ defmodule Opm.Clients.CheckyMonkey do
   end
 
   @doc """
+  Get verification status by request ID.
+  """
+  def get_verification_status(%__MODULE__{client: client}, request_id) do
+    case Http.get_json(client, "/verification/#{request_id}") do
+      {:ok, json} ->
+        {:ok, decode_response(json)}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
   Check service health.
   """
   def health(%__MODULE__{client: client}) do

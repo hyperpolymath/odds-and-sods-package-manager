@@ -151,6 +151,16 @@ defmodule Opm.Lockfile do
   end
 
   @doc """
+  Get packages by name (across all forths).
+  """
+  def packages_for_name(lockfile, name) do
+    lockfile.packages
+    |> Map.values()
+    |> Enum.filter(fn p -> p.name == name end)
+    |> Enum.sort_by(& &1.forth)
+  end
+
+  @doc """
   Verify package integrity against lockfile.
   Returns :ok if matches, {:mismatch, details} if different.
   """

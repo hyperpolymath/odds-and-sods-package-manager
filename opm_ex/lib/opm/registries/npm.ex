@@ -6,6 +6,7 @@ defmodule Opm.Registries.Npm do
   """
 
   alias Opm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://registry.npmjs.org"
 
@@ -19,14 +20,17 @@ defmodule Opm.Registries.Npm do
       "#{@base_url}/#{URI.encode(name)}/#{version}"
     end
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         {:ok, parse_package(body, version)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
         {:error, :not_found}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, %{status: status}} ->
         {:error, "npm returned status #{status}"}
 
       {:error, reason} ->
@@ -41,12 +45,12 @@ defmodule Opm.Registries.Npm do
     limit = Keyword.get(opts, :limit, 20)
     url = "#{@base_url}/-/v1/search?text=#{URI.encode(query)}&size=#{limit}"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         results = body["objects"] || []
         {:ok, Enum.map(results, &parse_search_result/1)}
 
-      {:ok, %{status: status}} ->
+      {:error, %{status: status}} ->
         {:error, "npm search returned status #{status}"}
 
       {:error, reason} ->
@@ -60,8 +64,8 @@ defmodule Opm.Registries.Npm do
   def exists?(name) do
     url = "#{@base_url}/#{URI.encode(name)}"
 
-    case Req.head(url, receive_timeout: 5_000) do
-      {:ok, %{status: 200}} -> true
+    case VerifiedHttp.get(url, receive_timeout: 5_000) do
+      {:ok, _response} -> true
       _ -> false
     end
   end
@@ -72,12 +76,15 @@ defmodule Opm.Registries.Npm do
   def versions(name) do
     url = "#{@base_url}/#{URI.encode(name)}"
 
-    case Req.get(url, receive_timeout: 10_000) do
-      {:ok, %{status: 200, body: body}} ->
+    case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
+      {:ok, body} ->
         versions = body["versions"] || %{}
         {:ok, Map.keys(versions) |> Enum.sort(&version_compare/2)}
 
-      {:ok, %{status: 404}} ->
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
         {:error, :not_found}
 
       {:error, reason} ->

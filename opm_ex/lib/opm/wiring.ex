@@ -4,8 +4,10 @@ defmodule Opm.Wiring do
   Command orchestration - wires together service clients for publish, audit, status flows.
   """
 
+  require Logger
+
   alias Opm.Clients.{CicdHyperA, CheckyMonkey, ClaimForge, Oikos, Palimpsest}
-  alias Opm.ManifestIngestion
+  alias Opm.{Errors, ManifestIngestion}
   alias Opm.Types.{
     OpmConfig,
     ClaimForgeRequest,
@@ -61,7 +63,7 @@ defmodule Opm.Wiring do
          {:ok, claim_response} <- generate_attestation(config, ingestion.manifest_path, ingestion.digest),
          {:ok, _license_result} <- run_license_check(config, ingestion.manifest_path, ingestion.manifest),
          {:ok, publish_response} <-
-           publish_manifest(config, ingestion.manifest, ingestion.digest, claim_response, config) do
+           publish_manifest(config, ingestion.manifest, ingestion.tarball_url, ingestion.digest, claim_response) do
       maybe_run_checky(config, ingestion.manifest_path)
       IO.puts("")
       print_publish_summary(ingestion.manifest, publish_response)
@@ -161,21 +163,31 @@ defmodule Opm.Wiring do
             |> Enum.map(fn conflict -> "#{conflict.license1} vs #{conflict.license2}" end)
             |> Enum.join(", ")
 
+          error_type = {:license_conflict, conflict_list}
+          severity = Errors.classify_severity(error_type)
+
+          IO.puts("  ✗ #{Errors.severity_description(severity)}")
+          IO.puts("    License conflicts detected: #{conflict_list}")
+
+          # License conflicts are HARD_FAIL - block publication
           {:error, "License conflicts detected: #{conflict_list}"}
         end
 
       {:error, reason} ->
-        IO.puts("  ⚠ License analysis unavailable: #{reason}")
+        # Service unavailable is SOFT_FAIL - allow with warning
+        severity = Errors.classify_severity({:network_error, reason})
+        IO.puts("  ⚠ #{Errors.severity_description(severity)}")
+        IO.puts("    License analysis unavailable: #{reason}")
         {:ok, :skipped}
     end
   end
 
-  defp publish_manifest(config, manifest, digest, claim_response, _config) do
+  defp publish_manifest(config, manifest, tarball_url, digest, claim_response) do
     client = CicdHyperA.new(config.cicd_hyper_a, config.http)
 
     request = %CicdPublishRequest{
       manifest: package_metadata_from_manifest(manifest),
-      tarball_url: nil,
+      tarball_url: tarball_url,
       attestations: [
         %AttestationRef{
           attestation_type: :claim_forge,
@@ -219,7 +231,7 @@ defmodule Opm.Wiring do
         case CheckyMonkey.submit_verification(client, request) do
           {:ok, resp} ->
             IO.puts("  ✓ Checky-monkey request queued: #{resp.request_id}")
-            {:ok, resp}
+            wait_for_verification(config, client, resp.request_id, timeout: 60_000)
 
           {:error, reason} ->
             IO.puts("  ⚠ Checky-monkey submission failed: #{reason}")
@@ -231,6 +243,66 @@ defmodule Opm.Wiring do
         {:ok, :skipped}
     end
   end
+
+  defp wait_for_verification(_config, client, request_id, opts) do
+    timeout = Keyword.get(opts, :timeout, 60_000)
+    poll_interval = 5_000
+    max_attempts = div(timeout, poll_interval)
+
+    IO.puts("  ⏳ Polling checky-monkey for results (timeout: #{timeout}ms)...")
+
+    do_poll_verification(client, request_id, max_attempts, poll_interval)
+  end
+
+  defp do_poll_verification(_client, _request_id, 0, _interval) do
+    IO.puts("  ⚠ Checky-monkey verification timed out")
+    {:error, :timeout}
+  end
+
+  defp do_poll_verification(client, request_id, attempts_left, interval) do
+    case CheckyMonkey.get_verification_status(client, request_id) do
+      {:ok, %{status: :completed, results: results}} ->
+        IO.puts("  ✓ Checky-monkey verification completed")
+        print_verification_results(results)
+        {:ok, results}
+
+      {:ok, %{status: :failed, error: error}} ->
+        IO.puts("  ✗ Checky-monkey verification failed: #{error}")
+        {:error, error}
+
+      {:ok, %{status: status}} when status in [:queued, :running] ->
+        Process.sleep(interval)
+        do_poll_verification(client, request_id, attempts_left - 1, interval)
+
+      {:error, :not_found} ->
+        IO.puts("  ⚠ Checky-monkey request not found: #{request_id}")
+        {:error, :not_found}
+
+      {:error, reason} ->
+        IO.puts("  ⚠ Checky-monkey polling failed: #{reason}")
+        {:error, reason}
+    end
+  end
+
+  defp print_verification_results(results) when is_map(results) do
+    IO.puts("  Verification results:")
+
+    if results[:property_tests] do
+      IO.puts("    property tests: #{results.property_tests.status}")
+      if results.property_tests.tests_passed do
+        IO.puts("      passed: #{results.property_tests.tests_passed}")
+      end
+    end
+
+    if results[:type_checking] do
+      IO.puts("    type checking: #{results.type_checking.status}")
+      if results.type_checking.errors do
+        IO.puts("      errors: #{length(results.type_checking.errors)}")
+      end
+    end
+  end
+
+  defp print_verification_results(_results), do: :ok
 
   defp git_metadata(dir) do
     case System.cmd("git", ["-C", dir, "rev-parse", "HEAD"], stderr_to_stdout: true) do

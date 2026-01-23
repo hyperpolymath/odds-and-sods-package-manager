@@ -1,0 +1,566 @@
+// SPDX-License-Identifier: PMPL-1.0
+= HAR Integration for Agentic Package Fetching
+:revdate: 2026-01-23
+:toc: left
+:toclevels: 3
+
+This document describes how OPM integrates with hybrid-automation-router (HAR) for agentic package discovery and fetching.
+
+== Overview
+
+When a package cannot be found in conventional registries, OPM delegates to HAR agents that can:
+
+- Search GitHub, GitLab, SourceForge, university repositories
+- Scrape legacy project websites for download links
+- Try multiple mirrors and fallback locations
+- Assist users interactively when automation fails
+- Build packages from source when binaries unavailable
+
+== Architecture
+
+[source]
+----
+OPM CLI
+   │
+   ├─> Registry Adapters (npm, Hex, Crates, PyPI, etc.)
+   │   └─> Direct HTTP fetch ✓
+   │
+   └─> Agentic Registry Adapter
+       └─> HAR Task Queue (/tmp/opm-har-ingest/)
+           │
+           ├─> Git Search Agent
+           ├─> Web Scraper Agent
+           ├─> Mirror Finder Agent
+           ├─> Build Agent
+           └─> User Assist Agent
+----
+
+== Task Queue Protocol
+
+=== Task Submission
+
+OPM writes task files to `/tmp/opm-har-ingest/<uuid>.json`:
+
+[source,json]
+----
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "task_type": "package_fetch",
+  "submitted_at": "2026-01-23T12:00:00Z",
+  "timeout_seconds": 300,
+
+  "package": {
+    "name": "obscure-lib",
+    "version": "1.2.3",
+    "language": "idris2"
+  },
+
+  "strategy": "agentic",
+
+  "hints": {
+    "search_terms": [
+      "idris2 obscure-lib",
+      "obscure library idris",
+      "idris obscure"
+    ],
+    "common_domains": [
+      "github.com",
+      "gitlab.com",
+      "university.edu"
+    ],
+    "file_patterns": ["*.ipkg", "README.md"],
+    "maintainer": "author@example.com",
+    "last_known_url": "https://old-site.com/downloads",
+    "build_commands": ["idris2 --build obscure-lib.ipkg"]
+  },
+
+  "callback": {
+    "url": "http://localhost:4050/har/result/550e8400-e29b-41d4-a716-446655440000",
+    "method": "POST",
+    "auth": "Bearer <token>"
+  }
+}
+----
+
+=== Task Response
+
+HAR agents POST results back to OPM callback URL:
+
+[source,json]
+----
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "completed_at": "2026-01-23T12:03:45Z",
+  "status": "success",
+
+  "package_location": {
+    "type": "git",
+    "url": "https://github.com/discovered/obscure-lib",
+    "ref": "v1.2.3",
+    "commit_sha": "abc123def456",
+    "subpath": null
+  },
+
+  "metadata": {
+    "name": "obscure-lib",
+    "version": "1.2.3",
+    "description": "Obscure library for Idris2",
+    "license": "MIT",
+    "manifest_file": "obscure-lib.ipkg",
+    "dependencies": ["base", "contrib"]
+  },
+
+  "discovery": {
+    "method": "github-api-search",
+    "confidence": 0.95,
+    "search_query": "idris2 obscure-lib",
+    "result_rank": 1,
+    "alternatives": [
+      {
+        "url": "https://gitlab.com/another/obscure-lib",
+        "confidence": 0.60
+      }
+    ]
+  },
+
+  "verification": {
+    "digest": "sha256:abc123...",
+    "signature": null,
+    "build_tested": false
+  }
+}
+----
+
+=== Error Response
+
+When agents cannot find the package:
+
+[source,json]
+----
+{
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "completed_at": "2026-01-23T12:05:00Z",
+  "status": "failure",
+
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "No matching packages found after exhaustive search",
+    "attempts": [
+      {
+        "agent": "github-search",
+        "query": "idris2 obscure-lib",
+        "results": 0
+      },
+      {
+        "agent": "web-scraper",
+        "url": "https://old-site.com/downloads",
+        "error": "404 Not Found"
+      },
+      {
+        "agent": "maintainer-contact",
+        "email": "author@example.com",
+        "status": "email_bounced"
+      }
+    ]
+  },
+
+  "suggestions": [
+    "Try alternative package names: 'idris2-obscure', 'obscure-idris'",
+    "Contact Idris2 community at discourse.idris-lang.org",
+    "Package may be archived or deprecated"
+  ]
+}
+----
+
+== Agent Types
+
+=== 1. Git Search Agent
+
+**Purpose:** Search GitHub, GitLab, Bitbucket, etc. for repositories
+
+**Strategy:**
+- Use platform APIs (GitHub Search, GitLab Search)
+- Match package name + language + file patterns
+- Rank by stars, recent activity, manifest presence
+- Clone and verify build instructions work
+
+**Example search:**
+[source]
+----
+github:idris2 filename:obscure-lib.ipkg
+language:Idris stars:>5
+----
+
+=== 2. Web Scraper Agent
+
+**Purpose:** Parse legacy project pages for download links
+
+**Strategy:**
+- Start with known URL or Google search
+- Extract download links (`.tar.gz`, `.zip`, git clone)
+- Follow redirects and mirrors
+- Handle FTP servers, SourceForge, university pages
+
+**Example:**
+[source]
+----
+curl https://university.edu/~prof/projects/obscure-lib/
+  → Parse HTML for <a href="obscure-lib-1.2.3.tar.gz">
+  → Verify digest if available
+----
+
+=== 3. Mirror Finder Agent
+
+**Purpose:** Try multiple download locations
+
+**Strategy:**
+- Check Software Heritage Archive
+- Try archive.org Wayback Machine
+- Query Debian/Fedora/Arch package indexes
+- Search academic mirrors
+
+**Mirrors to try:**
+[source]
+----
+https://archive.softwareheritage.org/
+https://web.archive.org/
+https://snapshot.debian.org/
+https://mirrors.kernel.org/
+----
+
+=== 4. Build Agent
+
+**Purpose:** Compile from source when no binary available
+
+**Strategy:**
+- Clone repository
+- Detect build system (make, cmake, cargo, etc.)
+- Execute build in sandbox
+- Package built artifacts
+- Cache for future requests
+
+**Build detection:**
+[source,bash]
+----
+if [ -f "Makefile" ]; then make
+elif [ -f "CMakeLists.txt" ]; then cmake . && make
+elif [ -f "Cargo.toml" ]; then cargo build --release
+elif [ -f "*.ipkg" ]; then idris2 --build *.ipkg
+fi
+----
+
+=== 5. User Assist Agent
+
+**Purpose:** Interactive mode when automation fails
+
+**Strategy:**
+- Present search results to user
+- Ask for manual URL/path input
+- Guide through manual download/build
+- Cache user input for future requests
+
+**Example prompt:**
+[source]
+----
+Could not automatically find 'obscure-lib' for Idris2.
+
+Tried:
+  ✗ GitHub search (0 results)
+  ✗ GitLab search (0 results)
+  ✗ https://old-site.com/downloads (404)
+
+Please provide:
+  1. Git repository URL
+  2. Download URL (tarball/zip)
+  3. Local file path
+  4. Skip (mark as unavailable)
+
+Your choice: _
+----
+
+== OPM Integration
+
+=== Agentic Registry Adapter
+
+[source,elixir]
+----
+# opm_ex/lib/opm/registries/agentic.ex
+defmodule Opm.Registries.Agentic do
+  @moduledoc """
+  Agentic registry adapter that delegates to HAR for package discovery.
+  """
+
+  alias Opm.HarQueue
+  alias Opm.Types.ResolvedPackage
+
+  def fetch_package(name, hints \\ %{}) do
+    task_id = generate_task_id()
+    task = build_task(task_id, name, hints)
+
+    with {:ok, _} <- HarQueue.submit(task),
+         {:ok, result} <- HarQueue.await_result(task_id, timeout: 300_000) do
+      parse_result(result)
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp build_task(task_id, name, hints) do
+    %{
+      task_id: task_id,
+      task_type: "package_fetch",
+      submitted_at: DateTime.utc_now(),
+      timeout_seconds: 300,
+      package: %{
+        name: name,
+        version: hints[:version] || "latest",
+        language: hints[:language]
+      },
+      strategy: "agentic",
+      hints: hints,
+      callback: %{
+        url: "http://localhost:4050/har/result/#{task_id}",
+        method: "POST"
+      }
+    }
+  end
+
+  defp parse_result(%{"status" => "success"} = result) do
+    loc = result["package_location"]
+    meta = result["metadata"]
+
+    package = %ResolvedPackage{
+      name: meta["name"],
+      version: meta["version"],
+      description: meta["description"],
+      license: meta["license"],
+      repository: loc["url"],
+      dependencies: parse_deps(meta["dependencies"]),
+      metadata: %{
+        "registry" => "agentic",
+        "discovery_method" => result["discovery"]["method"],
+        "confidence" => result["discovery"]["confidence"],
+        "digest" => result["verification"]["digest"]
+      }
+    }
+
+    {:ok, package}
+  end
+
+  defp parse_result(%{"status" => "failure"} = result) do
+    {:error, result["error"]["message"]}
+  end
+end
+----
+
+=== HAR Queue Manager
+
+[source,elixir]
+----
+# opm_ex/lib/opm/har_queue.ex
+defmodule Opm.HarQueue do
+  @moduledoc """
+  Manages task queue for HAR integration.
+  """
+
+  @queue_dir "/tmp/opm-har-ingest"
+
+  def submit(task) do
+    ensure_queue_dir()
+    task_file = Path.join(@queue_dir, "#{task.task_id}.json")
+
+    case Jason.encode(task, pretty: true) do
+      {:ok, json} ->
+        File.write(task_file, json)
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def await_result(task_id, opts \\ []) do
+    timeout = Keyword.get(opts, :timeout, 300_000)
+    poll_interval = Keyword.get(opts, :poll_interval, 1000)
+    result_file = Path.join(@queue_dir, "#{task_id}.result.json")
+
+    wait_for_result(result_file, timeout, poll_interval)
+  end
+
+  defp wait_for_result(result_file, timeout, poll_interval) do
+    end_time = System.monotonic_time(:millisecond) + timeout
+
+    Stream.repeatedly(fn ->
+      if File.exists?(result_file) do
+        case File.read(result_file) do
+          {:ok, content} ->
+            File.rm(result_file)
+            {:halt, Jason.decode(content)}
+          {:error, _} ->
+            :continue
+        end
+      else
+        if System.monotonic_time(:millisecond) >= end_time do
+          {:halt, {:error, :timeout}}
+        else
+          Process.sleep(poll_interval)
+          :continue
+        end
+      end
+    end)
+    |> Enum.find(fn
+      {:halt, _} -> true
+      _ -> false
+    end)
+    |> case do
+      {:halt, result} -> result
+      nil -> {:error, :timeout}
+    end
+  end
+
+  defp ensure_queue_dir do
+    File.mkdir_p!(@queue_dir)
+  end
+end
+----
+
+== Callback Handler
+
+OPM runs a simple HTTP server to receive HAR results:
+
+[source,elixir]
+----
+# opm_ex/lib/opm/har_callback.ex
+defmodule Opm.HarCallback do
+  use Plug.Router
+
+  plug :match
+  plug :dispatch
+
+  post "/har/result/:task_id" do
+    task_id = conn.params["task_id"]
+    {:ok, body, conn} = read_body(conn)
+
+    result_file = "/tmp/opm-har-ingest/#{task_id}.result.json"
+    File.write!(result_file, body)
+
+    send_resp(conn, 200, "OK")
+  end
+
+  match _ do
+    send_resp(conn, 404, "Not Found")
+  end
+end
+----
+
+== Testing
+
+=== Manual Testing
+
+Create a test task:
+
+[source,bash]
+----
+cat > /tmp/opm-har-ingest/test-123.json <<'EOF'
+{
+  "task_id": "test-123",
+  "task_type": "package_fetch",
+  "package": {"name": "idris2-json", "language": "idris2"},
+  "hints": {"search_terms": ["idris2 json"]},
+  "callback": {"url": "http://localhost:4050/har/result/test-123"}
+}
+EOF
+
+# Simulate HAR agent response
+curl -X POST http://localhost:4050/har/result/test-123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_id": "test-123",
+    "status": "success",
+    "package_location": {
+      "type": "git",
+      "url": "https://github.com/stefan-hoeck/idris2-json"
+    },
+    "metadata": {
+      "name": "json",
+      "version": "0.2.0",
+      "license": "BSD-3-Clause"
+    }
+  }'
+----
+
+=== Integration Testing
+
+[source,elixir]
+----
+# Test with actual HAR agents running
+test "agentic fetch via HAR" do
+  # Ensure HAR agents are running
+  assert System.find_executable("har-agent")
+
+  result = Agentic.fetch_package("idris2-json", %{
+    language: "idris2",
+    search_hints: ["idris2 json parsing"]
+  })
+
+  assert {:ok, pkg} = result
+  assert pkg.name == "json"
+  assert pkg.repository =~ "github.com"
+end
+----
+
+== HAR Agent Implementation Guide
+
+To implement a HAR agent:
+
+1. Watch `/tmp/opm-har-ingest/` for new `*.json` files
+2. Parse task and extract hints
+3. Execute search/fetch strategy
+4. POST result to callback URL
+5. Delete task file
+
+Example agent skeleton:
+
+[source,bash]
+----
+#!/usr/bin/env bash
+# har-github-agent.sh
+
+QUEUE_DIR="/tmp/opm-har-ingest"
+
+inotifywait -m "$QUEUE_DIR" -e create |
+while read dir action file; do
+  if [[ "$file" == *.json ]]; then
+    task_file="$QUEUE_DIR/$file"
+    task_id=$(jq -r '.task_id' "$task_file")
+
+    # Search GitHub
+    name=$(jq -r '.package.name' "$task_file")
+    lang=$(jq -r '.package.language' "$task_file")
+
+    result=$(gh search repos "$name $lang" --json name,url --limit 1)
+
+    # POST result
+    curl -X POST "http://localhost:4050/har/result/$task_id" \
+      -H "Content-Type: application/json" \
+      -d "{\"task_id\": \"$task_id\", \"status\": \"success\", ...}"
+
+    rm "$task_file"
+  fi
+done
+----
+
+== Security Considerations
+
+- **Sandboxing:** Run agents in containers/VMs
+- **Timeouts:** Enforce strict timeouts on agent tasks
+- **Validation:** Verify digests of downloaded packages
+- **Authentication:** Use Bearer tokens for callbacks
+- **Rate limiting:** Respect API rate limits
+- **Logging:** Audit all agentic actions
+
+== Future Enhancements
+
+- Agent orchestration with priority queues
+- ML-based confidence scoring
+- Distributed agent execution
+- Package provenance verification
+- Community-contributed package hints

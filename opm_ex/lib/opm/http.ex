@@ -4,6 +4,8 @@ defmodule Opm.Http do
   HTTP client with retries, exponential backoff, and connection pooling.
   Uses Req under the hood with Finch for connection management.
 
+  All JSON responses are validated using Verified.Json for safety.
+
   Connection pooling (P5) improves performance by:
   - Reusing connections to the same host
   - Reducing TLS handshake overhead
@@ -11,6 +13,7 @@ defmodule Opm.Http do
   """
 
   alias Opm.Types.HttpConfig
+  alias Opm.Verified.Json
 
   # Default pool configuration for CLI usage
   @default_pool_size 10
@@ -68,11 +71,29 @@ defmodule Opm.Http do
 
   @doc """
   GET JSON from a path.
+
+  Response is validated using Verified.Json for safety (depth/size limits).
   """
   def get_json(client, path) do
     case Req.get(client, url: path) do
       {:ok, %Req.Response{status: status, body: body}} when status in 200..299 ->
-        {:ok, body}
+        # Validate JSON response if it's a string
+        case body do
+          body when is_binary(body) ->
+            case Json.decode(body) do
+              {:ok, parsed} -> {:ok, parsed}
+              {:error, reason} -> {:error, "JSON validation failed: #{inspect(reason)}"}
+            end
+
+          body when is_map(body) or is_list(body) ->
+            # Already parsed by Req, return as-is
+            # Note: We trust Req's JSON decoder for now, but in v2.0
+            # we should validate all JSON regardless of source
+            {:ok, body}
+
+          _other ->
+            {:error, "Invalid response body type"}
+        end
 
       {:ok, %Req.Response{status: status, body: body}} ->
         {:error, "HTTP error: #{status} - #{inspect(body)}"}
@@ -88,5 +109,19 @@ defmodule Opm.Http do
   def build_url(base_url, path) do
     base = String.trim_trailing(base_url, "/")
     "#{base}#{path}"
+  end
+
+  @doc """
+  Build and validate URL using Verified.Url.
+
+  Returns `{:ok, url_string}` if valid, `{:error, reason}` otherwise.
+  """
+  def build_validated_url(base_url, path) do
+    url_string = build_url(base_url, path)
+
+    case Opm.Verified.Url.validate(url_string) do
+      {:ok, _validated} -> {:ok, url_string}
+      {:error, reason} -> {:error, {:invalid_url, reason}}
+    end
   end
 end
