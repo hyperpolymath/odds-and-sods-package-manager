@@ -1,4 +1,4 @@
-= odds-and-sods-package-manager (ospm)
+= odds-and-sods-package-manager (opsm)
 :revdate: 2026-01-18
 
 image:https://img.shields.io/badge/ReScript-Inside-e6484f?style=flat&logo=rescript[ReScript Inside]
@@ -33,7 +33,7 @@ See `docs/adding-language-adapters.adoc` for adding new languages.
 
 == Scope
 
-ospm wires together the hyperpolymath ecosystem into a single user-facing CLI and federation hub.
+opsm wires together the hyperpolymath ecosystem into a single user-facing CLI and federation hub.
 
 - Verification & logic: `proven` (Idris2)
 - Trust pipeline: `checky-monkey`, `claim-forge`, `palimpsest-license`, `oikos`
@@ -43,7 +43,7 @@ ospm wires together the hyperpolymath ecosystem into a single user-facing CLI an
 
 == Federation architecture
 
-Primary hub (ospm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu plus Radicle P2P, with event propagation for:
+Primary hub (opsm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.edu plus Radicle P2P, with event propagation for:
 
 - package-published
 - security-advisory (critical, immediate, notify dependents)
@@ -59,26 +59,26 @@ Primary hub (ospm-registry-hub) mirrors to GitHub/GitLab/Codeberg/corp.io/uni.ed
 deno task build
 
 # Run directly
-deno task ospm status
+deno task opsm status
 
 # Or install globally
-deno install --allow-read --allow-env --allow-net --allow-run -n ospm cli/Main.res.js
+deno install --allow-read --allow-env --allow-net --allow-run -n opsm cli/Main.res.js
 
 # Then use
-ospm publish ./my-package
-ospm audit @scope/package
-ospm status
+opsm publish ./my-package
+opsm audit @scope/package
+opsm status
 ----
 
 == Configuration
 
 Config search order:
 
-1. `$ospm_CONFIG`
-2. `./ospm.toml`
-3. `~/.config/ospm/ospm.toml`
+1. `$opsm_CONFIG`
+2. `./opsm.toml`
+3. `~/.config/opsm/opsm.toml`
 
-Example `ospm.toml`:
+Example `opsm.toml`:
 
 [source,toml]
 ----
@@ -106,7 +106,7 @@ base_url = "http://127.0.0.1:7005"
 
 == Verified code via proven
 
-ospm uses the https://github.com/hyperpolymath/proven[proven] library for mathematically verified operations:
+opsm uses the https://github.com/hyperpolymath/proven[proven] library for mathematically verified operations:
 
 - **SafeUrl** - URL validation for service configurations
 - **SafeJson** - Safe JSON parsing for API responses
@@ -131,7 +131,7 @@ cli/                    # ReScript CLI source (compiles to JS for Deno)
     ├── CheckyMonkey.res
     └── Palimpsest.res
 
-ospm-registry-hub/       # Registry hub stubs
+opsm-registry-hub/       # Registry hub stubs
 ├── schemas/            # JSON schemas
 ├── event-handlers/     # Event processing
 └── trust-pipeline/     # Trust scoring
@@ -146,23 +146,23 @@ docs/                   # Documentation
 
 - CLI code: `cli/` (ReScript clients + type contracts)
 - Service contracts: `docs/service-contracts.adoc`
-- Registry hub stubs: `ospm-registry-hub/` (schemas + examples)
+- Registry hub stubs: `opsm-registry-hub/` (schemas + examples)
 - Architecture: `docs/architecture.adoc`
 - IMP drafts: `docs/imp/`
 
 == Manifest ingestion pipeline
 
-Before `ospm publish` hits the trust pipeline the CLI now:
+Before `opsm publish` hits the trust pipeline the CLI now:
 
 1. **Locates and validates** the manifest via Nickel when `nickel-config-reporter` is installed (`nickel-config-reporter validate ...`).
-2. **Normalizes** the manifest through `ospm.Imp`, emitting the IMP payload described in `docs/imp/imp.schema.json`.
-3. **Stages** the IMP JSON for HAR by writing `/tmp/ospm-har-ingest/<package>.imp.json`, so HAR can route the normalized manifest through its agents.
+2. **Normalizes** the manifest through `opsm.Imp`, emitting the IMP payload described in `docs/imp/imp.schema.json`.
+3. **Stages** the IMP JSON for HAR by writing `/tmp/opsm-har-ingest/<package>.imp.json`, so HAR can route the normalized manifest through its agents.
 
 This keeps the publish flow aligned with the documented Nickel + HAR pipeline even before every service is online.
 
 == Minimal http-capability-gateway API
 
-`ospm.RegistryGateway` now exposes a tiny HTTP surface that mirrors the `http-capability-gateway` story:
+`opsm.RegistryGateway` now exposes a tiny HTTP surface that mirrors the `http-capability-gateway` story:
 
 * `POST /packages/publish` accepts `{ "manifest": <manifest>, "imp": <imp>, "digest": "sha256:..." }` and records the package in memory for downstream consumers while the HAR queue keeps the federation path fed.
 * `GET /packages/:name` returns the stored manifest, IMP payload, digest, and `published_at`.
@@ -175,10 +175,10 @@ Run `mix run scripts/seam_analysis.exs` to ingest several synthetic manifests ag
 Next work typically continues in:
 
 - `cli/Wiring.res` (publish pipeline orchestration)
-- `ospm-registry-hub/` (event handlers + trust pipeline)
+- `opsm-registry-hub/` (event handlers + trust pipeline)
 - `docs/imp/` (formal schema and normalization rules)
 
-== Develospment
+== Developsment
 
 [source,bash]
 ----
