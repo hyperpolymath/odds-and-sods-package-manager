@@ -38,6 +38,15 @@ payloads that evaluate to a JSON object, for example:
 * `POST /smart/plan` -> `{ "tokens": [...] }` or `{ "command": "opsm install ..." }`
 * `POST /smart/apply` -> executes plan (no dry-run)
 
+== Backend Environment Variables
+
+Some backends require extra context:
+
+* `OPSM_TOOLBOX_NAME` (default: `default`)
+* `OPSM_DISTROBOX_NAME` (required for distrobox backend)
+* `OPSM_CONTAINER_IMAGE` (required for container backend)
+* `OPSM_CONTAINER_CMD` (optional; default `dnf install -y`)
+
 == Response Formats
 
 `/smart/plan` returns a grouped plan plus backend availability:
