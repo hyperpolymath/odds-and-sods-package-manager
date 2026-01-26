@@ -214,7 +214,7 @@ defmodule Opsm.CLI do
       --user                   Install for current user (default)
       -g, --global             Global install (native mode)
       -D, --dev                Developsment dependency
-      --apply                  Apply smart install plan (default is dry-run)
+      --apply                  Apply smart install plan (connection ports only)
       --native                 Use native toolchain (npm, cargo, mix, pip)
       -y, --yes                Assume yes to prompts
       -q, --quiet              Minimal output
@@ -352,7 +352,7 @@ defmodule Opsm.CLI do
     print_smart_plan(plan)
 
     if opts[:apply] do
-      IO.puts("Apply is not wired yet. This is a dry-run plan only.")
+      execute_smart_plan(plan, opts)
     else
       IO.puts("Dry-run only. Use --apply to execute when available.")
     end
@@ -1076,7 +1076,29 @@ defmodule Opsm.CLI do
       |> Enum.map(&String.trim_leading(&1, "["))
       |> Enum.map(&String.trim_trailing(&1, "]"))
 
-    backends = MapSet.new(["rpm-ostree", "toolbox", "distrobox", "container", "native", "git", "source", "auto"])
+    backends =
+      MapSet.new([
+        "rpm-ostree",
+        "rpm",
+        "deb",
+        "dnfinition",
+        "flatpak",
+        "snap",
+        "pacman",
+        "homebrew",
+        "nix",
+        "guix",
+        "winget",
+        "choco",
+        "scoop",
+        "toolbox",
+        "distrobox",
+        "container",
+        "native",
+        "git",
+        "source",
+        "auto"
+      ])
 
     Enum.reduce(cleaned, %{current: "auto", plan: %{}}, fn token, acc ->
       case String.split(token, ":", parts: 2) do
@@ -1119,11 +1141,71 @@ defmodule Opsm.CLI do
       "distrobox" -> check_exec("distrobox")
       "container" -> check_exec("podman") |> fallback_exec("docker")
       "rpm-ostree" -> check_exec("rpm-ostree")
+      "rpm" -> check_exec("dnf") |> fallback_exec("yum")
+      "deb" -> check_exec("apt-get")
       "dnfinition" -> check_exec("dnfinition")
       "flatpak" -> check_exec("flatpak")
       "snap" -> check_exec("snap")
+      "pacman" -> check_exec("pacman")
+      "homebrew" -> check_exec("brew")
+      "nix" -> check_exec("nix-env")
+      "guix" -> check_exec("guix")
+      "winget" -> check_exec("winget")
+      "choco" -> check_exec("choco")
+      "scoop" -> check_exec("scoop")
       "native" -> {:ok, "native"}
       _ -> {:ok, "auto"}
+    end
+  end
+
+  defp execute_smart_plan(plan, opts) do
+    dry_run? = Keyword.get(opts, :dry_run, false)
+
+    if dry_run? do
+      IO.puts("Apply requested with --dry-run; no changes will be made.")
+    end
+
+    Enum.each(plan, fn {backend, pkgs} ->
+      case backend_to_port(backend) do
+        {:ok, port} ->
+          Enum.each(pkgs, fn pkg ->
+            IO.puts("Executing #{backend} install for #{pkg}...")
+
+            case Federation.install_via_port(pkg, port, dry_run: dry_run?) do
+              {:ok, %{command: cmd, dry_run: true}} ->
+                IO.puts("[DRY RUN] Would run: #{cmd}")
+
+              {:ok, output} when is_binary(output) ->
+                IO.puts(output)
+
+              {:error, reason} ->
+                Errors.print_error({:error, "Install failed: #{reason}"})
+            end
+          end)
+
+        :unsupported ->
+          IO.puts("Backend '#{backend}' not yet executable; keeping dry-run only.")
+      end
+    end)
+  end
+
+  defp backend_to_port(backend) do
+    case backend do
+      "rpm-ostree" -> {:ok, :rpm_ostree}
+      "rpm_ostree" -> {:ok, :rpm_ostree}
+      "rpm" -> {:ok, :rpm}
+      "deb" -> {:ok, :deb}
+      "dnfinition" -> {:ok, :dnfinition}
+      "flatpak" -> {:ok, :flatpak}
+      "snap" -> {:ok, :snap}
+      "pacman" -> {:ok, :pacman}
+      "homebrew" -> {:ok, :homebrew}
+      "nix" -> {:ok, :nix}
+      "guix" -> {:ok, :guix}
+      "winget" -> {:ok, :winget}
+      "choco" -> {:ok, :choco}
+      "scoop" -> {:ok, :scoop}
+      _ -> :unsupported
     end
   end
 
