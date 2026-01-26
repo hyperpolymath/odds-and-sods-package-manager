@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Help
+:toc: preamble
+:toclevels: 2
+
+== Quick Start
+
+[source,bash]
+----
+opsm install @npm lodash
+opsm search "http client"
+opsm install [rpm-ostree: gcc clang] [toolbox: zig ocaml]
+----
+
+== Smart Install (Dry‑Run)
+
+Use backend grouping to plan installs across rpm‑ostree, toolbox, containers, and source.
+
+[source,bash]
+----
+opsm install [rpm-ostree: gnat ada] [toolbox: zig ghc]
+----
+
+== Policies
+
+* `¬python` — block Python ecosystems
+* Approved‑only installs for users
+* Dry‑run plans always available
+
+== Troubleshooting
+
+If a package is missing or unmaintained, OPSM should:
+
+* warn clearly
+* suggest alternatives
+* provide a reversible plan
+
+See link:../problems-solutions/README.adoc[problems‑solutions].

@@ -1,0 +1,48 @@
+.TH OPSM 1 "January 2026" "OPSM" "User Commands"
+.SH NAME
+opsm \- Odds-and-sods package manager
+.SH SYNOPSIS
+.B opsm
+.RI [command] " [options]"
+.SH DESCRIPTION
+OPSM is a federated package manager that resolves across multiple ecosystems and system package managers.
+It supports dry-run planning, trust pipeline checks, and reversible operations.
+.SH COMMANDS
+.TP
+.B install [@forth] <pkg>
+Install a package from a specific registry.
+.TP
+.B install [backend:] ...
+Smart install grouping (dry-run plan by backend).
+.TP
+.B remove <pkg>
+Remove an installed package.
+.TP
+.B search <query>
+Search across registries.
+.TP
+.B info <pkg>
+Show package info.
+.TP
+.B audit <pkg>
+Run sustainability + license analysis.
+.TP
+.B ports
+List available system package managers.
+.SH OPTIONS
+.TP
+.B -n, --dry-run
+Show what would be done.
+.TP
+.B --apply
+Apply smart install plan (when wired).
+.SH CONFIG
+Default config lookup order:
+.BR $OPSM_CONFIG
+, ./opsm.toml, ~/.config/opsm/opsm.toml.
+.SH EXAMPLES
+.nf
+opsm install @npm lodash
+opsm install [rpm-ostree: gcc clang] [toolbox: zig ocaml]
+opsm search "http client"
+.fi

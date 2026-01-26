@@ -791,3 +791,7 @@ For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:STATE.scm[S
 == Problems → Solutions
 
 See link:problems-solutions/README.adoc[problems-solutions] for real-world failure cases and how OPSM should resolve them.
+
+== Help
+
+See link:docs/HELP.adoc[HELP].
