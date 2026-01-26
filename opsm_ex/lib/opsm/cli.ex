@@ -239,6 +239,8 @@ defmodule Opsm.CLI do
     CONNECTION PORTS (system package managers):
       @deb      Debian/Ubuntu (apt)
       @rpm      Fedora/RHEL (dnf/yum)
+      @rpm-ostree Fedora Silverblue (rpm-ostree)
+      @dnfinition Unified OS PM bridge (dnfinition)
       @pacman   Arch Linux (pacman)
       @winget   Windows (winget)
       @choco    Windows (Chocolatey)
@@ -246,6 +248,8 @@ defmodule Opsm.CLI do
       @homebrew macOS/Linux (brew)
       @nix      NixOS/any (nix-env)
       @guix     Guix System (guix)
+      @flatpak  Flatpak (flatpak)
+      @snap     Snap (snap)
 
     EXAMPLES:
       opsm install lodash                      # From default/detected registry

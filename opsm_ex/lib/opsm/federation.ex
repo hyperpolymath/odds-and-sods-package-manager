@@ -408,6 +408,10 @@ defmodule Opsm.Federation do
       target: :rpm_ostree,
       command: "rpm-ostree"
     },
+    dnfinition: %ConnectionPort{
+      target: :dnfinition,
+      command: "dnfinition"
+    },
     snap: %ConnectionPort{
       target: :snap,
       command: "snap"
@@ -769,6 +773,7 @@ defmodule Opsm.Federation do
   defp install_args(:deb, package, _opts), do: ["install", "-y", package]
   defp install_args(:rpm, package, _opts), do: ["install", "-y", package]
   defp install_args(:rpm_ostree, package, _opts), do: ["install", package]
+  defp install_args(:dnfinition, package, _opts), do: ["install", package]
   defp install_args(:pacman, package, _opts), do: ["-S", "--noconfirm", package]
   defp install_args(:homebrew, package, _opts), do: ["install", package]
   defp install_args(:nix, package, _opts), do: ["-iA", "nixpkgs.#{package}"]
