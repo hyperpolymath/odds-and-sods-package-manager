@@ -44,7 +44,8 @@ defmodule Opsm.CLI do
         json: :boolean,
         limit: :integer,
         native: :boolean,
-        dev: :boolean
+        dev: :boolean,
+        apply: :boolean
       ],
       aliases: [
         h: :help,
@@ -69,9 +70,7 @@ defmodule Opsm.CLI do
       ["repolist" | _] -> {:repolist, opts}
 
       # Install/Remove
-      ["install", "@" <> forth, package | _] -> {:install, forth, package, opts}
-      ["install", package | _] -> {:install, nil, package, opts}
-      ["install"] -> {:error, "install requires a package argument"}
+      ["install" | rest] -> parse_install_args(rest, opts)
 
       ["remove", package | _] -> {:remove, package, opts}
       ["uninstall", package | _] -> {:remove, package, opts}
@@ -143,6 +142,22 @@ defmodule Opsm.CLI do
     end
   end
 
+  defp parse_install_args([], _opts), do: {:error, "install requires a package argument"}
+
+  defp parse_install_args(["@" <> forth, package | _], opts) do
+    {:install, forth, package, opts}
+  end
+
+  defp parse_install_args([package], opts) do
+    if String.contains?(package, ":") or String.contains?(package, "[") or String.contains?(package, "]") do
+      {:smart_install, [package], opts}
+    else
+      {:install, nil, package, opts}
+    end
+  end
+
+  defp parse_install_args(rest, opts), do: {:smart_install, rest, opts}
+
   defp run({:help, _opts}) do
     IO.puts("""
     opsm - Odds-and-sods Package Manager
@@ -154,6 +169,7 @@ defmodule Opsm.CLI do
 
     PACKAGE COMMANDS:
       install [@forth] <pkg>   Install package (optionally from specific registry)
+      install [backend:] ...   Smart install with backend grouping
       remove <package>         Remove an installed package
       reinstall <package>      Reinstall a package
       update [packages...]     Update packages (all if none specified)
@@ -198,6 +214,7 @@ defmodule Opsm.CLI do
       --user                   Install for current user (default)
       -g, --global             Global install (native mode)
       -D, --dev                Developsment dependency
+      --apply                  Apply smart install plan (default is dry-run)
       --native                 Use native toolchain (npm, cargo, mix, pip)
       -y, --yes                Assume yes to prompts
       -q, --quiet              Minimal output
@@ -233,6 +250,7 @@ defmodule Opsm.CLI do
     EXAMPLES:
       opsm install lodash                      # From default/detected registry
       opsm install @npm lodash --version 4.17  # Specific version from npm
+      opsm install rpm-ostree: gcc clang       # Smart install grouping
       opsm install @cargo tokio --allow rc     # Release candidate
       opsm install @hex phoenix --systemwide   # System-wide
       opsm install @dnf htop                   # Via system package manager
@@ -322,6 +340,17 @@ defmodule Opsm.CLI do
     else
       # No registry specified - discover across all
       do_install_discover(package, version, allow, scope, dry_run?, json?)
+    end
+  end
+
+  defp run({:smart_install, rest, opts}) do
+    plan = parse_smart_install(rest)
+    print_smart_plan(plan)
+
+    if opts[:apply] do
+      IO.puts("Apply is not wired yet. This is a dry-run plan only.")
+    else
+      IO.puts("Dry-run only. Use --apply to execute when available.")
     end
   end
 
@@ -1034,5 +1063,43 @@ defmodule Opsm.CLI do
     IO.puts("  opsm install @npm #{package} --version #{version}")
     IO.puts("  opsm install @cargo #{package}")
     System.halt(0)
+  end
+
+  defp parse_smart_install(tokens) do
+    cleaned =
+      tokens
+      |> Enum.map(&String.trim/1)
+      |> Enum.map(&String.trim_leading(&1, "["))
+      |> Enum.map(&String.trim_trailing(&1, "]"))
+
+    backends = MapSet.new(["rpm-ostree", "toolbox", "distrobox", "container", "native", "git", "source", "auto"])
+
+    Enum.reduce(cleaned, %{current: "auto", plan: %{}}, fn token, acc ->
+      case String.split(token, ":", parts: 2) do
+        [backend, ""] ->
+          backend = String.downcase(backend)
+          backend = if MapSet.member?(backends, backend), do: backend, else: "auto"
+          %{acc | current: backend}
+
+        [backend, rest] when rest != "" ->
+          backend = String.downcase(backend)
+          backend = if MapSet.member?(backends, backend), do: backend, else: "auto"
+          pkg = String.trim(rest)
+          plan = Map.update(acc.plan, backend, [pkg], fn pkgs -> pkgs ++ [pkg] end)
+          %{acc | current: backend, plan: plan}
+
+        [pkg] ->
+          plan = Map.update(acc.plan, acc.current, [pkg], fn pkgs -> pkgs ++ [pkg] end)
+          %{acc | plan: plan}
+      end
+    end)
+    |> Map.get(:plan)
+  end
+
+  defp print_smart_plan(plan) do
+    IO.puts("Smart install plan (grouped by backend):")
+    Enum.each(plan, fn {backend, pkgs} ->
+      IO.puts("  - #{backend}: #{Enum.join(pkgs, \", \")}")
+    end)
   end
 end
