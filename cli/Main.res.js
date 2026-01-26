@@ -19,9 +19,9 @@ function printHelp() {
   console.log("");
   console.log("CONFIGURATION:");
   console.log("  Config file search order:");
-  console.log("  1. $OPM_CONFIG environment variable");
-  console.log("  2. ./opm.toml (local directory)");
-  console.log("  3. ~/.config/opm/opm.toml (user config)");
+  console.log("  1. $OPSM_CONFIG environment variable");
+  console.log("  2. ./opsm.toml (local directory)");
+  console.log("  3. ~/.config/opsm/opsm.toml (user config)");
   console.log("");
   console.log("EXAMPLES:");
   console.log("  opsm publish ./my-package");

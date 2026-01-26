@@ -145,7 +145,7 @@ run *args:
     # TODO: Add run command
     # Rust: cargo run {{args}}
 
-# Run in development mode with hot reload
+# Run in developsment mode with hot reload
 dev:
     @echo "Starting dev mode..."
     # TODO: Add dev command
@@ -345,7 +345,7 @@ state-phase:
 # GUIX & NIX
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Enter Guix development shell (primary)
+# Enter Guix developsment shell (primary)
 guix-shell:
     guix shell -D -f guix.scm
 
@@ -353,7 +353,7 @@ guix-shell:
 guix-build:
     guix build -f guix.scm
 
-# Enter Nix development shell (fallback)
+# Enter Nix developsment shell (fallback)
 nix-shell:
     @if [ -f "flake.nix" ]; then nix develop; else echo "No flake.nix"; fi
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-= OPM Architecture
+= OPSM Architecture
 :revdate: 2026-01-18
 
 == Overview
 
-OPM is a federated package manager that composes existing hyperpolymath services into a single CLI and registry hub.
+OPSM is a federated package manager that composes existing hyperpolymath services into a single CLI and registry hub.
 
 == Current state
 

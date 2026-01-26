@@ -206,11 +206,11 @@ async function loadConfigFrom(path) {
 }
 
 async function loadConfig() {
-  let envPath = Deno.env.get("OPM_CONFIG");
+  let envPath = Deno.env.get("OPSM_CONFIG");
   if (envPath !== undefined) {
     return await loadConfigFrom(envPath);
   }
-  let localPath = "opm.toml";
+  let localPath = "opsm.toml";
   let localExists = await fileExists(localPath);
   if (localExists) {
     return await loadConfigFrom(localPath);
@@ -222,7 +222,7 @@ async function loadConfig() {
       _0: "opsm config not found"
     };
   }
-  let userPath = Path.join(home, ".config", "opm", "opm.toml");
+  let userPath = Path.join(home, ".config", "opsm", "opsm.toml");
   let userExists = await fileExists(userPath);
   if (userExists) {
     return await loadConfigFrom(userPath);

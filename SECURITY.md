@@ -164,7 +164,7 @@ We commit to the following response times:
 | **Initial Response** | 48 hours     | We acknowledge receipt and confirm we're investigating                  |
 | **Triage**           | 7 days       | We assess severity, confirm the vulnerability, and estimate timeline    |
 | **Status Update**    | Every 7 days | Regular updates on remediation progress                                 |
-| **Resolution**       | 90 days      | Target for fix development and release (complex issues may take longer) |
+| **Resolution**       | 90 days      | Target for fix developsment and release (complex issues may take longer) |
 | **Disclosure**       | 90 days      | Public disclosure after fix is available (coordinated with you)         |
 
 > **Note:** These are targets, not guarantees. Complex vulnerabilities may require more time. We'll
@@ -361,7 +361,7 @@ To stay informed about security updates:
 
 | Version                | Supported | Notes                     |
 | ---------------------- | --------- | ------------------------- |
-| `main` branch          | ✅ Yes    | Latest development        |
+| `main` branch          | ✅ Yes    | Latest developsment        |
 | Latest release         | ✅ Yes    | Current stable            |
 | Previous minor release | ✅ Yes    | Security fixes backported |
 | Older versions         | ❌ No     | Please upgrade            |

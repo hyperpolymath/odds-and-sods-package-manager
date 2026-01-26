@@ -1,17 +1,17 @@
-# OPM v1.0.0 Testing Guide
+# OPSM v1.0.0 Testing Guide
 
-This guide provides manual testing procedures to validate OPM functionality before release.
+This guide provides manual testing procedures to validate OPSM functionality before release.
 
 ## Prerequisites
 
 ```bash
-# Install OPM
-cd opm_ex
+# Install OPSM
+cd opsm_ex
 mix deps.get
 mix compile
 mix escript.build
 
-# Make OPM available globally (optional)
+# Make OPSM available globally (optional)
 sudo ln -s $(pwd)/opsm /usr/local/bin/opsm
 
 # Verify installation
@@ -32,7 +32,7 @@ opsm version
 ### Run All Tests
 
 ```bash
-cd opm_ex
+cd opsm_ex
 
 # Run all unit tests (fast)
 mix test --exclude integration --exclude skip
@@ -61,7 +61,7 @@ Test semver constraint parsing:
 # In iex
 iex -S mix
 
-alias Opm.VersionConstraint
+alias Opsm.VersionConstraint
 
 # Caret range
 {:ok, c} = VersionConstraint.parse("^1.2.3", :semver)
@@ -92,7 +92,7 @@ Test simple dependency resolution:
 ```bash
 iex -S mix
 
-alias Opm.Resolver
+alias Opsm.Resolver
 
 # Simple resolution
 deps = [%{name: "lodash", constraint: "^4.17.0", forth: :npm}]
@@ -165,7 +165,7 @@ Test that resolver detects conflicts:
 ```bash
 iex -S mix
 
-alias Opm.Resolver
+alias Opsm.Resolver
 
 # Create impossible constraints (for demonstration)
 deps = [
@@ -325,7 +325,7 @@ cat > package.json <<EOF
 {
   "name": "my-test-package",
   "version": "1.0.0",
-  "description": "Test package for OPM validation",
+  "description": "Test package for OPSM validation",
   "license": "MIT",
   "main": "index.js"
 }
@@ -397,7 +397,7 @@ Test URL and JSON validation:
 ```bash
 iex -S mix
 
-alias Opm.Verified.{Url, Json}
+alias Opsm.Verified.{Url, Json}
 
 # URL validation
 {:ok, url} = Url.validate("https://registry.npmjs.org/package")
@@ -429,8 +429,8 @@ Test federation event creation:
 ```bash
 iex -S mix
 
-alias Opm.Events
-alias Opm.Config
+alias Opsm.Events
+alias Opsm.Config
 
 {:ok, config} = Config.load()
 
@@ -556,7 +556,7 @@ If trust services are not running, many tests will show warnings but should not 
 ⚠ License analysis unavailable: service timeout
 ```
 
-This is expected behavior - OPM degrades gracefully.
+This is expected behavior - OPSM degrades gracefully.
 
 ### HAR Agents Not Running
 
@@ -612,10 +612,10 @@ jobs:
           otp-version: '26'
 
       - name: Install dependencies
-        run: cd opm_ex && mix deps.get
+        run: cd opsm_ex && mix deps.get
 
       - name: Run tests
-        run: cd opm_ex && mix test --exclude integration
+        run: cd opsm_ex && mix test --exclude integration
 
       - name: Run validation
         run: ./scripts/validate-v1.0.sh

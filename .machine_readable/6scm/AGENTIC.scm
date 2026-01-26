@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: PMPL-1.0
+;; SPDX-License-Identifier: PMPL-1.0-or-later
 ;; AGENTIC.scm - AI agent interaction patterns for odds-and-sods-package-manager
 
 (define agentic-config

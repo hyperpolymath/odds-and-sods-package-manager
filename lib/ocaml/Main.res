@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Main.res - Entry point for OPM CLI
+// Main.res - Entry point for OPSM CLI
 
 open Types
 
@@ -30,9 +30,9 @@ let printHelp = () => {
   Console.log("")
   Console.log("CONFIGURATION:")
   Console.log("  Config file search order:")
-  Console.log("  1. $OPM_CONFIG environment variable")
-  Console.log("  2. ./opm.toml (local directory)")
-  Console.log("  3. ~/.config/opm/opm.toml (user config)")
+  Console.log("  1. $OPSM_CONFIG environment variable")
+  Console.log("  2. ./opsm.toml (local directory)")
+  Console.log("  3. ~/.config/opsm/opsm.toml (user config)")
   Console.log("")
   Console.log("EXAMPLES:")
   Console.log("  opsm publish ./my-package")

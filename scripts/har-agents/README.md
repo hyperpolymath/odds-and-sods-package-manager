@@ -158,7 +158,7 @@ Searches package archives and mirror services for historical versions.
 
 ## Running Agents
 
-### Development
+### Developsment
 ```bash
 # Run all agents in separate terminals:
 ./github-search.sh
@@ -208,21 +208,21 @@ sudo systemctl status har-*
 
 ---
 
-## Integration with OPM
+## Integration with OPSM
 
 The Agentic registry adapter (`lib/opsm/registries/agentic.ex`) submits tasks to the HAR queue:
 
 ```elixir
-# OPM submits task
-Opm.Registries.Agentic.fetch_package("idris2-json", "latest")
+# OPSM submits task
+Opsm.Registries.Agentic.fetch_package("idris2-json", "latest")
 
 # Task written to /tmp/opsm-har-ingest/task-abc123.imp.json
 
 # HAR agent processes task
 # Result written to /tmp/opsm-har-ingest/results/task-abc123.result.json
 
-# OPM polls for result
-Opm.HarQueue.await_result(task_id, timeout: 30_000)
+# OPSM polls for result
+Opsm.HarQueue.await_result(task_id, timeout: 30_000)
 ```
 
 ---
@@ -258,7 +258,7 @@ To avoid rate limits:
 - Agents should run in sandboxed environment
 - Consider using AppArmor/SELinux profiles
 - Validate all URLs before making requests
-- Use OPM's `Verified.Url` module for URL validation
+- Use OPSM's `Verified.Url` module for URL validation
 
 ---
 

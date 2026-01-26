@@ -1,6 +1,6 @@
 {
   "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
-  "name": "@hyperpolymath/opm",
+  "name": "@hyperpolymath/opsm",
   "version": "0.1.0",
   "license": "PMPL-1.0",
   "exports": "./cli/Main.res.js",

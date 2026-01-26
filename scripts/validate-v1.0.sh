@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: PMPL-1.0
-# OPM v1.0.0 Manual Validation Script
+# OPSM v1.0.0 Manual Validation Script
 # Tests all major functionality before release
 
 set -euo pipefail
@@ -11,7 +11,7 @@ readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m' # No Color
 
 readonly TEST_DIR="/tmp/opsm-validation-$$"
-readonly OPM_BIN="./opsm"
+readonly OPSM_BIN="./opsm"
 
 PASSED=0
 FAILED=0
@@ -56,12 +56,12 @@ setup() {
     mkdir -p "$TEST_DIR"
     cd "$TEST_DIR"
 
-    # Build OPM if needed
-    if [[ ! -f "$OPM_BIN" ]]; then
-        log "Building OPM..."
-        cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    # Build OPSM if needed
+    if [[ ! -f "$OPSM_BIN" ]]; then
+        log "Building OPSM..."
+        cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
         mix escript.build || {
-            error "Failed to build OPM"
+            error "Failed to build OPSM"
             exit 1
         }
         cd "$TEST_DIR"
@@ -80,7 +80,7 @@ cleanup() {
 test_version_constraints() {
     section "Test 1: Version Constraint Parsing"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running version constraint tests..."
     if mix test test/opsm/version_constraint_test.exs --color 2>&1 | grep -q "0 failures"; then
@@ -98,7 +98,7 @@ test_version_constraints() {
 test_dependency_resolver() {
     section "Test 2: Dependency Resolver"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running resolver tests..."
     if mix test test/opsm/resolver_test.exs --color 2>&1 | grep -q "0 failures"; then
@@ -116,7 +116,7 @@ test_dependency_resolver() {
 test_lockfile() {
     section "Test 3: Lockfile System"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running lockfile tests..."
     if mix test test/opsm/lockfile_test.exs --color 2>&1 | grep -q "0 failures"; then
@@ -134,7 +134,7 @@ test_lockfile() {
 test_trust_pipeline() {
     section "Test 4: Trust Pipeline"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running trust pipeline tests (unit tests)..."
     if mix test test/integration/trust_pipeline_test.exs --exclude integration --color 2>&1 | grep -q "0 failures"; then
@@ -152,7 +152,7 @@ test_trust_pipeline() {
 test_verified_library() {
     section "Test 5: Verified Library"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running verified library tests..."
     if mix test test/opsm/verified_test.exs --color 2>&1 | grep -q "0 failures"; then
@@ -170,7 +170,7 @@ test_verified_library() {
 test_e2e_integration() {
     section "Test 6: E2E Integration Tests"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running E2E integration tests (unit tests only)..."
     if mix test test/integration/e2e_test.exs --exclude integration --exclude skip --color 2>&1 | grep -q "0 failures"; then
@@ -188,13 +188,13 @@ test_e2e_integration() {
 test_registry_adapters() {
     section "Test 7: Registry Adapters"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     local adapters=("npm" "hex" "cargo" "pypi" "nimble" "idris2" "git" "agentic")
 
     for adapter in "${adapters[@]}"; do
         log "Checking $adapter adapter..."
-        if grep -q "defmodule Opm.Registries.$(echo "$adapter" | sed 's/.*/\u&/')" "lib/opsm/registries/${adapter}.ex" 2>/dev/null; then
+        if grep -q "defmodule Opsm.Registries.$(echo "$adapter" | sed 's/.*/\u&/')" "lib/opsm/registries/${adapter}.ex" 2>/dev/null; then
             test_pass "$adapter adapter exists"
         else
             test_fail "$adapter adapter missing"
@@ -252,7 +252,7 @@ test_har_agents() {
 test_cli_commands() {
     section "Test 9: CLI Commands"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     # Test help
     if mix opsm help &>/dev/null; then
@@ -284,7 +284,7 @@ test_cli_commands() {
 test_configuration() {
     section "Test 10: Configuration"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     # Check for default config
     if [[ -f "config/opsm.toml" ]] || [[ -f "opsm.toml" ]]; then
@@ -295,7 +295,7 @@ test_configuration() {
 
     # Test config loading
     log "Testing configuration loading..."
-    if mix run -e "Opm.Config.load()" &>/dev/null; then
+    if mix run -e "Opsm.Config.load()" &>/dev/null; then
         test_pass "Configuration loads successfully"
     else
         test_fail "Configuration loading failed"
@@ -337,7 +337,7 @@ test_documentation() {
 test_full_suite() {
     section "Test 12: Full Test Suite"
 
-    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
+    cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opsm_ex
 
     log "Running full test suite (this may take a while)..."
     local test_output
@@ -359,7 +359,7 @@ test_full_suite() {
 # Main
 # =============================================================================
 main() {
-    log "OPM v1.0.0 Validation Suite"
+    log "OPSM v1.0.0 Validation Suite"
     log "==========================="
 
     setup
@@ -387,7 +387,7 @@ main() {
     echo ""
 
     if [[ $FAILED -eq 0 ]]; then
-        log "All tests passed! OPM v1.0.0 is ready for release."
+        log "All tests passed! OPSM v1.0.0 is ready for release."
         exit 0
     else
         error "$FAILED test(s) failed. Please fix before release."

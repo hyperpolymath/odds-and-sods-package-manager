@@ -81,7 +81,7 @@ Look for issues labelled:
 
 ---
 
-## Development Workflow
+## Developsment Workflow
 
 ### Branch Naming
 ```

@@ -7,7 +7,7 @@ using HTTP
 using JSON3
 using Dates
 
-const QUEUE_DIR = "/tmp/opm-har-ingest"
+const QUEUE_DIR = "/tmp/opsm-har-ingest"
 const POLL_INTERVAL = 5
 const SEARCH_ENGINE = "https://html.duckduckgo.com/html/"
 

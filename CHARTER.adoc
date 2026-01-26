@@ -1,9 +1,9 @@
-= OPM Charter
+= OPSM Charter
 :revdate: 2026-01-18
 
 == Purpose
 
-OPM exists to deliver a federated, multi-language package manager with formal verification guarantees, a multi-dimensional trust pipeline, and automated ecosystem health monitoring.
+OPSM exists to deliver a federated, multi-language package manager with formal verification guarantees, a multi-dimensional trust pipeline, and automated ecosystem health monitoring.
 
 == Stewardship Council
 
@@ -23,4 +23,4 @@ The stewardship council safeguards:
 
 == Scope
 
-OPM orchestrates the existing ecosystem rather than replacing it. The opsm CLI provides a unified user experience across trusted services.
+OPSM orchestrates the existing ecosystem rather than replacing it. The opsm CLI provides a unified user experience across trusted services.

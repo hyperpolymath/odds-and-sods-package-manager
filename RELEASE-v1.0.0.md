@@ -1,4 +1,4 @@
-# OPM v1.0.0 Release Announcement
+# OPSM v1.0.0 Release Announcement
 
 **Date:** January 23, 2026
 **Repository:** https://github.com/hyperpolymath/opsm
@@ -6,18 +6,18 @@
 
 ## Overview
 
-We're excited to announce the release of **OPM (Odds and Sods Package Manager) v1.0.0**, a universal package manager that unifies dependency management across 8+ programming language ecosystems with built-in trust verification and federation support.
+We're excited to announce the release of **OPSM (Odds and Sods Package Manager) v1.0.0**, a universal package manager that unifies dependency management across 8+ programming language ecosystems with built-in trust verification and federation support.
 
-OPM v1.0.0 represents 4 months of development and the completion of all 4 major implementation phases:
+OPSM v1.0.0 represents 4 months of developsment and the completion of all 4 major implementation phases:
 
 - **Phase 1:** Dependency Resolution Engine
 - **Phase 2:** Trust Pipeline Hardening
 - **Phase 3:** Federation Activation
 - **Phase 4:** End-to-End Validation
 
-## What is OPM?
+## What is OPSM?
 
-OPM is a next-generation package manager designed to solve the fragmentation problem in modern software development. Instead of managing separate package managers for each ecosystem (npm, cargo, pip, hex, etc.), OPM provides:
+OPSM is a next-generation package manager designed to solve the fragmentation problem in modern software developsment. Instead of managing separate package managers for each ecosystem (npm, cargo, pip, hex, etc.), OPSM provides:
 
 - **Universal Interface:** One CLI for all your dependencies
 - **Verified Packages:** Built-in trust pipeline with attestation and verification
@@ -27,7 +27,7 @@ OPM is a next-generation package manager designed to solve the fragmentation pro
 
 ## Supported Ecosystems
 
-OPM v1.0.0 supports **8 package ecosystems**:
+OPSM v1.0.0 supports **8 package ecosystems**:
 
 1. **npm** (JavaScript/TypeScript) - Node.js packages
 2. **Hex** (Elixir) - BEAM ecosystem packages
@@ -186,7 +186,7 @@ mix test test/opsm/verified_test.exs
 ```bash
 # Clone repository:
 git clone https://github.com/hyperpolymath/opsm.git
-cd opsm/opm_ex
+cd opsm/opsm_ex
 
 # Install dependencies:
 mix deps.get
@@ -283,7 +283,7 @@ opsm install my-project
 # - serde (cargo)
 # - poison (hex)
 
-# OPM resolves all dependencies across registries
+# OPSM resolves all dependencies across registries
 ```
 
 ### Publish with Trust Pipeline
@@ -318,7 +318,7 @@ opsm install idris2-network --forth agentic
 
 ### Dependency Resolution
 
-OPM uses a **PubGrub-inspired algorithm** (same as Cargo and pip):
+OPSM uses a **PubGrub-inspired algorithm** (same as Cargo and pip):
 
 1. Start with root package constraints
 2. Fetch available versions from registries
@@ -357,7 +357,7 @@ Mirrors (GitHub, GitLab, IPFS)
 
 ### Registry Adapters
 
-OPM uses a registry adapter pattern:
+OPSM uses a registry adapter pattern:
 
 - **HTTP Registries:** npm, Hex, Crates, PyPI, Nimble
 - **Git-Based:** Idris2, generic Git
@@ -373,7 +373,7 @@ Each adapter implements:
 HAR agents run as systemd services watching `/tmp/opsm-har-ingest/`:
 
 ```
-OPM Client
+OPSM Client
     ↓
 Task Queue (*.imp.json)
     ↓
@@ -381,7 +381,7 @@ HAR Agents (github-search, web-scraper, mirror-finder)
     ↓
 Results (*.result.json)
     ↓
-OPM Client
+OPSM Client
 ```
 
 **Queue Structure:**
@@ -402,7 +402,7 @@ OPM Client
 # Before (npm):
 npm install express lodash
 
-# After (OPM):
+# After (OPSM):
 opsm install express lodash --forth npm
 
 # Or batch install:
@@ -415,7 +415,7 @@ opsm install  # Reads package.json dependencies
 # Before (cargo):
 cargo add tokio serde
 
-# After (OPM):
+# After (OPSM):
 opsm install tokio serde --forth cargo
 
 # Or from Cargo.toml:
@@ -428,7 +428,7 @@ opsm install  # Reads Cargo.toml dependencies
 # Before (mix):
 mix deps.get
 
-# After (OPM):
+# After (OPSM):
 opsm install --forth hex
 
 # Or specify packages:
@@ -513,7 +513,7 @@ We welcome contributions! See `CONTRIBUTING.md` for guidelines.
 ```bash
 # Fork and clone:
 git clone https://github.com/YOUR_USERNAME/opsm.git
-cd opsm/opm_ex
+cd opsm/opsm_ex
 
 # Run tests:
 mix test --exclude integration
@@ -540,7 +540,7 @@ mix test --exclude integration
 
 ## License
 
-OPM is licensed under the **PMPL-1.0 (Polymath Public Meta-License)**.
+OPSM is licensed under the **PMPL-1.0 (Polymath Public Meta-License)**.
 
 See `LICENSE` for details.
 
@@ -554,6 +554,6 @@ See `LICENSE` for details.
 
 ---
 
-**Thank you** to everyone who contributed feedback, testing, and code during the v1.0 development cycle. OPM v1.0.0 represents a major milestone in unifying package management across the programming ecosystem.
+**Thank you** to everyone who contributed feedback, testing, and code during the v1.0 developsment cycle. OPSM v1.0.0 represents a major milestone in unifying package management across the programming ecosystem.
 
 Let's build something amazing together! 🚀

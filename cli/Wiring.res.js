@@ -148,7 +148,7 @@ async function runStatus(config) {
     retries: httpOpts_retries,
     backoffMs: httpOpts_backoffMs
   };
-  console.log("OPM Service Status");
+  console.log("OPSM Service Status");
   console.log("==================");
   let oikosClient = Oikos.make(config.oikos.baseUrl, config.oikos.token, httpOpts);
   let oikosHealth = await Oikos.health(oikosClient);

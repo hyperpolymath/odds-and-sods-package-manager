@@ -1,0 +1,289 @@
+= OPSM Mobile Architecture
+
+== Technology Stack
+
+**UI Layer:** ReScript + TEA (The Elm Architecture)
+**Routing:** cadre-router + cadre-tea-router
+**Native Layer:** Tauri 2.0 (Rust)
+**Backend:** OPSM Phoenix (Elixir)
+
+== Component Overview
+
+[source]
+----
+┌─────────────────────────────────────────────────────┐
+│  ReScript TEA App                                   │
+│  ├─ Model: AppState                                 │
+│  │    ├─ currentRoute: Route.t                      │
+│  │    ├─ packages: list<Package.t>                  │
+│  │    ├─ searchQuery: string                        │
+│  │    └─ installStatus: InstallStatus.t             │
+│  ├─ View: route => Html.t                           │
+│  ├─ Update: (msg, model) => (model, Cmd.t)          │
+│  └─ Subscriptions: model => Sub.t                   │
+└────────────────┬────────────────────────────────────┘
+                 │ ReScript FFI
+                 ▼
+┌─────────────────────────────────────────────────────┐
+│  Tauri Commands (Rust)                              │
+│  ├─ install_package(name, version)                  │
+│  ├─ search_packages(query, registry)                │
+│  ├─ get_package_info(name, version)                 │
+│  ├─ audit_lockfile(path)                            │
+│  └─ list_installed()                                │
+└────────────────┬────────────────────────────────────┘
+                 │ HTTP Client (reqwest)
+                 ▼
+┌─────────────────────────────────────────────────────┐
+│  OPSM Phoenix API                                    │
+│  POST /api/packages/install                         │
+│  GET  /api/packages/search                          │
+│  GET  /api/packages/:name/:version                  │
+│  POST /api/lockfile/audit                           │
+│  GET  /api/packages/installed                       │
+└─────────────────────────────────────────────────────┘
+----
+
+== Route Definitions
+
+Using cadre-router, we define type-safe routes:
+
+[source,rescript]
+----
+module Route = {
+  type t =
+    | Home
+    | Search(string)                    // /search/:query
+    | PackageDetail(string, string)     // /package/:name/:version
+    | Install(string, string, string)   // /install/:registry/:name/:version
+    | Installed
+    | Settings
+    | NotFound
+  
+  // Parser using cadre-router combinators
+  let parser = {
+    open CadreRouter.Parser
+    oneOf([
+      top->map(_ => Home),
+      s("search")->andThen(str)->map(((_, q)) => Search(q)),
+      s("package")->andThen(str)->andThen(str)
+        ->map((((_, name), version)) => PackageDetail(name, version)),
+      s("install")->andThen(str)->andThen(str)->andThen(str)
+        ->map(((((_, reg), name), ver)) => Install(reg, name, ver)),
+      s("installed")->map(_ => Installed),
+      s("settings")->map(_ => Settings),
+    ])
+  }
+  
+  let toString = route => switch route {
+    | Home => "/"
+    | Search(q) => "/search/" ++ q
+    | PackageDetail(name, ver) => "/package/" ++ name ++ "/" ++ ver
+    | Install(reg, name, ver) => "/install/" ++ reg ++ "/" ++ name ++ "/" ++ ver
+    | Installed => "/installed"
+    | Settings => "/settings"
+    | NotFound => "/404"
+  }
+}
+----
+
+== TEA Integration
+
+Using cadre-tea-router for navigation:
+
+[source,rescript]
+----
+type msg =
+  | UrlChanged(Route.t)
+  | Navigate(Route.t)
+  | SearchPackages(string)
+  | SearchResult(Result.t<list<Package.t>, string>)
+  | InstallPackage(string, string, string)
+  | InstallComplete(Result.t<unit, string>)
+
+let subscriptions = _model => {
+  CadreTeaRouter.Router.urlChanges(url => 
+    UrlChanged(url->CadreRouter.Parser.parse(Route.parser))
+  )
+}
+
+let update = (msg, model) => {
+  switch msg {
+  | Navigate(route) => 
+      (model, CadreTeaRouter.Router.push(Route.toString(route)))
+  
+  | UrlChanged(route) => 
+      ({...model, currentRoute: route}, Cmd.none)
+  
+  | SearchPackages(query) =>
+      (model, TauriFFI.searchPackages(query, SearchResult))
+  
+  | InstallPackage(reg, name, ver) =>
+      (model, TauriFFI.installPackage(reg, name, ver, InstallComplete))
+  }
+}
+----
+
+== Tauri FFI Layer
+
+ReScript bindings for Tauri commands:
+
+[source,rescript]
+----
+module TauriFFI = {
+  type package = {
+    name: string,
+    version: string,
+    registry: string,
+    description: option<string>,
+  }
+  
+  @module("@tauri-apps/api/core")
+  external invoke: (string, 'a) => Promise.t<'b> = "invoke"
+  
+  let searchPackages = (query: string, toMsg) => {
+    Tea.Cmd.call(callbacks => {
+      invoke("search_packages", {"query": query})
+      ->Promise.then(result => {
+        callbacks.enqueue(toMsg(Ok(result)))
+        Promise.resolve()
+      })
+      ->Promise.catch(err => {
+        callbacks.enqueue(toMsg(Error(err)))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+  }
+  
+  let installPackage = (registry, name, version, toMsg) => {
+    Tea.Cmd.call(callbacks => {
+      invoke("install_package", {
+        "registry": registry,
+        "name": name, 
+        "version": version
+      })
+      ->Promise.then(_ => {
+        callbacks.enqueue(toMsg(Ok()))
+        Promise.resolve()
+      })
+      ->Promise.catch(err => {
+        callbacks.enqueue(toMsg(Error(err)))
+        Promise.resolve()
+      })
+      ->ignore
+    })
+  }
+}
+----
+
+== Rust Tauri Commands
+
+[source,rust]
+----
+#[tauri::command]
+async fn search_packages(query: String, registry: Option<String>) -> Result<Vec<Package>, String> {
+    let url = format!("http://localhost:4000/api/packages/search?q={}&registry={}", 
+        query, registry.unwrap_or("npm".to_string()));
+    
+    let client = reqwest::Client::new();
+    let response = client.get(&url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    response.json::<Vec<Package>>()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn install_package(registry: String, name: String, version: String) -> Result<(), String> {
+    let url = "http://localhost:4000/api/packages/install";
+    let body = serde_json::json!({
+        "registry": registry,
+        "name": name,
+        "version": version
+    });
+    
+    let client = reqwest::Client::new();
+    client.post(url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
+----
+
+== Phoenix API Endpoints
+
+[source,elixir]
+----
+# lib/opsm_web/router.ex
+scope "/api", OpsmWeb do
+  pipe_through :api
+  
+  post "/packages/install", PackageController, :install
+  get "/packages/search", PackageController, :search
+  get "/packages/:name/:version", PackageController, :show
+  post "/lockfile/audit", LockfileController, :audit
+  get "/packages/installed", PackageController, :installed
+end
+
+# lib/opsm_web/controllers/package_controller.ex
+defmodule OpsmWeb.PackageController do
+  use OpsmWeb, :controller
+  
+  def search(conn, %{"q" => query, "registry" => registry}) do
+    registry_atom = String.to_existing_atom(registry)
+    
+    case Opsm.Registries.Registry.search(registry_atom, query) do
+      {:ok, packages} ->
+        json(conn, %{status: "success", packages: packages})
+      
+      {:error, reason} ->
+        conn
+        |> put_status(500)
+        |> json(%{status: "error", reason: inspect(reason)})
+    end
+  end
+  
+  def install(conn, %{"registry" => registry, "name" => name, "version" => version}) do
+    case Opsm.Wiring.run_install(name, version, registry: String.to_atom(registry)) do
+      {:ok, result} ->
+        json(conn, %{status: "success", result: result})
+      
+      {:error, reason} ->
+        conn
+        |> put_status(500)
+        |> json(%{status: "error", reason: inspect(reason)})
+    end
+  end
+end
+----
+
+== Benefits of This Architecture
+
+1. **Type Safety**: Routes, messages, and API calls are all type-checked
+2. **Predictability**: TEA architecture makes state changes explicit
+3. **Reusability**: 100% of OPSM Elixir backend logic reused
+4. **Native Performance**: Tauri compiles to native iOS/Android
+5. **Standard Compliance**: Uses your approved tech stack (ReScript, Rust, Elixir)
+6. **Router Integration**: cadre-router provides Elm-quality routing in ReScript
+
+== Developsment Workflow
+
+1. **Start API host app:** `mix phx.server`
+2. **Run Tauri dev:** `cd opsm_mobile && cargo tauri dev`
+3. **Build for mobile:** `cargo tauri android build` or `cargo tauri ios build`
+
+== Next Steps
+
+1. Create Phoenix API endpoints
+2. Implement Tauri commands
+3. Write ReScript FFI bindings
+4. Build TEA app with cadre-tea-router
+5. Test on desktop
+6. Build for iOS/Android

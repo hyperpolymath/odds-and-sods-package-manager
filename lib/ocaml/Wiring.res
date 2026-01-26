@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Wiring.res - Command orchestration for OPM CLI
+// Wiring.res - Command orchestration for OPSM CLI
 
 open Types
 
@@ -7,7 +7,7 @@ open Types
 // Publish Pipeline
 // =============================================================================
 
-let runPublish = async (config: opmConfig, path: string): result<unit> => {
+let runPublish = async (config: opsmConfig, path: string): result<unit> => {
   let httpOpts: httpOptions = {
     timeoutMs: config.http.timeoutMs,
     retries: config.http.retries,
@@ -116,7 +116,7 @@ let runPublish = async (config: opmConfig, path: string): result<unit> => {
 // Audit Pipeline
 // =============================================================================
 
-let runAudit = async (config: opmConfig, packageName: string): result<unit> => {
+let runAudit = async (config: opsmConfig, packageName: string): result<unit> => {
   let httpOpts: httpOptions = {
     timeoutMs: config.http.timeoutMs,
     retries: config.http.retries,
@@ -175,14 +175,14 @@ let runAudit = async (config: opmConfig, packageName: string): result<unit> => {
 // Status Check
 // =============================================================================
 
-let runStatus = async (config: opmConfig): result<unit> => {
+let runStatus = async (config: opsmConfig): result<unit> => {
   let httpOpts: httpOptions = {
     timeoutMs: config.http.timeoutMs,
     retries: config.http.retries,
     backoffMs: config.http.backoffMs,
   }
 
-  Console.log("OPM Service Status")
+  Console.log("OPSM Service Status")
   Console.log("==================")
 
   // Check oikos

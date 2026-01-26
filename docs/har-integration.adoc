@@ -4,11 +4,11 @@
 :toc: left
 :toclevels: 3
 
-This document describes how OPM integrates with hybrid-automation-router (HAR) for agentic package discovery and fetching.
+This document describes how OPSM integrates with hybrid-automation-router (HAR) for agentic package discovery and fetching.
 
 == Overview
 
-When a package cannot be found in conventional registries, OPM delegates to HAR agents that can:
+When a package cannot be found in conventional registries, OPSM delegates to HAR agents that can:
 
 - Search GitHub, GitLab, SourceForge, university repositories
 - Scrape legacy project websites for download links
@@ -20,7 +20,7 @@ When a package cannot be found in conventional registries, OPM delegates to HAR 
 
 [source]
 ----
-OPM CLI
+OPSM CLI
    │
    ├─> Registry Adapters (npm, Hex, Crates, PyPI, etc.)
    │   └─> Direct HTTP fetch ✓
@@ -39,7 +39,7 @@ OPM CLI
 
 === Task Submission
 
-OPM writes task files to `/tmp/opsm-har-ingest/<uuid>.json`:
+OPSM writes task files to `/tmp/opsm-har-ingest/<uuid>.json`:
 
 [source,json]
 ----
@@ -84,7 +84,7 @@ OPM writes task files to `/tmp/opsm-har-ingest/<uuid>.json`:
 
 === Task Response
 
-HAR agents POST results back to OPM callback URL:
+HAR agents POST results back to OPSM callback URL:
 
 [source,json]
 ----
@@ -278,20 +278,20 @@ Please provide:
 Your choice: _
 ----
 
-== OPM Integration
+== OPSM Integration
 
 === Agentic Registry Adapter
 
 [source,elixir]
 ----
-# opm_ex/lib/opsm/registries/agentic.ex
-defmodule Opm.Registries.Agentic do
+# opsm_ex/lib/opsm/registries/agentic.ex
+defmodule Opsm.Registries.Agentic do
   @moduledoc """
   Agentic registry adapter that delegates to HAR for package discovery.
   """
 
-  alias Opm.HarQueue
-  alias Opm.Types.ResolvedPackage
+  alias Opsm.HarQueue
+  alias Opsm.Types.ResolvedPackage
 
   def fetch_package(name, hints \\ %{}) do
     task_id = generate_task_id()
@@ -357,8 +357,8 @@ end
 
 [source,elixir]
 ----
-# opm_ex/lib/opsm/har_queue.ex
-defmodule Opm.HarQueue do
+# opsm_ex/lib/opsm/har_queue.ex
+defmodule Opsm.HarQueue do
   @moduledoc """
   Manages task queue for HAR integration.
   """
@@ -424,12 +424,12 @@ end
 
 == Callback Handler
 
-OPM runs a simple HTTP server to receive HAR results:
+OPSM runs a simple HTTP server to receive HAR results:
 
 [source,elixir]
 ----
-# opm_ex/lib/opsm/har_callback.ex
-defmodule Opm.HarCallback do
+# opsm_ex/lib/opsm/har_callback.ex
+defmodule Opsm.HarCallback do
   use Plug.Router
 
   plug :match

@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: PMPL-1.0
+;; SPDX-License-Identifier: PMPL-1.0-or-later
 ;; ECOSYSTEM.scm - Ecosystem position for odds-and-sods-package-manager
 ;; Media-Type: application/vnd.ecosystem+scm
 

@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: PMPL-1.0
+;; SPDX-License-Identifier: PMPL-1.0-or-later
 ;; META.scm - Meta-level information for odds-and-sods-package-manager
 ;; Media-Type: application/meta+scheme
 
@@ -8,7 +8,7 @@
     ("Verification-first pipeline with proven/Idris2")
     ("Trust scoring via checky-monkey + oikos"))
 
-  (development-practices
+  (developsment-practices
     (code-style ("Rust + AsciiDoc + Scheme metadata"))
     (security
       (principle "Defense in depth"))

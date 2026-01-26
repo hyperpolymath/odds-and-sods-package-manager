@@ -3,7 +3,7 @@
 The following files in `.machine_readable/` contain structured project metadata:
 
 - `STATE.scm` - Current project state and progress
-- `META.scm` - Architecture decisions and development practices
+- `META.scm` - Architecture decisions and developsment practices
 - `ECOSYSTEM.scm` - Position in the ecosystem and related projects
 - `AGENTIC.scm` - AI agent interaction patterns
 - `NEUROSYM.scm` - Neurosymbolic integration config
@@ -63,7 +63,7 @@ The following files in `.machine_readable/` contain structured project metadata:
 | React Native | Tauri/Dioxus |
 | Flutter/Dart | Tauri/Dioxus |
 
-## Mobile Development
+## Mobile Developsment
 
 No exceptions for Kotlin/Swift - use Rust-first approach:
 

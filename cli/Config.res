@@ -62,7 +62,7 @@ let defaultServiceConfig = (port: int): serviceConfig => {
   token: None,
 }
 
-let exampleConfig = (): opmConfig => {
+let exampleConfig = (): opsmConfig => {
   http: defaultHttpConfig,
   claimForge: defaultServiceConfig(7001),
   checkyMonkey: defaultServiceConfig(7002),
@@ -175,7 +175,7 @@ let fileExists = async (path: string): bool => {
 // Config Loading
 // =============================================================================
 
-let loadConfigFrom = async (path: string): result<opmConfig> => {
+let loadConfigFrom = async (path: string): result<opsmConfig> => {
   try {
     let data = await Deno.readTextFile(path)
     let raw = Toml.parse(data)
@@ -221,21 +221,21 @@ let loadConfigFrom = async (path: string): result<opmConfig> => {
   }
 }
 
-let loadConfig = async (): result<opmConfig> => {
-  // 1. Check OPM_CONFIG env var
-  switch Deno.Env.get("OPM_CONFIG") {
+let loadConfig = async (): result<opsmConfig> => {
+  // 1. Check OPSM_CONFIG env var
+  switch Deno.Env.get("OPSM_CONFIG") {
   | Some(envPath) => await loadConfigFrom(envPath)
   | None => {
-      // 2. Check ./opm.toml
-      let localPath = "opm.toml"
+      // 2. Check ./opsm.toml
+      let localPath = "opsm.toml"
       let localExists = await fileExists(localPath)
       if localExists {
         await loadConfigFrom(localPath)
       } else {
-        // 3. Check ~/.config/opm/opm.toml
+        // 3. Check ~/.config/opsm/opsm.toml
         switch Deno.Env.get("HOME") {
         | Some(home) => {
-            let userPath = Path.join([home, ".config", "opm", "opm.toml"])
+            let userPath = Path.join([home, ".config", "opsm", "opsm.toml"])
             let userExists = await fileExists(userPath)
             if userExists {
               await loadConfigFrom(userPath)
@@ -250,7 +250,7 @@ let loadConfig = async (): result<opmConfig> => {
   }
 }
 
-let loadConfigOrExample = async (): opmConfig => {
+let loadConfigOrExample = async (): opsmConfig => {
   switch await loadConfig() {
   | Ok(config) => config
   | Error(_) => exampleConfig()

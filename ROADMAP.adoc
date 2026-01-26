@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-= OPM Roadmap
+= OPSM Roadmap
 :revdate: 2026-01-23
 :version: 2.0
 :toc: macro
@@ -13,7 +13,7 @@ toc::[]
 
 == Overview
 
-OPM's roadmap progresses through four major phases:
+OPSM's roadmap progresses through four major phases:
 
 [source]
 ----
@@ -87,14 +87,14 @@ v10.0.0 🔮 (2027+)                → Federated Ecosystem
 **Implementation:** Elixir/BEAM (fault-tolerant, concurrent, distributed)
 
 **Key Modules:**
-* `Opm.Resolver` - PubGrub dependency resolver
-* `Opm.VersionConstraint` - Version constraint parser
-* `Opm.Lockfile` - Lockfile management
-* `Opm.Verified` - Security guarantees
-* `Opm.Events` - Federation events
-* `Opm.HarQueue` - HAR queue manager
-* 8 registry adapters in `Opm.Registries.*`
-* 5 trust service clients in `Opm.Clients.*`
+* `Opsm.Resolver` - PubGrub dependency resolver
+* `Opsm.VersionConstraint` - Version constraint parser
+* `Opsm.Lockfile` - Lockfile management
+* `Opsm.Verified` - Security guarantees
+* `Opsm.Events` - Federation events
+* `Opsm.HarQueue` - HAR queue manager
+* 8 registry adapters in `Opsm.Registries.*`
+* 5 trust service clients in `Opsm.Clients.*`
 
 **See:** link:RELEASE-v1.0.0.md[Release Notes] | link:README.adoc[README]
 
@@ -112,7 +112,7 @@ v10.0.0 🔮 (2027+)                → Federated Ecosystem
 
 ==== 1. Complete Mobile Wrapper (1 week)
 
-**Priority:** CRITICAL - Makes OPM usable on mobile devices
+**Priority:** CRITICAL - Makes OPSM usable on mobile devices
 
 **Tasks:**
 * [ ] Implement Rust Tauri commands (5 commands)
@@ -208,7 +208,7 @@ opsm status                  # System health check
 **Tasks:**
 * [ ] S3/IPFS tarball storage (replaces /tmp cache)
 * [ ] Docker images for trust services
-* [ ] `docker-compose.yml` for local development
+* [ ] `docker-compose.yml` for local developsment
 * [ ] Kubernetes manifests for production
 * [ ] CI/CD pipeline (GitHub Actions)
 
@@ -240,7 +240,7 @@ opsm status                  # System health check
 
 **Total:** $50K
 
-* Mobile development: $20K
+* Mobile developsment: $20K
 * Testing infrastructure: $15K
 * Performance work: $10K
 * Miscellaneous: $5K
@@ -269,14 +269,14 @@ opsm status                  # System health check
 * [ ] Idris2 NIF scaffolding (rustler-style)
 * [ ] Compile Idris2 proven functions to C
 * [ ] Link C code into Elixir NIFs
-* [ ] Replace `Opm.Verified` with proven bindings
+* [ ] Replace `Opsm.Verified` with proven bindings
 * [ ] Property tests to verify formal guarantees
 
 **Core Proven Functions:**
 
 [source,idris]
 ----
-module OPM.Verified
+module OPSM.Verified
 
 -- URL validation with proof of safety
 validateUrl : (url : String) -> Either Error (ValidUrl url)
@@ -312,7 +312,7 @@ verifyLockfile : (lockfile : String) -> Either Error (Lockfile verified)
 * **Level 3:** Hermetic builds + verification ← *Target*
 * **Level 4:** Two-party review required
 
-**Target:** SLSA Level 3 for all OPM-published packages
+**Target:** SLSA Level 3 for all OPSM-published packages
 
 ==== 3. Supply Chain Provenance (2 weeks)
 
@@ -385,7 +385,7 @@ opsm tui                     # Launch interactive mode
 [source]
 ----
 ┌───────────────────────────────────────┐
-│ OPM v1.5.0 - Interactive Mode         │
+│ OPSM v1.5.0 - Interactive Mode         │
 ├───────────────────────────────────────┤
 │ ► Installed Packages (125)            │
 │   ► Upgradable Packages (8)           │
@@ -446,7 +446,7 @@ Commands: hjkl/arrows=navigate, /=search
 
 === Vision
 
-Transform OPM from "8-language package manager" to "universal, intelligent package ecosystem"
+Transform OPSM from "8-language package manager" to "universal, intelligent package ecosystem"
 
 **From:** Curated 8-language package manager
 **To:** Universal package ecosystem with intelligent discovery
@@ -641,7 +641,7 @@ Transform OPM from "8-language package manager" to "universal, intelligent packa
 * [ ] Dependency pinning policies
 * [ ] Break-glass procedures
 
-**Deliverable:** Enterprise-ready OPM with full compliance features
+**Deliverable:** Enterprise-ready OPSM with full compliance features
 
 === Success Metrics
 

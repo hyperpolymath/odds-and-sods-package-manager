@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Types.res - Core type definitions for OPM CLI
+// Types.res - Core type definitions for OPSM CLI
 
 // =============================================================================
 // Result type (compatible with proven)
@@ -32,7 +32,7 @@ type serviceConfig = {
   token: option<string>,
 }
 
-type opmConfig = {
+type opsmConfig = {
   http: httpConfig,
   claimForge: serviceConfig,
   checkyMonkey: serviceConfig,

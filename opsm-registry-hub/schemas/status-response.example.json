@@ -1,0 +1,4 @@
+{
+  "registry_hub": "opsm-registry-hub",
+  "federation": "git-private-farm + Radicle + IPFS"
+}

@@ -1,13 +1,13 @@
-= OPM Service Contracts
+= OPSM Service Contracts
 :revdate: 2026-01-18
 :toc: left
 :toclevels: 3
 
-This document describes the API contracts for the trust pipeline services that OPM integrates with.
+This document describes the API contracts for the trust pipeline services that OPSM integrates with.
 
 == Overview
 
-OPM orchestrates five backend services to provide a complete package management experience with multi-dimensional trust scoring:
+OPSM orchestrates five backend services to provide a complete package management experience with multi-dimensional trust scoring:
 
 [cols="1,2,1,1"]
 |===
@@ -35,7 +35,7 @@ OPM orchestrates five backend services to provide a complete package management 
 
 | *checky-monkey*
 | Code verification
-| In development
+| In developsment
 | REST API (planned)
 |===
 
@@ -189,7 +189,7 @@ After publishing, packages are federated to:
 
 === Overview
 
-Claim-forge generates cryptographic attestations for artifacts. The upstream implementation is an Ada CLI tool. OPM supports two integration modes:
+Claim-forge generates cryptographic attestations for artifacts. The upstream implementation is an Ada CLI tool. OPSM supports two integration modes:
 
 1. *Service mode*: HTTP API via claim-forge-service wrapper
 2. *CLI mode*: Direct invocation of claim-forge binary
@@ -252,7 +252,7 @@ Checky-monkey orchestrates multiple verification strategies:
 * *formal-verification* - Proof-based verification (via proven/Idris)
 * *mutation-testing* - Code mutation coverage
 
-NOTE: The REST API is currently in development. This documents the planned contract.
+NOTE: The REST API is currently in developsment. This documents the planned contract.
 
 === Endpoints
 

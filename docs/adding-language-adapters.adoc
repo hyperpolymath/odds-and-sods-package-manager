@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
-= Adding Language Adapters to OPM
+= Adding Language Adapters to OPSM
 :revdate: 2026-01-23
 :toc: left
 :toclevels: 3
 
-This guide explains how to add support for new programming languages and their package ecosystems to OPM.
+This guide explains how to add support for new programming languages and their package ecosystems to OPSM.
 
 == Overview
 
-OPM supports multiple package ecosystems through a unified registry adapter pattern. Each language or ecosystem gets its own adapter module that implements a common interface.
+OPSM supports multiple package ecosystems through a unified registry adapter pattern. Each language or ecosystem gets its own adapter module that implements a common interface.
 
 === Current Adapters
 
@@ -18,24 +18,24 @@ OPM supports multiple package ecosystems through a unified registry adapter patt
 
 | JavaScript/Node.js
 | npm
-| `Opm.Registries.Npm`
+| `Opsm.Registries.Npm`
 
 | Rust
 | Crates.io
-| `Opm.Registries.Crates`
+| `Opsm.Registries.Crates`
 
 | Elixir/Erlang
 | Hex.pm
-| `Opm.Registries.Hex`
+| `Opsm.Registries.Hex`
 
 | Python
 | PyPI
-| `Opm.Registries.Pypi`
+| `Opsm.Registries.Pypi`
 |===
 
 == Registry Adapter Categories
 
-OPM recognizes three types of package ecosystems:
+OPSM recognizes three types of package ecosystems:
 
 === 1. Centralized Registry (HTTP API)
 
@@ -79,13 +79,13 @@ All registry adapters MUST implement this behavior:
 
 [source,elixir]
 ----
-defmodule Opm.Registries.YourRegistry do
+defmodule Opsm.Registries.YourRegistry do
   @moduledoc """
   Registry adapter for [Language/Ecosystem Name].
   [Brief description of the ecosystem and its package distribution model]
   """
 
-  alias Opm.Types.{ResolvedPackage, ManifestFormat}
+  alias Opsm.Types.{ResolvedPackage, ManifestFormat}
 
   @doc """
   Fetch package metadata from the registry.
@@ -123,19 +123,19 @@ end
 
 === Step 1: Create the Adapter Module
 
-Create a new file in `opm_ex/lib/opsm/registries/`:
+Create a new file in `opsm_ex/lib/opsm/registries/`:
 
 [source,elixir]
 ----
-# opm_ex/lib/opsm/registries/nimble.ex
+# opsm_ex/lib/opsm/registries/nimble.ex
 # SPDX-License-Identifier: PMPL-1.0-or-later
-defmodule Opm.Registries.Nimble do
+defmodule Opsm.Registries.Nimble do
   @moduledoc """
   Nimble Package Directory adapter for Nim packages.
   https://nimble.directory/
   """
 
-  alias Opm.Types.{ResolvedPackage, ManifestFormat}
+  alias Opsm.Types.{ResolvedPackage, ManifestFormat}
 
   @base_url "https://nimble.directory"
 
@@ -159,12 +159,12 @@ end
 
 === Step 2: Register the Adapter
 
-Add your adapter to the registry dispatcher in `opm_ex/lib/opsm/registries/registry.ex`:
+Add your adapter to the registry dispatcher in `opsm_ex/lib/opsm/registries/registry.ex`:
 
 [source,elixir]
 ----
-defmodule Opm.Registries.Registry do
-  alias Opm.Registries.{Npm, Crates, Hex, Pypi, Nimble}
+defmodule Opsm.Registries.Registry do
+  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble}
 
   @registry_modules %{
     npm: Npm,
@@ -184,16 +184,16 @@ end
 
 === Step 3: Write Tests
 
-Create tests in `opm_ex/test/opsm/registries/`:
+Create tests in `opsm_ex/test/opsm/registries/`:
 
 [source,elixir]
 ----
-# opm_ex/test/opsm/registries/nimble_test.exs
+# opsm_ex/test/opsm/registries/nimble_test.exs
 # SPDX-License-Identifier: PMPL-1.0-or-later
-defmodule Opm.Registries.NimbleTest do
+defmodule Opsm.Registries.NimbleTest do
   use ExUnit.Case, async: true
 
-  alias Opm.Registries.Nimble
+  alias Opsm.Registries.Nimble
 
   @moduletag :external_api
 

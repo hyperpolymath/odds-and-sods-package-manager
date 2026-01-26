@@ -1,4 +1,4 @@
-= OPM (Odds and Sods Package Manager)
+= OPSM (Odds and Sods Package Manager)
 :revdate: 2026-01-23
 :version: 1.0.0
 :toc: macro
@@ -15,9 +15,9 @@ image:https://img.shields.io/badge/Tests-250%20passing-success?style=flat[Tests 
 
 toc::[]
 
-== What is OPM?
+== What is OPSM?
 
-OPM is the **first universal package manager** that combines:
+OPSM is the **first universal package manager** that combines:
 
 1. **Multi-Language Support** - 8 ecosystems today (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic), 100+ planned for v2.0
 2. **Trust Pipeline** - 5-microservice verification before every publish (attestations, signatures, licenses, sustainability, provenance)
@@ -26,9 +26,9 @@ OPM is the **first universal package manager** that combines:
 5. **Federation-First** - Event propagation, distributed architecture, no single points of failure
 6. **Cross-Registry Resolution** - PubGrub dependency resolver handles transitive dependencies across ecosystems
 
-**Unlike npm/cargo/pip:** OPM works across languages and verifies every package through a trust pipeline.
+**Unlike npm/cargo/pip:** OPSM works across languages and verifies every package through a trust pipeline.
 
-**Unlike Nix/Guix:** OPM focuses on language ecosystems, not OS-level reproducibility.
+**Unlike Nix/Guix:** OPSM focuses on language ecosystems, not OS-level reproducibility.
 
 == Current Status (v1.0.0 - Released)
 
@@ -48,7 +48,7 @@ OPM is the **first universal package manager** that combines:
 
 == Supported Ecosystems
 
-OPM currently supports **8 package registries:**
+OPSM currently supports **8 package registries:**
 
 [cols="1,2,3,1"]
 |===
@@ -111,7 +111,7 @@ OPM currently supports **8 package registries:**
 ----
 # Clone the repository
 git clone https://github.com/hyperpolymath/odds-and-sods-package-manager.git
-cd odds-and-sods-package-manager/opm_ex
+cd odds-and-sods-package-manager/opsm_ex
 
 # Install dependencies
 mix deps.get
@@ -131,7 +131,7 @@ sudo cp opsm /usr/local/bin/
 [source,bash]
 ----
 opsm --version
-# OPM 1.0.0
+# OPSM 1.0.0
 
 # Run tests
 mix test
@@ -222,7 +222,7 @@ opsm audit https://github.com/owner/repo
 [source]
 ----
 ┌─────────────────────────────────────────────────────────────┐
-│                       OPM CLI (Elixir)                       │
+│                       OPSM CLI (Elixir)                       │
 │  - Command routing                                           │
 │  - Config management (TOML)                                  │
 │  - PubGrub resolver                                          │
@@ -248,7 +248,7 @@ Each registry adapter implements a common interface:
 
 [source,elixir]
 ----
-defmodule Opm.Registries.RegistryAdapter do
+defmodule Opsm.Registries.RegistryAdapter do
   @callback search(query :: String.t()) ::
     {:ok, [package()]} | {:error, term()}
 
@@ -301,7 +301,7 @@ Every `opsm publish` goes through 5 verification stages:
 
 === HAR (Human-Assisted Registry)
 
-For obscure languages without centralized registries, OPM uses **3 agentic discovery agents:**
+For obscure languages without centralized registries, OPSM uses **3 agentic discovery agents:**
 
 1. **github-search.sh** (Bash) - GitHub API search for language-specific packages
 2. **web-scraper.jl** (Julia) - DuckDuckGo search + HTML parsing for package metadata
@@ -316,14 +316,14 @@ For obscure languages without centralized registries, OPM uses **3 agentic disco
 2. Task queued: /tmp/opsm-har-ingest/idris2-json.task.json
 3. Agents poll queue, search for package
 4. Results posted back: /tmp/opsm-har-ingest/idris2-json.result.json
-5. OPM reads result, installs package
+5. OPSM reads result, installs package
 ----
 
 **Deployment:** See link:scripts/har-agents/README.md[HAR Agent Documentation]
 
 === Verified Library (Security Guarantees)
 
-OPM uses property-based testing to provide formal security guarantees:
+OPSM uses property-based testing to provide formal security guarantees:
 
 **Verified.Url** - SSRF Prevention
 [source,elixir]
@@ -364,7 +364,7 @@ Verified.Json.decode(huge_json)
 
 == Configuration
 
-OPM uses TOML configuration files:
+OPSM uses TOML configuration files:
 
 [source,toml]
 ----
@@ -410,7 +410,7 @@ timeout_ms = 120000  # 2 minutes for agentic discovery
 [source]
 ----
 odds-and-sods-package-manager/
-├── opm_ex/                          # Elixir implementation (v1.0.0)
+├── opsm_ex/                          # Elixir implementation (v1.0.0)
 │   ├── lib/
 │   │   └── opsm/
 │   │       ├── cli.ex               # CLI entry point
@@ -472,13 +472,13 @@ odds-and-sods-package-manager/
 └── README.adoc                      # This file
 ----
 
-== Development
+== Developsment
 
 === Running Tests
 
 [source,bash]
 ----
-cd opm_ex
+cd opsm_ex
 
 # Run all tests
 mix test
@@ -529,7 +529,7 @@ mix dialyzer
 
 === Deploying Trust Services
 
-OPM requires 5 trust services to be running for publish operations:
+OPSM requires 5 trust services to be running for publish operations:
 
 [source,bash]
 ----
@@ -642,7 +642,7 @@ For detailed comparison with nala and aptitude, see link:docs/CLI-FEATURE-COMPAR
 
 [cols="1,1,1,1"]
 |===
-| Feature | nala/aptitude | OPM v1.0 | OPM v1.5
+| Feature | nala/aptitude | OPSM v1.0 | OPSM v1.5
 
 | Basic operations
 | ✅
@@ -680,7 +680,7 @@ For detailed comparison with nala and aptitude, see link:docs/CLI-FEATURE-COMPAR
 | ✅✅
 |===
 
-**OPM's Unique Strengths:**
+**OPSM's Unique Strengths:**
 - ✅✅ Multi-language support (8 ecosystems → 100+ in v2.0)
 - ✅✅ Cross-registry resolution (npm + Hex + Crates + ...)
 - ✅✅ Trust pipeline (5-microservice verification)
@@ -723,7 +723,7 @@ See link:CONTRIBUTING.md[CONTRIBUTING.md] for contribution guidelines.
 
 == Related Projects
 
-OPM is part of the hyperpolymath ecosystem:
+OPSM is part of the hyperpolymath ecosystem:
 
 **Trust Pipeline Microservices:**
 - https://github.com/hyperpolymath/claim-forge[claim-forge] - Attestation generation
@@ -757,13 +757,13 @@ See link:LICENSE[LICENSE] file for full text.
 
 == Citation
 
-If you use OPM in your research or project, please cite:
+If you use OPSM in your research or project, please cite:
 
 [source,bibtex]
 ----
-@software{opm2026,
+@software{opsm2026,
   author = {Jewell, Jonathan D.A.},
-  title = {OPM: Federated Multi-Language Package Manager with Formal Verification},
+  title = {OPSM: Federated Multi-Language Package Manager with Formal Verification},
   year = {2026},
   publisher = {GitHub},
   url = {https://github.com/hyperpolymath/odds-and-sods-package-manager},
@@ -773,7 +773,7 @@ If you use OPM in your research or project, please cite:
 
 == Acknowledgments
 
-OPM builds on ideas from:
+OPSM builds on ideas from:
 - **PubGrub algorithm** (Natalie Weizenbaum, Dart team)
 - **Nix/Guix** (reproducible package management)
 - **Cargo** (excellent resolver and error messages)
