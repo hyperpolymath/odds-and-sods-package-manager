@@ -13,6 +13,31 @@ toc::[]
 
 == Overview
 
+== Critical Chain (Priority Path)
+
+OPSM’s highest‑impact milestone path is:
+
+1. **Package‑managerless languages** (hardest‑to‑install first)
+2. **Rogue repos / extrepos** (GitHub/GitLab/Bitbucket that lack manifests)
+3. **OS‑package fallback** (when apt/dnf/pacman/rpm‑ostree fail)
+
+This path is additive and does not replace the rest of the roadmap.
+
+=== Example (Smart Install)
+
+[source,bash]
+----
+opsm install [rpm-ostree: gnat ada ats2 v forth factor ldc zig idris2 ghc]   [toolbox: janus arrow paxos kraft raft swi-prolog datalog logtalk qml ocaml j lisp lfe rust gcc gcc-c++]
+----
+
+Expected behavior:
+
+* Classify packages by backend
+* Offer substitutes (e.g., gforth when "forth" missing)
+* Dry‑run plan with conflicts and policy warnings
+* Reversible apply if approved
+
+
 OPSM's roadmap progresses through four major phases:
 
 [source]
@@ -1076,3 +1101,5 @@ Transform OPSM from "8-language package manager" to "universal, intelligent pack
 OPSM becomes a global, federated, verifiable substrate for software distribution across
 languages, platforms, and domains — with strict policy controls, user sovereignty, and
 provable integrity as the default.
+
+

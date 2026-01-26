@@ -787,3 +787,7 @@ Special thanks to the Elixir, Rust, and ReScript communities for excellent tooli
 **Status:** v1.0.0 Released | **Next:** v1.1 Production Hardening (Q1 2026)
 
 For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:STATE.scm[STATE.scm].
+
+== Problems → Solutions
+
+See link:problems-solutions/README.adoc[problems-solutions] for real-world failure cases and how OPSM should resolve them.

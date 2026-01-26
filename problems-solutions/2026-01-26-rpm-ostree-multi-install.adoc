@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= rpm-ostree multi‑install with mixed availability
+
+== Context
+
+* OS: Fedora Silverblue
+* Manager: rpm-ostree
+* User wants: batch install with mixed language tooling
+
+== Exact Error
+
+User supplied a mixed list including packages not in rpm‑ostree or only available
+via toolbox/flatpak/source.
+
+== Expected OPSM Behavior
+
+* Parse list and classify per backend.
+* Warn about unresolvable items on rpm‑ostree.
+* Offer alternatives (toolbox, container, source build).
+* Provide **dry‑run** plan before apply.
+
+== Fallback Strategy
+
+* rpm‑ostree for base packages
+* toolbox/distrobox for dev toolchains
+* source/rogue‑repo install for orphaned packages
+
+== Notes
+
+OPSM should auto‑detect architecture constraints (e.g., mac‑only packages) and
+mark as incompatible with explicit reasons.
+

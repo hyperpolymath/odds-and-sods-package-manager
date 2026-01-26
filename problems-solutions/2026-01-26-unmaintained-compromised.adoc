@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= Unmaintained or compromised package
+
+== Context
+
+* Package exists but is unmaintained or flagged
+* User expects normal install
+
+== Expected OPSM Behavior
+
+* Warn clearly in WYSIWYG mode
+* Block in WYSIWYGM unless policy allows
+* Suggest known alternatives
+* Record the decision for audit
+
+== Notes
+
+Signals can come from advisories, maintainer activity, and trust services.
+

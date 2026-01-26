@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= Problems → Solutions Library
+:toc: preamble
+:toclevels: 2
+
+This folder collects real‑world package manager failures and how OPSM should
+address them. Add scenarios from your own experience (or from public issue
+threads) with error messages, context, and expected behavior.
+
+== How to Add a Scenario
+
+Create a new file named like:
+
+`YYYY-MM-DD-short-title.adoc`
+
+Include:
+
+* **Context** (OS, distro, package manager)
+* **Exact error**
+* **Expected OPSM behavior**
+* **Fallback strategy**
+* **Notes** (known issues, unmaintained, compromised, etc.)
+
+== Why This Exists
+
+Many package managers fail in recurring ways. OPSM will map these to known
+causes and recommended resolutions, with user‑friendly warnings.
+

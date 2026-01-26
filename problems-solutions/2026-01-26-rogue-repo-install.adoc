@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= Rogue Git repo install (no manifest)
+
+== Context
+
+* Source: GitHub/GitLab/Bitbucket repository
+* No package manager metadata or manifest
+
+== Exact Error
+
+"No package/manifest found" or install fails after clone.
+
+== Expected OPSM Behavior
+
+* Identify project type via heuristics (language, build files)
+* Propose install plan (build + install) with **dry‑run**
+* Use `bitfuckit`/extrepo helpers where applicable
+* Cache build artifacts and report reproducibility hints
+
+== Fallback Strategy
+
+* If no build system, provide interactive build steps
+* If incompatible architecture, offer alternatives or skip
+
