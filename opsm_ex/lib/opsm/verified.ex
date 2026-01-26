@@ -7,8 +7,8 @@ defmodule Opsm.Verified do
   For v2.0: Will bind to Idris2 proven library via NIFs for formal verification.
 
   Provides:
-  - SafeUrl: URL validation and parsing
-  - SafeJson: Safe JSON decoding with schema validation
+  - SafeUrl: URL validation and parsing (Proven.SafeUrl)
+  - SafeJson: Safe JSON decoding with schema validation (Proven.SafeJson)
   - Result: Explicit error handling type
   """
 end
@@ -49,41 +49,40 @@ defmodule Opsm.Verified.Url do
   """
   @spec validate(String.t()) :: {:ok, t()} | {:error, atom()}
   def validate(url_string) when is_binary(url_string) do
-    # Pre-check for IPv6 localhost patterns before URI.parse
-    # URI.parse may not handle ::1 correctly in all cases
     if String.contains?(url_string, "::1") do
       {:error, :blocked_host}
     else
-      case URI.parse(url_string) do
-        %URI{scheme: nil} ->
-          {:error, :missing_scheme}
+      case Proven.SafeUrl.parse(url_string) do
+        {:ok, parsed} ->
+          scheme = parsed.scheme
+          host = parsed.host
 
-        %URI{scheme: scheme} when scheme not in @allowed_schemes ->
-          {:error, {:invalid_scheme, scheme}}
+          cond do
+            scheme not in @allowed_schemes ->
+              {:error, {:invalid_scheme, scheme}}
 
-        %URI{host: nil} ->
-          {:error, :missing_host}
+            host in @blocked_hosts ->
+              {:error, :blocked_host}
 
-        %URI{host: ""} ->
-          {:error, :missing_host}
+            (Proven.SafeNetwork.valid_ipv4?(host) and
+               (Proven.SafeNetwork.private?(host) or Proven.SafeNetwork.loopback?(host))) or
+                String.starts_with?(host, "169.254.") ->
+              {:error, :blocked_host}
 
-        %URI{scheme: scheme, host: host} = uri when scheme in @allowed_schemes ->
-          if host in @blocked_hosts or is_private_ip?(host) do
-            {:error, :blocked_host}
-          else
-            validated = %__MODULE__{
-              scheme: scheme,
-              host: host,
-              port: uri.port,
-              path: uri.path || "/",
-              query: uri.query,
-              original: url_string
-            }
+            true ->
+              validated = %__MODULE__{
+                scheme: scheme,
+                host: host,
+                port: parsed.port,
+                path: parsed.path || "/",
+                query: parsed.query,
+                original: url_string
+              }
 
-            {:ok, validated}
+              {:ok, validated}
           end
 
-        _other ->
+        {:error, _} ->
           {:error, :invalid_url}
       end
     end
@@ -99,17 +98,6 @@ defmodule Opsm.Verified.Url do
     url.original
   end
 
-  # Check if hostname is a private/internal IP address.
-  defp is_private_ip?(host) do
-    cond do
-      String.starts_with?(host, "192.168.") -> true
-      String.starts_with?(host, "10.") -> true
-      String.match?(host, ~r/^172\.(1[6-9]|2[0-9]|3[0-1])\./) -> true
-      String.starts_with?(host, "169.254.") -> true
-      host == "localhost" -> true
-      true -> false
-    end
-  end
 end
 
 defmodule Opsm.Verified.Json do
@@ -135,24 +123,12 @@ defmodule Opsm.Verified.Json do
   """
   @spec decode(String.t()) :: {:ok, map() | list()} | {:error, term()}
   def decode(json_string) when is_binary(json_string) do
-    # Check size limit
-    if byte_size(json_string) > @max_size do
-      {:error, :payload_too_large}
-    else
-      case Jason.decode(json_string) do
-        {:ok, data} ->
-          if valid_depth?(data, @max_depth) do
-            {:ok, data}
-          else
-            {:error, :nesting_too_deep}
-          end
-
-        {:error, %Jason.DecodeError{} = error} ->
-          {:error, {:json_decode_error, error.data}}
-
-        {:error, reason} ->
-          {:error, reason}
-      end
+    case Proven.SafeJson.parse(json_string, max_depth: @max_depth, max_size: @max_size) do
+      {:ok, data} -> {:ok, data}
+      {:error, :payload_too_large} -> {:error, :payload_too_large}
+      {:error, :max_depth_exceeded} -> {:error, :nesting_too_deep}
+      {:error, :invalid_json} -> {:error, {:json_decode_error, :invalid_json}}
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -163,24 +139,13 @@ defmodule Opsm.Verified.Json do
   """
   @spec encode(term()) :: {:ok, String.t()} | {:error, term()}
   def encode(data) do
-    case Jason.encode(data) do
+    case Proven.SafeJson.encode(data, max_size: @max_size) do
       {:ok, json} -> {:ok, json}
+      {:error, :payload_too_large} -> {:error, :payload_too_large}
       {:error, reason} -> {:error, {:json_encode_error, reason}}
     end
   end
 
-  # Check nesting depth to prevent DoS via deeply nested structures
-  defp valid_depth?(_data, 0), do: false
-
-  defp valid_depth?(data, depth) when is_map(data) do
-    Enum.all?(data, fn {_k, v} -> valid_depth?(v, depth - 1) end)
-  end
-
-  defp valid_depth?(data, depth) when is_list(data) do
-    Enum.all?(data, fn item -> valid_depth?(item, depth - 1) end)
-  end
-
-  defp valid_depth?(_data, _depth), do: true
 end
 
 defmodule Opsm.Verified.Result do

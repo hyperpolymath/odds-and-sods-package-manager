@@ -27,6 +27,7 @@ defmodule Opsm.MixProject do
       {:toml, "~> 0.7"},
       {:optimus, "~> 0.5"},
       {:jason, "~> 1.4"},
+      {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"}
