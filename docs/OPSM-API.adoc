@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Local API
+:toc: preamble
+:toclevels: 2
+
+OPSM exposes a local REST API for UI integration. The API is intended for
+localhost use only and defaults to `127.0.0.1:4466`.
+
+NOTE: GraphQL and gRPC endpoints are planned; REST is the current surface.
+
+== Start the API
+
+[source,bash]
+----
+opsm api --port 4466
+----
+
+== Nickel-first payloads
+
+JSON is supported for transport, but Nickel is the preferred authoring format.
+If `nickel` is installed, you may send `application/nickel` or `text/nickel`
+payloads that evaluate to a JSON object, for example:
+
+[source,nickel]
+----
+{
+  tokens = [
+    "rpm-ostree: gcc",
+    "toolbox: zig",
+  ],
+}
+----
+
+== Endpoints
+
+* `GET /health` -> `{ "status": "ok" }`
+* `GET /backends` -> availability map by backend
+* `POST /smart/plan` -> `{ "tokens": [...] }` or `{ "command": "opsm install ..." }`
+* `POST /smart/apply` -> executes plan (no dry-run)
+
+== Response Formats
+
+`/smart/plan` returns a grouped plan plus backend availability:
+
+[source,json]
+----
+{
+  "plan": { "rpm-ostree": ["gcc"], "toolbox": ["zig"] },
+  "status": { "rpm-ostree": { "status": "ok" }, "toolbox": { "status": "ok" } }
+}
+----

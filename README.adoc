@@ -35,7 +35,7 @@ OPSM is the **first universal package manager** that combines:
 OPSM has a dedicated UI spec and shell in the `opsm-ui` repo. The UI uses the OPSM
 CLI for dry-runs, backend capability detection, and apply actions.
 
-See: link:docs/OPSM-UI.adoc[OPSM UI Integration] | https://github.com/hyperpolymath/opsm-ui
+See: link:docs/OPSM-UI.adoc[OPSM UI Integration] | link:docs/OPSM-API.adoc[OPSM Local API] | https://github.com/hyperpolymath/opsm-ui
 
 == Current Status (v1.0.0 - Released)
 

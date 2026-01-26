@@ -15,6 +15,9 @@ Install a package from a specific registry.
 .B install [backend:] ...
 Smart install grouping (dry-run plan by backend).
 .TP
+.B api
+Run local OPSM API server for UI integration.
+.TP
 .B remove <pkg>
 Remove an installed package.
 .TP
@@ -35,7 +38,10 @@ List available system package managers.
 Show what would be done.
 .TP
 .B --apply
-Apply smart install plan (when wired).
+Apply smart install plan (connection ports + select backends).
+.TP
+.B --port
+Port for opsm api (default 4466).
 .SH CONFIG
 Default config lookup order:
 .BR $OPSM_CONFIG

@@ -3,8 +3,8 @@
 :toc: preamble
 :toclevels: 2
 
-OPSM UI lives in the standalone repo `opsm-ui` and uses the OPSM CLI as its backend
-for discovery, dry-runs, capability detection, and apply actions.
+OPSM UI lives in the standalone repo `opsm-ui` and uses the OPSM CLI and local
+API for discovery, dry-runs, capability detection, and apply actions.
 
 == Repo
 
@@ -12,11 +12,12 @@ for discovery, dry-runs, capability detection, and apply actions.
 
 == Integration Contract
 
-- The UI shells out to `opsm` for:
+- The UI can shell out to `opsm` for:
   - `opsm install ...` dry-run plans
   - backend availability checks
-  - apply operations (connection ports only)
-- The UI expects `opsm` to be on PATH and to support `--json` where relevant.
+-  apply operations (connection ports + select backends)
+- The UI can also use the local API (`opsm api`) for plan/apply endpoints.
+- Nickel is the preferred authoring format for payloads; JSON remains supported.
 
 == Ports
 
@@ -25,5 +26,4 @@ for discovery, dry-runs, capability detection, and apply actions.
 
 == Status
 
-Initial wiring is documented; full IPC / daemon integration will follow once
-`opsm` gains a dedicated local API.
+Initial wiring is documented; REST is live, GraphQL/gRPC are planned.

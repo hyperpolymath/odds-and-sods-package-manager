@@ -11,6 +11,7 @@ defmodule Opsm.CLI do
   alias Opsm.Federation
   alias Opsm.Errors
   alias Opsm.Maintenance
+  alias Opsm.SmartInstall
 
 
   def main(args) do
@@ -45,7 +46,8 @@ defmodule Opsm.CLI do
         limit: :integer,
         native: :boolean,
         dev: :boolean,
-        apply: :boolean
+        apply: :boolean,
+        port: :integer
       ],
       aliases: [
         h: :help,
@@ -68,6 +70,7 @@ defmodule Opsm.CLI do
       # Status & Info
       ["status" | _] -> {:status, opts}
       ["repolist" | _] -> {:repolist, opts}
+      ["api" | _] -> {:api, opts}
 
       # Install/Remove
       ["install" | rest] -> parse_install_args(rest, opts)
@@ -201,6 +204,7 @@ defmodule Opsm.CLI do
     SYSTEM:
       status                   Show service status and configuration
       repolist                 List configured registries (forths)
+      api                      Run local Opsm API server
 
     FEDERATION:
       ports                    List available system package managers
@@ -214,7 +218,8 @@ defmodule Opsm.CLI do
       --user                   Install for current user (default)
       -g, --global             Global install (native mode)
       -D, --dev                Developsment dependency
-      --apply                  Apply smart install plan (connection ports only)
+      --apply                  Apply smart install plan (connection ports + select backends)
+      --port                   Port for opsm api (default 4466)
       --native                 Use native toolchain (npm, cargo, mix, pip)
       -y, --yes                Assume yes to prompts
       -q, --quiet              Minimal output
@@ -278,6 +283,13 @@ defmodule Opsm.CLI do
     config = Config.load_config_or_example()
     :ok = Wiring.run_status(config)
     System.halt(0)
+  end
+
+  defp run({:api, opts}) do
+    port = Keyword.get(opts, :port, 4466)
+    {:ok, _} = Opsm.Api.Server.start_link(port: port)
+    IO.puts("OPSM API listening on http://127.0.0.1:#{port}")
+    Process.sleep(:infinity)
   end
 
   defp run({:repolist, opts}) do
@@ -348,11 +360,26 @@ defmodule Opsm.CLI do
   end
 
   defp run({:smart_install, rest, opts}) do
-    plan = parse_smart_install(rest)
+    plan = SmartInstall.parse(rest)
     print_smart_plan(plan)
 
     if opts[:apply] do
-      execute_smart_plan(plan, opts)
+      scope =
+        cond do
+          Keyword.get(opts, :systemwide) -> :system
+          true -> :user
+        end
+
+      results =
+        SmartInstall.execute(plan,
+          dry_run: Keyword.get(opts, :dry_run, false),
+          scope: scope,
+          native: Keyword.get(opts, :native, false),
+          global: Keyword.get(opts, :global, false),
+          dev: Keyword.get(opts, :dev, false)
+        )
+
+      print_smart_results(results)
     else
       IO.puts("Dry-run only. Use --apply to execute when available.")
     end
@@ -1069,64 +1096,11 @@ defmodule Opsm.CLI do
     System.halt(0)
   end
 
-  defp parse_smart_install(tokens) do
-    cleaned =
-      tokens
-      |> Enum.map(&String.trim/1)
-      |> Enum.map(&String.trim_leading(&1, "["))
-      |> Enum.map(&String.trim_trailing(&1, "]"))
-
-    backends =
-      MapSet.new([
-        "rpm-ostree",
-        "rpm",
-        "deb",
-        "dnfinition",
-        "flatpak",
-        "snap",
-        "pacman",
-        "homebrew",
-        "nix",
-        "guix",
-        "winget",
-        "choco",
-        "scoop",
-        "toolbox",
-        "distrobox",
-        "container",
-        "native",
-        "git",
-        "source",
-        "auto"
-      ])
-
-    Enum.reduce(cleaned, %{current: "auto", plan: %{}}, fn token, acc ->
-      case String.split(token, ":", parts: 2) do
-        [backend, ""] ->
-          backend = String.downcase(backend)
-          backend = if MapSet.member?(backends, backend), do: backend, else: "auto"
-          %{acc | current: backend}
-
-        [backend, rest] when rest != "" ->
-          backend = String.downcase(backend)
-          backend = if MapSet.member?(backends, backend), do: backend, else: "auto"
-          pkg = String.trim(rest)
-          plan = Map.update(acc.plan, backend, [pkg], fn pkgs -> pkgs ++ [pkg] end)
-          %{acc | current: backend, plan: plan}
-
-        [pkg] ->
-          plan = Map.update(acc.plan, acc.current, [pkg], fn pkgs -> pkgs ++ [pkg] end)
-          %{acc | plan: plan}
-      end
-    end)
-    |> Map.get(:plan)
-  end
-
   defp print_smart_plan(plan) do
     IO.puts("Smart install plan (grouped by backend):")
     Enum.each(plan, fn {backend, pkgs} ->
       status =
-        case check_backend_availability(backend) do
+        case SmartInstall.backend_availability(backend) do
           {:ok, _} -> "✓"
           {:error, reason} -> "✗ #{reason}"
         end
@@ -1135,87 +1109,18 @@ defmodule Opsm.CLI do
     end)
   end
 
-  defp check_backend_availability(backend) do
-    case backend do
-      "toolbox" -> check_exec("toolbox")
-      "distrobox" -> check_exec("distrobox")
-      "container" -> check_exec("podman") |> fallback_exec("docker")
-      "rpm-ostree" -> check_exec("rpm-ostree")
-      "rpm" -> check_exec("dnf") |> fallback_exec("yum")
-      "deb" -> check_exec("apt-get")
-      "dnfinition" -> check_exec("dnfinition")
-      "flatpak" -> check_exec("flatpak")
-      "snap" -> check_exec("snap")
-      "pacman" -> check_exec("pacman")
-      "homebrew" -> check_exec("brew")
-      "nix" -> check_exec("nix-env")
-      "guix" -> check_exec("guix")
-      "winget" -> check_exec("winget")
-      "choco" -> check_exec("choco")
-      "scoop" -> check_exec("scoop")
-      "native" -> {:ok, "native"}
-      _ -> {:ok, "auto"}
-    end
-  end
+  defp print_smart_results(results) do
+    Enum.each(results, fn {backend, entries} ->
+      Enum.each(entries, fn
+        {:dry_run, pkg, cmd} ->
+          IO.puts("[DRY RUN] #{backend}: #{pkg} -> #{cmd}")
 
-  defp execute_smart_plan(plan, opts) do
-    dry_run? = Keyword.get(opts, :dry_run, false)
+        {:ok, pkg, message} ->
+          IO.puts("✓ #{backend}: #{pkg} -> #{message}")
 
-    if dry_run? do
-      IO.puts("Apply requested with --dry-run; no changes will be made.")
-    end
-
-    Enum.each(plan, fn {backend, pkgs} ->
-      case backend_to_port(backend) do
-        {:ok, port} ->
-          Enum.each(pkgs, fn pkg ->
-            IO.puts("Executing #{backend} install for #{pkg}...")
-
-            case Federation.install_via_port(pkg, port, dry_run: dry_run?) do
-              {:ok, %{command: cmd, dry_run: true}} ->
-                IO.puts("[DRY RUN] Would run: #{cmd}")
-
-              {:ok, output} when is_binary(output) ->
-                IO.puts(output)
-
-              {:error, reason} ->
-                Errors.print_error({:error, "Install failed: #{reason}"})
-            end
-          end)
-
-        :unsupported ->
-          IO.puts("Backend '#{backend}' not yet executable; keeping dry-run only.")
-      end
+        {:error, pkg, reason} ->
+          Errors.print_error({:error, "#{backend}: #{pkg} failed: #{reason}"})
+      end)
     end)
-  end
-
-  defp backend_to_port(backend) do
-    case backend do
-      "rpm-ostree" -> {:ok, :rpm_ostree}
-      "rpm_ostree" -> {:ok, :rpm_ostree}
-      "rpm" -> {:ok, :rpm}
-      "deb" -> {:ok, :deb}
-      "dnfinition" -> {:ok, :dnfinition}
-      "flatpak" -> {:ok, :flatpak}
-      "snap" -> {:ok, :snap}
-      "pacman" -> {:ok, :pacman}
-      "homebrew" -> {:ok, :homebrew}
-      "nix" -> {:ok, :nix}
-      "guix" -> {:ok, :guix}
-      "winget" -> {:ok, :winget}
-      "choco" -> {:ok, :choco}
-      "scoop" -> {:ok, :scoop}
-      _ -> :unsupported
-    end
-  end
-
-  
-  defp fallback_exec({:ok, path}, _fallback), do: {:ok, path}
-  defp fallback_exec({:error, _}, fallback), do: check_exec(fallback)
-defp check_exec(cmd) do
-    case System.find_executable(cmd) do
-      nil -> {:error, "#{cmd} not found"}
-      path -> {:ok, path}
-    end
   end
 end
