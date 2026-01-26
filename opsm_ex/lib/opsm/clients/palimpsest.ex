@@ -66,7 +66,7 @@ defmodule Opsm.Clients.Palimpsest do
   Fallback to CLI license-checker for basic license detection.
   """
   def cli_check_licenses(path) do
-    case System.cmd("license-checker", ["--json", "--start", path], stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("license-checker", ["--json", "--start", path], stderr_to_stdout: true) do
       {output, 0} ->
         case Jason.decode(output) do
           {:ok, json} -> {:ok, json}

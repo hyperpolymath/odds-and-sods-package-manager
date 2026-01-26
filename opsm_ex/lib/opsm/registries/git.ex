@@ -88,7 +88,7 @@ defmodule Opsm.Registries.Git do
     Logger.debug("Listing tags for git repo: #{url}")
 
     with {:ok, cache_path} <- ensure_cloned(url, shallow: false) do
-      case System.cmd("git", ["tag", "--sort=-v:refname"], cd: cache_path) do
+      case Opsm.SafeExec.cmd("git", ["tag", "--sort=-v:refname"], cd: cache_path) do
         {output, 0} ->
           tags = output
           |> String.split("\n", trim: true)
@@ -113,7 +113,7 @@ defmodule Opsm.Registries.Git do
   @spec default_branch(String.t()) :: {:ok, String.t()} | {:error, term()}
   def default_branch(url) do
     with {:ok, cache_path} <- ensure_cloned(url, []) do
-      case System.cmd("git", ["symbolic-ref", "refs/remotes/origin/HEAD"], cd: cache_path) do
+      case Opsm.SafeExec.cmd("git", ["symbolic-ref", "refs/remotes/origin/HEAD"], cd: cache_path) do
         {output, 0} ->
           branch = output
           |> String.trim()
@@ -138,7 +138,7 @@ defmodule Opsm.Registries.Git do
   """
   @spec accessible?(String.t()) :: boolean()
   def accessible?(url) do
-    case System.cmd("git", ["ls-remote", "--exit-code", "--heads", url]) do
+    case Opsm.SafeExec.cmd("git", ["ls-remote", "--exit-code", "--heads", url]) do
       {_, 0} -> true
       _ -> false
     end
@@ -179,7 +179,7 @@ defmodule Opsm.Registries.Git do
       ["clone", url, dest]
     end
 
-    case System.cmd("git", args, stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("git", args, stderr_to_stdout: true) do
       {_, 0} ->
         Logger.info("Successfully cloned: #{url}")
         {:ok, dest}
@@ -191,7 +191,7 @@ defmodule Opsm.Registries.Git do
   end
 
   defp update_cache(cache_path) do
-    case System.cmd("git", ["fetch", "--all"], cd: cache_path, stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("git", ["fetch", "--all"], cd: cache_path, stderr_to_stdout: true) do
       {_, 0} ->
         :ok
 
@@ -203,16 +203,16 @@ defmodule Opsm.Registries.Git do
 
   defp resolve_ref(cache_path, "latest") do
     # Get default branch HEAD
-    case System.cmd("git", ["rev-parse", "origin/HEAD"], cd: cache_path) do
+    case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/HEAD"], cd: cache_path) do
       {output, 0} ->
         {:ok, String.trim(output)}
 
       {_, _} ->
         # Fallback to main/master
-        case System.cmd("git", ["rev-parse", "origin/main"], cd: cache_path) do
+        case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/main"], cd: cache_path) do
           {output, 0} -> {:ok, String.trim(output)}
           {_, _} ->
-            case System.cmd("git", ["rev-parse", "origin/master"], cd: cache_path) do
+            case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/master"], cd: cache_path) do
               {output, 0} -> {:ok, String.trim(output)}
               {_, _} -> {:error, "Could not resolve default branch"}
             end
@@ -222,13 +222,13 @@ defmodule Opsm.Registries.Git do
 
   defp resolve_ref(cache_path, ref) do
     # Try to resolve ref (tag, branch, or commit SHA)
-    case System.cmd("git", ["rev-parse", ref], cd: cache_path) do
+    case Opsm.SafeExec.cmd("git", ["rev-parse", ref], cd: cache_path) do
       {output, 0} ->
         {:ok, String.trim(output)}
 
       {_, _} ->
         # Try with origin/ prefix for branches
-        case System.cmd("git", ["rev-parse", "origin/#{ref}"], cd: cache_path) do
+        case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/#{ref}"], cd: cache_path) do
           {output, 0} ->
             {:ok, String.trim(output)}
 
@@ -239,7 +239,7 @@ defmodule Opsm.Registries.Git do
   end
 
   defp checkout_ref(cache_path, ref) do
-    case System.cmd("git", ["checkout", ref], cd: cache_path, stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("git", ["checkout", ref], cd: cache_path, stderr_to_stdout: true) do
       {_, 0} ->
         :ok
 

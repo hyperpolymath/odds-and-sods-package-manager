@@ -179,7 +179,7 @@ defmodule Opsm.Federation do
   Uses nickel-lang CLI for evaluation.
   """
   def convert_nickel_manifest(path) do
-    case System.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
       {output, 0} ->
         case Jason.decode(output) do
           {:ok, json} -> {:ok, json_to_manifest(json)}
@@ -478,7 +478,7 @@ defmodule Opsm.Federation do
         if dry_run do
           {:ok, %{command: install_cmd, dry_run: true}}
         else
-          case System.cmd(cmd, install_args(target, package, opts), stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd(cmd, install_args(target, package, opts), stderr_to_stdout: true) do
             {output, 0} -> {:ok, output}
             {error, code} -> {:error, "#{cmd} failed (#{code}): #{error}"}
           end

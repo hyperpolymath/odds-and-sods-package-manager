@@ -63,7 +63,7 @@ defmodule Opsm.Clients.ClaimForge do
   Fallback to CLI spdx-tool for SPDX attestation generation.
   """
   def cli_generate_spdx(artifact_path) do
-    case System.cmd("spdx-tool", ["generate", "--format", "json", artifact_path], stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("spdx-tool", ["generate", "--format", "json", artifact_path], stderr_to_stdout: true) do
       {output, 0} ->
         case Jason.decode(output) do
           {:ok, json} -> {:ok, json}

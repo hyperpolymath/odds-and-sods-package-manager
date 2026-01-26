@@ -305,9 +305,9 @@ defmodule Opsm.Wiring do
   defp print_verification_results(_results), do: :ok
 
   defp git_metadata(dir) do
-    case System.cmd("git", ["-C", dir, "rev-parse", "HEAD"], stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("git", ["-C", dir, "rev-parse", "HEAD"], stderr_to_stdout: true) do
       {commit, 0} ->
-        case System.cmd("git", ["-C", dir, "remote", "get-url", "origin"], stderr_to_stdout: true) do
+        case Opsm.SafeExec.cmd("git", ["-C", dir, "remote", "get-url", "origin"], stderr_to_stdout: true) do
           {url, 0} ->
             {:ok, %{repo_url: String.trim(url), commit_sha: String.trim(commit)}}
 

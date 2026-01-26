@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+name: Gitbot Fleet
+on:
+  push:
+  pull_request:
+
+permissions: read-all
+
+jobs:
+  fleet-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Clone gitbot-fleet + hypatia
+        run: |
+          mkdir -p _bot
+          git clone https://github.com/hyperpolymath/gitbot-fleet.git _bot/gitbot-fleet
+          git clone https://github.com/hyperpolymath/hypatia.git _bot/hypatia
+
+      - name: Run gitbot-fleet scan
+        env:
+          GITBOT_FLEET_DIR: ${{ github.workspace }}/_bot/gitbot-fleet
+        run: |
+          scripts/gitbot-fleet.sh run-scan

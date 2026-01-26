@@ -98,7 +98,7 @@ defmodule Opsm.ManifestIngestion do
       # Create tarball using system tar command
       Logger.info("Creating tarball: #{tarball_path}")
 
-      case System.cmd("tar", ["-czf", tarball_path, "-C", Path.dirname(package_path), Path.basename(package_path)],
+      case Opsm.SafeExec.cmd("tar", ["-czf", tarball_path, "-C", Path.dirname(package_path), Path.basename(package_path)],
              stderr_to_stdout: true
            ) do
         {_, 0} ->
@@ -122,7 +122,7 @@ defmodule Opsm.ManifestIngestion do
   end
 
   defp run_command(executable, args, label) do
-    case System.cmd(executable, args, stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd(executable, args, stderr_to_stdout: true) do
       {_, 0} -> :ok
       {stderr, _} -> {:error, "#{label} failed: #{String.trim(stderr)}"}
     end

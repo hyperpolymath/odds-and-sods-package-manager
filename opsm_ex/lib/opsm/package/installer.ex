@@ -322,8 +322,8 @@ defmodule Opsm.Package.Installer do
 
   defp unpack_npm(tarball_path, dest_path) do
     # npm packages are .tgz with a `package/` prefix
-    case System.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-                    stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
+          stderr_to_stdout: true) do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end
@@ -331,8 +331,8 @@ defmodule Opsm.Package.Installer do
 
   defp unpack_crate(tarball_path, dest_path) do
     # Rust crates are .crate (gzipped tar) with package-version/ prefix
-    case System.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-                    stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
+          stderr_to_stdout: true) do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end
@@ -344,12 +344,12 @@ defmodule Opsm.Package.Installer do
     tmp_dir = Path.join(System.tmp_dir!(), "opsm_hex_#{:rand.uniform(100000)}")
     File.mkdir_p!(tmp_dir)
 
-    case System.cmd("tar", ["-xf", tarball_path, "-C", tmp_dir], stderr_to_stdout: true) do
+    case Opsm.SafeExec.cmd("tar", ["-xf", tarball_path, "-C", tmp_dir], stderr_to_stdout: true) do
       {_, 0} ->
         # Now extract contents.tar.gz
         contents_tar = Path.join(tmp_dir, "contents.tar.gz")
         if File.exists?(contents_tar) do
-          case System.cmd("tar", ["-xzf", contents_tar, "-C", dest_path], stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd("tar", ["-xzf", contents_tar, "-C", dest_path], stderr_to_stdout: true) do
             {_, 0} ->
               File.rm_rf!(tmp_dir)
               :ok
@@ -371,13 +371,13 @@ defmodule Opsm.Package.Installer do
   defp unpack_pypi(tarball_path, dest_path) do
     # Python packages are .tar.gz or .whl (zip) with package-version/ prefix
     if String.ends_with?(tarball_path, ".whl") do
-      case System.cmd("unzip", ["-q", tarball_path, "-d", dest_path], stderr_to_stdout: true) do
+      case Opsm.SafeExec.cmd("unzip", ["-q", tarball_path, "-d", dest_path], stderr_to_stdout: true) do
         {_, 0} -> :ok
         {error, _} -> {:error, error}
       end
     else
-      case System.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-                      stderr_to_stdout: true) do
+      case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
+            stderr_to_stdout: true) do
         {_, 0} -> :ok
         {error, _} -> {:error, error}
       end

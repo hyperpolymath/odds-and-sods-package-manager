@@ -12,7 +12,7 @@ defmodule Opsm.Api.Nickel do
       _ ->
         path = write_temp(body)
 
-        case System.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
+        case Opsm.SafeExec.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
           {output, 0} ->
             Jason.decode(output)
 

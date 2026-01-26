@@ -197,7 +197,7 @@ defmodule Opsm.SmartInstall do
       if dry_run do
         {:dry_run, pkg, "#{cmd} #{Enum.join(args, " ")}"}
       else
-        case System.cmd(cmd, args, stderr_to_stdout: true) do
+        case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
           {output, 0} -> {:ok, pkg, output}
           {error, code} -> {:error, pkg, "#{cmd} failed (#{code}): #{error}"}
         end
@@ -220,7 +220,7 @@ defmodule Opsm.SmartInstall do
         if dry_run do
           {:dry_run, pkg, "#{cmd} #{Enum.join(args, " ")}"}
         else
-          case System.cmd(cmd, args, stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
             {output, 0} -> {:ok, pkg, output}
             {error, code} -> {:error, pkg, "#{cmd} failed (#{code}): #{error}"}
           end
@@ -256,7 +256,7 @@ defmodule Opsm.SmartInstall do
         if dry_run do
           {:dry_run, pkg, "#{cmd} #{Enum.join(args, " ")}"}
         else
-          case System.cmd(cmd, args, stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
             {output, 0} -> {:ok, pkg, output}
             {error, code} -> {:error, pkg, "#{cmd} failed (#{code}): #{error}"}
           end
