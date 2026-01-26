@@ -17,7 +17,8 @@
     ("proven" "checky-monkey" "claim-forge" "palimpsest-license"
      "nickel-config-reporter" "hybrid-automation-router" "protocol-squisher"
      "scaffoldia" "cicd-hyper-a" "http-capability-gateway" "git-private-farm"
-     "oikos" "rhodibot" "seambot" "echidnabot" "robot-repo-automaton"))
+     "oikos" "rhodibot" "seambot" "echidnabot" "robot-repo-automaton"
+     "opsm-ui" "gitbot-fleet"))
 
   (what-this-is
     ("Federated package manager"

@@ -168,7 +168,26 @@
            "- Fast (Deno caching)"
            "NEGATIVE:"
            "- Less common than npm/Node"
-           "- Some tooling assumes Node")))
+           "- Some tooling assumes Node"))
+
+       (adr-007
+         (title . "Adopt gitbot-fleet for continuous quality enforcement")
+         (status . "accepted")
+         (date . "2026-01-26")
+         (context
+           "Need continuous enforcement of repository standards, verification coverage,"
+           "sustainability checks, presentation polish, and release readiness.")
+         (decision
+           "Use gitbot-fleet as the orchestration layer for cross-bot enforcement."
+           "Integrate with hypatia rule engine and robot-repo-automaton for fixes.")
+         (consequences
+           "POSITIVE:"
+           "- Continuous standards enforcement"
+           "- Shared context and rule learning across bots"
+           "- Reduced regressions before release"
+           "NEGATIVE:"
+           "- Requires local fleet checkout for full automation"
+           "- Adds coordination steps to release flow"))))
 
     (developsment-practices
       (code-style

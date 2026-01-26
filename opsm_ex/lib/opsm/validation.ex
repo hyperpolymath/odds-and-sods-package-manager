@@ -9,6 +9,10 @@ defmodule Opsm.Validation do
   - Atom table exhaustion
   """
 
+  alias Proven.SafePath
+  alias Proven.SafeUrl
+  alias Proven.SafeNetwork
+
   # Package name patterns by registry
   # npm: @scope/name or name, allows alphanumeric, -, _, .
   @npm_pattern ~r|^(@[a-zA-Z0-9][\w.-]*/)?[a-zA-Z0-9][\w.-]*$|
@@ -105,8 +109,8 @@ defmodule Opsm.Validation do
       String.contains?(path, "\0") ->
         {:error, "Path cannot contain null bytes"}
 
-      String.contains?(path, "..") ->
-        {:error, "Path cannot contain traversal sequences (..)"}
+      SafePath.has_traversal?(path) ->
+        {:error, "Path cannot contain traversal sequences"}
 
       true ->
         {:ok, path}
@@ -148,38 +152,44 @@ defmodule Opsm.Validation do
   def validate_url(""), do: {:error, "URL cannot be empty"}
 
   def validate_url(url) when is_binary(url) do
-    case URI.parse(url) do
-      %URI{scheme: nil} ->
-        {:error, "URL must have a scheme (e.g., https://)"}
+    if String.contains?(url, "::1") do
+      {:error, "URL host is blocked (loopback)"}
+    else
+      case SafeUrl.parse(url) do
+        {:ok, parsed} ->
+          scheme_lower = String.downcase(parsed.scheme || "")
+          host = parsed.host || ""
 
-      %URI{scheme: _scheme, host: nil} ->
-        {:error, "URL must have a host"}
+          cond do
+            scheme_lower in @dangerous_schemes ->
+              {:error, "URL scheme '#{parsed.scheme}' is not allowed for security reasons"}
 
-      %URI{scheme: _scheme, host: ""} ->
-        {:error, "URL must have a host"}
+            scheme_lower not in @allowed_schemes ->
+              {:error, "URL scheme '#{parsed.scheme}' is not supported. Use https:// or http://"}
 
-      %URI{scheme: scheme, host: host} when is_binary(scheme) and is_binary(host) ->
-        scheme_lower = String.downcase(scheme)
+            host == "" ->
+              {:error, "URL must have a host"}
 
-        cond do
-          scheme_lower in @dangerous_schemes ->
-            {:error, "URL scheme '#{scheme}' is not allowed for security reasons"}
+            String.contains?(host, "..") ->
+              {:error, "URL host contains invalid sequence"}
 
-          scheme_lower not in @allowed_schemes ->
-            {:error, "URL scheme '#{scheme}' is not supported. Use https:// or http://"}
+            SafeNetwork.valid_ipv4?(host) and
+                (SafeNetwork.private?(host) or SafeNetwork.loopback?(host)) ->
+              {:error, "URL host is blocked (private/loopback)"}
 
-          String.contains?(host, "..") ->
-            {:error, "URL host contains invalid sequence"}
+            String.starts_with?(host, "169.254.") ->
+              {:error, "URL host is blocked (link-local)"}
 
-          String.length(url) > 2048 ->
-            {:error, "URL too long (max 2048 characters)"}
+            String.length(url) > 2048 ->
+              {:error, "URL too long (max 2048 characters)"}
 
-          true ->
-            {:ok, url}
-        end
+            true ->
+              {:ok, url}
+          end
 
-      _ ->
-        {:error, "Invalid URL format"}
+        {:error, _} ->
+          {:error, "Invalid URL format"}
+      end
     end
   end
 

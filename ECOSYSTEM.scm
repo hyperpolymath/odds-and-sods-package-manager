@@ -103,6 +103,12 @@
      (description . "Cross-platform UI spec and shell for OPSM")
      (integration . "UI uses OPSM CLI for discovery, dry-run plans, and apply actions"))
 
+    ((name . "gitbot-fleet")
+     (relationship . "quality-enforcement")
+     (url . "https://github.com/hyperpolymath/gitbot-fleet")
+     (description . "Bot fleet for RSR, verification, sustainability, presentation, release readiness")
+     (integration . "Continuous repo quality enforcement for OPSM")))
+
     ((name . "cadre-router")
      (relationship . "dependency")
      (url . "https://github.com/hyperpolymath/cadre-router")

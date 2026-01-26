@@ -6,7 +6,8 @@
   (architecture-decisions
     ("Federated hub with event-driven mirroring")
     ("Verification-first pipeline with proven/Idris2")
-    ("Trust scoring via checky-monkey + oikos"))
+    ("Trust scoring via checky-monkey + oikos")
+    ("Continuous quality enforcement via gitbot-fleet + hypatia"))
 
   (developsment-practices
     (code-style ("Rust + AsciiDoc + Scheme metadata"))

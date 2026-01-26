@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= Gitbot Fleet Integration
+:toc: preamble
+:toclevels: 2
+
+OPSM uses the gitbot-fleet orchestration layer to keep repository standards,
+verification, sustainability, presentation, and release-readiness under constant review.
+
+== Run the fleet (local)
+
+[source,bash]
+----
+scripts/gitbot-fleet.sh run-scan
+----
+
+== Configure path
+
+By default, the script expects `../gitbot-fleet` relative to this repo.
+Override with:
+
+* `GITBOT_FLEET_DIR=/path/to/gitbot-fleet`
+
+== What it covers
+
+* RSR compliance (rhodibot)
+* Formal verification & fuzzing (echidnabot)
+* Eco/economic standards (oikos)
+* Presentation + accessibility (glambot)
+* Integration health (seambot)
+* Release readiness (finishing-bot)
+* Rules + remediation coordination (hypatia / robot-repo-automaton)

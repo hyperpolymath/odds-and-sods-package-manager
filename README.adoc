@@ -38,6 +38,13 @@ CLI for dry-runs, backend capability detection, and apply actions.
 
 See: link:docs/OPSM-UI.adoc[OPSM UI Integration] | link:docs/OPSM-API.adoc[OPSM Local API] | https://github.com/hyperpolymath/opsm-ui
 
+== Gitbot Fleet
+
+OPSM is continuously checked by the gitbot-fleet quality enforcement bots
+(RSR compliance, formal verification, sustainability, presentation, release readiness).
+
+See: link:docs/gitbot-fleet.adoc[Gitbot Fleet Integration]
+
 == Current Status (v1.0.0 - Released)
 
 **✅ Production Ready** - Released January 23, 2026
