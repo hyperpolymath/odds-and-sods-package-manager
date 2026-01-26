@@ -9,7 +9,7 @@
     (type . "federated-package-manager")
     (purpose . "Universal, trust-verified package management with formal guarantees")
     (created . "2025-01-17")
-    (updated . "2026-01-23"))
+    (updated . "2026-01-26"))
 
   (position-in-ecosystem
     (layer . "infrastructure")
@@ -96,6 +96,12 @@
      (url . "https://tauri.app")
      (description . "Cross-platform app framework")
      (integration . "OPSM mobile wrapper uses Tauri 2.0"))
+
+    ((name . "opsm-ui")
+     (relationship . "sibling-ui")
+     (url . "https://github.com/hyperpolymath/opsm-ui")
+     (description . "Cross-platform UI spec and shell for OPSM")
+     (integration . "UI uses OPSM CLI for discovery, dry-run plans, and apply actions"))
 
     ((name . "cadre-router")
      (relationship . "dependency")

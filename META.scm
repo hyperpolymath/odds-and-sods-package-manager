@@ -7,7 +7,7 @@
       (version . "1.0.0")
       (schema-version . "2025-12-08")
       (created . "2025-01-17")
-      (last-updated . "2026-01-23")
+      (last-updated . "2026-01-26")
       (project . "OPSM (Odds and Sods Package Manager)")
       (repository . "https://github.com/hyperpolymath/odds-and-sods-package-manager"))
 
