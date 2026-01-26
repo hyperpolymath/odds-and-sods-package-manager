@@ -24,8 +24,8 @@ Override with:
 
 * RSR compliance (rhodibot)
 * Formal verification & fuzzing (echidnabot)
-* Eco/economic standards (oikos)
+* Eco/economic standards (sustainabot)
 * Presentation + accessibility (glambot)
 * Integration health (seambot)
-* Release readiness (finishing-bot)
+* Release readiness (finishbot)
 * Rules + remediation coordination (hypatia / robot-repo-automaton)
