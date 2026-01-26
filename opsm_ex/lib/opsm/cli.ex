@@ -1103,7 +1103,37 @@ defmodule Opsm.CLI do
   defp print_smart_plan(plan) do
     IO.puts("Smart install plan (grouped by backend):")
     Enum.each(plan, fn {backend, pkgs} ->
-      IO.puts("  - #{backend}: #{Enum.join(pkgs, \", \")}")
+      status =
+        case check_backend_availability(backend) do
+          {:ok, _} -> "✓"
+          {:error, reason} -> "✗ #{reason}"
+        end
+
+      IO.puts("  - #{backend}: #{Enum.join(pkgs, ", ")}  [#{status}]")
     end)
+  end
+
+  defp check_backend_availability(backend) do
+    case backend do
+      "toolbox" -> check_exec("toolbox")
+      "distrobox" -> check_exec("distrobox")
+      "container" -> check_exec("podman") |> fallback_exec("docker")
+      "rpm-ostree" -> check_exec("rpm-ostree")
+      "dnfinition" -> check_exec("dnfinition")
+      "flatpak" -> check_exec("flatpak")
+      "snap" -> check_exec("snap")
+      "native" -> {:ok, "native"}
+      _ -> {:ok, "auto"}
+    end
+  end
+
+  
+  defp fallback_exec({:ok, path}, _fallback), do: {:ok, path}
+  defp fallback_exec({:error, _}, fallback), do: check_exec(fallback)
+defp check_exec(cmd) do
+    case System.find_executable(cmd) do
+      nil -> {:error, "#{cmd} not found"}
+      path -> {:ok, path}
+    end
   end
 end
