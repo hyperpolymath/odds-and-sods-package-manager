@@ -12,7 +12,7 @@ defmodule Opsm.Application do
   def start(_type, _args) do
     children = [
       RegistryGateway.Store,
-      {Plug.Cowboy, scheme: :http, plug: RegistryGateway.Router, options: [port: registry_port()]}
+      {Bandit, plug: RegistryGateway.Router, scheme: :http, port: registry_port(), ip: {127, 0, 0, 1}}
     ]
 
     opts = [strategy: :one_for_one, name: Opsm.Supervisor]
