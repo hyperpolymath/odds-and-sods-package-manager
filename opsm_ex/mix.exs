@@ -29,7 +29,8 @@ defmodule Opsm.MixProject do
       {:jason, "~> 1.4"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
-      {:plug_cowboy, "~> 2.7"}
+      {:plug_cowboy, "~> 2.7"},
+      {:bandit, "~> 1.5"}
     ]
   end
 

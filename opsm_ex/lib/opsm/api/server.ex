@@ -6,6 +6,6 @@ defmodule Opsm.Api.Server do
 
   def start_link(opts \\ []) do
     port = Keyword.get(opts, :port, 4466)
-    Plug.Cowboy.http(Opsm.Api.Router, [], port: port, ip: {127, 0, 0, 1})
+    Bandit.start_link(plug: Opsm.Api.Router, scheme: :http, port: port, ip: {127, 0, 0, 1})
   end
 end
