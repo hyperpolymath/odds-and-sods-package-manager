@@ -12,7 +12,7 @@ Searches GitHub API for package repositories by name and language.
 - Searches GitHub repositories by package name and programming language
 - Returns results with confidence scoring based on star count
 - Supports callback URLs for async notification
-- Writes results to `/tmp/opm-har-ingest/results/`
+- Writes results to `/tmp/opsm-har-ingest/results/`
 
 **Dependencies:**
 - `bash`
@@ -177,11 +177,11 @@ sudo ./install-services.sh
 **Manual Installation:**
 ```bash
 # Create system user:
-sudo useradd --system --no-create-home --shell /bin/false opm
+sudo useradd --system --no-create-home --shell /bin/false opsm
 
 # Create queue directory:
-sudo mkdir -p /tmp/opm-har-ingest/{results,processed}
-sudo chown -R opm:opm /tmp/opm-har-ingest
+sudo mkdir -p /tmp/opsm-har-ingest/{results,processed}
+sudo chown -R opsm:opsm /tmp/opsm-har-ingest
 
 # Install systemd services:
 sudo cp *.service /etc/systemd/system/
@@ -198,7 +198,7 @@ sudo systemctl status har-*
 ## Queue Directory Structure
 
 ```
-/tmp/opm-har-ingest/
+/tmp/opsm-har-ingest/
 ├── *.imp.json          # Pending tasks
 ├── results/            # Completed task results
 │   └── *.result.json
@@ -210,16 +210,16 @@ sudo systemctl status har-*
 
 ## Integration with OPM
 
-The Agentic registry adapter (`lib/opm/registries/agentic.ex`) submits tasks to the HAR queue:
+The Agentic registry adapter (`lib/opsm/registries/agentic.ex`) submits tasks to the HAR queue:
 
 ```elixir
 # OPM submits task
 Opm.Registries.Agentic.fetch_package("idris2-json", "latest")
 
-# Task written to /tmp/opm-har-ingest/task-abc123.imp.json
+# Task written to /tmp/opsm-har-ingest/task-abc123.imp.json
 
 # HAR agent processes task
-# Result written to /tmp/opm-har-ingest/results/task-abc123.result.json
+# Result written to /tmp/opsm-har-ingest/results/task-abc123.result.json
 
 # OPM polls for result
 Opm.HarQueue.await_result(task_id, timeout: 30_000)
@@ -267,22 +267,22 @@ To avoid rate limits:
 **Agent not processing tasks:**
 ```bash
 # Check queue directory exists
-ls -la /tmp/opm-har-ingest/
+ls -la /tmp/opsm-har-ingest/
 
 # Check agent logs
 journalctl -u har-github-search -f
 
 # Test task manually
-echo '{"imp":{"package":"test","forth":"idris2"}}' > /tmp/opm-har-ingest/test.imp.json
+echo '{"imp":{"package":"test","forth":"idris2"}}' > /tmp/opsm-har-ingest/test.imp.json
 ```
 
 **No results returned:**
 ```bash
 # Check results directory
-ls -la /tmp/opm-har-ingest/results/
+ls -la /tmp/opsm-har-ingest/results/
 
 # Check processed directory
-ls -la /tmp/opm-har-ingest/processed/
+ls -la /tmp/opsm-har-ingest/processed/
 ```
 
 **Rate limit errors:**

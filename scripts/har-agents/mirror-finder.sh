@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-readonly QUEUE_DIR="/tmp/opm-har-ingest"
+readonly QUEUE_DIR="/tmp/opsm-har-ingest"
 readonly POLL_INTERVAL=5
 readonly SWH_API="https://archive.softwareheritage.org/api/1"
 readonly WAYBACK_API="https://archive.org/wayback/available"

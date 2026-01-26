@@ -145,12 +145,12 @@ defmodule Opm.CLI do
 
   defp run({:help, _opts}) do
     IO.puts("""
-    opm - Odds-and-sods Package Manager
+    opsm - Odds-and-sods Package Manager
 
     Federated multi-registry package manager with trust pipeline.
 
     USAGE:
-      opm <command> [@forth] [package] [options]
+      opsm <command> [@forth] [package] [options]
 
     PACKAGE COMMANDS:
       install [@forth] <pkg>   Install package (optionally from specific registry)
@@ -231,21 +231,21 @@ defmodule Opm.CLI do
       @guix     Guix System (guix)
 
     EXAMPLES:
-      opm install lodash                      # From default/detected registry
-      opm install @npm lodash --version 4.17  # Specific version from npm
-      opm install @cargo tokio --allow rc     # Release candidate
-      opm install @hex phoenix --systemwide   # System-wide
-      opm install @dnf htop                   # Via system package manager
-      opm search "http client"                # Search across all forths
-      opm list --updates                      # Show available updates
-      opm depends @npm express --recursive    # Full dependency tree
-      opm pin lodash 4.17.21                  # Lock version
-      opm history undo                        # Undo last transaction
-      opm publish ./my-package
-      opm audit express
-      opm ports                               # List available system PMs
-      opm convert package.ncl                 # Convert Nickel manifest
-      opm export myapp deb                    # Export to .deb format
+      opsm install lodash                      # From default/detected registry
+      opsm install @npm lodash --version 4.17  # Specific version from npm
+      opsm install @cargo tokio --allow rc     # Release candidate
+      opsm install @hex phoenix --systemwide   # System-wide
+      opsm install @dnf htop                   # Via system package manager
+      opsm search "http client"                # Search across all forths
+      opsm list --updates                      # Show available updates
+      opsm depends @npm express --recursive    # Full dependency tree
+      opsm pin lodash 4.17.21                  # Lock version
+      opsm history undo                        # Undo last transaction
+      opsm publish ./my-package
+      opsm audit express
+      opsm ports                               # List available system PMs
+      opsm convert package.ncl                 # Convert Nickel manifest
+      opsm export myapp deb                    # Export to .deb format
 
     CONFIG:
       $OPM_CONFIG > ./opm.toml > ~/.config/opm/opm.toml
@@ -478,7 +478,7 @@ defmodule Opm.CLI do
           IO.puts(Jason.encode!(installed, pretty: true))
         else
           if installed == [] do
-            IO.puts("No packages installed via opm")
+            IO.puts("No packages installed via opsm")
           else
             IO.puts("Installed packages:")
             IO.puts("")
@@ -783,7 +783,7 @@ defmodule Opm.CLI do
               System.halt(0)
           end
         else
-          IO.puts("Usage: opm history info <id>")
+          IO.puts("Usage: opsm history info <id>")
           System.halt(1)
         end
 
@@ -851,7 +851,7 @@ defmodule Opm.CLI do
         end
       end
       IO.puts("")
-      IO.puts("Use 'opm install @<port> <package>' to install via system PM")
+      IO.puts("Use 'opsm install @<port> <package>' to install via system PM")
     end
     System.halt(0)
   end
@@ -911,7 +911,7 @@ defmodule Opm.CLI do
 
   defp run({:error, message}) do
     Errors.print_error({:error, message})
-    IO.puts(:stderr, "Run 'opm help' for usage information")
+    IO.puts(:stderr, "Run 'opsm help' for usage information")
     System.halt(1)
   end
 
@@ -1031,8 +1031,8 @@ defmodule Opm.CLI do
 
     IO.puts("")
     IO.puts("To install, specify a registry:")
-    IO.puts("  opm install @npm #{package} --version #{version}")
-    IO.puts("  opm install @cargo #{package}")
+    IO.puts("  opsm install @npm #{package} --version #{version}")
+    IO.puts("  opsm install @cargo #{package}")
     System.halt(0)
   end
 end

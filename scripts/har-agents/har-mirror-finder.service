@@ -1,13 +1,13 @@
 [Unit]
 Description=HAR Mirror Finder Agent
-Documentation=https://github.com/hyperpolymath/opm
+Documentation=https://github.com/hyperpolymath/opsm
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=opm
-Group=opm
+User=opsm
+Group=opsm
 WorkingDirectory=/var/mnt/eclipse/repos/odds-and-sods-package-manager/scripts/har-agents
 ExecStart=/var/mnt/eclipse/repos/odds-and-sods-package-manager/scripts/har-agents/mirror-finder.sh
 Restart=always
@@ -20,7 +20,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/tmp/opm-har-ingest
+ReadWritePaths=/tmp/opsm-har-ingest
 
 [Install]
 WantedBy=multi-user.target

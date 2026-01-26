@@ -240,10 +240,10 @@ let loadConfig = async (): result<opmConfig> => {
             if userExists {
               await loadConfigFrom(userPath)
             } else {
-              Error("opm config not found")
+              Error("opsm config not found")
             }
           }
-        | None => Error("opm config not found")
+        | None => Error("opsm config not found")
         }
       }
     }

@@ -9,7 +9,7 @@
     "build:watch": "npx rescript build -w",
     "clean": "npx rescript clean",
     "dev": "npx rescript build && deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
-    "opm": "deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
+    "opsm": "deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
     "test": "deno test --allow-read --allow-env --allow-net",
     "lint": "deno lint cli/*.res.js cli/clients/*.res.js",
     "fmt": "deno fmt",

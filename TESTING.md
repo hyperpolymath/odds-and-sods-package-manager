@@ -12,10 +12,10 @@ mix compile
 mix escript.build
 
 # Make OPM available globally (optional)
-sudo ln -s $(pwd)/opm /usr/local/bin/opm
+sudo ln -s $(pwd)/opsm /usr/local/bin/opsm
 
 # Verify installation
-opm version
+opsm version
 ```
 
 ## Test Categories
@@ -38,10 +38,10 @@ cd opm_ex
 mix test --exclude integration --exclude skip
 
 # Run specific test suite
-mix test test/opm/version_constraint_test.exs
-mix test test/opm/resolver_test.exs
-mix test test/opm/lockfile_test.exs
-mix test test/opm/verified_test.exs
+mix test test/opsm/version_constraint_test.exs
+mix test test/opsm/resolver_test.exs
+mix test test/opsm/lockfile_test.exs
+mix test test/opsm/verified_test.exs
 
 # Run validation script
 ../scripts/validate-v1.0.sh
@@ -113,18 +113,18 @@ Test installation of a simple npm package:
 
 ```bash
 cd /tmp
-mkdir opm-test-install
-cd opm-test-install
+mkdir opsm-test-install
+cd opsm-test-install
 
 # Initialize
-opm init
+opsm init
 
 # Install small package
-opm install lodash --forth npm
+opsm install lodash --forth npm
 
 # Verify installation
 ls node_modules/lodash
-cat opm.lock  # Should contain lodash entry
+cat opsm.lock  # Should contain lodash entry
 ```
 
 **Expected:**
@@ -140,15 +140,15 @@ Test transitive dependency resolution:
 
 ```bash
 cd /tmp
-mkdir opm-test-deps
-cd opm-test-deps
+mkdir opsm-test-deps
+cd opsm-test-deps
 
 # Install package with dependencies
-opm install express --forth npm
+opsm install express --forth npm
 
 # Verify dependencies installed
 ls node_modules/  # Should include accepts, mime-types, etc.
-cat opm.lock | jq '.packages | keys'  # Show all installed packages
+cat opsm.lock | jq '.packages | keys'  # Show all installed packages
 ```
 
 **Expected:**
@@ -186,20 +186,20 @@ deps = [
 Test lockfile creation and reading:
 
 ```bash
-cd /tmp/opm-test-install
+cd /tmp/opsm-test-install
 
 # Create lockfile
-opm install lodash
+opsm install lodash
 
 # Verify lockfile structure
-cat opm.lock | jq '.'
-cat opm.lock | jq '.version'  # Should be "1.0"
-cat opm.lock | jq '.packages | keys'  # Should include "lodash"
+cat opsm.lock | jq '.'
+cat opsm.lock | jq '.version'  # Should be "1.0"
+cat opsm.lock | jq '.packages | keys'  # Should include "lodash"
 
 # Test lockfile roundtrip
-cp opm.lock opm.lock.backup
-opm install  # Should use existing lockfile
-diff opm.lock opm.lock.backup  # Should be identical (except timestamps)
+cp opsm.lock opsm.lock.backup
+opsm install  # Should use existing lockfile
+diff opsm.lock opsm.lock.backup  # Should be identical (except timestamps)
 ```
 
 **Expected:**
@@ -215,35 +215,35 @@ Test each registry adapter:
 
 ```bash
 # npm
-opm search lodash --forth npm
-opm info lodash --forth npm
+opsm search lodash --forth npm
+opsm info lodash --forth npm
 
 # Hex (Elixir)
-opm search poison --forth hex
-opm info poison --forth hex
+opsm search poison --forth hex
+opsm info poison --forth hex
 
 # Crates (Rust)
-opm search serde --forth cargo
-opm info serde --forth cargo
+opsm search serde --forth cargo
+opsm info serde --forth cargo
 
 # PyPI (Python)
-opm search requests --forth pypi
-opm info requests --forth pypi
+opsm search requests --forth pypi
+opsm info requests --forth pypi
 
 # Nimble (Nim)
-opm search nimble --forth nimble
-opm info nimble --forth nimble
+opsm search nimble --forth nimble
+opsm info nimble --forth nimble
 
 # Idris2
-opm search idris2-json --forth idris2
-opm info idris2-json --forth idris2
+opsm search idris2-json --forth idris2
+opsm info idris2-json --forth idris2
 
 # Git (generic)
-opm info https://github.com/idris-community/idris2-json --forth git
+opsm info https://github.com/idris-community/idris2-json --forth git
 
 # Agentic (HAR-based discovery)
 # Requires HAR agents running
-opm info obscure-package --forth agentic
+opsm info obscure-package --forth agentic
 ```
 
 **Expected:** Each adapter returns package information or appropriate error.
@@ -262,8 +262,8 @@ cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/scripts/har-agents
 ./mirror-finder.sh &
 
 # Submit test task
-mkdir -p /tmp/opm-har-ingest
-cat > /tmp/opm-har-ingest/test-task.imp.json <<EOF
+mkdir -p /tmp/opsm-har-ingest
+cat > /tmp/opsm-har-ingest/test-task.imp.json <<EOF
 {
   "imp": {
     "package": "idris2-json",
@@ -276,11 +276,11 @@ EOF
 sleep 10
 
 # Check results
-ls /tmp/opm-har-ingest/results/
-cat /tmp/opm-har-ingest/results/test-task.result.json | jq '.'
+ls /tmp/opsm-har-ingest/results/
+cat /tmp/opsm-har-ingest/results/test-task.result.json | jq '.'
 
 # Cleanup
-rm /tmp/opm-har-ingest/test-task.imp.json
+rm /tmp/opsm-har-ingest/test-task.imp.json
 ```
 
 **Expected:**
@@ -295,7 +295,7 @@ rm /tmp/opm-har-ingest/test-task.imp.json
 Test trust service health checks:
 
 ```bash
-opm status
+opsm status
 
 # Should show status of:
 # - claim-forge
@@ -341,7 +341,7 @@ git commit -m "Initial commit"
 git remote add origin https://github.com/test/my-test-package.git
 
 # Publish (requires trust services running)
-opm publish .
+opsm publish .
 
 # Expected output:
 # ✓ Manifest ingested
@@ -365,7 +365,7 @@ Test sustainability audit:
 
 ```bash
 # Audit a GitHub repository
-opm audit https://github.com/some/popular-repo
+opsm audit https://github.com/some/popular-repo
 
 # Expected output:
 # Sustainability Analysis (oikos)
@@ -464,11 +464,11 @@ Complete end-to-end workflow:
 cd /tmp
 mkdir full-workflow-test
 cd full-workflow-test
-opm init
+opsm init
 
-opm install lodash express --forth npm
+opsm install lodash express --forth npm
 ls node_modules/
-cat opm.lock | jq '.packages | keys'
+cat opsm.lock | jq '.packages | keys'
 
 # 2. Create your package
 cat > package.json <<EOF
@@ -484,10 +484,10 @@ EOF
 
 # 3. Publish (requires services)
 git init && git add . && git commit -m "init"
-opm publish .
+opsm publish .
 
 # 4. Audit
-opm audit .
+opsm audit .
 ```
 
 **Expected:** Complete workflow executes without errors.
@@ -506,11 +506,11 @@ mkdir perf-test
 cd perf-test
 
 # Install package with large dependency tree
-time opm install webpack --forth npm
+time opsm install webpack --forth npm
 
 # Check lockfile size
-wc -l opm.lock
-jq '.packages | length' opm.lock
+wc -l opsm.lock
+jq '.packages | length' opsm.lock
 ```
 
 **Expected:**
@@ -529,9 +529,9 @@ cd /tmp
 mkdir -p test-{1,2,3}
 
 # Run installs in parallel
-(cd test-1 && opm install lodash) &
-(cd test-2 && opm install express) &
-(cd test-3 && opm install axios) &
+(cd test-1 && opsm install lodash) &
+(cd test-2 && opsm install express) &
+(cd test-3 && opsm install axios) &
 
 wait
 
@@ -586,8 +586,8 @@ If package downloads fail:
 
 If lockfile becomes corrupted:
 ```bash
-rm opm.lock
-opm install  # Recreates from package.json
+rm opsm.lock
+opsm install  # Recreates from package.json
 ```
 
 ---
@@ -661,7 +661,7 @@ Before releasing v1.0.0, ensure:
 
 ## Getting Help
 
-- **Issues:** https://github.com/hyperpolymath/opm/issues
+- **Issues:** https://github.com/hyperpolymath/opsm/issues
 - **Documentation:** docs/
 - **Examples:** examples/
 - **State file:** STATE.scm (project status)

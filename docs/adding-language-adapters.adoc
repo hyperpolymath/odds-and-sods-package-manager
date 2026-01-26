@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = Adding Language Adapters to OPM
 :revdate: 2026-01-23
 :toc: left
@@ -123,12 +123,12 @@ end
 
 === Step 1: Create the Adapter Module
 
-Create a new file in `opm_ex/lib/opm/registries/`:
+Create a new file in `opm_ex/lib/opsm/registries/`:
 
 [source,elixir]
 ----
-# opm_ex/lib/opm/registries/nimble.ex
-# SPDX-License-Identifier: PMPL-1.0
+# opm_ex/lib/opsm/registries/nimble.ex
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opm.Registries.Nimble do
   @moduledoc """
   Nimble Package Directory adapter for Nim packages.
@@ -159,7 +159,7 @@ end
 
 === Step 2: Register the Adapter
 
-Add your adapter to the registry dispatcher in `opm_ex/lib/opm/registries/registry.ex`:
+Add your adapter to the registry dispatcher in `opm_ex/lib/opsm/registries/registry.ex`:
 
 [source,elixir]
 ----
@@ -184,12 +184,12 @@ end
 
 === Step 3: Write Tests
 
-Create tests in `opm_ex/test/opm/registries/`:
+Create tests in `opm_ex/test/opsm/registries/`:
 
 [source,elixir]
 ----
-# opm_ex/test/opm/registries/nimble_test.exs
-# SPDX-License-Identifier: PMPL-1.0
+# opm_ex/test/opsm/registries/nimble_test.exs
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opm.Registries.NimbleTest do
   use ExUnit.Case, async: true
 

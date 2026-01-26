@@ -1,7 +1,7 @@
 # OPM v1.0.0 Release Announcement
 
 **Date:** January 23, 2026
-**Repository:** https://github.com/hyperpolymath/opm
+**Repository:** https://github.com/hyperpolymath/opsm
 **License:** PMPL-1.0
 
 ## Overview
@@ -55,9 +55,9 @@ OPM v1.0.0 supports **8 package ecosystems**:
 
 **CLI Commands:**
 ```bash
-opm install express --forth npm      # Install with dependencies
-opm depends lodash                   # Show dependency tree
-opm rdepends lodash                  # Show reverse dependencies
+opsm install express --forth npm      # Install with dependencies
+opsm depends lodash                   # Show dependency tree
+opsm rdepends lodash                  # Show reverse dependencies
 ```
 
 **Test Coverage:**
@@ -88,9 +88,9 @@ opm rdepends lodash                  # Show reverse dependencies
 
 **CLI Commands:**
 ```bash
-opm publish ./my-package    # Publish with trust pipeline
-opm audit ./my-package      # Sustainability + license analysis
-opm status                  # Check trust service health
+opsm publish ./my-package    # Publish with trust pipeline
+opsm audit ./my-package      # Sustainability + license analysis
+opsm status                  # Check trust service health
 ```
 
 ### Phase 3: Federation Activation
@@ -128,8 +128,8 @@ Three agents for discovering packages in obscure sources:
 
 **CLI Commands:**
 ```bash
-opm install idris2-json --forth agentic   # Use HAR agents
-opm search idris2 --forth agentic         # Agentic search
+opsm install idris2-json --forth agentic   # Use HAR agents
+opsm search idris2 --forth agentic         # Agentic search
 ```
 
 **Systemd Services:**
@@ -167,10 +167,10 @@ sudo systemctl start har-mirror-finder
 ./scripts/validate-v1.0.sh
 
 # Run specific test suites:
-mix test test/opm/version_constraint_test.exs
-mix test test/opm/resolver_test.exs
-mix test test/opm/lockfile_test.exs
-mix test test/opm/verified_test.exs
+mix test test/opsm/version_constraint_test.exs
+mix test test/opsm/resolver_test.exs
+mix test test/opsm/lockfile_test.exs
+mix test test/opsm/verified_test.exs
 ```
 
 **Testing Documentation:**
@@ -185,8 +185,8 @@ mix test test/opm/verified_test.exs
 
 ```bash
 # Clone repository:
-git clone https://github.com/hyperpolymath/opm.git
-cd opm/opm_ex
+git clone https://github.com/hyperpolymath/opsm.git
+cd opsm/opm_ex
 
 # Install dependencies:
 mix deps.get
@@ -195,10 +195,10 @@ mix deps.get
 mix escript.build
 
 # Install globally (optional):
-sudo ln -s $(pwd)/opm /usr/local/bin/opm
+sudo ln -s $(pwd)/opsm /usr/local/bin/opsm
 
 # Verify installation:
-opm version
+opsm version
 ```
 
 ### System Requirements
@@ -214,24 +214,24 @@ opm version
 
 ```bash
 # Initialize project:
-opm init
+opsm init
 
 # Install dependencies:
-opm install lodash --forth npm
-opm install phoenix --forth hex
-opm install tokio --forth cargo
+opsm install lodash --forth npm
+opsm install phoenix --forth hex
+opsm install tokio --forth cargo
 
 # View dependencies:
-opm depends
-opm list
+opsm depends
+opsm list
 
 # Publish package:
-opm publish .
+opsm publish .
 ```
 
 ### Configuration
 
-Create `opm.toml` in project root or `~/.config/opm/config.toml`:
+Create `opsm.toml` in project root or `~/.config/opsm/config.toml`:
 
 ```toml
 [registries]
@@ -247,7 +247,7 @@ oikos_url = "http://localhost:7004"
 cicd_hyper_a_url = "http://localhost:7005"
 
 [har]
-queue_dir = "/tmp/opm-har-ingest"
+queue_dir = "/tmp/opsm-har-ingest"
 timeout_ms = 30000
 ```
 
@@ -257,10 +257,10 @@ timeout_ms = 30000
 
 ```bash
 # Install Express (npm) with all dependencies:
-opm install express --forth npm
+opsm install express --forth npm
 
 # View dependency tree:
-opm depends express
+opsm depends express
 
 # Output:
 # express@4.18.2
@@ -276,7 +276,7 @@ opm depends express
 
 ```bash
 # Install package with mixed dependencies:
-opm install my-project
+opsm install my-project
 
 # my-project depends on:
 # - lodash (npm)
@@ -290,11 +290,11 @@ opm install my-project
 
 ```bash
 # Publish package to registry:
-opm publish ./my-package
+opsm publish ./my-package
 
 # Output:
 # ✓ Manifest validated
-# ✓ Tarball generated: /tmp/opm-tarballs/my-package-1.0.0.tar.gz
+# ✓ Tarball generated: /tmp/opsm-tarballs/my-package-1.0.0.tar.gz
 # ✓ Attestation created (claim-forge)
 # ✓ License compatible (palimpsest)
 # ⏳ Verification queued (checky-monkey)
@@ -306,7 +306,7 @@ opm publish ./my-package
 
 ```bash
 # Find unmaintained Idris2 package:
-opm install idris2-network --forth agentic
+opsm install idris2-network --forth agentic
 
 # HAR agents search:
 # ✓ github-search: Found https://github.com/idris-community/network
@@ -328,9 +328,9 @@ OPM uses a **PubGrub-inspired algorithm** (same as Cargo and pip):
 6. Return complete resolution map
 
 **Key Files:**
-- `lib/opm/version_constraint.ex` - Version constraint parser
-- `lib/opm/resolver.ex` - Dependency resolver
-- `lib/opm/lockfile.ex` - Lockfile management
+- `lib/opsm/version_constraint.ex` - Version constraint parser
+- `lib/opsm/resolver.ex` - Dependency resolver
+- `lib/opsm/lockfile.ex` - Lockfile management
 
 ### Trust Pipeline
 
@@ -370,7 +370,7 @@ Each adapter implements:
 
 ### HAR Integration
 
-HAR agents run as systemd services watching `/tmp/opm-har-ingest/`:
+HAR agents run as systemd services watching `/tmp/opsm-har-ingest/`:
 
 ```
 OPM Client
@@ -386,7 +386,7 @@ OPM Client
 
 **Queue Structure:**
 ```
-/tmp/opm-har-ingest/
+/tmp/opsm-har-ingest/
 ├── task-abc123.imp.json      # Pending task
 ├── results/
 │   └── task-abc123.result.json  # Completed
@@ -403,10 +403,10 @@ OPM Client
 npm install express lodash
 
 # After (OPM):
-opm install express lodash --forth npm
+opsm install express lodash --forth npm
 
 # Or batch install:
-opm install  # Reads package.json dependencies
+opsm install  # Reads package.json dependencies
 ```
 
 ### From Cargo
@@ -416,10 +416,10 @@ opm install  # Reads package.json dependencies
 cargo add tokio serde
 
 # After (OPM):
-opm install tokio serde --forth cargo
+opsm install tokio serde --forth cargo
 
 # Or from Cargo.toml:
-opm install  # Reads Cargo.toml dependencies
+opsm install  # Reads Cargo.toml dependencies
 ```
 
 ### From Mix (Hex)
@@ -429,22 +429,22 @@ opm install  # Reads Cargo.toml dependencies
 mix deps.get
 
 # After (OPM):
-opm install --forth hex
+opsm install --forth hex
 
 # Or specify packages:
-opm install phoenix poison --forth hex
+opsm install phoenix poison --forth hex
 ```
 
 ## Breaking Changes from v0.5
 
 1. **Lockfile Format:** Upgraded to v1.0 with full dependency tree
-   - Migration: Delete old `opm.lock`, run `opm install`
+   - Migration: Delete old `opsm.lock`, run `opsm install`
 
 2. **Registry Adapter API:** `ResolvedPackage` struct changes
    - Migration: Update custom adapters to new format
 
-3. **CLI Commands:** `opm depends` replaces `opm tree`
-   - Migration: Use `opm depends` instead of `opm tree`
+3. **CLI Commands:** `opsm depends` replaces `opsm tree`
+   - Migration: Use `opsm depends` instead of `opsm tree`
 
 ## Known Issues
 
@@ -512,8 +512,8 @@ We welcome contributions! See `CONTRIBUTING.md` for guidelines.
 **Getting Started:**
 ```bash
 # Fork and clone:
-git clone https://github.com/YOUR_USERNAME/opm.git
-cd opm/opm_ex
+git clone https://github.com/YOUR_USERNAME/opsm.git
+cd opsm/opm_ex
 
 # Run tests:
 mix test --exclude integration
@@ -546,8 +546,8 @@ See `LICENSE` for details.
 
 ## Links
 
-- **GitHub:** https://github.com/hyperpolymath/opm
-- **Issues:** https://github.com/hyperpolymath/opm/issues
+- **GitHub:** https://github.com/hyperpolymath/opsm
+- **Issues:** https://github.com/hyperpolymath/opsm/issues
 - **Documentation:** docs/
 - **Examples:** examples/
 - **Chat:** (TBD - Discord/Matrix)

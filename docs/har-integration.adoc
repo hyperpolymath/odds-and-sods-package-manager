@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = HAR Integration for Agentic Package Fetching
 :revdate: 2026-01-23
 :toc: left
@@ -26,7 +26,7 @@ OPM CLI
    │   └─> Direct HTTP fetch ✓
    │
    └─> Agentic Registry Adapter
-       └─> HAR Task Queue (/tmp/opm-har-ingest/)
+       └─> HAR Task Queue (/tmp/opsm-har-ingest/)
            │
            ├─> Git Search Agent
            ├─> Web Scraper Agent
@@ -39,7 +39,7 @@ OPM CLI
 
 === Task Submission
 
-OPM writes task files to `/tmp/opm-har-ingest/<uuid>.json`:
+OPM writes task files to `/tmp/opsm-har-ingest/<uuid>.json`:
 
 [source,json]
 ----
@@ -284,7 +284,7 @@ Your choice: _
 
 [source,elixir]
 ----
-# opm_ex/lib/opm/registries/agentic.ex
+# opm_ex/lib/opsm/registries/agentic.ex
 defmodule Opm.Registries.Agentic do
   @moduledoc """
   Agentic registry adapter that delegates to HAR for package discovery.
@@ -357,13 +357,13 @@ end
 
 [source,elixir]
 ----
-# opm_ex/lib/opm/har_queue.ex
+# opm_ex/lib/opsm/har_queue.ex
 defmodule Opm.HarQueue do
   @moduledoc """
   Manages task queue for HAR integration.
   """
 
-  @queue_dir "/tmp/opm-har-ingest"
+  @queue_dir "/tmp/opsm-har-ingest"
 
   def submit(task) do
     ensure_queue_dir()
@@ -428,7 +428,7 @@ OPM runs a simple HTTP server to receive HAR results:
 
 [source,elixir]
 ----
-# opm_ex/lib/opm/har_callback.ex
+# opm_ex/lib/opsm/har_callback.ex
 defmodule Opm.HarCallback do
   use Plug.Router
 
@@ -439,7 +439,7 @@ defmodule Opm.HarCallback do
     task_id = conn.params["task_id"]
     {:ok, body, conn} = read_body(conn)
 
-    result_file = "/tmp/opm-har-ingest/#{task_id}.result.json"
+    result_file = "/tmp/opsm-har-ingest/#{task_id}.result.json"
     File.write!(result_file, body)
 
     send_resp(conn, 200, "OK")
@@ -459,7 +459,7 @@ Create a test task:
 
 [source,bash]
 ----
-cat > /tmp/opm-har-ingest/test-123.json <<'EOF'
+cat > /tmp/opsm-har-ingest/test-123.json <<'EOF'
 {
   "task_id": "test-123",
   "task_type": "package_fetch",
@@ -511,7 +511,7 @@ end
 
 To implement a HAR agent:
 
-1. Watch `/tmp/opm-har-ingest/` for new `*.json` files
+1. Watch `/tmp/opsm-har-ingest/` for new `*.json` files
 2. Parse task and extract hints
 3. Execute search/fetch strategy
 4. POST result to callback URL
@@ -524,7 +524,7 @@ Example agent skeleton:
 #!/usr/bin/env bash
 # har-github-agent.sh
 
-QUEUE_DIR="/tmp/opm-har-ingest"
+QUEUE_DIR="/tmp/opsm-har-ingest"
 
 inotifywait -m "$QUEUE_DIR" -e create |
 while read dir action file; do

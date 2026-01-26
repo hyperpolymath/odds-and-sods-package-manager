@@ -143,16 +143,16 @@ Publishing requires:
     "license": "PMPL-1.0",
     "repository": "https://github.com/org/repo",
     "authors": ["Author Name"],
-    "keywords": ["opm", "package"],
+    "keywords": ["opsm", "package"],
     "dependencies": {
       "@other/dep": "^2.0.0"
     }
   },
-  "tarballUrl": "https://registry.opm.dev/tarballs/...",
+  "tarballUrl": "https://registry.opsm.dev/tarballs/...",
   "attestations": [
     {
       "type": "claim-forge",
-      "uri": "https://attestations.opm.dev/...",
+      "uri": "https://attestations.opsm.dev/...",
       "digest": "sha256:..."
     }
   ]
@@ -436,7 +436,7 @@ All services support Bearer token authentication:
 Authorization: Bearer <token>
 ----
 
-Tokens are configured per-service in `opm.toml`:
+Tokens are configured per-service in `opsm.toml`:
 
 [source,toml]
 ----

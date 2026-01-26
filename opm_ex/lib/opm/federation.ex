@@ -582,7 +582,7 @@ defmodule Opm.Federation do
     recs = []
 
     recs = if Enum.empty?(available) do
-      recs ++ ["Package '#{package_name}' not found in any registry. Try 'opm search #{package_name}'"]
+      recs ++ ["Package '#{package_name}' not found in any registry. Try 'opsm search #{package_name}'"]
     else
       recs ++ ["Package '#{package_name}' available from: #{Enum.map(available, & &1.forth) |> Enum.join(", ")}"]
     end

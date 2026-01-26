@@ -10,8 +10,8 @@ readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m' # No Color
 
-readonly TEST_DIR="/tmp/opm-validation-$$"
-readonly OPM_BIN="./opm"
+readonly TEST_DIR="/tmp/opsm-validation-$$"
+readonly OPM_BIN="./opsm"
 
 PASSED=0
 FAILED=0
@@ -83,7 +83,7 @@ test_version_constraints() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     log "Running version constraint tests..."
-    if mix test test/opm/version_constraint_test.exs --color 2>&1 | grep -q "0 failures"; then
+    if mix test test/opsm/version_constraint_test.exs --color 2>&1 | grep -q "0 failures"; then
         test_pass "Version constraint parser tests"
     else
         test_fail "Version constraint parser tests"
@@ -101,7 +101,7 @@ test_dependency_resolver() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     log "Running resolver tests..."
-    if mix test test/opm/resolver_test.exs --color 2>&1 | grep -q "0 failures"; then
+    if mix test test/opsm/resolver_test.exs --color 2>&1 | grep -q "0 failures"; then
         test_pass "Dependency resolver tests"
     else
         test_fail "Dependency resolver tests"
@@ -119,7 +119,7 @@ test_lockfile() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     log "Running lockfile tests..."
-    if mix test test/opm/lockfile_test.exs --color 2>&1 | grep -q "0 failures"; then
+    if mix test test/opsm/lockfile_test.exs --color 2>&1 | grep -q "0 failures"; then
         test_pass "Lockfile system tests"
     else
         test_fail "Lockfile system tests"
@@ -155,7 +155,7 @@ test_verified_library() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     log "Running verified library tests..."
-    if mix test test/opm/verified_test.exs --color 2>&1 | grep -q "0 failures"; then
+    if mix test test/opsm/verified_test.exs --color 2>&1 | grep -q "0 failures"; then
         test_pass "Verified library tests"
     else
         test_fail "Verified library tests"
@@ -194,7 +194,7 @@ test_registry_adapters() {
 
     for adapter in "${adapters[@]}"; do
         log "Checking $adapter adapter..."
-        if grep -q "defmodule Opm.Registries.$(echo "$adapter" | sed 's/.*/\u&/')" "lib/opm/registries/${adapter}.ex" 2>/dev/null; then
+        if grep -q "defmodule Opm.Registries.$(echo "$adapter" | sed 's/.*/\u&/')" "lib/opsm/registries/${adapter}.ex" 2>/dev/null; then
             test_pass "$adapter adapter exists"
         else
             test_fail "$adapter adapter missing"
@@ -255,24 +255,24 @@ test_cli_commands() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     # Test help
-    if mix opm help &>/dev/null; then
-        test_pass "opm help command"
+    if mix opsm help &>/dev/null; then
+        test_pass "opsm help command"
     else
-        test_fail "opm help command"
+        test_fail "opsm help command"
     fi
 
     # Test version
-    if mix opm version &>/dev/null; then
-        test_pass "opm version command"
+    if mix opsm version &>/dev/null; then
+        test_pass "opsm version command"
     else
-        test_fail "opm version command"
+        test_fail "opsm version command"
     fi
 
     # Test status (will fail if services not running, but command should work)
-    if mix opm status &>/dev/null || true; then
-        test_pass "opm status command exists"
+    if mix opsm status &>/dev/null || true; then
+        test_pass "opsm status command exists"
     else
-        test_fail "opm status command missing"
+        test_fail "opsm status command missing"
     fi
 
     cd "$TEST_DIR"
@@ -287,7 +287,7 @@ test_configuration() {
     cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/opm_ex
 
     # Check for default config
-    if [[ -f "config/opm.toml" ]] || [[ -f "opm.toml" ]]; then
+    if [[ -f "config/opsm.toml" ]] || [[ -f "opsm.toml" ]]; then
         test_pass "Configuration file exists"
     else
         test_skip "Configuration file not found (will use defaults)"

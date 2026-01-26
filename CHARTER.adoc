@@ -23,4 +23,4 @@ The stewardship council safeguards:
 
 == Scope
 
-OPM orchestrates the existing ecosystem rather than replacing it. The opm CLI provides a unified user experience across trusted services.
+OPM orchestrates the existing ecosystem rather than replacing it. The opsm CLI provides a unified user experience across trusted services.

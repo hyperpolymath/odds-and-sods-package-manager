@@ -42,7 +42,7 @@ defmodule Opm.Config do
     with {:error, _} <- load_from_env(),
          {:error, _} <- load_from_local(),
          {:error, _} <- load_from_user() do
-      {:error, "opm config not found"}
+      {:error, "opsm config not found"}
     end
   end
 
@@ -82,7 +82,7 @@ defmodule Opm.Config do
     case System.get_env("HOME") do
       nil -> {:error, "HOME not set"}
       home ->
-        path = Path.join([home, ".config", "opm", "opm.toml"])
+        path = Path.join([home, ".config", "opsm", "opm.toml"])
         if File.exists?(path) do
           load_config_from(path)
         else
@@ -144,7 +144,7 @@ defmodule Opm.Config do
 
         Error: #{inspect(other)}
 
-        Run 'opm config example' to see valid config format.
+        Run 'opsm config example' to see valid config format.
         """
     end
   end
@@ -168,7 +168,7 @@ defmodule Opm.Config do
     - Missing = between key and value
 
     Validate your TOML at: https://www.toml-lint.com/
-    Or run: opm config example > example.toml
+    Or run: opsm config example > example.toml
     """
   end
 

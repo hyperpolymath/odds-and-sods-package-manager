@@ -47,19 +47,19 @@ check_dependencies() {
 }
 
 create_user() {
-    if id "opm" &>/dev/null; then
-        log "User 'opm' already exists"
+    if id "opsm" &>/dev/null; then
+        log "User 'opsm' already exists"
     else
-        log "Creating user 'opm'..."
-        useradd --system --no-create-home --shell /bin/false opm
+        log "Creating user 'opsm'..."
+        useradd --system --no-create-home --shell /bin/false opsm
     fi
 }
 
 create_queue_dir() {
     log "Creating HAR queue directory..."
-    mkdir -p /tmp/opm-har-ingest/{results,processed}
-    chown -R opm:opm /tmp/opm-har-ingest
-    chmod 755 /tmp/opm-har-ingest
+    mkdir -p /tmp/opsm-har-ingest/{results,processed}
+    chown -R opsm:opsm /tmp/opsm-har-ingest
+    chmod 755 /tmp/opsm-har-ingest
 }
 
 install_services() {

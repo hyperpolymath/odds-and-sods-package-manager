@@ -134,7 +134,7 @@ defmodule Opm.Wiring do
       artifact_path: manifest_path,
       artifact_digest: digest,
       claim_type: :build_provenance,
-      metadata: %{"source" => "opm", "artifact" => Path.basename(manifest_path)}
+      metadata: %{"source" => "opsm", "artifact" => Path.basename(manifest_path)}
     }
 
     ClaimForge.generate_attestation(client, request)

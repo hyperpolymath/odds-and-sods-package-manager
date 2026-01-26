@@ -219,7 +219,7 @@ async function loadConfig() {
   if (home === undefined) {
     return {
       TAG: "Error",
-      _0: "opm config not found"
+      _0: "opsm config not found"
     };
   }
   let userPath = Path.join(home, ".config", "opm", "opm.toml");
@@ -229,7 +229,7 @@ async function loadConfig() {
   } else {
     return {
       TAG: "Error",
-      _0: "opm config not found"
+      _0: "opsm config not found"
     };
   }
 }

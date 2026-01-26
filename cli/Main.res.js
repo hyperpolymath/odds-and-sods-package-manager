@@ -6,10 +6,10 @@ import * as Wiring from "./Wiring.res.js";
 let $$Deno = {};
 
 function printHelp() {
-  console.log("opm - Odds-and-sods Package Manager");
+  console.log("opsm - Odds-and-sods Package Manager");
   console.log("");
   console.log("USAGE:");
-  console.log("  opm <command> [options]");
+  console.log("  opsm <command> [options]");
   console.log("");
   console.log("COMMANDS:");
   console.log("  publish <path>    Publish a package through the trust pipeline");
@@ -24,13 +24,13 @@ function printHelp() {
   console.log("  3. ~/.config/opm/opm.toml (user config)");
   console.log("");
   console.log("EXAMPLES:");
-  console.log("  opm publish ./my-package");
-  console.log("  opm audit @scope/package");
-  console.log("  opm status");
+  console.log("  opsm publish ./my-package");
+  console.log("  opsm audit @scope/package");
+  console.log("  opsm status");
 }
 
 function printVersion() {
-  console.log("opm 0.1.0");
+  console.log("opsm 0.1.0");
 }
 
 function parseArgs(args) {
@@ -99,7 +99,7 @@ async function main() {
         Deno.exit(0);
         return;
       case "Version" :
-        console.log("opm 0.1.0");
+        console.log("opsm 0.1.0");
         Deno.exit(0);
         return;
     }
@@ -127,7 +127,7 @@ async function main() {
         return;
       case "Unknown" :
         console.error(`Unknown command: ` + command._0);
-        console.error("Run 'opm help' for usage information");
+        console.error("Run 'opsm help' for usage information");
         Deno.exit(1);
         return;
     }

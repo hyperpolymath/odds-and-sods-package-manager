@@ -74,7 +74,7 @@ defmodule Opm.Errors do
 
   def package_not_found(name) do
     {:not_found, "Package '#{name}' not found in any registry",
-     "Use 'opm search #{name}' to find similar packages"}
+     "Use 'opsm search #{name}' to find similar packages"}
   end
 
   @doc """
@@ -127,12 +127,12 @@ defmodule Opm.Errors do
 
   def unpack_failed(package, reason) do
     {:install, "Failed to unpack '#{package}': #{reason}",
-     "The package archive may be corrupted. Try 'opm clean cache' and reinstall"}
+     "The package archive may be corrupted. Try 'opsm clean cache' and reinstall"}
   end
 
   def install_path_exists(path) do
     {:install, "Installation path already exists: #{path}",
-     "Use 'opm remove <package>' first or 'opm reinstall <package>'"}
+     "Use 'opsm remove <package>' first or 'opsm reinstall <package>'"}
   end
 
   @doc """

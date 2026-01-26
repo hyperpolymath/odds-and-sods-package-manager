@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = OPM Architecture
 :revdate: 2026-01-18
 
@@ -18,7 +18,7 @@ Next: formalize service contracts and wire live endpoints.
 
 [literal]
 ....
-                    opm-registry-hub (Primary)
+                    opsm-registry-hub (Primary)
     ┌──────────────────────────────────────────────────────────┐
     │  registry-manifest.json   Package & mirror registry      │
     │  trust-pipeline/          Validation workflows           │
@@ -65,4 +65,4 @@ communication:
 
 == CLI orchestration
 
-The `opm` CLI coordinates publish/audit/status calls into the trust pipeline and registry.
+The `opsm` CLI coordinates publish/audit/status calls into the trust pipeline and registry.

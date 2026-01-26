@@ -17,10 +17,10 @@ module Deno = {
 // =============================================================================
 
 let printHelp = () => {
-  Console.log("opm - Odds-and-sods Package Manager")
+  Console.log("opsm - Odds-and-sods Package Manager")
   Console.log("")
   Console.log("USAGE:")
-  Console.log("  opm <command> [options]")
+  Console.log("  opsm <command> [options]")
   Console.log("")
   Console.log("COMMANDS:")
   Console.log("  publish <path>    Publish a package through the trust pipeline")
@@ -35,13 +35,13 @@ let printHelp = () => {
   Console.log("  3. ~/.config/opm/opm.toml (user config)")
   Console.log("")
   Console.log("EXAMPLES:")
-  Console.log("  opm publish ./my-package")
-  Console.log("  opm audit @scope/package")
-  Console.log("  opm status")
+  Console.log("  opsm publish ./my-package")
+  Console.log("  opsm audit @scope/package")
+  Console.log("  opsm status")
 }
 
 let printVersion = () => {
-  Console.log("opm 0.1.0")
+  Console.log("opsm 0.1.0")
 }
 
 // =============================================================================
@@ -101,7 +101,7 @@ let main = async () => {
     }
   | Unknown(cmd) => {
       Console.error(`Unknown command: ${cmd}`)
-      Console.error("Run 'opm help' for usage information")
+      Console.error("Run 'opsm help' for usage information")
       Deno.exit(1)
     }
   | Publish(path) => {

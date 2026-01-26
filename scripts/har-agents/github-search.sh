@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: PMPL-1.0
 # HAR Agent: GitHub Search
-# Watches /tmp/opm-har-ingest/ for discovery tasks and searches GitHub API
+# Watches /tmp/opsm-har-ingest/ for discovery tasks and searches GitHub API
 
 set -euo pipefail
 
-readonly QUEUE_DIR="/tmp/opm-har-ingest"
+readonly QUEUE_DIR="/tmp/opsm-har-ingest"
 readonly POLL_INTERVAL=5
 readonly GITHUB_API="https://api.github.com/search/repositories"
 
