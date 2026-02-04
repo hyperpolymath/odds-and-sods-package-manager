@@ -13,7 +13,7 @@ defmodule Opsm.Crypto.Password do
   Aligns with SECURITY-STANDARDS.scm PasswordHashing requirements.
   """
 
-  @memory_cost 524_288  # 512 MiB in KiB
+  @memory_cost 19  # 2^19 KiB = 512 MiB (argon2 uses log2 of memory in KiB)
   @time_cost 8
   @parallelism 4
   @hash_length 64
@@ -28,18 +28,18 @@ defmodule Opsm.Crypto.Password do
       true
   """
   def hash(password) when is_binary(password) do
-    salt = :crypto.strong_rand_bytes(32)
+    # argon2_elixir's Argon2.hash_pwd_salt returns the hash string directly
+    hash =
+      Argon2.hash_pwd_salt(password,
+        t_cost: @time_cost,
+        m_cost: @memory_cost,
+        parallelism: @parallelism,
+        hash_len: @hash_length
+      )
 
-    case Argon2.hash_pwd_salt(password,
-           t_cost: @time_cost,
-           m_cost: @memory_cost,
-           parallelism: @parallelism,
-           hash_length: @hash_length,
-           salt: salt
-         ) do
-      {:ok, hash} -> {:ok, hash}
-      {:error, reason} -> {:error, "Argon2id hashing failed: #{reason}"}
-    end
+    {:ok, hash}
+  rescue
+    e in ArgumentError -> {:error, "Argon2id hashing failed: #{Exception.message(e)}"}
   end
 
   @doc """

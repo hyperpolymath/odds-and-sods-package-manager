@@ -98,10 +98,15 @@ defmodule Opsm.Api.Router do
 
   defp content_type(conn) do
     case Plug.Conn.get_req_header(conn, "content-type") do
-      [type | _] when String.contains?(type, "application/nickel") -> {:nickel, type}
-      [type | _] when String.contains?(type, "text/nickel") -> {:nickel, type}
-      [type | _] -> {:other, type}
-      _ -> :unknown
+      [type | _] ->
+        cond do
+          String.contains?(type, "application/nickel") -> {:nickel, type}
+          String.contains?(type, "text/nickel") -> {:nickel, type}
+          true -> {:other, type}
+        end
+
+      _ ->
+        :unknown
     end
   end
 end

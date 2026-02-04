@@ -31,13 +31,15 @@ defmodule Opsm.MixProject do
       {:toml, "~> 0.7"},
       {:optimus, "~> 0.5"},
       {:jason, "~> 1.4"},
-      {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
+      # Temporarily disabled - has multiple compilation errors (SafeColor guards, SafeCurrency abs/1)
+      # TODO: Create PR to hyperpolymath/proven with fixes
+      # {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"},
       # v1.0.1 Security primitives (SECURITY-STANDARDS.scm Phase 1)
-      {:argon2_elixir, "~> 4.0"},
-      {:blake3, "~> 1.0"}
+      {:argon2_elixir, "~> 4.0"}
+      # Note: BLAKE2b from :crypto module (built-in, no dependency needed)
     ]
   end
 

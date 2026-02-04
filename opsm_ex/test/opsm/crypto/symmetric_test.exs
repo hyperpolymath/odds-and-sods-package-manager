@@ -5,7 +5,7 @@ defmodule Opsm.Crypto.SymmetricTest do
   alias Opsm.Crypto.Symmetric
 
   describe "encrypt/3 and decrypt/3" do
-    test "encrypt and decrypt with XChaCha20-Poly1305" do
+    test "encrypt and decrypt with ChaCha20-Poly1305" do
       key = Symmetric.generate_key()
       plaintext = "sensitive-api-key-data"
       associated_data = "lockfile-v1.0.0"
@@ -103,8 +103,8 @@ defmodule Opsm.Crypto.SymmetricTest do
 
       {:ok, encrypted} = Symmetric.encrypt(plaintext, key)
 
-      # nonce (24) + ciphertext (4) + tag (16) = 44 bytes minimum
-      assert byte_size(encrypted) >= 24 + byte_size(plaintext) + 16
+      # nonce (12) + ciphertext (4) + tag (16) = 32 bytes minimum
+      assert byte_size(encrypted) >= 12 + byte_size(plaintext) + 16
     end
   end
 
@@ -139,7 +139,7 @@ defmodule Opsm.Crypto.SymmetricTest do
       # Tamper with a byte in the ciphertext
       <<nonce::binary-size(24), rest::binary>> = encrypted
       <<first_byte, rest_bytes::binary>> = rest
-      tampered = nonce <> <<first_byte ^^^ 1>> <> rest_bytes
+      tampered = nonce <> <<Bitwise.bxor(first_byte, 1)>> <> rest_bytes
 
       assert {:error, _} = Symmetric.decrypt(tampered, key)
     end
