@@ -8,9 +8,11 @@ defmodule Opsm.LockfileTest do
     test "creates an empty lockfile" do
       lockfile = Lockfile.new()
 
-      assert lockfile.version == "1"
+      assert lockfile.version == "2"  # v2: Added crypto integration
       assert lockfile.packages == %{}
       assert lockfile.generated_at != nil
+      assert lockfile.integrity_hash == nil  # Not computed until write
+      assert lockfile.integrity_algo == "sha3-512"
     end
   end
 
@@ -274,6 +276,191 @@ defmodule Opsm.LockfileTest do
       File.mkdir_p!(subdir)
 
       {:error, :not_found} = Lockfile.find_lockfile(subdir)
+    end
+  end
+
+  describe "compute_integrity_hash/1" do
+    test "computes SHA3-512 integrity hash for lockfile" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+
+      lockfile_with_hash = Lockfile.compute_integrity_hash(lockfile)
+
+      assert lockfile_with_hash.integrity_hash != nil
+      assert String.length(lockfile_with_hash.integrity_hash) == 128  # 512 bits = 128 hex chars
+      assert lockfile_with_hash.integrity_algo == "sha3-512"
+    end
+
+    test "produces different hashes for different lockfiles" do
+      lockfile1 = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+      |> Lockfile.compute_integrity_hash()
+
+      lockfile2 = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
+      |> Lockfile.compute_integrity_hash()
+
+      assert lockfile1.integrity_hash != lockfile2.integrity_hash
+    end
+
+    test "produces same hash for same lockfile" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
+      hash1 = Lockfile.compute_integrity_hash(lockfile).integrity_hash
+      hash2 = Lockfile.compute_integrity_hash(lockfile).integrity_hash
+
+      assert hash1 == hash2
+    end
+  end
+
+  describe "verify_integrity/1" do
+    test "verifies valid integrity hash" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      |> Lockfile.compute_integrity_hash()
+
+      assert :ok = Lockfile.verify_integrity(lockfile)
+    end
+
+    test "detects tampering (modified packages)" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      |> Lockfile.compute_integrity_hash()
+
+      # Tamper with the lockfile (change version)
+      tampered = Lockfile.add_package(lockfile, %{name: "pkg", version: "2.0.0", forth: :npm})
+      # Keep the old integrity hash (simulating tampering)
+      tampered = %{tampered | integrity_hash: lockfile.integrity_hash}
+
+      assert {:error, _} = Lockfile.verify_integrity(tampered)
+    end
+
+    test "allows lockfiles without integrity hash (backward compatibility)" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      # No integrity hash computed
+
+      assert {:ok, :no_integrity_hash} = Lockfile.verify_integrity(lockfile)
+    end
+  end
+
+  describe "encryption and decryption" do
+    setup do
+      tmp_dir = Path.join(System.tmp_dir!(), "opsm_lockfile_crypto_#{:rand.uniform(1_000_000)}")
+      File.mkdir_p!(tmp_dir)
+
+      on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+      {:ok, tmp_dir: tmp_dir}
+    end
+
+    test "encrypts and decrypts lockfile", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "opsm.lock")
+      key = Opsm.Crypto.Symmetric.generate_key()
+
+      original = Lockfile.new()
+      |> Lockfile.add_package(%{name: "secret-pkg", version: "1.0.0", forth: :npm})
+
+      {:ok, ^path} = Lockfile.write(original, path, encrypt: true, key: key)
+      {:ok, loaded} = Lockfile.read(path, decrypt: true, key: key, verify_integrity: false)
+
+      assert loaded.version == original.version
+      entry = Lockfile.get_package(loaded, "secret-pkg", :npm)
+      assert entry.name == "secret-pkg"
+    end
+
+    test "encrypted file cannot be read without decryption", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "opsm.lock")
+      key = Opsm.Crypto.Symmetric.generate_key()
+
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
+      {:ok, ^path} = Lockfile.write(lockfile, path, encrypt: true, key: key)
+
+      # Try to read without decryption - should fail
+      assert {:error, _} = Lockfile.read(path)
+    end
+
+    test "decryption fails with wrong key", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "opsm.lock")
+      correct_key = Opsm.Crypto.Symmetric.generate_key()
+      wrong_key = Opsm.Crypto.Symmetric.generate_key()
+
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
+      {:ok, ^path} = Lockfile.write(lockfile, path, encrypt: true, key: correct_key)
+
+      # Try to decrypt with wrong key
+      assert {:error, _} = Lockfile.read(path, decrypt: true, key: wrong_key)
+    end
+  end
+
+  describe "write with integrity hash" do
+    setup do
+      tmp_dir = Path.join(System.tmp_dir!(), "opsm_lockfile_integrity_#{:rand.uniform(1_000_000)}")
+      File.mkdir_p!(tmp_dir)
+
+      on_exit(fn -> File.rm_rf!(tmp_dir) end)
+
+      {:ok, tmp_dir: tmp_dir}
+    end
+
+    test "write automatically computes integrity hash", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "opsm.lock")
+
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
+      {:ok, ^path} = Lockfile.write(lockfile, path)
+      {:ok, loaded} = Lockfile.read(path)
+
+      assert loaded.integrity_hash != nil
+      assert loaded.integrity_algo == "sha3-512"
+      assert :ok = Lockfile.verify_integrity(loaded)
+    end
+
+    test "read detects tampered lockfile", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "opsm.lock")
+
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
+      {:ok, ^path} = Lockfile.write(lockfile, path)
+
+      # Manually tamper with the file
+      {:ok, content} = File.read(path)
+      tampered = String.replace(content, "1.0.0", "2.0.0")
+      File.write!(path, tampered)
+
+      # Should fail integrity check
+      assert {:error, _} = Lockfile.read(path)
+    end
+  end
+
+  describe "BLAKE2b package checksums" do
+    test "new packages default to BLAKE2b checksums" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+
+      entry = Lockfile.get_package(lockfile, "pkg", :npm)
+      assert entry.checksum_algo == "blake2b"  # v1.0.1: Default to BLAKE2b
+    end
+
+    test "can specify custom checksum algorithm" do
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{
+        name: "pkg",
+        version: "1.0.0",
+        forth: :npm,
+        checksum: "xyz789",
+        checksum_algo: "sha3-512"
+      })
+
+      entry = Lockfile.get_package(lockfile, "pkg", :npm)
+      assert entry.checksum_algo == "sha3-512"
     end
   end
 end

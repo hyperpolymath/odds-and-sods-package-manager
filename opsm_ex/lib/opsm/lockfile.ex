@@ -5,7 +5,8 @@ defmodule Opsm.Lockfile do
 
   The lock file (opsm.lock) records:
   - Exact versions of all installed packages
-  - Checksums for integrity verification
+  - Checksums for integrity verification (BLAKE2b for performance)
+  - Lockfile integrity hash (SHA3-512 for long-term security)
   - Dependency tree structure
   - Installation timestamps
 
@@ -13,10 +14,19 @@ defmodule Opsm.Lockfile do
   - Reproducible installs across machines
   - Faster installs (skip resolution, use cached versions)
   - Dependency auditing
+  - Tamper detection (lockfile integrity verification)
+
+  Security features (v1.0.1+):
+  - BLAKE2b package checksums (fast, secure)
+  - SHA3-512 lockfile integrity hash (post-quantum, FIPS 202)
+  - Optional ChaCha20-Poly1305 lockfile encryption
   """
 
+  alias Opsm.Crypto.Hash
+  alias Opsm.Crypto.Symmetric
+
   @lockfile_name "opsm.lock"
-  @lockfile_version "1"
+  @lockfile_version "2"  # v2: Added crypto integration
 
   @type package_entry :: %{
     name: String.t(),
@@ -32,38 +42,139 @@ defmodule Opsm.Lockfile do
   @type lockfile :: %{
     version: String.t(),
     generated_at: String.t(),
-    packages: %{String.t() => package_entry()}
+    packages: %{String.t() => package_entry()},
+    integrity_hash: String.t() | nil,
+    integrity_algo: String.t() | nil
   }
 
   @doc """
   Read the lock file from the current directory or specified path.
   Returns {:ok, lockfile} or {:error, reason}.
+
+  Options:
+  - decrypt: If true, decrypt the lockfile with ChaCha20-Poly1305
+  - key: Decryption key (required if decrypt: true)
+  - verify_integrity: If true, verify SHA3-512 integrity hash (default: true)
   """
-  def read(path \\ @lockfile_name) do
-    case File.read(path) do
-      {:ok, content} ->
-        parse_lockfile(content)
+  def read(path \\ @lockfile_name, opts \\ []) do
+    with {:ok, content} <- File.read(path),
+         {:ok, json_content} <- decrypt_if_needed(content, opts),
+         {:ok, lockfile} <- parse_lockfile(json_content),
+         {:ok, verified_lockfile} <- verify_integrity_if_needed(lockfile, opts) do
+      {:ok, verified_lockfile}
+    else
+      {:error, :enoent} -> {:error, :not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
-      {:error, :enoent} ->
-        {:error, :not_found}
+  defp decrypt_if_needed(content, opts) do
+    if Keyword.get(opts, :decrypt, false) do
+      key = Keyword.fetch!(opts, :key)
+      context = "opsm-lockfile-v#{@lockfile_version}"
 
-      {:error, reason} ->
-        {:error, "Failed to read lock file: #{reason}"}
+      case Symmetric.decrypt(content, key, context) do
+        {:ok, decrypted} -> {:ok, decrypted}
+        {:error, reason} -> {:error, "Lockfile decryption failed: #{reason}"}
+      end
+    else
+      {:ok, content}
+    end
+  end
+
+  defp verify_integrity_if_needed(lockfile, opts) do
+    if Keyword.get(opts, :verify_integrity, true) do
+      case verify_integrity(lockfile) do
+        :ok -> {:ok, lockfile}
+        {:ok, :no_integrity_hash} -> {:ok, lockfile}  # Allow old lockfiles without integrity
+        {:error, reason} -> {:error, reason}
+      end
+    else
+      {:ok, lockfile}
     end
   end
 
   @doc """
   Write a lock file to the current directory or specified path.
-  """
-  def write(lockfile, path \\ @lockfile_name) do
-    content = serialize_lockfile(lockfile)
 
-    case File.write(path, content) do
+  Options:
+  - encrypt: If true, encrypt the lockfile with ChaCha20-Poly1305
+  - key: Encryption key (required if encrypt: true)
+  - compute_integrity: If true, compute SHA3-512 integrity hash (default: true)
+  """
+  def write(lockfile, path \\ @lockfile_name, opts \\ []) do
+    # Compute integrity hash before writing (SHA3-512 for long-term security)
+    lockfile_with_integrity = if Keyword.get(opts, :compute_integrity, true) do
+      compute_integrity_hash(lockfile)
+    else
+      lockfile
+    end
+
+    content = serialize_lockfile(lockfile_with_integrity)
+
+    # Optionally encrypt the lockfile
+    final_content = if Keyword.get(opts, :encrypt, false) do
+      key = Keyword.fetch!(opts, :key)
+      context = "opsm-lockfile-v#{@lockfile_version}"
+
+      case Symmetric.encrypt(content, key, context) do
+        {:ok, encrypted} -> encrypted
+        {:error, reason} -> raise "Lockfile encryption failed: #{reason}"
+      end
+    else
+      content
+    end
+
+    case File.write(path, final_content) do
       :ok ->
         {:ok, path}
 
       {:error, reason} ->
         {:error, "Failed to write lock file: #{reason}"}
+    end
+  end
+
+  @doc """
+  Compute SHA3-512 integrity hash for the entire lockfile.
+
+  Uses SHA3-512 for long-term security and post-quantum resistance.
+  """
+  def compute_integrity_hash(lockfile) do
+    # Serialize lockfile without integrity_hash field
+    data = %{
+      "version" => lockfile.version,
+      "generated_at" => lockfile.generated_at,
+      "packages" => serialize_packages(lockfile.packages)
+    }
+
+    json = Jason.encode!(data, pretty: true)
+    hash = Hash.hash_provenance(json)
+
+    %{lockfile |
+      integrity_hash: hash,
+      integrity_algo: "sha3-512"
+    }
+  end
+
+  @doc """
+  Verify the lockfile integrity hash.
+
+  Returns :ok if valid, {:error, reason} otherwise.
+  """
+  def verify_integrity(lockfile) do
+    case lockfile.integrity_hash do
+      nil ->
+        {:ok, :no_integrity_hash}
+
+      stored_hash ->
+        # Recompute integrity hash
+        recomputed = compute_integrity_hash(%{lockfile | integrity_hash: nil})
+
+        if recomputed.integrity_hash == stored_hash do
+          :ok
+        else
+          {:error, "Lockfile integrity verification failed (tampering detected)"}
+        end
     end
   end
 
@@ -74,12 +185,17 @@ defmodule Opsm.Lockfile do
     %{
       version: @lockfile_version,
       generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
-      packages: %{}
+      packages: %{},
+      integrity_hash: nil,
+      integrity_algo: "sha3-512"
     }
   end
 
   @doc """
   Add or update a package entry in the lockfile.
+
+  Defaults to BLAKE2b checksums for performance (v1.0.1+).
+  Use SHA3-512 for long-term archival or provenance tracking.
   """
   def add_package(lockfile, package_info) do
     entry = %{
@@ -87,7 +203,7 @@ defmodule Opsm.Lockfile do
       version: package_info.version,
       forth: package_info.forth,
       checksum: Map.get(package_info, :checksum),
-      checksum_algo: Map.get(package_info, :checksum_algo, "sha256"),
+      checksum_algo: Map.get(package_info, :checksum_algo, "blake2b"),  # v1.0.1: Default to BLAKE2b
       source_url: Map.get(package_info, :source_url),
       dependencies: Map.get(package_info, :dependencies, []),
       installed_at: DateTime.utc_now() |> DateTime.to_iso8601()
@@ -98,7 +214,8 @@ defmodule Opsm.Lockfile do
 
     %{lockfile |
       packages: packages,
-      generated_at: DateTime.utc_now() |> DateTime.to_iso8601()
+      generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+      integrity_hash: nil  # Will be computed on write
     }
   end
 
@@ -111,7 +228,8 @@ defmodule Opsm.Lockfile do
 
     %{lockfile |
       packages: packages,
-      generated_at: DateTime.utc_now() |> DateTime.to_iso8601()
+      generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+      integrity_hash: nil  # Will be recomputed on write
     }
   end
 
@@ -236,7 +354,9 @@ defmodule Opsm.Lockfile do
         lockfile = %{
           version: Map.get(data, "version", "1"),
           generated_at: Map.get(data, "generated_at", ""),
-          packages: parse_packages(Map.get(data, "packages", %{}))
+          packages: parse_packages(Map.get(data, "packages", %{})),
+          integrity_hash: Map.get(data, "integrity_hash"),
+          integrity_algo: Map.get(data, "integrity_algo", "sha3-512")
         }
         {:ok, lockfile}
 
@@ -285,7 +405,9 @@ defmodule Opsm.Lockfile do
     data = %{
       "version" => lockfile.version,
       "generated_at" => lockfile.generated_at,
-      "packages" => serialize_packages(lockfile.packages)
+      "packages" => serialize_packages(lockfile.packages),
+      "integrity_hash" => lockfile.integrity_hash,
+      "integrity_algo" => lockfile.integrity_algo
     }
 
     Jason.encode!(data, pretty: true)
