@@ -77,7 +77,8 @@
        (notes . "100% CODE COMPLETE: ReScript TEA UI + Rust Tauri commands (6 commands, 252 lines) + Phoenix API (6 endpoints, port 4051). Architecture: ReScript → Tauri → Phoenix → Elixir. Next: Desktop/mobile testing (v1.1).")))
 
     (critical-next
-      ("Implement v1.0.1 security primitives (Argon2id, XChaCha20, BLAKE3, ChaCha20-DRBG)"
+      ("Fix dependency blockers (proven SafeColor, blake3 Rustler NIF)"
+       "Complete v1.0.1 security primitives testing (70 tests)"
        "Test mobile app on desktop (cargo tauri dev)"
        "Begin v1.1 real-world testing (express, phoenix, tokio)"
        "Deploy trust services to staging environment"
