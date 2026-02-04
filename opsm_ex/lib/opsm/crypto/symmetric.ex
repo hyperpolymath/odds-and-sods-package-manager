@@ -69,19 +69,22 @@ defmodule Opsm.Crypto.Symmetric do
          <<nonce::binary-size(12), ciphertext_and_tag::binary>> <- encrypted,
          ciphertext_size = byte_size(ciphertext_and_tag) - @tag_size,
          <<ciphertext::binary-size(ciphertext_size), tag::binary-size(16)>> <-
-           ciphertext_and_tag,
-         plaintext <-
-           :crypto.crypto_one_time_aead(
+           ciphertext_and_tag do
+      # Decrypt uses 7-arity function with tag as separate parameter
+      case :crypto.crypto_one_time_aead(
              :chacha20_poly1305,
              key,
              nonce,
-             ciphertext <> tag,
+             ciphertext,
              associated_data,
+             tag,
              false
            ) do
-      {:ok, plaintext}
+        plaintext when is_binary(plaintext) -> {:ok, plaintext}
+        :error -> {:error, "Decryption failed (authentication failure)"}
+      end
     else
-      :error -> {:error, "Decryption failed (authentication failure)"}
+      :error -> {:error, "Invalid encrypted data format"}
       {:error, reason} -> {:error, reason}
     end
   end
