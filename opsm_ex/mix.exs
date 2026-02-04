@@ -34,7 +34,10 @@ defmodule Opsm.MixProject do
       {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      # v1.0.1 Security primitives (SECURITY-STANDARDS.scm Phase 1)
+      {:argon2_elixir, "~> 4.0"},
+      {:blake3, "~> 1.0"}
     ]
   end
 
