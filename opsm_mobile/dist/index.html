@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPSM - Package Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .subtitle { opacity: 0.9; font-size: 14px; }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f5f5f5;
+        }
+        .tab {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab:hover { background: #ebebeb; }
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #667eea;
+            color: #667eea;
+        }
+        .content {
+            padding: 24px;
+            min-height: 400px;
+        }
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover { background: #5568d3; }
+        .package-list {
+            display: grid;
+            gap: 12px;
+        }
+        .package-item {
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .package-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        .package-name { font-weight: 600; color: #333; margin-bottom: 4px; }
+        .package-version { font-size: 12px; color: #666; margin-bottom: 8px; }
+        .package-desc { font-size: 14px; color: #555; }
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 OPSM</h1>
+            <div class="subtitle">Universal Package Manager • Trust Pipeline • Cryptographic Security</div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('search')">🔍 Search</button>
+            <button class="tab" onclick="showTab('installed')">📦 Installed</button>
+            <button class="tab" onclick="showTab('audit')">🔒 Audit</button>
+        </div>
+
+        <div class="content">
+            <!-- Search Tab -->
+            <div id="search-tab" class="tab-content">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search packages..." onkeyup="handleSearchEnter(event)">
+                    <button onclick="searchPackages()">Search</button>
+                </div>
+                <div id="search-results" class="package-list"></div>
+            </div>
+
+            <!-- Installed Tab -->
+            <div id="installed-tab" class="tab-content hidden">
+                <button onclick="loadInstalled()" style="margin-bottom: 16px;">Refresh</button>
+                <div id="installed-list" class="package-list"></div>
+            </div>
+
+            <!-- Audit Tab -->
+            <div id="audit-tab" class="tab-content hidden">
+                <p style="margin-bottom: 16px; color: #666;">Audit your lockfile for security and sustainability issues</p>
+                <button onclick="auditLockfile()">Audit Current Project</button>
+                <div id="audit-results" style="margin-top: 24px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        const { invoke } = window.__TAURI__.core;
+
+        window.showTab = (tabName) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+        };
+
+        window.searchPackages = async () => {
+            const query = document.getElementById('search-input').value;
+            const results = document.getElementById('search-results');
+
+            if (!query) {
+                results.innerHTML = '<div class="status info">Please enter a search query</div>';
+                return;
+            }
+
+            results.innerHTML = '<div class="status info">Searching...</div>';
+
+            try {
+                const data = await invoke('search_packages', { query, registry: null });
+
+                if (data.packages.length === 0) {
+                    results.innerHTML = '<div class="status info">No packages found</div>';
+                    return;
+                }
+
+                results.innerHTML = data.packages.map(pkg => `
+                    <div class="package-item">
+                        <div class="package-name">${pkg.name}</div>
+                        <div class="package-version">v${pkg.version}${pkg.registry ? ` • @${pkg.registry}` : ''}</div>
+                        ${pkg.description ? `<div class="package-desc">${pkg.description}</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                results.innerHTML = `<div class="status error">Error: ${error}</div>`;
+            }
+        };
+
+        window.loadInstalled = async () => {
+            const list = document.getElementById('installed-list');
+            list.innerHTML = '<div class="status info">Loading...</div>';
+
+            try {
+                const packages = await invoke('list_installed_packages');
+
+                if (packages.length === 0) {
+                    list.innerHTML = '<div class="status info">No packages installed</div>';
+                    return;
+                }
+
+                list.innerHTML = packages.map(pkg => `
+                    <div class="package-item">
+                        <div class="package-name">${pkg.name}</div>
+                        <div class="package-version">v${pkg.version}${pkg.registry ? ` • @${pkg.registry}` : ''}</div>
+                        ${pkg.description ? `<div class="package-desc">${pkg.description}</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<div class="status error">Error: ${error}</div>`;
+            }
+        };
+
+        window.auditLockfile = async () => {
+            const results = document.getElementById('audit-results');
+            results.innerHTML = '<div class="status info">Auditing...</div>';
+
+            try {
+                // In a real app, you'd select a lockfile path
+                const data = await invoke('audit_lockfile', { lockfilePath: './opsm.lock' });
+
+                results.innerHTML = `
+                    <div class="status success">Audit Complete</div>
+                    <div style="margin-top: 16px;">
+                        <p><strong>Security Score:</strong> ${data.security_score || 'N/A'}</p>
+                        <p><strong>Sustainability Score:</strong> ${data.sustainability_score || 'N/A'}</p>
+                        <p><strong>Issues Found:</strong> ${data.issues.length}</p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `<div class="status error">Error: ${error}</div>`;
+            }
+        };
+
+        window.handleSearchEnter = (event) => {
+            if (event.key === 'Enter') {
+                searchPackages();
+            }
+        };
+
+        // Check API health on load
+        invoke('health_check').then(() => {
+            console.log('✓ API connection healthy');
+        }).catch(err => {
+            console.error('✗ API connection failed:', err);
+        });
+    </script>
+</body>
+</html>

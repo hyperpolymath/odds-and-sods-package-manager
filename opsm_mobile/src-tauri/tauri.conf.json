@@ -1,12 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "opsm-mobile",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "version": "1.0.1",
+  "identifier": "com.hyperpolymath.opsm",
   "build": {
-    "frontendDist": ".",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "deno task build"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
   },
   "app": {
     "windows": [

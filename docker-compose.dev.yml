@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Development compose file - only OPSM service (others require implementation)
+
+version: "3.8"
+
+networks:
+  opsm-dev:
+    driver: bridge
+
+services:
+  # Core OPSM CLI/API
+  opsm:
+    build:
+      context: ./opsm_ex
+      dockerfile: Containerfile
+    container_name: opsm-api-dev
+    hostname: opsm-dev
+    networks:
+      - opsm-dev
+    ports:
+      - "4466:4466"
+    environment:
+      - OPSM_ENV=development
+      - OPSM_API_PORT=4466
+      # Mock service URLs (services not yet implemented)
+      - CLAIM_FORGE_URL=http://localhost:8080
+      - CHECKY_MONKEY_URL=http://localhost:8081
+      - PALIMPSEST_URL=http://localhost:8082
+      - CICD_HYPER_A_URL=http://localhost:8083
+      - OIKOS_URL=http://localhost:8084
+    volumes:
+      - opsm-dev-state:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "/app/bin/opsm", "eval", "System.cmd(\"echo\", [\"healthy\"])"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=api"
+      - "com.opsm.environment=development"
+
+volumes:
+  opsm-dev-state:
+    driver: local

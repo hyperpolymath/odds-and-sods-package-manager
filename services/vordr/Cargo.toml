@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+[package]
+name = "vordr"
+version = "1.0.0"
+edition = "2021"
+authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+license = "PMPL-1.0-or-later"
+description = "Runtime verification and OPA policy enforcement service for OPSM"
+
+[dependencies]
+# Web framework
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Process execution
+tokio-process = "0.2"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json"] }
+
+# File operations
+walkdir = "2.5"
+
+[dev-dependencies]
+reqwest = { version = "0.12", features = ["json"] }

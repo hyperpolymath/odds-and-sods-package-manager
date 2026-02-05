@@ -12,7 +12,8 @@ defmodule Opsm.Application do
   def start(_type, _args) do
     children = [
       RegistryGateway.Store,
-      {Bandit, plug: RegistryGateway.Router, scheme: :http, port: registry_port(), ip: {127, 0, 0, 1}}
+      {Bandit, plug: RegistryGateway.Router, scheme: :http, port: registry_port(), ip: {127, 0, 0, 1}},
+      {Bandit, plug: Opsm.Api.MobileRouter, scheme: :http, port: mobile_api_port(), ip: {127, 0, 0, 1}}
     ]
 
     opts = [strategy: :one_for_one, name: Opsm.Supervisor]
@@ -21,5 +22,9 @@ defmodule Opsm.Application do
 
   defp registry_port do
     Application.get_env(:opsm, :registry_port, 4050)
+  end
+
+  defp mobile_api_port do
+    Application.get_env(:opsm, :mobile_api_port, 4051)
   end
 end

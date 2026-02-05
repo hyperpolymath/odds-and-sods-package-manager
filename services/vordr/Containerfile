@@ -38,9 +38,9 @@ USER vordr
 EXPOSE 8087
 
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD ["/app/vordr", "health"]
+    CMD ["/usr/bin/curl", "-f", "http://localhost:8087/health"]
 
-CMD ["/app/vordr", "serve"]
+CMD ["/app/vordr"]
 
 LABEL org.opencontainers.image.title="Vordr" \
       org.opencontainers.image.description="Runtime verification and policy enforcement" \

@@ -17,7 +17,6 @@ WORKDIR /build
 
 # Copy mix files
 COPY mix.exs mix.lock ./
-COPY config config
 
 # Install dependencies
 RUN mix local.hex --force && \
@@ -26,7 +25,6 @@ RUN mix local.hex --force && \
 
 # Copy application code
 COPY lib lib
-COPY priv priv
 
 # Compile release
 ENV MIX_ENV=prod
