@@ -200,7 +200,7 @@
     "8. INTELLIGENT SEARCH: ML-based semantic search and recommendations (v2.0)"
     "9. SUPPLY CHAIN SECURITY: SLSA attestations, provenance tracking, CVE integration (v1.5)"
     ""
-    "OPSM answers the question: 'What if package management prioritized trust and universality over convenience?'")
+    "OPSM demonstrates that trust, security, and universal language support can coexist in modern package management.")
 
   (what-this-is-not
     "OPSM is NOT:"
