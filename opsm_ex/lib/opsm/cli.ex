@@ -665,107 +665,6 @@ defmodule Opsm.CLI do
     System.halt(0)
   end
 
-  defp show_dependencies_from_lockfile(lockfile, package, recursive?, json?) do
-    case Opsm.Lockfile.packages_for_name(lockfile, package) do
-      [] ->
-        IO.puts("Package #{package} not found in lockfile")
-
-      [pkg | _] ->
-        if recursive? do
-          # Collect all transitive dependencies
-          all_deps = collect_transitive_deps(lockfile, [package], MapSet.new())
-
-          if json? do
-            IO.puts(Jason.encode!(MapSet.to_list(all_deps), pretty: true))
-          else
-            IO.puts("All dependencies (#{MapSet.size(all_deps)}):")
-            all_deps
-            |> MapSet.to_list()
-            |> Enum.sort()
-            |> Enum.each(fn dep -> IO.puts("  - #{dep}") end)
-          end
-        else
-          # Direct dependencies only
-          deps = pkg.dependencies || []
-
-          if json? do
-            IO.puts(Jason.encode!(deps, pretty: true))
-          else
-            if deps == [] do
-              IO.puts("No direct dependencies")
-            else
-              IO.puts("Direct dependencies:")
-              Enum.each(deps, fn dep -> IO.puts("  - #{dep}") end)
-            end
-          end
-        end
-    end
-  end
-
-  defp show_dependencies_from_resolution(resolution, package, recursive?, json?) do
-    case Map.get(resolution, package) do
-      nil ->
-        IO.puts("Package #{package} not found in resolution")
-
-      {_version, resolved_pkg} ->
-        deps = Map.keys(resolved_pkg.manifest.dependencies || %{})
-
-        if recursive? do
-          # Show all packages in resolution (excluding root)
-          all_packages =
-            resolution
-            |> Map.keys()
-            |> Enum.reject(fn name -> name == package end)
-            |> Enum.sort()
-
-          if json? do
-            IO.puts(Jason.encode!(all_packages, pretty: true))
-          else
-            IO.puts("All dependencies (#{length(all_packages)}):")
-            Enum.each(all_packages, fn name ->
-              {version, _} = Map.get(resolution, name)
-              IO.puts("  - #{name}@#{version}")
-            end)
-          end
-        else
-          # Direct dependencies only
-          if json? do
-            IO.puts(Jason.encode!(deps, pretty: true))
-          else
-            if deps == [] do
-              IO.puts("No direct dependencies")
-            else
-              IO.puts("Direct dependencies:")
-              Enum.each(deps, fn dep -> IO.puts("  - #{dep}") end)
-            end
-          end
-        end
-    end
-  end
-
-  defp collect_transitive_deps(lockfile, to_visit, visited) do
-    case to_visit do
-      [] ->
-        visited
-
-      [pkg_name | rest] ->
-        if MapSet.member?(visited, pkg_name) do
-          collect_transitive_deps(lockfile, rest, visited)
-        else
-          case Opsm.Lockfile.packages_for_name(lockfile, pkg_name) do
-            [] ->
-              collect_transitive_deps(lockfile, rest, visited)
-
-            [pkg | _] ->
-              deps = pkg.dependencies || []
-              new_visited = MapSet.put(visited, pkg_name)
-              new_to_visit = rest ++ deps
-              collect_transitive_deps(lockfile, new_to_visit, new_visited)
-          end
-        end
-    end
-  end
-
   defp run({:pin, package, version, _opts}) do
     :ok = Maintenance.pin(package, version)
     System.halt(0)
@@ -973,6 +872,109 @@ defmodule Opsm.CLI do
     Errors.print_error({:error, message})
     IO.puts(:stderr, "Run 'opsm help' for usage information")
     System.halt(1)
+  end
+
+  # Helper functions
+
+  defp show_dependencies_from_lockfile(lockfile, package, recursive?, json?) do
+    case Opsm.Lockfile.packages_for_name(lockfile, package) do
+      [] ->
+        IO.puts("Package #{package} not found in lockfile")
+
+      [pkg | _] ->
+        if recursive? do
+          # Collect all transitive dependencies
+          all_deps = collect_transitive_deps(lockfile, [package], MapSet.new())
+
+          if json? do
+            IO.puts(Jason.encode!(MapSet.to_list(all_deps), pretty: true))
+          else
+            IO.puts("All dependencies (#{MapSet.size(all_deps)}):")
+            all_deps
+            |> MapSet.to_list()
+            |> Enum.sort()
+            |> Enum.each(fn dep -> IO.puts("  - #{dep}") end)
+          end
+        else
+          # Direct dependencies only
+          deps = pkg.dependencies || []
+
+          if json? do
+            IO.puts(Jason.encode!(deps, pretty: true))
+          else
+            if deps == [] do
+              IO.puts("No direct dependencies")
+            else
+              IO.puts("Direct dependencies:")
+              Enum.each(deps, fn dep -> IO.puts("  - #{dep}") end)
+            end
+          end
+        end
+    end
+  end
+
+  defp show_dependencies_from_resolution(resolution, package, recursive?, json?) do
+    case Map.get(resolution, package) do
+      nil ->
+        IO.puts("Package #{package} not found in resolution")
+
+      {_version, resolved_pkg} ->
+        deps = Map.keys(resolved_pkg.manifest.dependencies || %{})
+
+        if recursive? do
+          # Show all packages in resolution (excluding root)
+          all_packages =
+            resolution
+            |> Map.keys()
+            |> Enum.reject(fn name -> name == package end)
+            |> Enum.sort()
+
+          if json? do
+            IO.puts(Jason.encode!(all_packages, pretty: true))
+          else
+            IO.puts("All dependencies (#{length(all_packages)}):")
+            Enum.each(all_packages, fn name ->
+              {version, _} = Map.get(resolution, name)
+              IO.puts("  - #{name}@#{version}")
+            end)
+          end
+        else
+          # Direct dependencies only
+          if json? do
+            IO.puts(Jason.encode!(deps, pretty: true))
+          else
+            if deps == [] do
+              IO.puts("No direct dependencies")
+            else
+              IO.puts("Direct dependencies:")
+              Enum.each(deps, fn dep -> IO.puts("  - #{dep}") end)
+            end
+          end
+        end
+    end
+  end
+
+  defp collect_transitive_deps(lockfile, to_visit, visited) do
+    case to_visit do
+      [] ->
+        visited
+
+      [pkg_name | rest] ->
+        if MapSet.member?(visited, pkg_name) do
+          collect_transitive_deps(lockfile, rest, visited)
+        else
+          case Opsm.Lockfile.packages_for_name(lockfile, pkg_name) do
+            [] ->
+              collect_transitive_deps(lockfile, rest, visited)
+
+            [pkg | _] ->
+              deps = pkg.dependencies || []
+              new_visited = MapSet.put(visited, pkg_name)
+              new_to_visit = rest ++ deps
+              collect_transitive_deps(lockfile, new_to_visit, new_visited)
+          end
+        end
+    end
   end
 
   # Install helpers

@@ -66,8 +66,12 @@ defmodule Opsm.Clients.CheckyMonkey do
       {:ok, json} ->
         {:ok, decode_response(json)}
 
-      {:error, %{status: 404}} ->
-        {:error, :not_found}
+      {:error, reason} when is_binary(reason) ->
+        if String.contains?(reason, "404") do
+          {:error, :not_found}
+        else
+          {:error, reason}
+        end
 
       {:error, reason} ->
         {:error, reason}

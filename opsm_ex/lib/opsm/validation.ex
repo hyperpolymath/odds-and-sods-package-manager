@@ -193,7 +193,7 @@ defmodule Opsm.Validation do
   # Helper function to check for private/loopback IP addresses
   defp is_private_or_loopback_ip?(host) do
     case parse_ipv4(host) do
-      {:ok, {a, b, c, _d}} ->
+      {:ok, {a, b, _c, _d}} ->
         # Loopback: 127.0.0.0/8
         a == 127 or
         # Private: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16

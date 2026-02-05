@@ -132,7 +132,8 @@ defmodule Opsm.Registries.Nimble do
   def versions(name) do
     case fetch_package(name) do
       {:ok, pkg} ->
-        versions = pkg.metadata["versions"] || [pkg.version]
+        # metadata field doesn't exist in ResolvedPackage type, just use version
+        versions = [pkg.version]
         sorted = Enum.sort(versions, {:desc, Version})
         {:ok, sorted}
 

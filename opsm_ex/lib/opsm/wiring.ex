@@ -266,7 +266,8 @@ defmodule Opsm.Wiring do
         print_verification_results(results)
         {:ok, results}
 
-      {:ok, %{status: :failed, error: error}} ->
+      {:ok, %{status: :failed} = response} ->
+        error = Map.get(response, :error, "Verification failed")
         IO.puts("  ✗ Checky-monkey verification failed: #{error}")
         {:error, error}
 
