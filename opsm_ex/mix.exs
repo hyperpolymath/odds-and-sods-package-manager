@@ -5,7 +5,7 @@ defmodule Opsm.MixProject do
   def project do
     [
       app: :opsm,
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -58,12 +58,17 @@ defmodule Opsm.MixProject do
 
   defp description do
     """
-    OPSM (Odds and Sods Package Manager) - Universal package manager with trust verification.
+    OPSM (Odds and Sods Package Manager) - Universal multi-language package manager with cryptographic trust verification.
 
     Supports 8 ecosystems (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic) with
-    built-in trust pipeline, PubGrub dependency resolution, HAR-based discovery for obscure
+    built-in cryptographic primitives (Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512),
+    trust pipeline, PubGrub dependency resolution, HAR-based discovery for obscure
     packages, and federation support. Includes formal security guarantees (SSRF prevention,
-    JSON DoS protection, Result monad).
+    JSON DoS protection, Result monad, lockfile integrity, encrypted API key storage).
+    Post-quantum cryptography roadmap (Dilithium5, Kyber-1024, SPHINCS+).
+
+    Keywords: package-manager, multi-language, cryptography, security, trust-verification,
+    federated, elixir, argon2id, chacha20-poly1305, post-quantum, dependency-resolution
     """
   end
 

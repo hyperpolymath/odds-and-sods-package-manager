@@ -4,12 +4,12 @@
 
 (ecosystem
   (metadata
-    (version . "1.0.0")
+    (version . "1.0.1")
     (name . "OPSM (Odds and Sods Package Manager)")
     (type . "federated-package-manager")
-    (purpose . "Universal, trust-verified package management with formal guarantees")
+    (purpose . "Universal, trust-verified package management with cryptographic guarantees and formal verification")
     (created . "2025-01-17")
-    (updated . "2026-01-26"))
+    (updated . "2026-02-05"))
 
   (position-in-ecosystem
     (layer . "infrastructure")
