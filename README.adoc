@@ -25,7 +25,7 @@ OPSM is the **first universal package manager** that combines:
 3. **Multi-Language Support** - 8 ecosystems today (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic), 100+ planned for v2.0
 4. **Trust Pipeline** - 5-microservice verification before every publish (attestations, signatures, licenses, sustainability, provenance)
 5. **Formal Verification** - Proven library with mathematical security guarantees (SSRF/DoS prevention via property-based testing)
-6. **Human-Assisted Discovery (HAR)** - Agentic agents find packages in obscure languages without centralized registries
+6. **Human-Assisted Discovery (HAD)** - Agentic agents find packages in obscure languages without centralized registries
 7. **Federation-First** - Event propagation, distributed architecture, no single points of failure
 8. **Cross-Registry Resolution** - PubGrub dependency resolver handles transitive dependencies across ecosystems
 
