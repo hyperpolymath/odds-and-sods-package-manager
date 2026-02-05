@@ -4,10 +4,10 @@
 
 (define meta
   '((metadata
-      (version . "1.0.0")
+      (version . "1.1.0")
       (schema-version . "2025-12-08")
       (created . "2025-01-17")
-      (last-updated . "2026-01-26")
+      (last-updated . "2026-02-05")
       (project . "OPSM (Odds and Sods Package Manager)")
       (repository . "https://github.com/hyperpolymath/odds-and-sods-package-manager"))
 
@@ -187,7 +187,45 @@
            "- Reduced regressions before release"
            "NEGATIVE:"
            "- Requires local fleet checkout for full automation"
-           "- Adds coordination steps to release flow"))))
+           "- Adds coordination steps to release flow"))
+
+       (adr-008
+         (title . "Build Container Security Pipeline with 4 Rust Microservices")
+         (status . "accepted")
+         (date . "2026-02-05")
+         (context
+           "Need comprehensive container security for package distribution:"
+           "- Vulnerability scanning before publish"
+           "- Image signing for authenticity"
+           "- Runtime policy verification"
+           "- Security monitoring and threat detection"
+           "Evaluated:"
+           "1. Monolithic Elixir service"
+           "2. External SaaS (Snyk, Aqua Security)"
+           "3. Separate Rust microservices (chosen)"
+           "4. Extend existing trust pipeline")
+         (decision
+           "Build 4 dedicated Rust microservices:"
+           "- svalinn (port 8085): Vulnerability scanning with Trivy + Grype"
+           "- selur (port 8086): Image signing with Cosign + Ed25519"
+           "- vordr (port 8087): Policy verification with OPA + built-in engine"
+           "- cerro-torre (port 8088): Security monitoring with Falco + eBPF"
+           "Pipeline flow: Build → Scan → Sign → Verify → Monitor"
+           "Each service runs independently with REST APIs"
+           "Containerized with Chainguard Wolfi base images"
+           "Integrated with Phoenix mobile API")
+         (consequences
+           "POSITIVE:"
+           "- Performance (Rust native speed for scanning/monitoring)"
+           "- Modularity (services can be deployed/scaled independently)"
+           "- Tool integration (native bindings to Trivy, Cosign, Falco)"
+           "- Type safety (Rust prevents runtime errors)"
+           "- Graceful degradation (fallback modes when tools unavailable)"
+           "NEGATIVE:"
+           "- Increased complexity (4 services vs 1)"
+           "- More deployment infrastructure needed"
+           "- Cross-service coordination required"
+           "- Rust learning curve for contributors"))))
 
     (developsment-practices
       (code-style
@@ -293,7 +331,7 @@
       (decision-making . "Benevolent dictator (BDFL model) until v2.0, then community governance (v10.0 DAO)"))
 
     (future-vision
-      (v1.1 . "Production hardening (real-world testing, performance, mobile completion)")
+      (v1.1 . "COMPLETE: Container security pipeline with 4 Rust microservices (scan, sign, verify, monitor)")
       (v1.5 . "Enhanced trust (Idris2 NIFs, SLSA attestations, supply chain provenance)")
       (v2.0 . "Scale and intelligence (100+ languages, ML discovery, distributed resolver)")
       (v10.0 . "Federated ecosystem (cross-forge governance, global registry hubs, automated health monitoring)")

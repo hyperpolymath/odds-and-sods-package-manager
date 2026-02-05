@@ -4,10 +4,10 @@
 
 (ecosystem
   (metadata
-    (version . "1.0.1")
+    (version . "1.1.0")
     (name . "OPSM (Odds and Sods Package Manager)")
     (type . "federated-package-manager")
-    (purpose . "Universal, trust-verified package management with cryptographic guarantees and formal verification")
+    (purpose . "Universal, trust-verified package management with cryptographic guarantees, container security, and formal verification")
     (created . "2025-01-17")
     (updated . "2026-02-05"))
 
@@ -151,6 +151,30 @@
      (description . "Registry publication service")
      (integration . "OPSM trust pipeline component #5 (publish + federation)"))
 
+    ((name . "svalinn")
+     (relationship . "sibling-microservice")
+     (url . "services/svalinn")
+     (description . "Vulnerability scanning service")
+     (integration . "OPSM container security pipeline component #1 (Trivy + Grype, port 8085)"))
+
+    ((name . "selur")
+     (relationship . "sibling-microservice")
+     (url . "services/selur")
+     (description . "Image signing service")
+     (integration . "OPSM container security pipeline component #2 (Cosign + Ed25519, port 8086)"))
+
+    ((name . "vordr")
+     (relationship . "sibling-microservice")
+     (url . "services/vordr")
+     (description . "Policy verification service")
+     (integration . "OPSM container security pipeline component #3 (OPA + built-in, port 8087)"))
+
+    ((name . "cerro-torre")
+     (relationship . "sibling-microservice")
+     (url . "services/cerro-torre")
+     (description . "Security monitoring service")
+     (integration . "OPSM container security pipeline component #4 (Falco + eBPF, port 8088)"))
+
     ((name . "opsm-registry-hub")
      (relationship . "sibling-infrastructure")
      (url . "https://github.com/hyperpolymath/opsm-registry-hub")
@@ -168,12 +192,13 @@
     ""
     "1. UNIVERSAL LANGUAGE SUPPORT: 8 registries today (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic), 100+ in v2.0"
     "2. TRUST PIPELINE: 5-microservice verification (attestations, signatures, licenses, sustainability, provenance)"
-    "3. FORMAL VERIFICATION: Proven library (Idris2) with mathematical correctness proofs (v1.5)"
-    "4. HUMAN-ASSISTED DISCOVERY: HAR agents for obscure/unmaintained packages (GitHub search, web scraping, mirror finding)"
-    "5. FEDERATION-FIRST: Event propagation, IPFS storage, Radicle sync, git-private-farm mirroring"
-    "6. NATIVE MOBILE: iOS/Android apps via Tauri 2.0 with ReScript TEA architecture"
-    "7. INTELLIGENT SEARCH: ML-based semantic search and recommendations (v2.0)"
-    "8. SUPPLY CHAIN SECURITY: SLSA attestations, provenance tracking, CVE integration (v1.5)"
+    "3. CONTAINER SECURITY: 4-service pipeline (vulnerability scanning, image signing, policy verification, runtime monitoring)"
+    "4. FORMAL VERIFICATION: Proven library (Idris2) with mathematical correctness proofs (v1.5)"
+    "5. HUMAN-ASSISTED DISCOVERY: HAR agents for obscure/unmaintained packages (GitHub search, web scraping, mirror finding)"
+    "6. FEDERATION-FIRST: Event propagation, IPFS storage, Radicle sync, git-private-farm mirroring"
+    "7. NATIVE MOBILE: iOS/Android apps via Tauri 2.0 with ReScript TEA architecture"
+    "8. INTELLIGENT SEARCH: ML-based semantic search and recommendations (v2.0)"
+    "9. SUPPLY CHAIN SECURITY: SLSA attestations, provenance tracking, CVE integration (v1.5)"
     ""
     "OPSM answers the question: 'What if package management prioritized trust and universality over convenience?'")
 
