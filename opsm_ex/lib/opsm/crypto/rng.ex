@@ -13,7 +13,8 @@ defmodule Opsm.Crypto.RNG do
   on modern Erlang/OTP versions (>= 22).
   """
 
-  @seed_size 64  # 512 bits
+  # Seed size for reference (512 bits)
+  # @seed_size 64
 
   @doc """
   Generate n cryptographically secure random bytes.

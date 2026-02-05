@@ -9,9 +9,7 @@ defmodule Opsm.Validation do
   - Atom table exhaustion
   """
 
-  alias Proven.SafePath
-  alias Proven.SafeUrl
-  alias Proven.SafeNetwork
+  # Proven library is disabled - using inline implementations
 
   # Package name patterns by registry
   # npm: @scope/name or name, allows alphanumeric, -, _, .
@@ -109,7 +107,7 @@ defmodule Opsm.Validation do
       String.contains?(path, "\0") ->
         {:error, "Path cannot contain null bytes"}
 
-      SafePath.has_traversal?(path) ->
+      String.contains?(path, "..") or String.contains?(path, "//") ->
         {:error, "Path cannot contain traversal sequences"}
 
       true ->
@@ -155,26 +153,21 @@ defmodule Opsm.Validation do
     if String.contains?(url, "::1") do
       {:error, "URL host is blocked (loopback)"}
     else
-      case SafeUrl.parse(url) do
-        {:ok, parsed} ->
-          scheme_lower = String.downcase(parsed.scheme || "")
-          host = parsed.host || ""
+      case URI.parse(url) do
+        %URI{scheme: scheme, host: host} when scheme != nil and host != nil ->
+          scheme_lower = String.downcase(scheme)
 
           cond do
             scheme_lower in @dangerous_schemes ->
-              {:error, "URL scheme '#{parsed.scheme}' is not allowed for security reasons"}
+              {:error, "URL scheme '#{scheme}' is not allowed for security reasons"}
 
             scheme_lower not in @allowed_schemes ->
-              {:error, "URL scheme '#{parsed.scheme}' is not supported. Use https:// or http://"}
-
-            host == "" ->
-              {:error, "URL must have a host"}
+              {:error, "URL scheme '#{scheme}' is not supported. Use https:// or http://"}
 
             String.contains?(host, "..") ->
               {:error, "URL host contains invalid sequence"}
 
-            SafeNetwork.valid_ipv4?(host) and
-                (SafeNetwork.private?(host) or SafeNetwork.loopback?(host)) ->
+            is_private_or_loopback_ip?(host) ->
               {:error, "URL host is blocked (private/loopback)"}
 
             String.starts_with?(host, "169.254.") ->
@@ -187,7 +180,7 @@ defmodule Opsm.Validation do
               {:ok, url}
           end
 
-        {:error, _} ->
+        _ ->
           {:error, "Invalid URL format"}
       end
     end
@@ -195,6 +188,47 @@ defmodule Opsm.Validation do
 
   def validate_url(url) do
     {:error, "URL must be a string, got: #{inspect(url)}"}
+  end
+
+  # Helper function to check for private/loopback IP addresses
+  defp is_private_or_loopback_ip?(host) do
+    case parse_ipv4(host) do
+      {:ok, {a, b, c, _d}} ->
+        # Loopback: 127.0.0.0/8
+        a == 127 or
+        # Private: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+        a == 10 or
+        (a == 172 and b >= 16 and b <= 31) or
+        (a == 192 and b == 168) or
+        # Link-local: 169.254.0.0/16
+        (a == 169 and b == 254)
+
+      :error ->
+        # Check for localhost or IPv6 loopback
+        String.downcase(host) in ["localhost", "::1", "0:0:0:0:0:0:0:1"]
+    end
+  end
+
+  # Parse IPv4 address
+  defp parse_ipv4(str) do
+    case String.split(str, ".") do
+      [a, b, c, d] ->
+        with {a_int, ""} <- Integer.parse(a),
+             {b_int, ""} <- Integer.parse(b),
+             {c_int, ""} <- Integer.parse(c),
+             {d_int, ""} <- Integer.parse(d),
+             true <- a_int >= 0 and a_int <= 255,
+             true <- b_int >= 0 and b_int <= 255,
+             true <- c_int >= 0 and c_int <= 255,
+             true <- d_int >= 0 and d_int <= 255 do
+          {:ok, {a_int, b_int, c_int, d_int}}
+        else
+          _ -> :error
+        end
+
+      _ ->
+        :error
+    end
   end
 
   @doc """

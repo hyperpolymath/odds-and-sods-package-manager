@@ -12,8 +12,9 @@ defmodule Opsm.Crypto.Hash do
   BLAKE2b is cryptographically secure, fast, and built-in to Erlang's :crypto module.
   """
 
-  @blake2b_output_size 64  # 512 bits
-  @shake256_output_size 64  # 512 bits
+  # Output sizes for reference (512 bits each)
+  # @blake2b_output_size 64
+  # @shake256_output_size 64
 
   @doc """
   Hash data using BLAKE2b (performance-critical paths).

@@ -132,7 +132,7 @@ defmodule Opsm.Resolver do
     end
   end
 
-  defp try_versions(state, package_name, [], _forth, constraints) do
+  defp try_versions(_state, package_name, [], _forth, constraints) do
     # No valid versions found
     {:error, format_no_valid_version(package_name, constraints)}
   end
@@ -354,9 +354,9 @@ defmodule Opsm.Resolver do
   # Helpers
   # =============================================================================
 
-  defp infer_forth(state, _package_name) do
+  defp infer_forth(state, package_name) do
     # Try to infer forth from constraints
-    constraints = Map.get(state.constraints, _package_name, [])
+    constraints = Map.get(state.constraints, package_name, [])
 
     forth_from_constraints =
       Enum.find_value(constraints, fn {_constraint, _required_by, forth} ->

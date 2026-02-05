@@ -52,11 +52,8 @@ defmodule Opsm.Verified.Url do
     if String.contains?(url_string, "::1") do
       {:error, :blocked_host}
     else
-      case Proven.SafeUrl.parse(url_string) do
-        {:ok, parsed} ->
-          scheme = parsed.scheme
-          host = parsed.host
-
+      case URI.parse(url_string) do
+        %URI{scheme: scheme, host: host} when scheme != nil and host != nil ->
           cond do
             scheme not in @allowed_schemes ->
               {:error, {:invalid_scheme, scheme}}
@@ -64,15 +61,14 @@ defmodule Opsm.Verified.Url do
             host in @blocked_hosts ->
               {:error, :blocked_host}
 
-            (Proven.SafeNetwork.valid_ipv4?(host) and
-               (Proven.SafeNetwork.private?(host) or Proven.SafeNetwork.loopback?(host))) or
-                String.starts_with?(host, "169.254.") ->
+            is_private_or_loopback_ip?(host) or String.starts_with?(host, "169.254.") ->
               {:error, :blocked_host}
 
             true ->
+              parsed = URI.parse(url_string)
               validated = %__MODULE__{
-                scheme: scheme,
-                host: host,
+                scheme: parsed.scheme,
+                host: parsed.host,
                 port: parsed.port,
                 path: parsed.path || "/",
                 query: parsed.query,
@@ -82,7 +78,7 @@ defmodule Opsm.Verified.Url do
               {:ok, validated}
           end
 
-        {:error, _} ->
+        _ ->
           {:error, :invalid_url}
       end
     end
@@ -96,6 +92,44 @@ defmodule Opsm.Verified.Url do
   @spec to_string(t()) :: String.t()
   def to_string(%__MODULE__{} = url) do
     url.original
+  end
+
+  # Helper function to check for private/loopback IP addresses
+  defp is_private_or_loopback_ip?(host) do
+    case parse_ipv4(host) do
+      {:ok, {a, b, _c, _d}} ->
+        # Loopback: 127.0.0.0/8
+        a == 127 or
+        # Private: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+        a == 10 or
+        (a == 172 and b >= 16 and b <= 31) or
+        (a == 192 and b == 168)
+
+      :error ->
+        false
+    end
+  end
+
+  # Parse IPv4 address
+  defp parse_ipv4(str) do
+    case String.split(str, ".") do
+      [a, b, c, d] ->
+        with {a_int, ""} <- Integer.parse(a),
+             {b_int, ""} <- Integer.parse(b),
+             {c_int, ""} <- Integer.parse(c),
+             {d_int, ""} <- Integer.parse(d),
+             true <- a_int >= 0 and a_int <= 255,
+             true <- b_int >= 0 and b_int <= 255,
+             true <- c_int >= 0 and c_int <= 255,
+             true <- d_int >= 0 and d_int <= 255 do
+          {:ok, {a_int, b_int, c_int, d_int}}
+        else
+          _ -> :error
+        end
+
+      _ ->
+        :error
+    end
   end
 
 end
@@ -123,12 +157,25 @@ defmodule Opsm.Verified.Json do
   """
   @spec decode(String.t()) :: {:ok, map() | list()} | {:error, term()}
   def decode(json_string) when is_binary(json_string) do
-    case Proven.SafeJson.parse(json_string, max_depth: @max_depth, max_size: @max_size) do
-      {:ok, data} -> {:ok, data}
-      {:error, :payload_too_large} -> {:error, :payload_too_large}
-      {:error, :max_depth_exceeded} -> {:error, :nesting_too_deep}
-      {:error, :invalid_json} -> {:error, {:json_decode_error, :invalid_json}}
-      {:error, reason} -> {:error, reason}
+    # Check size limit
+    if byte_size(json_string) > @max_size do
+      {:error, :payload_too_large}
+    else
+      case Jason.decode(json_string) do
+        {:ok, data} ->
+          # Check depth after parsing
+          if check_depth(data, @max_depth) do
+            {:ok, data}
+          else
+            {:error, :nesting_too_deep}
+          end
+
+        {:error, %Jason.DecodeError{}} ->
+          {:error, {:json_decode_error, :invalid_json}}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
     end
   end
 
@@ -139,12 +186,31 @@ defmodule Opsm.Verified.Json do
   """
   @spec encode(term()) :: {:ok, String.t()} | {:error, term()}
   def encode(data) do
-    case Proven.SafeJson.encode(data, max_size: @max_size) do
-      {:ok, json} -> {:ok, json}
-      {:error, :payload_too_large} -> {:error, :payload_too_large}
-      {:error, reason} -> {:error, {:json_encode_error, reason}}
+    case Jason.encode(data) do
+      {:ok, json} ->
+        if byte_size(json) > @max_size do
+          {:error, :payload_too_large}
+        else
+          {:ok, json}
+        end
+
+      {:error, %Jason.EncodeError{} = error} ->
+        {:error, {:json_encode_error, error.message}}
+
+      {:error, reason} ->
+        {:error, {:json_encode_error, reason}}
     end
   end
+
+  # Check nesting depth recursively
+  defp check_depth(_data, 0), do: false
+  defp check_depth(data, depth) when is_map(data) do
+    Enum.all?(data, fn {_k, v} -> check_depth(v, depth - 1) end)
+  end
+  defp check_depth(data, depth) when is_list(data) do
+    Enum.all?(data, fn v -> check_depth(v, depth - 1) end)
+  end
+  defp check_depth(_data, _depth), do: true
 
 end
 
