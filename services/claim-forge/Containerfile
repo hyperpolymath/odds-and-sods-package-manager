@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Claim-Forge: Cryptographic attestation generation service
+# Rust service with Chainguard Wolfi base
+
+FROM cgr.dev/chainguard/rust:latest AS builder
+
+WORKDIR /build
+
+# Copy manifests
+COPY Cargo.toml Cargo.lock ./
+
+# Cache dependencies
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+# Copy source
+COPY src ./src
+
+# Build release
+RUN cargo build --release
+
+# Runtime stage
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+RUN apk add --no-cache libgcc libstdc++
+
+RUN addgroup -g 1000 claimforge && \
+    adduser -D -u 1000 -G claimforge claimforge
+
+WORKDIR /app
+
+COPY --from=builder --chown=claimforge:claimforge \
+    /build/target/release/claim-forge /app/
+
+USER claimforge
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD ["/app/claim-forge", "health"]
+
+CMD ["/app/claim-forge", "serve"]
+
+LABEL org.opencontainers.image.title="Claim-Forge" \
+      org.opencontainers.image.description="Cryptographic attestation generation" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later"

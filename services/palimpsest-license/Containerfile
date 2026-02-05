@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Palimpsest: License analysis and compatibility service
+# Gleam service with Chainguard Wolfi base
+
+FROM cgr.dev/chainguard/wolfi-base:latest AS builder
+
+RUN apk add --no-cache \
+    erlang \
+    gleam \
+    rebar3 \
+    git
+
+WORKDIR /build
+
+COPY gleam.toml manifest.toml ./
+COPY src ./src
+
+RUN gleam build
+
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+RUN apk add --no-cache erlang
+
+RUN addgroup -g 1000 palimpsest && \
+    adduser -D -u 1000 -G palimpsest palimpsest
+
+WORKDIR /app
+
+COPY --from=builder --chown=palimpsest:palimpsest \
+    /build/build /app/
+
+RUN mkdir -p /data && chown palimpsest:palimpsest /data
+
+USER palimpsest
+
+EXPOSE 8082
+
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD ["erlang", "-eval", "io:format(\"healthy\")."]
+
+CMD ["/app/prod/erlang-shipment/bin/palimpsest", "start"]
+
+LABEL org.opencontainers.image.title="Palimpsest" \
+      org.opencontainers.image.description="License analysis and compatibility" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later"

@@ -277,6 +277,128 @@ container-push registry="ghcr.io/hyperpolymath" tag="latest":
     $CTR tag {{project}}:{{tag}} {{registry}}/{{project}}:{{tag}}
     $CTR push {{registry}}/{{project}}:{{tag}}
 
+# Scan container image with Svalinn
+container-scan image tag="latest":
+    #!/usr/bin/env bash
+    echo "Scanning {{image}}:{{tag}} for vulnerabilities..."
+    curl -X POST http://localhost:8085/scan \
+        -H "Content-Type: application/json" \
+        -d '{"image": "{{image}}:{{tag}}", "scanners": ["trivy", "grype"], "severity_threshold": "medium"}'
+
+# Sign container image with Selur
+container-sign image tag="latest" key="/keys/signing.key":
+    #!/usr/bin/env bash
+    echo "Signing {{image}}:{{tag}}..."
+    curl -X POST http://localhost:8086/sign \
+        -H "Content-Type: application/json" \
+        -d '{"image": "{{image}}:{{tag}}", "key_path": "{{key}}", "method": "cosign"}'
+
+# Verify container image signature with Selur
+container-verify image tag="latest" pubkey="/keys/signing.pub":
+    #!/usr/bin/env bash
+    echo "Verifying {{image}}:{{tag}}..."
+    curl -X POST http://localhost:8086/verify \
+        -H "Content-Type: application/json" \
+        -d '{"image": "{{image}}:{{tag}}", "public_key_path": "{{pubkey}}", "method": "cosign"}'
+
+# Full container security pipeline: build, scan, sign, push
+container-pipeline tag="latest" registry="ghcr.io/hyperpolymath":
+    just container-build {{tag}}
+    just container-scan {{project}} {{tag}}
+    just container-sign {{project}} {{tag}}
+    just container-push {{registry}} {{tag}}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SELUR-COMPOSE (Secure Container Orchestration)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Detect compose runtime: selur-compose > docker-compose > podman-compose
+[private]
+compose-cmd:
+    #!/usr/bin/env bash
+    if command -v selur-compose >/dev/null 2>&1; then
+        echo "selur-compose"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+    elif command -v podman-compose >/dev/null 2>&1; then
+        echo "podman-compose"
+    else
+        echo "ERROR: No compose runtime found (install selur-compose, docker-compose, or podman-compose)" >&2
+        exit 1
+    fi
+
+# Start all OPSM services with selur-compose
+compose-up *args:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    echo "Starting OPSM services with $COMPOSE..."
+    $COMPOSE -f selur-compose.yml up {{args}}
+
+# Stop all OPSM services
+compose-down:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml down
+
+# View logs from all services
+compose-logs service="" *args:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml logs {{service}} {{args}}
+
+# Restart specific service
+compose-restart service:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml restart {{service}}
+
+# Execute command in service container
+compose-exec service *cmd:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml exec {{service}} {{cmd}}
+
+# Show status of all services
+compose-ps:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml ps
+
+# Build all service images
+compose-build *args:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml build {{args}}
+
+# Pull all service images
+compose-pull:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml pull
+
+# Validate selur-compose configuration
+compose-validate:
+    #!/usr/bin/env bash
+    COMPOSE=$(just compose-cmd)
+    $COMPOSE -f selur-compose.yml config
+
+# Full stack deployment: build, scan, sign, deploy
+compose-deploy:
+    @echo "=== OPSM Full Stack Deployment ==="
+    just compose-build
+    @echo "\n=== Scanning images... ==="
+    just container-scan opsm latest
+    just container-scan claim-forge latest
+    just container-scan checky-monkey latest
+    @echo "\n=== Signing images... ==="
+    just container-sign opsm latest
+    just container-sign claim-forge latest
+    just container-sign checky-monkey latest
+    @echo "\n=== Deploying stack... ==="
+    just compose-up -d
+    @echo "\n=== Deployment complete! ==="
+    just compose-ps
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # CI & AUTOMATION
 # ═══════════════════════════════════════════════════════════════════════════════

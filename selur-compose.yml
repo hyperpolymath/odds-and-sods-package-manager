@@ -1,0 +1,388 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Selur-Compose orchestration for OPSM trust pipeline
+# Secure container orchestration with image verification and runtime protection
+
+version: "3.0"
+
+# Security defaults applied to all services
+x-security-defaults: &security-defaults
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp:noexec,nosuid,nodev,size=64m
+
+# Chainguard Wolfi base for all services
+x-wolfi-base: &wolfi-base
+  image_verification:
+    enabled: true
+    keyring: /etc/opsm/chainguard.pub
+    require_signature: true
+
+# Health check defaults
+x-health-defaults: &health-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+networks:
+  opsm-trust:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: opsm0
+
+  opsm-public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  claim-forge-data:
+    driver: local
+  checky-monkey-cache:
+    driver: local
+  palimpsest-db:
+    driver: local
+  cicd-registry:
+    driver: local
+  oikos-cache:
+    driver: local
+  opsm-state:
+    driver: local
+
+services:
+  # Core OPSM CLI/API
+  opsm:
+    build:
+      context: ./opsm_ex
+      dockerfile: Containerfile
+    <<: [*security-defaults, *wolfi-base]
+    container_name: opsm-api
+    hostname: opsm
+    networks:
+      - opsm-public
+      - opsm-trust
+    ports:
+      - "4466:4466"
+    environment:
+      - OPSM_ENV=production
+      - OPSM_API_PORT=4466
+      - CLAIM_FORGE_URL=http://claim-forge:8080
+      - CHECKY_MONKEY_URL=http://checky-monkey:8081
+      - PALIMPSEST_URL=http://palimpsest:8082
+      - CICD_HYPER_A_URL=http://cicd-hyper-a:8083
+      - OIKOS_URL=http://oikos:8084
+    volumes:
+      - opsm-state:/app/data
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "/app/bin/opsm", "eval", "System.cmd(\"echo\", [\"healthy\"])"]
+    restart: unless-stopped
+    depends_on:
+      - claim-forge
+      - checky-monkey
+      - palimpsest
+      - cicd-hyper-a
+      - oikos
+    labels:
+      - "com.opsm.service=api"
+      - "com.opsm.tier=frontend"
+
+  # Claim-Forge: Attestation generation
+  claim-forge:
+    image: ghcr.io/hyperpolymath/claim-forge:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: claim-forge
+    hostname: claim-forge
+    networks:
+      - opsm-trust
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - CLAIM_FORGE_PORT=8080
+      - SIGNING_KEY_PATH=/secrets/signing.key
+    volumes:
+      - claim-forge-data:/data
+      - ./secrets:/secrets:ro
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=claim-forge"
+      - "com.opsm.tier=trust"
+      - "com.opsm.security=high"
+
+  # Checky-Monkey: Code verification
+  checky-monkey:
+    image: ghcr.io/hyperpolymath/checky-monkey:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: checky-monkey
+    hostname: checky-monkey
+    networks:
+      - opsm-trust
+    ports:
+      - "8081:8081"
+    environment:
+      - RUST_LOG=info
+      - CHECKY_PORT=8081
+      - MAX_VERIFICATION_TIME=600
+      - ENABLE_FUZZING=true
+      - ENABLE_PROPERTY_TESTS=true
+    volumes:
+      - checky-monkey-cache:/cache
+      - /tmp
+    # Checky-Monkey needs elevated caps for fuzzing
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=checky-monkey"
+      - "com.opsm.tier=verification"
+
+  # Palimpsest: License analysis
+  palimpsest:
+    image: ghcr.io/hyperpolymath/palimpsest-license:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: palimpsest
+    hostname: palimpsest
+    networks:
+      - opsm-trust
+    ports:
+      - "8082:8082"
+    environment:
+      - GLEAM_ENV=production
+      - PALIMPSEST_PORT=8082
+      - LICENSE_DB=/data/licenses.db
+    volumes:
+      - palimpsest-db:/data
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=palimpsest"
+      - "com.opsm.tier=analysis"
+
+  # CICD-Hyper-A: Package registry
+  cicd-hyper-a:
+    image: ghcr.io/hyperpolymath/cicd-hyper-a:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: cicd-hyper-a
+    hostname: cicd-hyper-a
+    networks:
+      - opsm-trust
+      - opsm-public
+    ports:
+      - "8083:8083"
+    environment:
+      - ELIXIR_ENV=production
+      - CICD_PORT=8083
+      - REGISTRY_STORAGE=/registry
+      - FEDERATION_ENABLED=true
+    volumes:
+      - cicd-registry:/registry
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=cicd-hyper-a"
+      - "com.opsm.tier=registry"
+
+  # Oikos: Sustainability analysis
+  oikos:
+    image: ghcr.io/hyperpolymath/oikos:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: oikos
+    hostname: oikos
+    networks:
+      - opsm-trust
+    ports:
+      - "8084:8084"
+    environment:
+      - RUST_LOG=info
+      - OIKOS_PORT=8084
+      - ANALYSIS_CACHE=/cache
+    volumes:
+      - oikos-cache:/cache
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=oikos"
+      - "com.opsm.tier=analysis"
+
+  # Svalinn: Container security scanner
+  svalinn:
+    image: ghcr.io/hyperpolymath/svalinn:latest
+    <<: *wolfi-base
+    container_name: svalinn
+    hostname: svalinn
+    networks:
+      - opsm-trust
+    ports:
+      - "8085:8085"
+    environment:
+      - RUST_LOG=info
+      - SVALINN_PORT=8085
+      - TRIVY_ENABLED=true
+      - GRYPE_ENABLED=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./svalinn-db:/db
+      - /tmp
+    # Needs access to container runtime for scanning
+    privileged: false
+    cap_add:
+      - DAC_READ_SEARCH
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=svalinn"
+      - "com.opsm.tier=security"
+      - "com.opsm.function=scanner"
+
+  # Selur: Image signing and verification
+  selur:
+    image: ghcr.io/hyperpolymath/selur:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: selur
+    hostname: selur
+    networks:
+      - opsm-trust
+    ports:
+      - "8086:8086"
+    environment:
+      - RUST_LOG=info
+      - SELUR_PORT=8086
+      - COSIGN_ENABLED=true
+      - SIGSTORE_URL=https://sigstore.dev
+    volumes:
+      - ./selur-keys:/keys:ro
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=selur"
+      - "com.opsm.tier=security"
+      - "com.opsm.function=signing"
+
+  # Vordr: Runtime verification
+  vordr:
+    image: ghcr.io/hyperpolymath/vordr:latest
+    <<: [*security-defaults, *wolfi-base]
+    container_name: vordr
+    hostname: vordr
+    networks:
+      - opsm-trust
+    ports:
+      - "8087:8087"
+    environment:
+      - RUST_LOG=info
+      - VORDR_PORT=8087
+      - POLICY_PATH=/policies
+      - AUDIT_LOG=/logs/audit.log
+    volumes:
+      - ./vordr-policies:/policies:ro
+      - ./vordr-logs:/logs
+      - /tmp
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8087/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=vordr"
+      - "com.opsm.tier=security"
+      - "com.opsm.function=verification"
+
+  # Cerro-Torre: Runtime security monitoring
+  cerro-torre:
+    image: ghcr.io/hyperpolymath/cerro-torre:latest
+    <<: *wolfi-base
+    container_name: cerro-torre
+    hostname: cerro-torre
+    networks:
+      - opsm-trust
+    ports:
+      - "8088:8088"
+    environment:
+      - RUST_LOG=info
+      - CERRO_PORT=8088
+      - FALCO_ENABLED=true
+      - EBPF_ENABLED=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - ./cerro-rules:/rules:ro
+      - /tmp
+    # Needs host access for eBPF monitoring
+    privileged: true
+    pid: host
+    healthcheck:
+      <<: *health-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+    restart: unless-stopped
+    labels:
+      - "com.opsm.service=cerro-torre"
+      - "com.opsm.tier=security"
+      - "com.opsm.function=monitoring"
+
+# Selur-specific extensions for security
+x-selur-config:
+  # Global security policies
+  image_signing:
+    required: true
+    keyring: /etc/opsm/selur.pub
+
+  # Vulnerability scanning
+  scan_on_pull: true
+  scan_threshold: medium
+
+  # Runtime protection
+  seccomp_default: runtime/default
+  apparmor_default: opsm-container
+
+  # Network policies
+  network_policies:
+    - name: trust-isolation
+      deny_external: true
+      allow_services:
+        - opsm-trust
+    - name: public-access
+      allow_external: true
+      rate_limit: 1000/min
+
+  # Audit logging
+  audit:
+    enabled: true
+    log_level: info
+    destinations:
+      - type: file
+        path: /var/log/opsm/audit.log
+      - type: syslog
+        host: localhost:514

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Svalinn: Container vulnerability scanning service
+# Integrates Trivy, Grype, and custom scanners
+
+FROM cgr.dev/chainguard/rust:latest AS builder
+
+WORKDIR /build
+
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+COPY src ./src
+RUN cargo build --release
+
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+# Install scanning tools
+RUN apk add --no-cache \
+    libgcc \
+    libstdc++ \
+    trivy \
+    grype \
+    curl
+
+RUN addgroup -g 1000 svalinn && \
+    adduser -D -u 1000 -G svalinn svalinn
+
+WORKDIR /app
+
+COPY --from=builder --chown=svalinn:svalinn \
+    /build/target/release/svalinn /app/
+
+RUN mkdir -p /db /cache && chown svalinn:svalinn /db /cache
+
+USER svalinn
+
+EXPOSE 8085
+
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD ["/app/svalinn", "health"]
+
+CMD ["/app/svalinn", "serve"]
+
+LABEL org.opencontainers.image.title="Svalinn" \
+      org.opencontainers.image.description="Container vulnerability scanner" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later"

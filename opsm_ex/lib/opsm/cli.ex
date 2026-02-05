@@ -140,6 +140,15 @@ defmodule Opsm.CLI do
       ["convert", path | _] -> {:convert, path, opts}
       ["export", package, target | _] -> {:export, package, target, opts}
 
+      # Container commands
+      ["container", "build", path | _] -> {:container_build, path, opts}
+      ["container", "scan", image | _] -> {:container_scan, image, opts}
+      ["container", "sign", image | _] -> {:container_sign, image, opts}
+      ["container", "verify", image | _] -> {:container_verify, image, opts}
+      ["container", "push", image | _] -> {:container_push, image, opts}
+      ["container", "pipeline", path | _] -> {:container_pipeline, path, opts}
+      ["container"] -> {:error, "container requires a subcommand (build|scan|sign|verify|push|pipeline)"}
+
       # Unknown
       [cmd | _] -> {:error, "Unknown command: #{cmd}"}
     end
@@ -211,6 +220,14 @@ defmodule Opsm.CLI do
       convert <manifest>       Convert manifest (Nickel/Idris2/npm/Cargo/etc.)
       export <pkg> <target>    Export package to system format (deb/rpm/etc.)
 
+    CONTAINER (OCI images with security):
+      container build <path>   Build container image from Containerfile
+      container scan <image>   Scan image for vulnerabilities (Svalinn)
+      container sign <image>   Sign image with Cosign (Selur)
+      container verify <image> Verify image signature (Selur)
+      container push <image>   Push image to registry
+      container pipeline <path> Full pipeline: build → scan → sign → push
+
     OPTIONS:
       --version <ver>          Version: 1.2.3, @next, @latest, @stable
       --allow <channel>        Allow: snapshot, alpha, beta, rc, esr
@@ -273,9 +290,15 @@ defmodule Opsm.CLI do
       opsm ports                               # List available system PMs
       opsm convert package.ncl                 # Convert Nickel manifest
       opsm export myapp deb                    # Export to .deb format
+      opsm container build ./opsm_ex           # Build container image
+      opsm container scan myapp:latest         # Scan for vulnerabilities
+      opsm container pipeline ./opsm_ex        # Full security pipeline
 
     CONFIG:
       $OPSM_CONFIG > ./opsm.toml > ~/.config/opsm/opsm.toml
+      $CONTAINER_REGISTRY > ghcr.io/hyperpolymath
+      $SVALINN_URL > http://localhost:8085
+      $SELUR_URL > http://localhost:8086
     """)
   end
 
@@ -864,6 +887,135 @@ defmodule Opsm.CLI do
 
       {:error, _reason} ->
         Errors.print_error(Errors.unknown_registry(target))
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_build, path, opts}) do
+    tag = Keyword.get(opts, :version, "latest")
+
+    IO.puts("Building container image from: #{path}")
+
+    case Opsm.Container.build(path, tag: tag) do
+      {:ok, image} ->
+        IO.puts("✓ Built: #{image.tag}")
+        if image.digest, do: IO.puts("  Digest: #{image.digest}")
+        System.halt(0)
+
+      {:error, reason} ->
+        Errors.print_error({:error, reason})
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_scan, image, _opts}) do
+    svalinn_url = System.get_env("SVALINN_URL", "http://localhost:8085")
+
+    IO.puts("Scanning container image: #{image}")
+
+    case Opsm.Container.scan(image, svalinn_url) do
+      {:ok, result} ->
+        IO.puts("✓ Scan complete")
+        IO.puts("  Critical: #{result.critical}")
+        IO.puts("  High: #{result.high}")
+        IO.puts("  Medium: #{result.medium}")
+        IO.puts("  Low: #{result.low}")
+        System.halt(0)
+
+      {:error, result} when is_struct(result, Opsm.Types.ScanResult) ->
+        IO.puts("✗ Security vulnerabilities found")
+        IO.puts("  Critical: #{result.critical}")
+        IO.puts("  High: #{result.high}")
+        Errors.print_error({:error, "Image has critical vulnerabilities"})
+        System.halt(1)
+
+      {:error, reason} ->
+        Errors.print_error({:error, reason})
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_sign, image, _opts}) do
+    selur_url = System.get_env("SELUR_URL", "http://localhost:8086")
+    key_path = System.get_env("SIGNING_KEY", "/keys/signing.key")
+
+    IO.puts("Signing container image: #{image}")
+
+    case Opsm.Container.sign(image, selur_url, key_path) do
+      {:ok, result} ->
+        IO.puts("✓ Image signed successfully")
+        IO.puts("  Algorithm: #{result.algorithm}")
+        System.halt(0)
+
+      {:error, reason} ->
+        Errors.print_error({:error, reason})
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_verify, image, _opts}) do
+    selur_url = System.get_env("SELUR_URL", "http://localhost:8086")
+    pubkey_path = System.get_env("VERIFY_KEY", "/keys/signing.pub")
+
+    IO.puts("Verifying container image: #{image}")
+
+    case Opsm.Container.verify(image, selur_url, pubkey_path) do
+      {:ok, :verified} ->
+        IO.puts("✓ Signature verified")
+        System.halt(0)
+
+      {:error, :verification_failed} ->
+        Errors.print_error({:error, "Signature verification failed"})
+        System.halt(1)
+
+      {:error, reason} ->
+        Errors.print_error({:error, reason})
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_push, image, _opts}) do
+    registry = System.get_env("CONTAINER_REGISTRY", "ghcr.io/hyperpolymath")
+
+    IO.puts("Pushing container image: #{image}")
+
+    case Opsm.Container.push(image, registry) do
+      {:ok, pushed_image} ->
+        IO.puts("✓ Image pushed: #{pushed_image}")
+        System.halt(0)
+
+      {:error, reason} ->
+        Errors.print_error({:error, reason})
+        System.halt(1)
+    end
+  end
+
+  defp run({:container_pipeline, path, opts}) do
+    tag = Keyword.get(opts, :version, "latest")
+    registry = System.get_env("CONTAINER_REGISTRY", "ghcr.io/hyperpolymath")
+    svalinn_url = System.get_env("SVALINN_URL", "http://localhost:8085")
+    selur_url = System.get_env("SELUR_URL", "http://localhost:8086")
+    key_path = System.get_env("SIGNING_KEY", "/keys/signing.key")
+
+    IO.puts("Starting container security pipeline")
+    IO.puts("")
+
+    case Opsm.Container.publish_pipeline(path, registry,
+           tag: tag,
+           svalinn_url: svalinn_url,
+           selur_url: selur_url,
+           key_path: key_path
+         ) do
+      {:ok, result} ->
+        IO.puts("")
+        IO.puts("✓ Pipeline completed successfully")
+        IO.puts("  Image: #{result.image}")
+        if result.digest, do: IO.puts("  Digest: #{result.digest}")
+        System.halt(0)
+
+      {:error, reason} ->
+        IO.puts("")
+        Errors.print_error({:error, reason})
         System.halt(1)
     end
   end

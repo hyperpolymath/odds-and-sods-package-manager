@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Selur: Container image signing and verification service
+# Integrates Cosign, Sigstore, and custom signing
+
+FROM cgr.dev/chainguard/rust:latest AS builder
+
+WORKDIR /build
+
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+COPY src ./src
+RUN cargo build --release
+
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+# Install signing tools
+RUN apk add --no-cache \
+    libgcc \
+    libstdc++ \
+    cosign \
+    openssl
+
+RUN addgroup -g 1000 selur && \
+    adduser -D -u 1000 -G selur selur
+
+WORKDIR /app
+
+COPY --from=builder --chown=selur:selur \
+    /build/target/release/selur /app/
+
+RUN mkdir -p /keys && chown selur:selur /keys
+
+USER selur
+
+EXPOSE 8086
+
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD ["/app/selur", "health"]
+
+CMD ["/app/selur", "serve"]
+
+LABEL org.opencontainers.image.title="Selur" \
+      org.opencontainers.image.description="Container image signing and verification" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later"

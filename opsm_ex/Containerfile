@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Multi-stage Containerfile for OPSM (Elixir)
+# Uses Chainguard Wolfi for minimal attack surface
+
+# Stage 1: Build
+FROM cgr.dev/chainguard/wolfi-base:latest AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    elixir \
+    erlang \
+    git \
+    build-base \
+    openssl-dev
+
+WORKDIR /build
+
+# Copy mix files
+COPY mix.exs mix.lock ./
+COPY config config
+
+# Install dependencies
+RUN mix local.hex --force && \
+    mix local.rebar --force && \
+    mix deps.get --only prod
+
+# Copy application code
+COPY lib lib
+COPY priv priv
+
+# Compile release
+ENV MIX_ENV=prod
+RUN mix deps.compile && \
+    mix compile && \
+    mix release
+
+# Stage 2: Runtime
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+# Install runtime dependencies only
+RUN apk add --no-cache \
+    libstdc++ \
+    openssl \
+    ncurses-libs
+
+# Create non-root user
+RUN addgroup -g 1000 opsm && \
+    adduser -D -u 1000 -G opsm opsm
+
+WORKDIR /app
+
+# Copy release from builder
+COPY --from=builder --chown=opsm:opsm /build/_build/prod/rel/opsm ./
+
+# Create directories for state
+RUN mkdir -p /app/data /app/cache /app/logs && \
+    chown -R opsm:opsm /app
+
+USER opsm
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["/app/bin/opsm", "eval", "System.cmd(\"echo\", [\"healthy\"])"]
+
+# Expose API port
+EXPOSE 4466
+
+# Default command: run API server
+CMD ["/app/bin/opsm", "start"]
+
+# Labels for OCI metadata
+LABEL org.opencontainers.image.title="OPSM" \
+      org.opencontainers.image.description="Universal package manager with cryptographic security" \
+      org.opencontainers.image.version="1.0.1" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later" \
+      org.opencontainers.image.source="https://github.com/hyperpolymath/odds-and-sods-package-manager" \
+      org.opencontainers.image.vendor="hyperpolymath"
