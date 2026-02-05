@@ -1,0 +1,8 @@
+/var/mnt/eclipse/repos/odds-and-sods-package-manager/services/vordr/target/release/deps/displaydoc-4de639ee3848d72f.d: /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/lib.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/attr.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/expand.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/fmt.rs
+
+/var/mnt/eclipse/repos/odds-and-sods-package-manager/services/vordr/target/release/deps/libdisplaydoc-4de639ee3848d72f.so: /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/lib.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/attr.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/expand.rs /home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/fmt.rs
+
+/home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/lib.rs:
+/home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/attr.rs:
+/home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/expand.rs:
+/home/hyper/.asdf/installs/rust/nightly/registry/src/index.crates.io-1949cf8c6b5b557f/displaydoc-0.2.5/src/fmt.rs:
