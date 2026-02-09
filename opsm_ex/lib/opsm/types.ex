@@ -360,7 +360,7 @@ defmodule Opsm.Types do
 
   @type forth_type :: :npm | :cargo | :hex | :pypi | :gem | :nuget | :maven | :pub | :go
                      | :deb | :rpm | :winget | :choco | :scoop | :pacman | :homebrew
-                     | :nix | :guix | :flatpak | :snap | :custom
+                     | :nix | :guix | :flatpak | :snap | :custom | :eclexia
 
   @type release_channel :: :snapshot | :alpha | :beta | :rc | :esr | :stable
 

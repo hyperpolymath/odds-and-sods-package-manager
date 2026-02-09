@@ -6,7 +6,7 @@ defmodule Opsm.Registries.Registry do
   Includes caching for improved performance.
   """
 
-  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic, Oblibeny, MyLang, JuliaTheViper, ErrorLang}
+  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic, Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia}
   alias Opsm.Cache
 
   @registry_modules %{
@@ -30,7 +30,9 @@ defmodule Opsm.Registries.Registry do
     julia_the_viper: JuliaTheViper,
     viper: JuliaTheViper,
     error_lang: ErrorLang,
-    error: ErrorLang
+    error: ErrorLang,
+    eclexia: Eclexia,
+    ecl: Eclexia
   }
 
   @doc """
