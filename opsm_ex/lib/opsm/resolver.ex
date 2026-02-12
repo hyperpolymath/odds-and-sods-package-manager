@@ -15,6 +15,7 @@ defmodule Opsm.Resolver do
 
   alias Opsm.VersionConstraint
   alias Opsm.Registries.Registry
+  alias Opsm.RegistryCache
   alias Opsm.Types.{ResolvedPackage, ManifestFormat}
 
   require Logger
@@ -74,6 +75,8 @@ defmodule Opsm.Resolver do
       resolved: %{},
       # Active constraints: package_name => [{constraint, required_by}]
       constraints: %{},
+      # Unresolved package names (avoids recomputing from constraints - resolved diff)
+      unresolved: MapSet.new(),
       # Visited nodes to prevent cycles
       visited: MapSet.new(),
       # Configuration
@@ -174,13 +177,16 @@ defmodule Opsm.Resolver do
         {:conflict, "Dependency tree depth (#{state.max_depth}) exceeded at #{package_name}. Possible circular dependency."}
 
       true ->
-        # Fetch package metadata
-        case Registry.fetch(forth, package_name, version) do
+        # Fetch package metadata (cached)
+        case RegistryCache.fetch_or_compute({:fetch, forth, package_name, version}, fn ->
+          Registry.fetch(forth, package_name, version)
+        end) do
           {:ok, resolved_pkg} ->
-            # Add to resolved set, increment tree depth
+            # Add to resolved set, remove from unresolved, increment tree depth
             new_state = %{
               state
               | resolved: Map.put(state.resolved, package_name, {version, resolved_pkg}),
+                unresolved: MapSet.delete(state.unresolved, package_name),
                 visited: MapSet.put(state.visited, key),
                 depth: state.depth + 1
             }
@@ -220,7 +226,16 @@ defmodule Opsm.Resolver do
     new_entry = {constraint_str, required_by, forth}
     updated_constraints = [new_entry | constraints]
 
-    %{state | constraints: Map.put(state.constraints, package_name, updated_constraints)}
+    # Track as unresolved if not already resolved
+    unresolved =
+      if Map.has_key?(state.resolved, package_name),
+        do: state.unresolved,
+        else: MapSet.put(state.unresolved, package_name)
+
+    %{state |
+      constraints: Map.put(state.constraints, package_name, updated_constraints),
+      unresolved: unresolved
+    }
   end
 
   defp check_conflicts(state) do
@@ -263,29 +278,36 @@ defmodule Opsm.Resolver do
   # =============================================================================
 
   defp next_unresolved(state) do
-    # Find a package that has constraints but is not yet resolved
-    state.constraints
-    |> Enum.reject(fn {pkg_name, _} -> Map.has_key?(state.resolved, pkg_name) end)
-    |> Enum.min_by(fn {_pkg_name, constraints} -> length(constraints) end, fn -> nil end)
+    # Pick from tracked unresolved set (O(1) membership check, no full scan)
+    case MapSet.size(state.unresolved) do
+      0 -> nil
+      _ ->
+        # Pick the package with the most constraints (most constrained first = fail fast)
+        state.unresolved
+        |> Enum.map(fn name -> {name, Map.get(state.constraints, name, [])} end)
+        |> Enum.min_by(fn {_name, constraints} -> length(constraints) end, fn -> nil end)
+    end
   end
 
   defp fetch_available_versions(package_name, forth) do
-    # Fetch all versions from registry
-    case Registry.versions(forth, package_name) do
-      {:ok, versions} when is_list(versions) ->
-        {:ok, versions}
+    # Use ETS cache to avoid repeated HTTP calls for the same package
+    RegistryCache.fetch_or_compute({:versions, forth, package_name}, fn ->
+      case Registry.versions(forth, package_name) do
+        {:ok, versions} when is_list(versions) ->
+          {:ok, versions}
 
-      {:ok, _other} ->
-        # Registry might return package metadata instead of version list
-        # Try fetching "latest"
-        case Registry.fetch(forth, package_name, "latest") do
-          {:ok, pkg} -> {:ok, [pkg.version]}
-          error -> error
-        end
+        {:ok, _other} ->
+          # Registry might return package metadata instead of version list
+          # Try fetching "latest"
+          case Registry.fetch(forth, package_name, "latest") do
+            {:ok, pkg} -> {:ok, [pkg.version]}
+            error -> error
+          end
 
-      error ->
-        error
-    end
+        error ->
+          error
+      end
+    end)
   end
 
   defp filter_valid_versions(versions, constraints) do

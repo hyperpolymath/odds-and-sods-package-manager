@@ -63,9 +63,11 @@ defmodule Opsm.TopoSort do
     kahn(queue, edges, in_degree, [], resolved_packages)
   end
 
-  defp kahn([], _edges, in_degree, result, resolved_packages) do
+  defp kahn([], _edges, in_degree, result_rev, resolved_packages) do
     # Check for remaining nodes (would indicate cycle)
     remaining = Enum.filter(in_degree, fn {_name, deg} -> deg > 0 end)
+
+    result = :lists.reverse(result_rev)
 
     if remaining == [] do
       # Convert names back to {version, package} tuples
@@ -79,7 +81,7 @@ defmodule Opsm.TopoSort do
     end
   end
 
-  defp kahn([current | rest], edges, in_degree, result, resolved_packages) do
+  defp kahn([current | rest], edges, in_degree, result_rev, resolved_packages) do
     # Process current node: reduce in-degree of all dependants
     dependants = Map.get(edges, current, [])
 
@@ -98,11 +100,11 @@ defmodule Opsm.TopoSort do
     # Remove current from in-degree tracking
     new_in_degree = Map.delete(new_in_degree, current)
 
-    # Sort new additions for deterministic order
+    # Use :queue or simple append for BFS queue; prepend to result (reversed at end)
     sorted_additions = Enum.sort(new_queue_additions)
     new_queue = rest ++ sorted_additions
 
-    kahn(new_queue, edges, new_in_degree, result ++ [current], resolved_packages)
+    kahn(new_queue, edges, new_in_degree, [current | result_rev], resolved_packages)
   end
 
   defp extract_dep_names({_version, pkg}) do
