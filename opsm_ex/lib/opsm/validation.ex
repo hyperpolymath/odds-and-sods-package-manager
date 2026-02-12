@@ -305,7 +305,9 @@ defmodule Opsm.Validation do
   # ===========================================================================
 
   @known_forths ~w(npm hex cargo crates pypi gem go pub hackage nuget maven
-                   deb rpm winget choco scoop pacman homebrew nix guix
+                   deb rpm winget choco scoop pacman homebrew brew nix nixpkgs guix
+                   apt debian ubuntu dnf fedora yum alpine apk
+                   flatpak flathub snap snapcraft
                    nimble idris2 git agentic
                    packagist php composer cpan perl metacpan cran r
                    conda anaconda cocoapods pods ios opam ocaml

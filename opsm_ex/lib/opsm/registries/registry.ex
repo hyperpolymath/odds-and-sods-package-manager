@@ -10,7 +10,8 @@ defmodule Opsm.Registries.Registry do
     Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia,
     RubyGems, GoModules, PubDev, Hackage, NuGet, Maven,
     Packagist, Cpan, Cran, Conda, CocoaPods, Opam, Clojars,
-    LuaRocks, Terraform, Jsr, Conan, SwiftPM, Elm, Vcpkg, JuliaGeneral}
+    LuaRocks, Terraform, Jsr, Conan, SwiftPM, Elm, Vcpkg, JuliaGeneral,
+    Homebrew, Nix, Apt, Rpm, Alpine, Flatpak, Snap, Guix}
   alias Opsm.Cache
 
   @registry_modules %{
@@ -70,6 +71,26 @@ defmodule Opsm.Registries.Registry do
     vcpkg: Vcpkg,
     julia: JuliaGeneral,
     juliageneral: JuliaGeneral,
+    # System package managers (8)
+    homebrew: Homebrew,
+    brew: Homebrew,
+    nix: Nix,
+    nixpkgs: Nix,
+    apt: Apt,
+    deb: Apt,
+    debian: Apt,
+    ubuntu: Apt,
+    rpm: Rpm,
+    dnf: Rpm,
+    fedora: Rpm,
+    yum: Rpm,
+    alpine: Alpine,
+    apk: Alpine,
+    flatpak: Flatpak,
+    flathub: Flatpak,
+    snap: Snap,
+    snapcraft: Snap,
+    guix: Guix,
     # Niche/custom ecosystems (5)
     nimble: Nimble,
     nim: Nimble,
@@ -152,7 +173,8 @@ defmodule Opsm.Registries.Registry do
   def search_all(query, opts \\ []) do
     forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
                         :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
+                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -180,7 +202,8 @@ defmodule Opsm.Registries.Registry do
   def exists_all?(package, opts \\ []) do
     forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
                         :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
+                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
     timeout = Keyword.get(opts, :timeout, 10_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -206,7 +229,8 @@ defmodule Opsm.Registries.Registry do
   def fetch_all(package, version \\ "latest", opts \\ []) do
     forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
                         :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
+                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
