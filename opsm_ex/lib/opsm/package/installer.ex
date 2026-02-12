@@ -123,19 +123,17 @@ defmodule Opsm.Package.Installer do
     case Resolver.resolve([root_dep], forth: forth) do
       {:ok, resolution} ->
         # Resolution successful - we have a map of package_name => {version, ResolvedPackage}
-        packages_to_install = Map.values(resolution)
-        IO.puts("  Resolved #{length(packages_to_install)} package(s)")
+        IO.puts("  Resolved #{map_size(resolution)} package(s)")
 
         # Show dependency tree
-        Enum.each(packages_to_install, fn {version, pkg} ->
+        Enum.each(resolution, fn {_name, {version, pkg}} ->
           IO.puts("    - #{pkg.package}@#{version}")
         end)
 
         IO.puts("")
 
-        # Install all packages in resolution order
-        # TODO: Sort topologically to install dependencies before dependents
-        install_resolved_packages(packages_to_install, scope, dry_run)
+        # Install all packages in topological order (dependencies first)
+        install_resolved_packages(resolution, scope, dry_run)
 
       {:error, reason} ->
         IO.puts("  ✗ Dependency resolution failed:")
@@ -144,36 +142,61 @@ defmodule Opsm.Package.Installer do
     end
   end
 
-  defp install_resolved_packages(packages, scope, dry_run) do
+  defp install_resolved_packages(resolution, scope, dry_run) do
     # Sort packages in dependency order (dependencies first)
-    sorted = Opsm.TopoSort.sort(packages)
+    # TopoSort.sort/1 expects %{name => {version, ResolvedPackage}} map
+    sorted = Opsm.TopoSort.sort(resolution)
 
-    # Install each package in topological order
-    results =
-      Enum.map(sorted, fn {version, package} ->
-        IO.puts("")
-        IO.puts("Installing #{package.package}@#{version}...")
+    # F1: Install with rollback — stop on first failure and undo all successful installs
+    install_with_rollback(sorted, resolution, scope, dry_run, _installed_acc = [])
+  end
 
-        # Run trust pipeline
-        IO.puts("  Running trust checks...")
-        {:ok, trust_result} = Pipeline.verify(package)
+  # F1: Sequential install with rollback on failure
+  defp install_with_rollback([], resolution, _scope, _dry_run, _installed) do
+    # All packages installed successfully
+    update_lockfile_with_resolution(Map.values(resolution))
+    {:ok, :all_installed}
+  end
 
-        case handle_trust_result(trust_result, package, scope, dry_run) do
-          {:ok, :dry_run} -> {:ok, :dry_run}
-          {:ok, _} -> {:ok, package}
-          {:error, reason} -> {:error, {package.package, reason}}
+  defp install_with_rollback([{version, package} | rest], resolution, scope, dry_run, installed) do
+    IO.puts("")
+    IO.puts("Installing #{package.package}@#{version}...")
+
+    # Run trust pipeline (D1: rescue crashes instead of letting them propagate)
+    IO.puts("  Running trust checks...")
+    result = try do
+      {:ok, trust_result} = Pipeline.verify(package)
+      case handle_trust_result(trust_result, package, scope, dry_run) do
+        {:ok, :dry_run} -> {:ok, :dry_run}
+        {:ok, _} -> {:ok, package}
+        {:error, reason} -> {:error, {package.package, reason}}
+      end
+    rescue
+      e ->
+        IO.puts("  ✗ Trust pipeline crashed: #{Exception.message(e)}")
+        {:error, {package.package, "Trust verification crashed: #{Exception.message(e)}"}}
+    end
+
+    case result do
+      {:ok, _} ->
+        # Success — continue with remaining packages
+        install_with_rollback(rest, resolution, scope, dry_run, [package | installed])
+
+      {:error, {failed_pkg, reason}} ->
+        # Failure — rollback all previously installed packages in this batch
+        if installed != [] and not dry_run do
+          IO.puts("")
+          IO.puts("Rolling back #{length(installed)} previously installed package(s)...")
+          Enum.each(installed, fn pkg ->
+            IO.puts("  Removing #{pkg.package}...")
+            case find_installed(pkg.package) do
+              nil -> :ok
+              entry -> do_remove(entry)
+            end
+          end)
         end
-      end)
 
-    # Check if any failed
-    failed = Enum.filter(results, fn r -> match?({:error, _}, r) end)
-
-    if failed != [] do
-      {:error, format_install_failures(failed)}
-    else
-      # Update lockfile with resolved packages
-      update_lockfile_with_resolution(packages)
-      {:ok, :all_installed}
+        {:error, format_install_failures([{:error, {failed_pkg, reason}}])}
     end
   end
 
@@ -335,20 +358,24 @@ defmodule Opsm.Package.Installer do
   end
 
   defp unpack(tarball_path, dest_path, forth) do
-    File.mkdir_p!(dest_path)
+    # S1: Validate all paths before passing to shell commands
+    with {:ok, safe_tarball} <- Validation.sanitize_path(tarball_path),
+         {:ok, safe_dest} <- Validation.sanitize_path(dest_path) do
+      File.mkdir_p!(safe_dest)
 
-    case forth do
-      :npm -> unpack_npm(tarball_path, dest_path)
-      :cargo -> unpack_crate(tarball_path, dest_path)
-      :hex -> unpack_hex(tarball_path, dest_path)
-      :pypi -> unpack_pypi(tarball_path, dest_path)
-      :gem -> unpack_gem(tarball_path, dest_path)
-      :go -> unpack_go_zip(tarball_path, dest_path)
-      :pub -> unpack_tarball(tarball_path, dest_path, strip: 1)
-      :hackage -> unpack_tarball(tarball_path, dest_path, strip: 1)
-      :nuget -> unpack_zip(tarball_path, dest_path)
-      :maven -> unpack_zip(tarball_path, dest_path)
-      _ -> unpack_generic(tarball_path, dest_path)
+      case forth do
+        :npm -> unpack_npm(safe_tarball, safe_dest)
+        :cargo -> unpack_crate(safe_tarball, safe_dest)
+        :hex -> unpack_hex(safe_tarball, safe_dest)
+        :pypi -> unpack_pypi(safe_tarball, safe_dest)
+        :gem -> unpack_gem(safe_tarball, safe_dest)
+        :go -> unpack_go_zip(safe_tarball, safe_dest)
+        :pub -> unpack_tarball(safe_tarball, safe_dest, strip: 1)
+        :hackage -> unpack_tarball(safe_tarball, safe_dest, strip: 1)
+        :nuget -> unpack_zip(safe_tarball, safe_dest)
+        :maven -> unpack_zip(safe_tarball, safe_dest)
+        _ -> unpack_generic(safe_tarball, safe_dest)
+      end
     end
   end
 

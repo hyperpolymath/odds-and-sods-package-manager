@@ -48,12 +48,18 @@ defmodule Opsm.Package.Native do
   def remove(forth, package_name, opts \\ []) do
     global = Keyword.get(opts, :global, false)
 
-    case Federation.check_toolchain(forth) do
-      {:error, info} ->
-        {:error, "Missing toolchain: #{info.message}"}
+    # S2: Validate package name before passing to shell commands
+    with {:ok, _} <- Validation.validate_package_name(package_name, forth) do
+      case Federation.check_toolchain(forth) do
+        {:error, info} ->
+          {:error, "Missing toolchain: #{info.message}"}
 
-      {:ok, _info} ->
-        do_native_remove(forth, package_name, global)
+        {:ok, _info} ->
+          do_native_remove(forth, package_name, global)
+      end
+    else
+      {:error, reason} ->
+        {:error, "Validation failed: #{reason}"}
     end
   end
 
@@ -76,7 +82,11 @@ defmodule Opsm.Package.Native do
     global = Keyword.get(opts, :global, false)
     dev = Keyword.get(opts, :dev, false)
 
-    build_install_command(forth, package_name, version, global, dev)
+    # S2: Validate before building command
+    with {:ok, _} <- Validation.validate_package_name(package_name, forth),
+         {:ok, _} <- Validation.validate_version(version) do
+      build_install_command(forth, package_name, version, global, dev)
+    end
   end
 
   # Install implementations

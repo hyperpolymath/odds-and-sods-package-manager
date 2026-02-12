@@ -54,10 +54,22 @@ defmodule Opsm.Trust.Pipeline do
       tasks
     end
 
-    # Collect results (P4: reduced timeout from 30s to 5s for better UX)
-    check_results = Task.await_many(tasks, 5_000)
-    |> Enum.map(fn {name, result} -> {name, result} end)
-    |> Map.new()
+    # Collect results safely (D2: use yield_many to handle task crashes/timeouts)
+    check_results =
+      Task.yield_many(tasks, 5_000)
+      |> Enum.map(fn
+        {_task, {:ok, {name, result}}} ->
+          {name, result}
+
+        {task, {:exit, reason}} ->
+          Task.shutdown(task, :brutal_kill)
+          {:crashed_check, {:error, "Check crashed: #{inspect(reason)}"}}
+
+        {task, nil} ->
+          Task.shutdown(task, :brutal_kill)
+          {:timed_out_check, {:skipped, "Check timed out"}}
+      end)
+      |> Map.new()
 
     results = %{results | checks: check_results}
 
