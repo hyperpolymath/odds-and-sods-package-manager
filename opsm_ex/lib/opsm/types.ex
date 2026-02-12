@@ -487,6 +487,58 @@ defmodule Opsm.Types do
                :forth, :timestamp, :user, :scope]
   end
 
+  # =============================================================================
+  # SLSA Provenance Types
+  # =============================================================================
+
+  @type slsa_level :: 0 | 1 | 2 | 3 | 4
+
+  defmodule SlsaProvenance do
+    @moduledoc "SLSA v1.0 provenance predicate."
+    @type t :: %__MODULE__{
+            builder_id: String.t(),
+            build_type: String.t(),
+            invocation: map(),
+            materials: [map()],
+            metadata: map(),
+            slsa_level: Opsm.Types.slsa_level(),
+            signature: String.t() | nil,
+            signature_algo: atom() | nil
+          }
+    defstruct [
+      :builder_id, :build_type, :invocation, :metadata,
+      :signature, :signature_algo,
+      materials: [], slsa_level: 0
+    ]
+  end
+
+  defmodule BuildMaterial do
+    @moduledoc "A single build input material (source, dependency, tool)."
+    @type t :: %__MODULE__{
+            uri: String.t(),
+            digest: %{String.t() => String.t()}
+          }
+    defstruct [:uri, digest: %{}]
+  end
+
+  defmodule SlsaVerificationResult do
+    @moduledoc "Result of SLSA provenance verification."
+    @type t :: %__MODULE__{
+            verified: boolean(),
+            slsa_level: Opsm.Types.slsa_level(),
+            builder_trusted: boolean(),
+            materials_match: boolean(),
+            signature_valid: boolean() | :not_checked,
+            warnings: [String.t()],
+            errors: [String.t()]
+          }
+    defstruct [
+      verified: false, slsa_level: 0, builder_trusted: false,
+      materials_match: false, signature_valid: :not_checked,
+      warnings: [], errors: []
+    ]
+  end
+
   defmodule ConnectionPort do
     @moduledoc """
     Bridge configuration for system package managers.

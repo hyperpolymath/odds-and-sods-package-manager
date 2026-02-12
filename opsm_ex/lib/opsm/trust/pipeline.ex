@@ -54,6 +54,12 @@ defmodule Opsm.Trust.Pipeline do
       tasks
     end
 
+    tasks = if :slsa not in skip_checks do
+      [Task.async(fn -> {:slsa, check_slsa_provenance(package, config)} end) | tasks]
+    else
+      tasks
+    end
+
     # Collect results safely (D2: use yield_many to handle task crashes/timeouts)
     check_results =
       Task.yield_many(tasks, 5_000)
@@ -169,6 +175,31 @@ defmodule Opsm.Trust.Pipeline do
 
       true ->
         {:info, "License: #{license}"}
+    end
+  end
+
+  defp check_slsa_provenance(package, _config) do
+    # Check if package has SLSA provenance attestation
+    slsa_attestation = Enum.find(package.attestations, fn
+      %{attestation_type: :in_toto} -> true
+      %{attestation_type: :sigstore} -> true
+      _ -> false
+    end)
+
+    cond do
+      is_nil(slsa_attestation) ->
+        # No SLSA provenance — generate a basic one from package metadata
+        {:ok, provenance} = Opsm.Slsa.Provenance.generate(package)
+
+        if provenance.slsa_level >= 1 do
+          {:info, "SLSA Level #{provenance.slsa_level} (self-attested, unverified)"}
+        else
+          {:warning, "No SLSA provenance available (Level 0)"}
+        end
+
+      true ->
+        # Has attestation — try to verify
+        {:info, "SLSA attestation found: #{slsa_attestation.uri}"}
     end
   end
 

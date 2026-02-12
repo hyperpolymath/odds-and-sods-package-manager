@@ -206,6 +206,8 @@ defmodule Opsm.Lockfile do
       checksum_algo: Map.get(package_info, :checksum_algo, "blake2b"),  # v1.0.1: Default to BLAKE2b
       source_url: Map.get(package_info, :source_url),
       dependencies: Map.get(package_info, :dependencies, []),
+      slsa_level: Map.get(package_info, :slsa_level),
+      slsa_provenance_uri: Map.get(package_info, :slsa_provenance_uri),
       installed_at: DateTime.utc_now() |> DateTime.to_iso8601()
     }
 
