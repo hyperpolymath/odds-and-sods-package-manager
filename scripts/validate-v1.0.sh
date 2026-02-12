@@ -10,7 +10,7 @@ readonly GREEN='\033[0;32m'
 readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m' # No Color
 
-readonly TEST_DIR="/tmp/opsm-validation-$$"
+readonly TEST_DIR="$(mktemp -d /tmp/opsm-validation-XXXXXXXX)"
 readonly OPSM_BIN="./opsm"
 
 PASSED=0
@@ -71,7 +71,10 @@ setup() {
 cleanup() {
     log "Cleaning up..."
     cd /
-    rm -rf "$TEST_DIR"
+    # Only remove if it's under /tmp and matches our pattern
+    if [[ "$TEST_DIR" == /tmp/opsm-validation-* ]]; then
+        rm -rf "$TEST_DIR"
+    fi
 }
 
 # =============================================================================
@@ -345,7 +348,7 @@ test_full_suite() {
 
     if echo "$test_output" | grep -q "0 failures"; then
         local test_count
-        test_count=$(echo "$test_output" | grep -oP '\d+(?= tests)' | tail -1)
+        test_count=$(echo "$test_output" | grep -Eo '[0-9]+ tests' | grep -Eo '[0-9]+' | tail -1)
         test_pass "Full test suite: $test_count tests passed"
     else
         test_fail "Full test suite has failures"

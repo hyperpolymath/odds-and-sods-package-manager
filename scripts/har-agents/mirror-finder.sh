@@ -5,13 +5,25 @@
 
 set -euo pipefail
 
-readonly QUEUE_DIR="/tmp/opsm-har-ingest"
+readonly QUEUE_DIR="${OPSM_HAR_QUEUE_DIR:-/tmp/opsm-har-ingest}"
 readonly POLL_INTERVAL=5
 readonly SWH_API="https://archive.softwareheritage.org/api/1"
 readonly WAYBACK_API="https://archive.org/wayback/available"
+readonly CURL_CONNECT_TIMEOUT=10
+readonly CURL_MAX_TIME=30
 
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+# Sanitize a string for safe use in file paths
+sanitize_path_component() {
+    printf '%s' "$1" | tr -cd 'a-zA-Z0-9._-'
+}
+
+# URL-encode a string for safe inclusion in URLs
+urlencode() {
+    printf '%s' "$1" | jq -sRr @uri
 }
 
 check_software_heritage() {
@@ -20,8 +32,11 @@ check_software_heritage() {
     log "Checking Software Heritage: $url"
 
     # Try to find URL in SWH archive
+    local encoded_url
+    encoded_url=$(urlencode "$url")
     local response
-    response=$(curl -s "${SWH_API}/origin/${url}/get/" || echo '{}')
+    response=$(curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+        "${SWH_API}/origin/${encoded_url}/get/" || echo '{}')
 
     local found
     found=$(echo "$response" | jq -r '.url // empty')
@@ -42,7 +57,8 @@ check_wayback_machine() {
 
     # Check if URL is archived
     local response
-    response=$(curl -s "${WAYBACK_API}?url=$(printf '%s' "$url" | jq -sRr @uri)" || echo '{}')
+    response=$(curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+        "${WAYBACK_API}?url=$(urlencode "$url")" || echo '{}')
 
     local snapshot
     snapshot=$(echo "$response" | jq -r '.archived_snapshots.closest.url // empty')
@@ -61,11 +77,14 @@ check_debian_snapshot() {
 
     log "Checking Debian snapshot: $package_name"
 
-    # Try Debian snapshot service
+    # Try Debian snapshot service (URL-encode package name)
+    local encoded_name
+    encoded_name=$(urlencode "$package_name")
     local response
-    response=$(curl -s "https://snapshot.debian.org/package/${package_name}/" || echo '')
+    response=$(curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+        "https://snapshot.debian.org/package/${encoded_name}/" || echo '')
 
-    if echo "$response" | grep -q "package ${package_name}"; then
+    if echo "$response" | grep -qF "package ${package_name}"; then
         local url="https://snapshot.debian.org/package/${package_name}/"
         log "Found in Debian snapshot: $url"
         echo "$url"
@@ -81,11 +100,14 @@ check_fedora_archive() {
     log "Checking Fedora archives: $package_name"
 
     # Try Fedora archives (koji)
+    local encoded_name
+    encoded_name=$(urlencode "$package_name")
     local response
-    response=$(curl -s "https://koji.fedoraproject.org/koji/search?match=glob&type=package&terms=${package_name}" || echo '')
+    response=$(curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+        "https://koji.fedoraproject.org/koji/search?match=glob&type=package&terms=${encoded_name}" || echo '')
 
-    if echo "$response" | grep -q "packageinfo"; then
-        local url="https://koji.fedoraproject.org/koji/packageinfo?packageID=${package_name}"
+    if echo "$response" | grep -qF "packageinfo"; then
+        local url="https://koji.fedoraproject.org/koji/packageinfo?packageID=${encoded_name}"
         log "Found in Fedora archive: $url"
         echo "$url"
         return 0
@@ -97,7 +119,12 @@ check_fedora_archive() {
 process_task() {
     local task_file="$1"
     local task_id
-    task_id=$(basename "$task_file" .imp.json)
+    task_id=$(sanitize_path_component "$(basename "$task_file" .imp.json)")
+
+    if [[ -z "$task_id" ]]; then
+        log "ERROR: Empty task_id from $task_file"
+        return 1
+    fi
 
     log "Processing task: $task_id"
 
@@ -170,16 +197,21 @@ process_task() {
     mkdir -p "$result_dir"
     echo "$result" > "$result_dir/${task_id}.result.json"
 
-    # POST to callback URL if provided
+    # POST to callback URL if provided (validate HTTPS only)
     local callback_url
     callback_url=$(jq -r '.callbackUrl // empty' "$task_file")
 
     if [[ -n "$callback_url" ]]; then
-        log "Posting result to $callback_url"
-        curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d "$result" \
-            "$callback_url" || log "WARN: Failed to post to callback URL"
+        if [[ "$callback_url" =~ ^https:// ]]; then
+            log "Posting result to $callback_url"
+            curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d "$result" \
+                "$callback_url" || log "WARN: Failed to post to callback URL"
+        else
+            log "WARN: Refusing callback to non-HTTPS URL: $callback_url"
+        fi
     fi
 
     # Mark task as processed
@@ -196,9 +228,9 @@ watch_queue() {
 
     mkdir -p "$QUEUE_DIR"
 
+    shopt -s nullglob
     while true; do
-        for task_file in "$QUEUE_DIR"/*.imp.json 2>/dev/null; do
-            [[ -e "$task_file" ]] || continue
+        for task_file in "$QUEUE_DIR"/*.imp.json; do
             process_task "$task_file" || log "ERROR: Failed to process $(basename "$task_file")"
         done
 

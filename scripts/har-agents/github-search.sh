@@ -5,12 +5,19 @@
 
 set -euo pipefail
 
-readonly QUEUE_DIR="/tmp/opsm-har-ingest"
+readonly QUEUE_DIR="${OPSM_HAR_QUEUE_DIR:-/tmp/opsm-har-ingest}"
 readonly POLL_INTERVAL=5
 readonly GITHUB_API="https://api.github.com/search/repositories"
+readonly CURL_CONNECT_TIMEOUT=10
+readonly CURL_MAX_TIME=30
 
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+# Sanitize a string for safe use in file paths (alphanumeric, dash, underscore, dot only)
+sanitize_path_component() {
+    printf '%s' "$1" | tr -cd 'a-zA-Z0-9._-'
 }
 
 search_github() {
@@ -22,7 +29,8 @@ search_github() {
 
     # Search GitHub API (no auth required for public search, but rate-limited)
     local response
-    response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+    response=$(curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+        -H "Accept: application/vnd.github.v3+json" \
         "$GITHUB_API?q=$(printf '%s' "$query" | jq -sRr @uri)&per_page=5")
 
     echo "$response"
@@ -31,7 +39,12 @@ search_github() {
 process_task() {
     local task_file="$1"
     local task_id
-    task_id=$(basename "$task_file" .imp.json)
+    task_id=$(sanitize_path_component "$(basename "$task_file" .imp.json)")
+
+    if [[ -z "$task_id" ]]; then
+        log "ERROR: Empty task_id from $task_file"
+        return 1
+    fi
 
     log "Processing task: $task_id"
 
@@ -85,13 +98,18 @@ process_task() {
     mkdir -p "$result_dir"
     echo "$result" > "$result_dir/${task_id}.result.json"
 
-    # POST to callback URL if provided
+    # POST to callback URL if provided (validate it starts with https://)
     if [[ -n "$callback_url" ]]; then
-        log "Posting result to $callback_url"
-        curl -s -X POST \
-            -H "Content-Type: application/json" \
-            -d "$result" \
-            "$callback_url" || log "WARN: Failed to post to callback URL"
+        if [[ "$callback_url" =~ ^https:// ]]; then
+            log "Posting result to $callback_url"
+            curl -s --connect-timeout "$CURL_CONNECT_TIMEOUT" --max-time "$CURL_MAX_TIME" \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d "$result" \
+                "$callback_url" || log "WARN: Failed to post to callback URL"
+        else
+            log "WARN: Refusing callback to non-HTTPS URL: $callback_url"
+        fi
     fi
 
     # Mark task as processed (move to processed directory)
@@ -108,11 +126,10 @@ watch_queue() {
 
     mkdir -p "$QUEUE_DIR"
 
+    shopt -s nullglob
     while true; do
         # Find all .imp.json files in queue
-        for task_file in "$QUEUE_DIR"/*.imp.json 2>/dev/null; do
-            [[ -e "$task_file" ]] || continue
-
+        for task_file in "$QUEUE_DIR"/*.imp.json; do
             # Process task (ignore errors, continue with next)
             process_task "$task_file" || log "ERROR: Failed to process $(basename "$task_file")"
         done

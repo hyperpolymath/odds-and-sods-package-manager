@@ -56,10 +56,11 @@ create_user() {
 }
 
 create_queue_dir() {
-    log "Creating HAR queue directory..."
-    mkdir -p /tmp/opsm-har-ingest/{results,processed}
-    chown -R opsm:opsm /tmp/opsm-har-ingest
-    chmod 755 /tmp/opsm-har-ingest
+    local queue_dir="${OPSM_HAR_QUEUE_DIR:-/tmp/opsm-har-ingest}"
+    log "Creating HAR queue directory at $queue_dir..."
+    mkdir -p "${queue_dir}"/{results,processed}
+    chown -R opsm:opsm "${queue_dir}"
+    chmod 755 "${queue_dir}"
 }
 
 install_services() {
