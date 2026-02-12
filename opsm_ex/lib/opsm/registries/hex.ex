@@ -30,10 +30,12 @@ defmodule Opsm.Registries.Hex do
           version
         end
 
-        # Fetch release-specific data to get dependencies
-        deps = fetch_release_deps(name, target_version)
+        # Fetch release-specific data to get dependencies and checksum
+        {deps, release_checksum} = fetch_release_data(name, target_version)
         release = Enum.find(releases, fn r -> r["version"] == target_version end)
-        {:ok, parse_package(body, release, target_version, deps)}
+        # Prefer checksum from release-specific endpoint (outer_checksum/checksum)
+        checksum = release_checksum || (if release, do: release["checksum"], else: nil)
+        {:ok, parse_package(body, checksum, target_version, deps)}
 
       {:error, :not_found} ->
         {:error, :not_found}
@@ -49,17 +51,15 @@ defmodule Opsm.Registries.Hex do
     end
   end
 
-  # Fetch dependencies from the release-specific API endpoint
-  defp fetch_release_deps(name, version) do
+  # Fetch dependencies and checksum from the release-specific API endpoint
+  defp fetch_release_data(name, version) do
     url = "#{@base_url}/packages/#{URI.encode(name)}/releases/#{version}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         requirements = body["requirements"] || %{}
-        # Convert hex requirements format to simple {name => constraint} map
-        Enum.reduce(requirements, %{}, fn {dep_name, req}, acc ->
+        deps = Enum.reduce(requirements, %{}, fn {dep_name, req}, acc ->
           constraint = req["requirement"] || ">= 0.0.0"
-          # Skip optional dependencies
           if req["optional"] do
             acc
           else
@@ -67,8 +67,12 @@ defmodule Opsm.Registries.Hex do
           end
         end)
 
+        # Extract checksum — Hex uses "checksum" (outer tarball checksum)
+        checksum = body["checksum"]
+        {deps, checksum}
+
       _ ->
-        %{}
+        {%{}, nil}
     end
   end
 
@@ -137,9 +141,8 @@ defmodule Opsm.Registries.Hex do
 
   # Parsers
 
-  defp parse_package(pkg, release, version, deps) do
+  defp parse_package(pkg, checksum, version, deps) do
     meta = pkg["meta"] || %{}
-    checksum = if release, do: release["checksum"], else: nil
 
     %ResolvedPackage{
       package: pkg["name"],

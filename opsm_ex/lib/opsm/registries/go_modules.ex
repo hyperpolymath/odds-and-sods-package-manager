@@ -35,7 +35,7 @@ defmodule Opsm.Registries.GoModules do
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             deps = fetch_go_mod_deps(encoded, ver)
-            ziphash = fetch_ziphash(encoded, ver)
+            ziphash = fetch_ziphash(name, ver)
             {:ok, parse_module(name, body, ver, deps, ziphash)}
 
           {:error, :not_found} ->
@@ -227,26 +227,52 @@ defmodule Opsm.Registries.GoModules do
     |> Enum.join()
   end
 
-  defp fetch_ziphash(encoded, version) do
-    url = "#{@proxy_url}/#{encoded}/@v/#{version}.ziphash"
+  @sum_db "https://sum.golang.org"
+
+  defp fetch_ziphash(name, version) do
+    # Use the Go checksum database (sum.golang.org) for zip hash
+    url = "#{@sum_db}/lookup/#{name}@#{version}"
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
-        parse_ziphash(String.trim(body))
+        parse_sum_db_hash(body, name, version)
       {:ok, body} when is_binary(body) ->
-        parse_ziphash(String.trim(body))
+        parse_sum_db_hash(body, name, version)
       _ -> nil
     end
   end
 
-  # Go ziphash format: "h1:<base64-encoded-sha256>"
-  # We convert to hex-encoded SHA256 for compatibility with our checksum system
-  defp parse_ziphash("h1:" <> b64_hash) do
-    case Base.decode64(b64_hash) do
+  # Parse sum.golang.org lookup response for the zip hash (h1: format)
+  # Format: "module version h1:<base64>\nmodule version/go.mod h1:<base64>\n..."
+  # We want the first line (zip hash), not the go.mod hash
+  defp parse_sum_db_hash(body, name, version) do
+    body
+    |> String.split("\n")
+    |> Enum.find_value(fn line ->
+      prefix = "#{name} #{version} h1:"
+      if String.starts_with?(line, prefix) do
+        "h1:" <> _ = String.trim_leading(line, "#{name} #{version} ")
+        parse_h1_hash(String.trim(line) |> String.split(" ") |> List.last())
+      end
+    end)
+  end
+
+  # Go h1 hash format: "h1:<base64-encoded-sha256>"
+  # Convert to hex-encoded SHA256 for compatibility with our checksum system
+  defp parse_h1_hash("h1:" <> b64_hash) do
+    b64_clean = String.trim_trailing(b64_hash, "=") |> pad_base64()
+    case Base.decode64(b64_clean) do
       {:ok, raw_hash} -> Base.encode16(raw_hash, case: :lower)
       :error -> nil
     end
   end
-  defp parse_ziphash(_), do: nil
+  defp parse_h1_hash(_), do: nil
+
+  defp pad_base64(s) do
+    case rem(String.length(s), 4) do
+      0 -> s
+      n -> s <> String.duplicate("=", 4 - n)
+    end
+  end
 
   # Parsers
 

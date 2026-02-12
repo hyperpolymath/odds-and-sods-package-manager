@@ -23,11 +23,23 @@ defmodule Opsm.Registries.NuGet do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         # Registration pages contain version catalogs
+        # Some pages inline items, others have only @id and need separate fetching
         items = body["items"] || []
         all_entries = items
           |> Enum.flat_map(fn page ->
-            # Some pages inline items, others need fetching
-            page["items"] || []
+            case page["items"] do
+              nil ->
+                # Page doesn't inline items — fetch the page by @id
+                case page["@id"] do
+                  nil -> []
+                  page_url ->
+                    case VerifiedHttp.get_json(page_url, receive_timeout: 10_000) do
+                      {:ok, page_body} -> page_body["items"] || []
+                      _ -> []
+                    end
+                end
+              inlined -> inlined
+            end
           end)
 
         target_version = if version == "latest" do
@@ -49,11 +61,15 @@ defmodule Opsm.Registries.NuGet do
           catalog["version"] == target_version
         end)
 
-        catalog = if entry, do: entry["catalogEntry"] || %{}, else: %{}
-        deps = extract_nuget_deps(catalog)
-        {hash, hash_algo} = extract_nuget_hash(catalog)
+        if is_nil(target_version) do
+          {:error, :not_found}
+        else
+          catalog = if entry, do: entry["catalogEntry"] || %{}, else: %{}
+          deps = extract_nuget_deps(catalog)
+          {hash, hash_algo} = extract_nuget_hash(catalog)
 
-        {:ok, parse_nuget_package(name, target_version, catalog, deps, hash, hash_algo)}
+          {:ok, parse_nuget_package(name, target_version, catalog, deps, hash, hash_algo)}
+        end
 
       {:error, :not_found} ->
         {:error, :not_found}
