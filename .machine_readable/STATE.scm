@@ -3,7 +3,7 @@
 
 (state
   (metadata
-    (version "1.2.0")
+    (version "1.3.0")
     (schema-version "1.0")
     (created "2026-01-18")
     (updated "2026-02-12")
@@ -17,49 +17,60 @@
 
   (current-position
     (phase "production")
-    (overall-completion 88)
-    (milestone "v1.2.0-registry-overhaul")
+    (overall-completion 93)
+    (milestone "v1.3.0-expanded-registries")
     (working-features
-      ("10 registry adapters (npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven)"
-       "Real dependency resolution across all 10 registries"
-       "Real package download, extraction, and installation with rollback"
+      ("34 registry adapters across all major ecosystems"
+       "Real dependency resolution across all registries"
+       "Topological sort for install order (Kahn's algorithm)"
+       "Real package download, extraction, and installation with batch rollback"
        "Package removal and installed package tracking (installed.json)"
-       "Lockfile generation and integrity verification"
+       "Lockfile generation and integrity verification with checksum verification"
        "PubGrub-based dependency resolver with semver, Python PEP 440, and Go MVS support"
+       "ETS-based registry cache with TTL for resolver performance"
        "Version constraint engine: caret, tilde, wildcard, comparison, AND/OR combinators"
        "Trust pipeline (5 microservices: claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)"
        "Container security pipeline (4 Rust services: svalinn, selur, vordr, cerro-torre)"
-       "HAR integration (3 agents: github-search, web-scraper, mirror-finder)"
+       "HAR integration (3 hardened agents: github-search, web-scraper, mirror-finder)"
        "Cryptographic security (Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512)"
        "Federation: 9 language forths + 9 system connection ports"
        "Manifest conversion (package.json, Cargo.toml, mix.exs, pyproject.toml, .ipkg, .ncl)"
        "Verified library (SSRF prevention, JSON DoS prevention, Result monad)"
        "Federation events (security advisories, package updates)"
        "Native toolchain delegation (npm, cargo, mix, pip, gem, go, dart)"
+       "Mobile wrapper (Tauri 2.x + ReScript TEA) with CSP and configurable API"
        "Deno-based CLI build (zero npm dependency)"
-       "335 core tests + 40 properties + 1 doctest, 0 failures"))
+       "329 core tests + 40 properties + 1 doctest, 0 failures"
+       "Safe atom conversion prevents atom table exhaustion"
+       "5 high-severity seams fixed (D1, D2, S1, S2, F1)"
+       "panic-attack assail scan: 0 actionable findings"))
+    (registries
+      ("npm" "cargo/crates" "hex/elixir" "pypi/python"
+       "rubygems/ruby" "go/golang" "pub/dart/flutter" "hackage/haskell"
+       "nuget/dotnet" "maven/java/kotlin"
+       "packagist/php/composer" "cpan/perl" "cran/r" "conda/anaconda"
+       "cocoapods/ios" "opam/ocaml" "clojars/clojure" "luarocks/lua"
+       "terraform/tf" "jsr/deno" "conan/cpp" "swift/spm" "elm" "vcpkg"
+       "julia/juliageneral"
+       "nimble/nim" "idris2" "git" "agentic"
+       "oblibeny" "my_lang" "julia_the_viper" "error_lang" "eclexia"))
     (recent-changes
-      ("2026-02-12: Added 6 new registry adapters (RubyGems, Go, Pub, Hackage, NuGet, Maven)"
-       "2026-02-12: Real package download and installation (not just dry-run)"
-       "2026-02-12: Go MVS semantics, pseudo-version support, quoted module names"
-       "2026-02-12: RubyGems v2 API (v1 dependencies endpoint dead)"
-       "2026-02-12: Maven POM XML dependency parsing"
-       "2026-02-12: Hackage cabal file parsing with GHC builtin filtering"
-       "2026-02-12: NuGet nuspec XML parsing"
-       "2026-02-12: Pub.dev dependency fetching"
-       "2026-02-12: Version constraint engine: Go v-prefix, 4-part Hackage versions"
-       "2026-02-12: All 4 OPSM microservices implemented (checky-monkey, palimpsest-license, oikos, cicd-hyper-a)"
-       "2026-02-12: Migrated CLI build from npm/npx to pure Deno"
-       "2026-02-12: Fixed ReScript shadowing warnings"
-       "2026-02-12: Implemented 7 CLI stub commands (remove, reinstall, etc.)"
-       "2026-02-11: URL validation fixes, phantom registry removal"
-       "2026-02-11: Real npm/hex/cargo/pypi dependency resolution"))
+      ("2026-02-12: Fixed 5 high-severity seams (D1, D2, S1, S2, F1)"
+       "2026-02-12: panic-attack assail scan — 0 actionable findings"
+       "2026-02-12: Added 15 new registry adapters (34 total)"
+       "2026-02-12: ETS-based registry cache with TTL"
+       "2026-02-12: Topological sort wired into installer correctly"
+       "2026-02-12: Performance: O(n) topo sort, MapSet-based unresolved tracking"
+       "2026-02-12: Mobile wrapper production-hardened (CSP, timeouts, configurable API)"
+       "2026-02-12: Shell scripts hardened (curl timeouts, path sanitization, nullglob)"
+       "2026-02-12: Enrolled in gitbot-fleet and echidna"
+       "2026-02-12: Atom exhaustion fix (String.to_existing_atom)"
+       "2026-02-12: Checksum verification wired for all registries"
+       "2026-02-12: Stress test passed 100+ packages across all registries"))
     (next-work
-      ("Complete mobile wrapper (Tauri 2.0 + ReScript TEA)"
-       "Real-world package testing (100+ packages across all registries)"
-       "Performance optimization for large dependency graphs"
-       "Topological sort for installation order"
-       "Checksum verification for all registries"
-       "Enroll in gitbot-fleet, echidna proofing"
-       "Run panic-attack assail for weak point scanning"
-       "v2.0: 100+ language adapters"))))
+      ("Implement stubbed CLI commands (reinstall, pin, unpin, history, clean)"
+       "Oikos sustainability scores integration in resolver"
+       "v2.0: Push toward 100+ registry adapters"
+       "Security Phase 2: Post-quantum crypto (Dilithium5, Kyber-1024)"
+       "SLSA Level 3 compliance"
+       "QUIC/HTTP3 client"))))
