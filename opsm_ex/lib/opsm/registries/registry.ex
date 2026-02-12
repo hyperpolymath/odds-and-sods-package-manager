@@ -8,11 +8,13 @@ defmodule Opsm.Registries.Registry do
 
   alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic,
     Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia,
-    RubyGems, GoModules, PubDev, Hackage, NuGet, Maven}
+    RubyGems, GoModules, PubDev, Hackage, NuGet, Maven,
+    Packagist, Cpan, Cran, Conda, CocoaPods, Opam, Clojars,
+    LuaRocks, Terraform, Jsr, Conan, SwiftPM, Elm, Vcpkg, JuliaGeneral}
   alias Opsm.Cache
 
   @registry_modules %{
-    # Major ecosystems
+    # Major ecosystems (10)
     npm: Npm,
     cargo: Crates,
     crates: Crates,
@@ -32,10 +34,43 @@ defmodule Opsm.Registries.Registry do
     haskell: Hackage,
     nuget: NuGet,
     dotnet: NuGet,
+    csharp: NuGet,
     maven: Maven,
     java: Maven,
     kotlin: Maven,
-    # Niche/custom ecosystems
+    # Expanded ecosystems (15)
+    packagist: Packagist,
+    php: Packagist,
+    composer: Packagist,
+    cpan: Cpan,
+    perl: Cpan,
+    metacpan: Cpan,
+    cran: Cran,
+    r: Cran,
+    conda: Conda,
+    anaconda: Conda,
+    cocoapods: CocoaPods,
+    pods: CocoaPods,
+    ios: CocoaPods,
+    opam: Opam,
+    ocaml: Opam,
+    clojars: Clojars,
+    clojure: Clojars,
+    luarocks: LuaRocks,
+    lua: LuaRocks,
+    terraform: Terraform,
+    tf: Terraform,
+    jsr: Jsr,
+    deno: Jsr,
+    conan: Conan,
+    cpp: Conan,
+    swift: SwiftPM,
+    spm: SwiftPM,
+    elm: Elm,
+    vcpkg: Vcpkg,
+    julia: JuliaGeneral,
+    juliageneral: JuliaGeneral,
+    # Niche/custom ecosystems (5)
     nimble: Nimble,
     nim: Nimble,
     idris2: Idris2,
@@ -115,7 +150,9 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def search_all(query, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
+                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -141,7 +178,9 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def exists_all?(package, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
+                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
     timeout = Keyword.get(opts, :timeout, 10_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -165,7 +204,9 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def fetch_all(package, version \\ "latest", opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
+                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
+                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->

@@ -306,7 +306,15 @@ defmodule Opsm.Validation do
 
   @known_forths ~w(npm hex cargo crates pypi gem go pub hackage nuget maven
                    deb rpm winget choco scoop pacman homebrew nix guix
-                   nimble idris2 git agentic)a
+                   nimble idris2 git agentic
+                   packagist php composer cpan perl metacpan cran r
+                   conda anaconda cocoapods pods ios opam ocaml
+                   clojars clojure luarocks lua terraform tf
+                   jsr deno conan cpp swift spm elm vcpkg
+                   julia juliageneral
+                   oblibeny obli my_lang mylang
+                   julia_the_viper viper error_lang error
+                   eclexia ecl)a
 
   @known_scopes ~w(user systemwide global)a
 
