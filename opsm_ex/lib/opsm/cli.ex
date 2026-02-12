@@ -1043,9 +1043,15 @@ defmodule Opsm.CLI do
           System.halt(1)
         end
 
+      "clear" ->
+        IO.puts("Clearing history...")
+        File.rm(Path.expand("~/.local/share/opsm/history.json"))
+        IO.puts("✓ History cleared")
+        System.halt(0)
+
       _ ->
         IO.puts("Unknown history action: #{action}")
-        IO.puts("Available: list, undo, info")
+        IO.puts("Available: list, undo, info, clear")
         System.halt(1)
     end
   end

@@ -160,6 +160,8 @@ defmodule Opsm.Maintenance do
   Undo the last operation (if possible).
   """
   def undo_last do
+    alias Opsm.Package.Installer
+
     case load_history() do
       [] ->
         {:error, "No history to undo"}
@@ -169,14 +171,32 @@ defmodule Opsm.Maintenance do
           "install" ->
             package = last["details"]["package"]
             IO.puts("Undoing: install #{package}")
-            IO.puts("⊘ Undo install not yet implemented")
-            {:ok, :would_remove, package}
+            case Installer.remove(package) do
+              :ok ->
+                record_history("undo_install", %{"package" => package, "undone_id" => last["id"]})
+                IO.puts("✓ Removed #{package}")
+                {:ok, :removed, package}
+              {:error, reason} ->
+                IO.puts("✗ Failed to undo install: #{reason}")
+                {:error, reason}
+            end
 
           "remove" ->
             package = last["details"]["package"]
+            forth_str = last["details"]["forth"] || "generic"
+            version = last["details"]["version"]
+            forth = Opsm.Validation.safe_to_forth(forth_str)
+
             IO.puts("Undoing: remove #{package}")
-            IO.puts("⊘ Undo remove not yet implemented")
-            {:ok, :would_reinstall, package}
+            case Installer.install(forth, package, version: version || "latest") do
+              {:ok, _} ->
+                record_history("undo_remove", %{"package" => package, "undone_id" => last["id"]})
+                IO.puts("✓ Reinstalled #{package}")
+                {:ok, :reinstalled, package}
+              {:error, reason} ->
+                IO.puts("✗ Failed to undo remove: #{inspect(reason)}")
+                {:error, reason}
+            end
 
           op ->
             {:error, "Cannot undo operation: #{op}"}
