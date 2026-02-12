@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Config.res - Configuration loading with SafeUrl validation
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

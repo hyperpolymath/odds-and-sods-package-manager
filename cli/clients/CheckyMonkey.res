@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// CheckyMonkey.res - Code verification client
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

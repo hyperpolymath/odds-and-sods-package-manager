@@ -36,15 +36,19 @@ defmodule Opsm.Package.Installer do
       IO.puts("Installing #{package_name}@#{version} from @#{forth}")
       IO.puts("")
 
-      # Check toolchain
-      case Federation.check_toolchain(forth) do
-        {:error, info} ->
-          error = Errors.missing_toolchain(forth, [info.message])
-          Errors.print_error(error)
-          {:error, :missing_toolchain}
+      # Check toolchain (skip for dry-run — resolution doesn't need local tools)
+      if dry_run do
+        do_install(forth, package_name, version, scope, dry_run)
+      else
+        case Federation.check_toolchain(forth) do
+          {:error, info} ->
+            error = Errors.missing_toolchain(forth, [info.message])
+            Errors.print_error(error)
+            {:error, :missing_toolchain}
 
-        _ ->
-          do_install(forth, package_name, version, scope, dry_run)
+          _ ->
+            do_install(forth, package_name, version, scope, dry_run)
+        end
       end
     else
       {:error, reason} ->
@@ -141,9 +145,12 @@ defmodule Opsm.Package.Installer do
   end
 
   defp install_resolved_packages(packages, scope, dry_run) do
-    # Install each package
+    # Sort packages in dependency order (dependencies first)
+    sorted = Opsm.TopoSort.sort(packages)
+
+    # Install each package in topological order
     results =
-      Enum.map(packages, fn {version, package} ->
+      Enum.map(sorted, fn {version, package} ->
         IO.puts("")
         IO.puts("Installing #{package.package}@#{version}...")
 
@@ -152,8 +159,8 @@ defmodule Opsm.Package.Installer do
         {:ok, trust_result} = Pipeline.verify(package)
 
         case handle_trust_result(trust_result, package, scope, dry_run) do
-          {:ok, _} -> {:ok, package}
           {:ok, :dry_run} -> {:ok, :dry_run}
+          {:ok, _} -> {:ok, package}
           {:error, reason} -> {:error, {package.package, reason}}
         end
       end)
@@ -190,16 +197,29 @@ defmodule Opsm.Package.Installer do
       end
 
     # Add each package to lockfile
+    # For packages without a registry-provided checksum, compute one from cache
     updated_lockfile =
       Enum.reduce(packages, lockfile, fn {version, pkg}, acc ->
         dep_names = Map.keys(pkg.manifest.dependencies || %{})
+
+        {checksum, algo} = if is_nil(pkg.checksum) do
+          # Compute checksum from cached download
+          cache_path = Downloader.cache_path_for(pkg)
+          if File.exists?(cache_path) do
+            {Downloader.compute_file_checksum(cache_path, :sha256), :sha256}
+          else
+            {nil, nil}
+          end
+        else
+          {pkg.checksum, pkg.checksum_algo}
+        end
 
         Lockfile.add_package(acc, %{
           name: pkg.package,
           version: version,
           forth: pkg.forth,
-          checksum: pkg.checksum,
-          checksum_algo: pkg.checksum_algo,
+          checksum: checksum,
+          checksum_algo: algo,
           source_url: pkg.tarball_url,
           dependencies: dep_names
         })
@@ -255,6 +275,12 @@ defmodule Opsm.Package.Installer do
       IO.puts("")
       case Downloader.download(package) do
         {:ok, tarball_path} ->
+          # Compute checksum post-download if registry didn't provide one
+          if is_nil(package.checksum) do
+            computed = Downloader.compute_file_checksum(tarball_path, :sha256)
+            IO.puts("  Computed SHA256: #{String.slice(computed, 0, 16)}...")
+          end
+
           # Track downloaded file in transaction
           txn = Transaction.record_file(txn, tarball_path)
 
@@ -316,6 +342,12 @@ defmodule Opsm.Package.Installer do
       :cargo -> unpack_crate(tarball_path, dest_path)
       :hex -> unpack_hex(tarball_path, dest_path)
       :pypi -> unpack_pypi(tarball_path, dest_path)
+      :gem -> unpack_gem(tarball_path, dest_path)
+      :go -> unpack_go_zip(tarball_path, dest_path)
+      :pub -> unpack_tarball(tarball_path, dest_path, strip: 1)
+      :hackage -> unpack_tarball(tarball_path, dest_path, strip: 1)
+      :nuget -> unpack_zip(tarball_path, dest_path)
+      :maven -> unpack_zip(tarball_path, dest_path)
       _ -> unpack_generic(tarball_path, dest_path)
     end
   end
@@ -384,19 +416,146 @@ defmodule Opsm.Package.Installer do
     end
   end
 
-  defp unpack_generic(tarball_path, dest_path) do
-    cmd = cond do
-      String.ends_with?(tarball_path, ".tar.gz") or String.ends_with?(tarball_path, ".tgz") ->
-        ["tar", ["-xzf", tarball_path, "-C", dest_path]]
-      String.ends_with?(tarball_path, ".tar") ->
-        ["tar", ["-xf", tarball_path, "-C", dest_path]]
-      String.ends_with?(tarball_path, ".zip") ->
-        ["unzip", ["-q", tarball_path, "-d", dest_path]]
-      true ->
-        ["tar", ["-xzf", tarball_path, "-C", dest_path]]
+  defp unpack_gem(tarball_path, dest_path) do
+    # Ruby gems are tar archives containing data.tar.gz + metadata.gz
+    tmp_dir = Path.join(System.tmp_dir!(), "opsm_gem_#{:rand.uniform(100000)}")
+    File.mkdir_p!(tmp_dir)
+
+    case Opsm.SafeExec.cmd("tar", ["-xf", tarball_path, "-C", tmp_dir], stderr_to_stdout: true) do
+      {_, 0} ->
+        data_tar = Path.join(tmp_dir, "data.tar.gz")
+        if File.exists?(data_tar) do
+          case Opsm.SafeExec.cmd("tar", ["-xzf", data_tar, "-C", dest_path], stderr_to_stdout: true) do
+            {_, 0} ->
+              File.rm_rf!(tmp_dir)
+              :ok
+            {error, _} ->
+              File.rm_rf!(tmp_dir)
+              {:error, error}
+          end
+        else
+          # Fallback: some gems are just tarballs
+          File.rm_rf!(tmp_dir)
+          unpack_tarball(tarball_path, dest_path, strip: 0)
+        end
+
+      {error, _} ->
+        File.rm_rf!(tmp_dir)
+        {:error, error}
+    end
+  end
+
+  defp unpack_go_zip(zip_path, dest_path) do
+    # Go module zips contain: module/path@version/ as the prefix
+    # e.g. github.com/fatih/color@v1.18.0/color.go
+    # Unzip to temp dir, find the versioned dir, move its contents to dest
+    tmp_dir = Path.join(System.tmp_dir!(), "opsm_go_#{:rand.uniform(100000)}")
+    File.mkdir_p!(tmp_dir)
+
+    case Opsm.SafeExec.cmd("unzip", ["-q", zip_path, "-d", tmp_dir], stderr_to_stdout: true) do
+      {_, 0} ->
+        # Find the deepest versioned directory (contains @v in name)
+        case find_go_module_root(tmp_dir) do
+          {:ok, module_root} ->
+            # Copy contents from the module root to dest
+            case File.ls(module_root) do
+              {:ok, files} ->
+                Enum.each(files, fn file ->
+                  src = Path.join(module_root, file)
+                  dst = Path.join(dest_path, file)
+                  # Use cp_r for directories
+                  if File.dir?(src) do
+                    File.cp_r!(src, dst)
+                  else
+                    File.cp!(src, dst)
+                  end
+                end)
+                File.rm_rf!(tmp_dir)
+                :ok
+              _ ->
+                File.rm_rf!(tmp_dir)
+                :ok
+            end
+
+          :error ->
+            # Fallback: just move everything from tmp to dest
+            case File.ls(tmp_dir) do
+              {:ok, files} ->
+                Enum.each(files, fn file ->
+                  src = Path.join(tmp_dir, file)
+                  dst = Path.join(dest_path, file)
+                  if File.dir?(src), do: File.cp_r!(src, dst), else: File.cp!(src, dst)
+                end)
+              _ -> :ok
+            end
+            File.rm_rf!(tmp_dir)
+            :ok
+        end
+
+      {error, _} ->
+        File.rm_rf!(tmp_dir)
+        {:error, error}
+    end
+  end
+
+  # Walk directory tree to find the Go module root (directory with @v in name)
+  defp find_go_module_root(dir) do
+    case File.ls(dir) do
+      {:ok, entries} ->
+        # Check if any entry has @v pattern (module@version format)
+        versioned = Enum.find(entries, fn entry ->
+          String.contains?(entry, "@v")
+        end)
+
+        if versioned do
+          {:ok, Path.join(dir, versioned)}
+        else
+          # Recurse into single subdirectory
+          subdirs = Enum.filter(entries, fn entry -> File.dir?(Path.join(dir, entry)) end)
+          case subdirs do
+            [single] -> find_go_module_root(Path.join(dir, single))
+            _ -> :error
+          end
+        end
+      _ -> :error
+    end
+  end
+
+  defp unpack_zip(zip_path, dest_path) do
+    case Opsm.SafeExec.cmd("unzip", ["-q", zip_path, "-d", dest_path], stderr_to_stdout: true) do
+      {_, 0} -> :ok
+      {error, _} -> {:error, error}
+    end
+  end
+
+  defp unpack_tarball(tarball_path, dest_path, opts) do
+    strip = Keyword.get(opts, :strip, 0)
+
+    args = if strip > 0 do
+      ["-xzf", tarball_path, "-C", dest_path, "--strip-components=#{strip}"]
+    else
+      ["-xzf", tarball_path, "-C", dest_path]
     end
 
-    case apply(System, :cmd, cmd ++ [[stderr_to_stdout: true]]) do
+    case Opsm.SafeExec.cmd("tar", args, stderr_to_stdout: true) do
+      {_, 0} -> :ok
+      {error, _} -> {:error, error}
+    end
+  end
+
+  defp unpack_generic(tarball_path, dest_path) do
+    {cmd, args} = cond do
+      String.ends_with?(tarball_path, ".tar.gz") or String.ends_with?(tarball_path, ".tgz") ->
+        {"tar", ["-xzf", tarball_path, "-C", dest_path]}
+      String.ends_with?(tarball_path, ".tar") ->
+        {"tar", ["-xf", tarball_path, "-C", dest_path]}
+      String.ends_with?(tarball_path, ".zip") or String.ends_with?(tarball_path, ".nupkg") ->
+        {"unzip", ["-q", tarball_path, "-d", dest_path]}
+      true ->
+        {"tar", ["-xzf", tarball_path, "-C", dest_path]}
+    end
+
+    case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end
@@ -470,6 +629,11 @@ defmodule Opsm.Package.Installer do
       :hex -> find_hex_bins(install_path)
       :pypi -> find_pypi_bins(install_path)
       :gem -> find_gem_bins(install_path)
+      :go -> find_go_bins(install_path)
+      :nuget -> find_nuget_bins(install_path)
+      :maven -> find_maven_bins(install_path)
+      :hackage -> find_hackage_bins(install_path)
+      :pub -> find_pub_bins(install_path)
       _ -> find_generic_bins(install_path)
     end
   end
@@ -565,6 +729,60 @@ defmodule Opsm.Package.Installer do
       File.dir?(bin_dir) -> list_executables(bin_dir)
       true -> []
     end
+  end
+
+  defp find_go_bins(install_path) do
+    # Go source packages need `go build` — check for cmd/ directory pattern
+    cmd_dir = Path.join(install_path, "cmd")
+    if File.dir?(cmd_dir) do
+      case File.ls(cmd_dir) do
+        {:ok, entries} ->
+          entries
+          |> Enum.map(&Path.join(cmd_dir, &1))
+          |> Enum.filter(&File.dir?/1)
+          |> Enum.flat_map(fn dir ->
+            # Check if the built binary exists alongside source
+            bin_name = Path.basename(dir)
+            built = Path.join(install_path, bin_name)
+            if File.exists?(built), do: [built], else: []
+          end)
+        _ -> []
+      end
+    else
+      find_in_bin_dir(install_path)
+    end
+  end
+
+  defp find_nuget_bins(install_path) do
+    # NuGet packages may have tools/ directory with executables
+    tools_dir = Path.join(install_path, "tools")
+    if File.dir?(tools_dir) do
+      list_executables(tools_dir)
+    else
+      find_in_bin_dir(install_path)
+    end
+  end
+
+  defp find_maven_bins(install_path) do
+    # Maven JARs don't have traditional executables
+    # Check for wrapper scripts in bin/
+    find_in_bin_dir(install_path)
+  end
+
+  defp find_hackage_bins(install_path) do
+    # Haskell packages need cabal build; check for pre-built executables
+    dist_dir = Path.join(install_path, "dist-newstyle")
+    if File.dir?(dist_dir) do
+      # Walk dist-newstyle for built executables
+      find_in_bin_dir(install_path)
+    else
+      find_in_bin_dir(install_path)
+    end
+  end
+
+  defp find_pub_bins(install_path) do
+    # Dart packages typically activated via `dart pub global activate`
+    find_in_bin_dir(install_path)
   end
 
   defp find_generic_bins(install_path) do

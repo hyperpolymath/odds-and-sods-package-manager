@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// CicdHyperA.res - Registry and CI/CD pipeline hub client
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

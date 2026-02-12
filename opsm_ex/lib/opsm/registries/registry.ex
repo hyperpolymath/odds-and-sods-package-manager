@@ -6,10 +6,13 @@ defmodule Opsm.Registries.Registry do
   Includes caching for improved performance.
   """
 
-  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic, Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia}
+  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic,
+    Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia,
+    RubyGems, GoModules, PubDev, Hackage, NuGet, Maven}
   alias Opsm.Cache
 
   @registry_modules %{
+    # Major ecosystems
     npm: Npm,
     cargo: Crates,
     crates: Crates,
@@ -17,6 +20,22 @@ defmodule Opsm.Registries.Registry do
     elixir: Hex,
     pypi: Pypi,
     python: Pypi,
+    gem: RubyGems,
+    rubygems: RubyGems,
+    ruby: RubyGems,
+    go: GoModules,
+    golang: GoModules,
+    pub: PubDev,
+    dart: PubDev,
+    flutter: PubDev,
+    hackage: Hackage,
+    haskell: Hackage,
+    nuget: NuGet,
+    dotnet: NuGet,
+    maven: Maven,
+    java: Maven,
+    kotlin: Maven,
+    # Niche/custom ecosystems
     nimble: Nimble,
     nim: Nimble,
     idris2: Idris2,
@@ -96,7 +115,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def search_all(query, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -122,7 +141,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def exists_all?(package, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
     timeout = Keyword.get(opts, :timeout, 10_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -146,7 +165,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def fetch_all(package, version \\ "latest", opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi])
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->

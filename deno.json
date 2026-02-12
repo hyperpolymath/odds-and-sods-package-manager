@@ -5,15 +5,15 @@
   "license": "PMPL-1.0",
   "exports": "./cli/Main.res.js",
   "tasks": {
-    "build": "npx rescript build",
-    "build:watch": "npx rescript build -w",
-    "clean": "npx rescript clean",
-    "dev": "npx rescript build && deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
+    "build": "deno run --allow-read --allow-write --allow-env --allow-sys --allow-run npm:rescript build",
+    "build:watch": "deno run --allow-read --allow-write --allow-env --allow-sys --allow-run npm:rescript build -w",
+    "clean": "deno run --allow-read --allow-write --allow-env --allow-sys --allow-run npm:rescript clean",
+    "dev": "deno task build && deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
     "opsm": "deno run --allow-read --allow-env --allow-net --allow-run cli/Main.res.js",
     "test": "deno test --allow-read --allow-env --allow-net",
     "lint": "deno lint cli/*.res.js cli/clients/*.res.js",
     "fmt": "deno fmt",
-    "check": "npx rescript build"
+    "check": "deno run --allow-read --allow-write --allow-env --allow-sys --allow-run npm:rescript build"
   },
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.0",

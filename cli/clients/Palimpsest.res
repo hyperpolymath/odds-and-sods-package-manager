@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Palimpsest.res - License analysis client
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

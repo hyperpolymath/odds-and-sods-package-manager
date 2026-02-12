@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Main.res - Entry point for OPSM CLI
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

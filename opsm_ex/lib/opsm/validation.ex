@@ -153,35 +153,36 @@ defmodule Opsm.Validation do
     if String.contains?(url, "::1") do
       {:error, "URL host is blocked (loopback)"}
     else
-      case URI.parse(url) do
-        %URI{scheme: scheme, host: host} when scheme != nil and host != nil ->
-          scheme_lower = String.downcase(scheme)
+      parsed = URI.parse(url)
 
-          cond do
-            scheme_lower in @dangerous_schemes ->
-              {:error, "URL scheme '#{scheme}' is not allowed for security reasons"}
+      cond do
+        is_nil(parsed.scheme) ->
+          {:error, "URL must have a scheme (https:// or http://)"}
 
-            scheme_lower not in @allowed_schemes ->
-              {:error, "URL scheme '#{scheme}' is not supported. Use https:// or http://"}
+        # Check dangerous schemes before host check (javascript:, data: have no host)
+        String.downcase(parsed.scheme) in @dangerous_schemes ->
+          {:error, "URL scheme '#{parsed.scheme}' is not allowed for security reasons"}
 
-            String.contains?(host, "..") ->
-              {:error, "URL host contains invalid sequence"}
+        is_nil(parsed.host) or parsed.host == "" ->
+          {:error, "URL must have a host"}
 
-            is_private_or_loopback_ip?(host) ->
-              {:error, "URL host is blocked (private/loopback)"}
+        String.downcase(parsed.scheme) not in @allowed_schemes ->
+          {:error, "URL scheme '#{parsed.scheme}' is not supported. Use https:// or http://"}
 
-            String.starts_with?(host, "169.254.") ->
-              {:error, "URL host is blocked (link-local)"}
+        String.contains?(parsed.host, "..") ->
+          {:error, "URL host contains invalid sequence"}
 
-            String.length(url) > 2048 ->
-              {:error, "URL too long (max 2048 characters)"}
+        is_private_or_loopback_ip?(parsed.host) ->
+          {:error, "URL host is blocked (private/loopback)"}
 
-            true ->
-              {:ok, url}
-          end
+        String.starts_with?(parsed.host, "169.254.") ->
+          {:error, "URL host is blocked (link-local)"}
 
-        _ ->
-          {:error, "Invalid URL format"}
+        String.length(url) > 2048 ->
+          {:error, "URL too long (max 2048 characters)"}
+
+        true ->
+          {:ok, url}
       end
     end
   end
@@ -273,5 +274,81 @@ defmodule Opsm.Validation do
   defp valid_for_registry?(name, :elixir), do: Regex.match?(@hex_pattern, name)
   defp valid_for_registry?(name, :pypi), do: Regex.match?(@pypi_pattern, name)
   defp valid_for_registry?(name, :python), do: Regex.match?(@pypi_pattern, name)
+  # Maven: groupId:artifactId (e.g., com.google.guava:guava)
+  defp valid_for_registry?(name, forth) when forth in [:maven, :java, :kotlin] do
+    Regex.match?(~r/^[a-zA-Z0-9._-]+(:[a-zA-Z0-9._-]+)?$/, name)
+  end
+  # Go: module paths (e.g., github.com/user/repo)
+  defp valid_for_registry?(name, forth) when forth in [:go, :golang] do
+    Regex.match?(~r|^[a-zA-Z0-9][a-zA-Z0-9._/-]*$|, name)
+  end
+  # RubyGems: alphanumeric with hyphens/underscores
+  defp valid_for_registry?(name, forth) when forth in [:gem, :rubygems, :ruby] do
+    Regex.match?(~r/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, name)
+  end
+  # Hackage: identifiers with hyphens
+  defp valid_for_registry?(name, forth) when forth in [:hackage, :haskell] do
+    Regex.match?(~r/^[a-zA-Z][a-zA-Z0-9-]*$/, name)
+  end
+  # NuGet: alphanumeric with dots/hyphens
+  defp valid_for_registry?(name, forth) when forth in [:nuget, :dotnet] do
+    Regex.match?(~r/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, name)
+  end
+  # pub.dev: lowercase with underscores
+  defp valid_for_registry?(name, forth) when forth in [:pub, :dart, :flutter] do
+    Regex.match?(~r/^[a-z][a-z0-9_]*$/, name)
+  end
   defp valid_for_registry?(name, _), do: Regex.match?(@generic_pattern, name)
+
+  # ===========================================================================
+  # Safe atom conversion (prevents atom table exhaustion)
+  # ===========================================================================
+
+  @known_forths ~w(npm hex cargo crates pypi gem go pub hackage nuget maven
+                   deb rpm winget choco scoop pacman homebrew nix guix
+                   nimble idris2 git agentic)a
+
+  @known_scopes ~w(user systemwide global)a
+
+  @doc """
+  Safely convert a string to a known forth atom.
+  Returns the atom if known, or {:error, reason} if not.
+  Prevents atom table exhaustion by only allowing pre-defined atoms.
+  """
+  def safe_to_forth(forth) when is_atom(forth), do: forth
+
+  def safe_to_forth(forth) when is_binary(forth) do
+    downcased = String.downcase(forth)
+    Enum.find(@known_forths, fn a -> Atom.to_string(a) == downcased end) || :unknown
+  end
+
+  def safe_to_forth(_), do: :unknown
+
+  @doc """
+  Safely convert a string to a known scope atom.
+  """
+  def safe_to_scope(scope) when is_atom(scope), do: scope
+
+  def safe_to_scope(scope) when is_binary(scope) do
+    downcased = String.downcase(scope)
+    Enum.find(@known_scopes, fn a -> Atom.to_string(a) == downcased end) || :user
+  end
+
+  def safe_to_scope(_), do: :user
+
+  @doc """
+  Safely convert a string to a known connection port target atom.
+  """
+  @known_targets ~w(npm cargo hex pypi gem go pub hackage nuget maven
+                     deb rpm winget choco scoop pacman homebrew nix guix
+                     flatpak snap toolbox distrobox)a
+
+  def safe_to_target(target) when is_atom(target), do: target
+
+  def safe_to_target(target) when is_binary(target) do
+    downcased = String.downcase(target)
+    Enum.find(@known_targets, fn a -> Atom.to_string(a) == downcased end) || :unknown
+  end
+
+  def safe_to_target(_), do: :unknown
 end

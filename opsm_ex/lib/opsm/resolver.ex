@@ -64,7 +64,8 @@ defmodule Opsm.Resolver do
   """
   def resolve(root_dependencies, opts \\ []) do
     forth = Keyword.get(opts, :forth, :npm)
-    max_depth = Keyword.get(opts, :max_depth, 50)
+    max_packages = Keyword.get(opts, :max_packages, 1000)
+    max_depth = Keyword.get(opts, :max_depth, 100)
     include_dev = Keyword.get(opts, :include_dev, false)
     sustainability = Keyword.get(opts, :sustainability_preference, false)
 
@@ -77,10 +78,11 @@ defmodule Opsm.Resolver do
       visited: MapSet.new(),
       # Configuration
       forth: forth,
+      max_packages: max_packages,
       max_depth: max_depth,
       include_dev: include_dev,
       sustainability: sustainability,
-      # Current recursion depth
+      # Current tree depth (reset per branch, for circular dep detection)
       depth: 0
     }
 
@@ -138,10 +140,10 @@ defmodule Opsm.Resolver do
   end
 
   defp try_versions(state, package_name, [version | rest], forth, constraints) do
-    # Check depth limit
-    if state.depth >= state.max_depth do
+    # Check total packages limit (prevents runaway resolution)
+    if map_size(state.resolved) >= state.max_packages do
       {:error,
-       "Maximum dependency depth (#{state.max_depth}) exceeded. Possible circular dependency involving #{package_name}."}
+       "Maximum package limit (#{state.max_packages}) exceeded while resolving #{package_name}. Resolution graph is too large."}
     else
       # Try to resolve with this version
       case resolve_with_version(state, package_name, version, forth) do
@@ -161,46 +163,51 @@ defmodule Opsm.Resolver do
   end
 
   defp resolve_with_version(state, package_name, version, forth) do
-    # Check for cycles
+    # Check for cycles using visited set
     key = "#{package_name}@#{version}"
 
-    if MapSet.member?(state.visited, key) do
-      {:conflict, "Circular dependency detected: #{key}"}
-    else
-      # Fetch package metadata
-      case Registry.fetch(forth, package_name, version) do
-        {:ok, resolved_pkg} ->
-          # Add to resolved set
-          new_state = %{
-            state
-            | resolved: Map.put(state.resolved, package_name, {version, resolved_pkg}),
-              visited: MapSet.put(state.visited, key),
-              depth: state.depth + 1
-          }
+    cond do
+      MapSet.member?(state.visited, key) ->
+        {:conflict, "Circular dependency detected: #{key}"}
 
-          # Add constraints from dependencies
-          deps = extract_dependencies(resolved_pkg.manifest, state.include_dev)
+      state.depth >= state.max_depth ->
+        {:conflict, "Dependency tree depth (#{state.max_depth}) exceeded at #{package_name}. Possible circular dependency."}
 
-          new_state_with_constraints =
-            Enum.reduce(deps, new_state, fn dep, acc ->
-              add_constraint(acc, dep.name, dep.constraint, dep.forth, package_name)
-            end)
+      true ->
+        # Fetch package metadata
+        case Registry.fetch(forth, package_name, version) do
+          {:ok, resolved_pkg} ->
+            # Add to resolved set, increment tree depth
+            new_state = %{
+              state
+              | resolved: Map.put(state.resolved, package_name, {version, resolved_pkg}),
+                visited: MapSet.put(state.visited, key),
+                depth: state.depth + 1
+            }
 
-          # Check if new constraints conflict with existing resolutions
-          case check_conflicts(new_state_with_constraints) do
-            :ok ->
-              {:ok, %{new_state_with_constraints | depth: state.depth + 1}}
+            # Add constraints from dependencies
+            deps = extract_dependencies(resolved_pkg.manifest, state.include_dev)
 
-            {:conflict, reason} ->
-              {:conflict, reason}
-          end
+            new_state_with_constraints =
+              Enum.reduce(deps, new_state, fn dep, acc ->
+                add_constraint(acc, dep.name, dep.constraint, dep.forth, package_name)
+              end)
 
-        {:error, :not_found} ->
-          {:conflict, "Package #{package_name}@#{version} not found in #{forth} registry"}
+            # Check if new constraints conflict with existing resolutions
+            case check_conflicts(new_state_with_constraints) do
+              :ok ->
+                {:ok, new_state_with_constraints}
 
-        {:error, reason} ->
-          {:error, "Failed to fetch #{package_name}@#{version}: #{reason}"}
-      end
+              {:conflict, reason} ->
+                {:conflict, reason}
+            end
+
+          {:error, :not_found} ->
+            {:conflict, "Package #{package_name}@#{version} not found in #{forth} registry"}
+
+          {:error, reason} ->
+            {:error, "Failed to fetch #{package_name}@#{version}: #{reason}"}
+        end
     end
   end
 
@@ -221,8 +228,8 @@ defmodule Opsm.Resolver do
     Enum.reduce_while(state.resolved, :ok, fn {pkg_name, {version, _resolved}}, _acc ->
       constraints = Map.get(state.constraints, pkg_name, [])
 
-      # Parse version
-      case Version.parse(version) do
+      # Parse version (lenient — handles Go v-prefix, Hackage 4-part, etc.)
+      case parse_version_lenient(version) do
         {:ok, _parsed_version} ->
           # Check if version satisfies all constraints
           violating =
@@ -297,9 +304,9 @@ defmodule Opsm.Resolver do
   end
 
   defp sort_versions(versions, _sustainability_preference = false) do
-    # Sort by semver (newest first)
+    # Sort by semver (newest first), with lenient parsing for non-semver formats
     Enum.sort(versions, fn v1, v2 ->
-      case {Version.parse(v1), Version.parse(v2)} do
+      case {parse_version_lenient(v1), parse_version_lenient(v2)} do
         {{:ok, ver1}, {:ok, ver2}} ->
           Version.compare(ver1, ver2) == :gt
 
@@ -353,6 +360,25 @@ defmodule Opsm.Resolver do
   # =============================================================================
   # Helpers
   # =============================================================================
+
+  # Lenient version parsing for non-semver formats (Go v-prefix, Hackage 4-part)
+  defp parse_version_lenient(version_string) do
+    normalized = version_string
+      |> String.trim_leading("v")
+      |> String.trim_leading("V")
+
+    case Version.parse(normalized) do
+      {:ok, version} -> {:ok, version}
+      :error ->
+        parts = String.split(normalized, ".")
+        if length(parts) > 3 do
+          truncated = parts |> Enum.take(3) |> Enum.join(".")
+          Version.parse(truncated)
+        else
+          :error
+        end
+    end
+  end
 
   defp infer_forth(state, package_name) do
     # Try to infer forth from constraints

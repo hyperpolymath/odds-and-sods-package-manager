@@ -146,7 +146,7 @@ defmodule Opsm.Registries.Oblibeny do
     end)
   end
 
-  defp git_versions(name) do
+  defp git_versions(_name) do
     # For git mode, versions are git tags
     # This requires git ls-remote or GitHub API
     {:ok, ["main", "master"]}  # Minimal fallback

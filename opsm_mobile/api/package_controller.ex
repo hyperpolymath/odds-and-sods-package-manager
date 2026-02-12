@@ -33,7 +33,7 @@ defmodule Opsm.Api.PackageController do
   def install(%{"package" => package_name} = params) do
     registry = params["registry"]
     version = params["version"] || "latest"
-    scope = String.to_atom(params["scope"] || "user")
+    scope = Opsm.Validation.safe_to_scope(params["scope"] || "user")
     dry_run = params["dry_run"] || false
 
     Logger.info("API: Installing #{package_name}@#{version} from @#{registry}")
@@ -44,7 +44,7 @@ defmodule Opsm.Api.PackageController do
         {:error, "registry parameter is required for API installs"}
 
       registry_str ->
-        registry_atom = String.to_atom(registry_str)
+        registry_atom = Opsm.Validation.safe_to_forth(registry_str)
 
         case Installer.install(registry_atom, package_name,
                version: version,
@@ -100,7 +100,7 @@ defmodule Opsm.Api.PackageController do
         end
 
       registry_str ->
-        registry_atom = String.to_atom(registry_str)
+        registry_atom = Opsm.Validation.safe_to_forth(registry_str)
 
         case Registry.search(registry_atom, query, limit: 20) do
           {:ok, results} ->
@@ -134,7 +134,7 @@ defmodule Opsm.Api.PackageController do
         {:error, "registry parameter is required for get_package_info"}
 
       registry_str ->
-        registry_atom = String.to_atom(registry_str)
+        registry_atom = Opsm.Validation.safe_to_forth(registry_str)
 
         case Registry.fetch(registry_atom, name) do
           {:ok, package_info} ->

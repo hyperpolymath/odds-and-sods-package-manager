@@ -1,558 +1,217 @@
-# SPDX-License-Identifier: PLMP-1.0-or-later
-# RSR-template-repo - RSR Standard Justfile Template
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# OPSM - Odds and Sods Package Manager
 # https://just.systems/man/en/
-#
-# This is the CANONICAL template for all RSR projects.
-# Copy this file to new projects and customize the {{PLACEHOLDER}} values.
-#
-# IMPORTANT: This file MUST be named "Justfile" (capital J) for RSR compliance.
-#
-# Run `just` to see all available recipes
-# Run `just cookbook` to generate docs/just-cookbook.adoc
-# Run `just combinations` to see matrix recipe options
 
 set shell := ["bash", "-uc"]
 set dotenv-load := true
 set positional-arguments := true
 
-# Project metadata - CUSTOMIZE THESE
-project := "RSR-template-repo"
-version := "0.1.0"
-tier := "infrastructure"  # 1 | 2 | infrastructure
+project := "opsm"
+version := "1.2.0"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DEFAULT & HELP
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Show all available recipes with descriptions
 default:
     @just --list --unsorted
 
-# Show detailed help for a specific recipe
-help recipe="":
+# ═══════════════════════════════════════════════════════════════════════════════
+# BUILD
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Build ReScript CLI
+build-cli:
+    deno task build
+
+# Build ReScript CLI in watch mode
+build-cli-watch:
+    deno task build:watch
+
+# Build Elixir escript (standalone binary)
+build-escript:
+    cd opsm_ex && mix deps.get && mix escript.build
+
+# Build Tauri mobile app (debug)
+build-mobile:
+    cd opsm_mobile/src-tauri && cargo build
+
+# Build Tauri mobile app (release)
+build-mobile-release:
+    cd opsm_mobile/src-tauri && cargo build --release
+
+# Build a specific Rust microservice
+build-service name:
+    cd services/{{name}} && cargo build
+
+# Build all Rust microservices
+build-services:
     #!/usr/bin/env bash
-    if [ -z "{{recipe}}" ]; then
-        just --list --unsorted
-        echo ""
-        echo "Usage: just help <recipe>"
-        echo "       just cookbook     # Generate full documentation"
-        echo "       just combinations # Show matrix recipes"
-    else
-        just --show "{{recipe}}" 2>/dev/null || echo "Recipe '{{recipe}}' not found"
-    fi
+    for svc in services/*/; do
+        svc_name=$(basename "$svc")
+        echo "Building $svc_name..."
+        (cd "$svc" && cargo build) || exit 1
+    done
 
-# Show this project's info
-info:
-    @echo "Project: {{project}}"
-    @echo "Version: {{version}}"
-    @echo "RSR Tier: {{tier}}"
-    @echo "Recipes: $(just --summary | wc -w)"
-    @[ -f STATE.scm ] && grep -oP '\(phase\s+\.\s+\K[^)]+' STATE.scm | head -1 | xargs -I{} echo "Phase: {}" || true
+# Build everything
+build: build-cli build-escript
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# BUILD & COMPILE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Build the project (debug mode)
-build *args:
-    @echo "Building {{project}}..."
-    # TODO: Add build command for your language
-    # Rust: cargo build {{args}}
-    # ReScript: npm run build
-    # Elixir: mix compile
-
-# Build in release mode with optimizations
-build-release *args:
-    @echo "Building {{project}} (release)..."
-    # TODO: Add release build command
-    # Rust: cargo build --release {{args}}
-
-# Build and watch for changes
-build-watch:
-    @echo "Watching for changes..."
-    # TODO: Add watch command
-    # Rust: cargo watch -x build
-    # ReScript: npm run watch
-
-# Clean build artifacts [reversible: rebuild with `just build`]
+# Clean all build artifacts
 clean:
-    @echo "Cleaning..."
-    rm -rf target _build dist lib node_modules
-
-# Deep clean including caches [reversible: rebuild]
-clean-all: clean
-    rm -rf .cache .tmp
+    deno task clean
+    cd opsm_ex && mix clean
+    rm -rf opsm_ex/opsm
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST & QUALITY
+# TEST
 # ═══════════════════════════════════════════════════════════════════════════════
+
+# Run Elixir tests
+test *args:
+    cd opsm_ex && mix test {{args}}
+
+# Run Elixir tests with verbose output
+test-verbose:
+    cd opsm_ex && mix test --trace
+
+# Run Deno tests
+test-cli:
+    deno task test
 
 # Run all tests
-test *args:
-    @echo "Running tests..."
-    # TODO: Add test command
-    # Rust: cargo test {{args}}
-    # ReScript: npm test
-    # Elixir: mix test
-
-# Run tests with verbose output
-test-verbose:
-    @echo "Running tests (verbose)..."
-    # TODO: Add verbose test
-
-# Run tests and generate coverage report
-test-coverage:
-    @echo "Running tests with coverage..."
-    # TODO: Add coverage command
-    # Rust: cargo llvm-cov
+test-all: test test-cli
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LINT & FORMAT
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Format all source files [reversible: git checkout]
-fmt:
-    @echo "Formatting..."
-    # TODO: Add format command
-    # Rust: cargo fmt
-    # ReScript: npm run format
-    # Elixir: mix format
+# Format Elixir code
+fmt-ex:
+    cd opsm_ex && mix format
 
-# Check formatting without changes
-fmt-check:
-    @echo "Checking format..."
-    # TODO: Add format check
-    # Rust: cargo fmt --check
+# Format with Deno
+fmt-deno:
+    deno fmt
 
-# Run linter
+# Lint ReScript output with Deno
 lint:
-    @echo "Linting..."
-    # TODO: Add lint command
-    # Rust: cargo clippy -- -D warnings
+    deno lint cli/*.res.js cli/clients/*.res.js
 
-# Run all quality checks
-quality: fmt-check lint test
-    @echo "All quality checks passed!"
+# Check Elixir format
+fmt-check:
+    cd opsm_ex && mix format --check-formatted
 
-# Fix all auto-fixable issues [reversible: git checkout]
-fix: fmt
-    @echo "Fixed all auto-fixable issues"
+# Format all code
+fmt: fmt-ex fmt-deno
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# RUN & EXECUTE
+# RUN
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Run the application
-run *args:
-    @echo "Running {{project}}..."
-    # TODO: Add run command
-    # Rust: cargo run {{args}}
+# Run OPSM via escript (primary CLI)
+opsm *args:
+    cd opsm_ex && ./opsm {{args}}
 
-# Run in developsment mode with hot reload
-dev:
-    @echo "Starting dev mode..."
-    # TODO: Add dev command
+# Run OPSM via Deno (ReScript CLI — trust pipeline)
+opsm-cli *args:
+    deno task opsm -- {{args}}
 
-# Run REPL/interactive mode
+# Run OPSM Elixir in dev mode with IEx
 repl:
-    @echo "Starting REPL..."
-    # TODO: Add REPL command
-    # Elixir: iex -S mix
-    # Guile: guix shell guile -- guile
+    cd opsm_ex && iex -S mix
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PACKAGE OPERATIONS (shortcuts)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Install a package (dry-run)
+install-dry forth pkg:
+    cd opsm_ex && ./opsm install @{{forth}} {{pkg}} --dry-run
+
+# Search across all registries
+search query:
+    cd opsm_ex && ./opsm search {{query}}
+
+# Show package info
+info forth pkg:
+    cd opsm_ex && ./opsm info @{{forth}} {{pkg}}
+
+# Check for updates
+check-updates:
+    cd opsm_ex && ./opsm check-update
+
+# Verify lockfile integrity
+verify:
+    cd opsm_ex && ./opsm check
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DEPENDENCIES
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Install Elixir dependencies
+deps-ex:
+    cd opsm_ex && mix deps.get
+
 # Install all dependencies
-deps:
-    @echo "Installing dependencies..."
-    # TODO: Add deps command
-    # Rust: (automatic with cargo)
-    # ReScript: npm install
-    # Elixir: mix deps.get
+deps: deps-ex
+    @echo "Deno deps auto-resolved via import maps"
 
-# Audit dependencies for vulnerabilities
+# Audit Elixir dependencies
 deps-audit:
-    @echo "Auditing dependencies..."
-    # TODO: Add audit command
-    # Rust: cargo audit
+    cd opsm_ex && mix hex.audit
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# DOCUMENTATION
+# CONTAINERS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Generate all documentation
-docs:
-    @mkdir -p docs/generated docs/man
-    just cookbook
-    just man
-    @echo "Documentation generated in docs/"
+# Build a service container image
+container-build service tag="latest":
+    podman build -t {{project}}-{{service}}:{{tag}} -f services/{{service}}/Containerfile services/{{service}}/
 
-# Generate justfile cookbook documentation
-cookbook:
-    #!/usr/bin/env bash
-    mkdir -p docs
-    OUTPUT="docs/just-cookbook.adoc"
-    echo "= {{project}} Justfile Cookbook" > "$OUTPUT"
-    echo ":toc: left" >> "$OUTPUT"
-    echo ":toclevels: 3" >> "$OUTPUT"
-    echo "" >> "$OUTPUT"
-    echo "Generated: $(date -Iseconds)" >> "$OUTPUT"
-    echo "" >> "$OUTPUT"
-    echo "== Recipes" >> "$OUTPUT"
-    echo "" >> "$OUTPUT"
-    just --list --unsorted | while read -r line; do
-        if [[ "$line" =~ ^[[:space:]]+([a-z_-]+) ]]; then
-            recipe="${BASH_REMATCH[1]}"
-            echo "=== $recipe" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-            echo "[source,bash]" >> "$OUTPUT"
-            echo "----" >> "$OUTPUT"
-            echo "just $recipe" >> "$OUTPUT"
-            echo "----" >> "$OUTPUT"
-            echo "" >> "$OUTPUT"
-        fi
-    done
-    echo "Generated: $OUTPUT"
-
-# Generate man page
-man:
-    #!/usr/bin/env bash
-    mkdir -p docs/man
-    cat > docs/man/{{project}}.1 << EOF
-.TH RSR-TEMPLATE-REPO 1 "$(date +%Y-%m-%d)" "{{version}}" "RSR Template Manual"
-.SH NAME
-{{project}} \- RSR standard repository template
-.SH SYNOPSIS
-.B just
-[recipe] [args...]
-.SH DESCRIPTION
-Canonical template for RSR (Rhodium Standard Repository) projects.
-.SH AUTHOR
-Hyperpolymath <hyperpolymath@proton.me>
-EOF
-    echo "Generated: docs/man/{{project}}.1"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONTAINERS (nerdctl-first, podman-fallback)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Detect container runtime: nerdctl > podman > docker
-[private]
-container-cmd:
-    #!/usr/bin/env bash
-    if command -v nerdctl >/dev/null 2>&1; then
-        echo "nerdctl"
-    elif command -v podman >/dev/null 2>&1; then
-        echo "podman"
-    elif command -v docker >/dev/null 2>&1; then
-        echo "docker"
-    else
-        echo "ERROR: No container runtime found (install nerdctl, podman, or docker)" >&2
-        exit 1
-    fi
-
-# Build container image
-container-build tag="latest":
-    #!/usr/bin/env bash
-    CTR=$(just container-cmd)
-    if [ -f Containerfile ]; then
-        echo "Building with $CTR..."
-        $CTR build -t {{project}}:{{tag}} -f Containerfile .
-    else
-        echo "No Containerfile found"
-    fi
-
-# Run container
-container-run tag="latest" *args:
-    #!/usr/bin/env bash
-    CTR=$(just container-cmd)
-    $CTR run --rm -it {{project}}:{{tag}} {{args}}
-
-# Push container image
-container-push registry="ghcr.io/hyperpolymath" tag="latest":
-    #!/usr/bin/env bash
-    CTR=$(just container-cmd)
-    $CTR tag {{project}}:{{tag}} {{registry}}/{{project}}:{{tag}}
-    $CTR push {{registry}}/{{project}}:{{tag}}
-
-# Scan container image with Svalinn
-container-scan image tag="latest":
-    #!/usr/bin/env bash
-    echo "Scanning {{image}}:{{tag}} for vulnerabilities..."
-    curl -X POST http://localhost:8085/scan \
-        -H "Content-Type: application/json" \
-        -d '{"image": "{{image}}:{{tag}}", "scanners": ["trivy", "grype"], "severity_threshold": "medium"}'
-
-# Sign container image with Selur
-container-sign image tag="latest" key="/keys/signing.key":
-    #!/usr/bin/env bash
-    echo "Signing {{image}}:{{tag}}..."
-    curl -X POST http://localhost:8086/sign \
-        -H "Content-Type: application/json" \
-        -d '{"image": "{{image}}:{{tag}}", "key_path": "{{key}}", "method": "cosign"}'
-
-# Verify container image signature with Selur
-container-verify image tag="latest" pubkey="/keys/signing.pub":
-    #!/usr/bin/env bash
-    echo "Verifying {{image}}:{{tag}}..."
-    curl -X POST http://localhost:8086/verify \
-        -H "Content-Type: application/json" \
-        -d '{"image": "{{image}}:{{tag}}", "public_key_path": "{{pubkey}}", "method": "cosign"}'
-
-# Full container security pipeline: build, scan, sign, push
-container-pipeline tag="latest" registry="ghcr.io/hyperpolymath":
-    just container-build {{tag}}
-    just container-scan {{project}} {{tag}}
-    just container-sign {{project}} {{tag}}
-    just container-push {{registry}} {{tag}}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# SELUR-COMPOSE (Secure Container Orchestration)
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Detect compose runtime: selur-compose > docker-compose > podman-compose
-[private]
-compose-cmd:
-    #!/usr/bin/env bash
-    if command -v selur-compose >/dev/null 2>&1; then
-        echo "selur-compose"
-    elif command -v docker-compose >/dev/null 2>&1; then
-        echo "docker-compose"
-    elif command -v podman-compose >/dev/null 2>&1; then
-        echo "podman-compose"
-    else
-        echo "ERROR: No compose runtime found (install selur-compose, docker-compose, or podman-compose)" >&2
-        exit 1
-    fi
-
-# Start all OPSM services with selur-compose
+# Start all OPSM services
 compose-up *args:
     #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    echo "Starting OPSM services with $COMPOSE..."
-    $COMPOSE -f selur-compose.yml up {{args}}
+    if command -v selur-compose >/dev/null 2>&1; then
+        selur-compose -f selur-compose.yml up {{args}}
+    elif command -v podman-compose >/dev/null 2>&1; then
+        podman-compose -f selur-compose.yml up {{args}}
+    else
+        echo "Install selur-compose or podman-compose"
+        exit 1
+    fi
 
 # Stop all OPSM services
 compose-down:
     #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml down
-
-# View logs from all services
-compose-logs service="" *args:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml logs {{service}} {{args}}
-
-# Restart specific service
-compose-restart service:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml restart {{service}}
-
-# Execute command in service container
-compose-exec service *cmd:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml exec {{service}} {{cmd}}
-
-# Show status of all services
-compose-ps:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml ps
-
-# Build all service images
-compose-build *args:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml build {{args}}
-
-# Pull all service images
-compose-pull:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml pull
-
-# Validate selur-compose configuration
-compose-validate:
-    #!/usr/bin/env bash
-    COMPOSE=$(just compose-cmd)
-    $COMPOSE -f selur-compose.yml config
-
-# Full stack deployment: build, scan, sign, deploy
-compose-deploy:
-    @echo "=== OPSM Full Stack Deployment ==="
-    just compose-build
-    @echo "\n=== Scanning images... ==="
-    just container-scan opsm latest
-    just container-scan claim-forge latest
-    just container-scan checky-monkey latest
-    @echo "\n=== Signing images... ==="
-    just container-sign opsm latest
-    just container-sign claim-forge latest
-    just container-sign checky-monkey latest
-    @echo "\n=== Deploying stack... ==="
-    just compose-up -d
-    @echo "\n=== Deployment complete! ==="
-    just compose-ps
+    if command -v selur-compose >/dev/null 2>&1; then
+        selur-compose -f selur-compose.yml down
+    elif command -v podman-compose >/dev/null 2>&1; then
+        podman-compose -f selur-compose.yml down
+    fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# CI & AUTOMATION
+# CI & QUALITY
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Run full CI pipeline locally
-ci: deps quality
+ci: deps build test lint fmt-check
     @echo "CI pipeline complete!"
 
-# Install git hooks
-install-hooks:
-    @mkdir -p .git/hooks
-    @cat > .git/hooks/pre-commit << 'EOF'
-#!/bin/bash
-just fmt-check || exit 1
-just lint || exit 1
-EOF
-    @chmod +x .git/hooks/pre-commit
-    @echo "Git hooks installed"
-
 # ═══════════════════════════════════════════════════════════════════════════════
-# SECURITY
+# UTILITIES
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Run security audit
-security: deps-audit
-    @echo "=== Security Audit ==="
-    @command -v gitleaks >/dev/null && gitleaks detect --source . --verbose || true
-    @command -v trivy >/dev/null && trivy fs --severity HIGH,CRITICAL . || true
-    @echo "Security audit complete"
+# Count lines of code
+loc:
+    @echo "=== OPSM Lines of Code ==="
+    @echo -n "Elixir: " && find opsm_ex/lib -name "*.ex" | xargs wc -l 2>/dev/null | tail -1
+    @echo -n "ReScript: " && find cli -name "*.res" | xargs wc -l 2>/dev/null | tail -1
+    @echo -n "Rust (services): " && find services -name "*.rs" | xargs wc -l 2>/dev/null | tail -1
+    @echo -n "Rust (mobile): " && find opsm_mobile -name "*.rs" | xargs wc -l 2>/dev/null | tail -1
 
-# Generate SBOM
-sbom:
-    @mkdir -p docs/security
-    @command -v syft >/dev/null && syft . -o spdx-json > docs/security/sbom.spdx.json || echo "syft not found"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# VALIDATION & COMPLIANCE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Validate RSR compliance
-validate-rsr:
-    #!/usr/bin/env bash
-    echo "=== RSR Compliance Check ==="
-    MISSING=""
-    for f in .editorconfig .gitignore Justfile RSR_COMPLIANCE.adoc README.adoc; do
-        [ -f "$f" ] || MISSING="$MISSING $f"
-    done
-    for d in .well-known; do
-        [ -d "$d" ] || MISSING="$MISSING $d/"
-    done
-    for f in .well-known/security.txt .well-known/ai.txt .well-known/humans.txt; do
-        [ -f "$f" ] || MISSING="$MISSING $f"
-    done
-    if [ ! -f "guix.scm" ] && [ ! -f ".guix-channel" ] && [ ! -f "flake.nix" ]; then
-        MISSING="$MISSING guix.scm/flake.nix"
-    fi
-    if [ -n "$MISSING" ]; then
-        echo "MISSING:$MISSING"
-        exit 1
-    fi
-    echo "RSR compliance: PASS"
-
-# Validate STATE.scm syntax
-validate-state:
-    @if [ -f "STATE.scm" ]; then \
-        guile -c "(primitive-load \"STATE.scm\")" 2>/dev/null && echo "STATE.scm: valid" || echo "STATE.scm: INVALID"; \
-    else \
-        echo "No STATE.scm found"; \
-    fi
-
-# Full validation suite
-validate: validate-rsr validate-state
-    @echo "All validations passed!"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# STATE MANAGEMENT
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Update STATE.scm timestamp
-state-touch:
-    @if [ -f "STATE.scm" ]; then \
-        sed -i 's/(updated . "[^"]*")/(updated . "'"$(date -Iseconds)"'")/' STATE.scm && \
-        echo "STATE.scm timestamp updated"; \
-    fi
-
-# Show current phase from STATE.scm
-state-phase:
-    @grep -oP '\(phase\s+\.\s+\K[^)]+' STATE.scm 2>/dev/null | head -1 || echo "unknown"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# GUIX & NIX
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Enter Guix developsment shell (primary)
-guix-shell:
-    guix shell -D -f guix.scm
-
-# Build with Guix
-guix-build:
-    guix build -f guix.scm
-
-# Enter Nix developsment shell (fallback)
-nix-shell:
-    @if [ -f "flake.nix" ]; then nix develop; else echo "No flake.nix"; fi
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# HYBRID AUTOMATION
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Run local automation tasks
-automate task="all":
-    #!/usr/bin/env bash
-    case "{{task}}" in
-        all) just fmt && just lint && just test && just docs && just state-touch ;;
-        cleanup) just clean && find . -name "*.orig" -delete && find . -name "*~" -delete ;;
-        update) just deps && just validate ;;
-        *) echo "Unknown: {{task}}. Use: all, cleanup, update" && exit 1 ;;
-    esac
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# COMBINATORIC MATRIX RECIPES
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Build matrix: [debug|release] × [target] × [features]
-build-matrix mode="debug" target="" features="":
-    @echo "Build matrix: mode={{mode}} target={{target}} features={{features}}"
-    # Customize for your build system
-
-# Test matrix: [unit|integration|e2e|all] × [verbosity] × [parallel]
-test-matrix suite="unit" verbosity="normal" parallel="true":
-    @echo "Test matrix: suite={{suite}} verbosity={{verbosity}} parallel={{parallel}}"
-
-# Container matrix: [build|run|push|shell|scan] × [registry] × [tag]
-container-matrix action="build" registry="ghcr.io/hyperpolymath" tag="latest":
-    @echo "Container matrix: action={{action}} registry={{registry}} tag={{tag}}"
-
-# CI matrix: [lint|test|build|security|all] × [quick|full]
-ci-matrix stage="all" depth="quick":
-    @echo "CI matrix: stage={{stage}} depth={{depth}}"
-
-# Show all matrix combinations
-combinations:
-    @echo "=== Combinatoric Matrix Recipes ==="
-    @echo ""
-    @echo "Build Matrix: just build-matrix [debug|release] [target] [features]"
-    @echo "Test Matrix:  just test-matrix [unit|integration|e2e|all] [verbosity] [parallel]"
-    @echo "Container:    just container-matrix [build|run|push|shell|scan] [registry] [tag]"
-    @echo "CI Matrix:    just ci-matrix [lint|test|build|security|all] [quick|full]"
-    @echo ""
-    @echo "Total combinations: ~10 billion"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# VERSION CONTROL
-# ═══════════════════════════════════════════════════════════════════════════════
+# Show TODO comments
+todos:
+    @grep -rn "TODO\|FIXME" --include="*.ex" --include="*.res" --include="*.rs" . 2>/dev/null | grep -v node_modules | grep -v _build | grep -v target || echo "No TODOs"
 
 # Show git status
 status:
@@ -561,19 +220,3 @@ status:
 # Show recent commits
 log count="20":
     @git log --oneline -{{count}}
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# UTILITIES
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Count lines of code
-loc:
-    @find . \( -name "*.rs" -o -name "*.ex" -o -name "*.res" -o -name "*.ncl" -o -name "*.scm" \) 2>/dev/null | xargs wc -l 2>/dev/null | tail -1 || echo "0"
-
-# Show TODO comments
-todos:
-    @grep -rn "TODO\|FIXME" --include="*.rs" --include="*.ex" --include="*.res" . 2>/dev/null || echo "No TODOs"
-
-# Open in editor
-edit:
-    ${EDITOR:-code} .

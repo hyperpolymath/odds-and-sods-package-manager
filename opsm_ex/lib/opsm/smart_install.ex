@@ -324,12 +324,12 @@ defmodule Opsm.SmartInstall do
       String.starts_with?(pkg, "@") and String.contains?(pkg, "/") ->
         "@" <> rest = pkg
         [forth, name] = String.split(rest, "/", parts: 2)
-        {:ok, String.to_atom(forth), name}
+        {:ok, Opsm.Validation.safe_to_forth(forth), name}
 
       String.starts_with?(pkg, "@") and String.contains?(pkg, ":") ->
         "@" <> rest = pkg
         [forth, name] = String.split(rest, ":", parts: 2)
-        {:ok, String.to_atom(forth), name}
+        {:ok, Opsm.Validation.safe_to_forth(forth), name}
 
       true ->
         {:error, "native backend requires @forth:pkg or @forth/pkg prefix"}

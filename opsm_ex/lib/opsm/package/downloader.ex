@@ -65,8 +65,14 @@ defmodule Opsm.Package.Downloader do
     version = package.version
     ext = extension_for(forth)
 
+    # Sanitize package name for filesystem (Go paths contain slashes, Maven uses colons)
+    safe_name = name
+      |> String.replace("/", "--")
+      |> String.replace(":", "--")
+      |> String.replace("@", "_at_")
+
     ensure_cache_dir()
-    Path.join([@cache_dir, to_string(forth), "#{name}-#{version}#{ext}"])
+    Path.join([@cache_dir, to_string(forth), "#{safe_name}-#{version}#{ext}"])
   end
 
   @doc """
@@ -198,9 +204,18 @@ defmodule Opsm.Package.Downloader do
     end
   end
 
+  @doc """
+  Compute the checksum of a file.
+  Public API for use by installer when registry didn't provide a checksum.
+  """
+  def compute_file_checksum(path, algo \\ :sha256) do
+    compute_checksum(path, algo)
+  end
+
   defp compute_checksum(path, algo) do
     hash_algo = case algo do
       :sha256 -> :sha256
+      :sha512 -> :sha512
       :sha1 -> :sha
       :md5 -> :md5
       _ -> :sha256
@@ -219,6 +234,11 @@ defmodule Opsm.Package.Downloader do
   defp extension_for(:hex), do: ".tar"
   defp extension_for(:pypi), do: ".tar.gz"
   defp extension_for(:gem), do: ".gem"
+  defp extension_for(:go), do: ".zip"
+  defp extension_for(:pub), do: ".tar.gz"
+  defp extension_for(:hackage), do: ".tar.gz"
+  defp extension_for(:nuget), do: ".nupkg"
+  defp extension_for(:maven), do: ".jar"
   defp extension_for(_), do: ".tar.gz"
 
   defp ensure_cache_dir do

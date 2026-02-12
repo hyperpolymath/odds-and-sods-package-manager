@@ -66,11 +66,15 @@ defmodule Opsm.VersionConstraint do
   def parse(constraint_string, constraint_type) when is_binary(constraint_string) do
     constraint_string = String.trim(constraint_string)
 
-    case constraint_type do
-      :semver -> parse_semver(constraint_string)
-      :python -> parse_python(constraint_string)
-      :exact -> parse_exact(constraint_string)
-      _ -> {:error, "Unknown constraint type: #{constraint_type}"}
+    try do
+      case constraint_type do
+        :semver -> parse_semver(constraint_string)
+        :python -> parse_python(constraint_string)
+        :exact -> parse_exact(constraint_string)
+        _ -> {:error, "Unknown constraint type: #{constraint_type}"}
+      end
+    rescue
+      _ -> {:error, "Unable to parse constraint: #{constraint_string}"}
     end
   end
 
@@ -87,9 +91,37 @@ defmodule Opsm.VersionConstraint do
       false
   """
   def satisfies?(version_string, %__MODULE__{} = constraint) when is_binary(version_string) do
-    case Version.parse(version_string) do
-      {:ok, version} -> evaluate_constraint(version, constraint.ast)
-      :error -> false
+    # Handle {:any} constraint first — any version satisfies wildcard
+    if constraint.ast == {:any} do
+      true
+    else
+      case parse_version_lenient(version_string) do
+        {:ok, version} -> evaluate_constraint(version, constraint.ast)
+        :error -> false
+      end
+    end
+  end
+
+  # Parse version string leniently, handling non-semver formats:
+  # - Go: "v1.2.3" → strip "v" prefix
+  # - Hackage: "2.2.3.0" → take first 3 segments
+  # - Pre-release: "1.2.3-beta.1" → standard semver
+  defp parse_version_lenient(version_string) do
+    normalized = version_string
+      |> String.trim_leading("v")
+      |> String.trim_leading("V")
+
+    case Version.parse(normalized) do
+      {:ok, version} -> {:ok, version}
+      :error ->
+        # Try truncating to 3 segments (handles Hackage 4-part versions)
+        parts = String.split(normalized, ".")
+        if length(parts) > 3 do
+          truncated = parts |> Enum.take(3) |> Enum.join(".")
+          Version.parse(truncated)
+        else
+          :error
+        end
     end
   end
 
@@ -154,9 +186,11 @@ defmodule Opsm.VersionConstraint do
       String.contains?(str, "x") or String.contains?(str, "X") or String.contains?(str, "*") ->
         parse_wildcard(str)
 
-      # Exact version: 1.2.3
+      # Exact version: 1.2.3 or v1.2.3 (Go-style)
       true ->
-        case Version.parse(str) do
+        normalized = str |> String.trim_leading("v") |> String.trim_leading("V") |> normalize_version()
+
+        case Version.parse(normalized) do
           {:ok, version} ->
             {:ok,
              %__MODULE__{
@@ -172,7 +206,7 @@ defmodule Opsm.VersionConstraint do
   end
 
   defp parse_comparison(op, version_str, original) do
-    normalized = normalize_version(String.trim(version_str))
+    normalized = version_str |> String.trim() |> String.trim_leading("v") |> String.trim_leading("V") |> normalize_version()
 
     case Version.parse(normalized) do
       {:ok, version} ->
@@ -189,15 +223,32 @@ defmodule Opsm.VersionConstraint do
   end
 
   # Normalize version to x.y.z format (Elixir Version module requirement)
-  # Python allows "1.0", we need "1.0.0"
+  # Handles: "1.0" → "1.0.0", "v1.2.3" → "1.2.3", "2.2.3.0" → "2.2.3"
   defp normalize_version(version_str) do
-    parts = String.split(version_str, ".")
+    cleaned = version_str
+      |> String.trim_leading("v")
+      |> String.trim_leading("V")
 
-    case length(parts) do
-      1 -> "#{version_str}.0.0"
-      2 -> "#{version_str}.0"
-      _ -> version_str
+    # Split on "." but preserve pre-release/build metadata
+    {base, suffix} = case String.split(cleaned, "-", parts: 2) do
+      [base, rest] -> {base, "-" <> rest}
+      [base] ->
+        case String.split(base, "+", parts: 2) do
+          [b, meta] -> {b, "+" <> meta}
+          [b] -> {b, ""}
+        end
     end
+
+    parts = String.split(base, ".")
+
+    normalized_base = case length(parts) do
+      1 -> "#{base}.0.0"
+      2 -> "#{base}.0"
+      n when n > 3 -> parts |> Enum.take(3) |> Enum.join(".")
+      _ -> base
+    end
+
+    normalized_base <> suffix
   end
 
   defp parse_wildcard(str) do

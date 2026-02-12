@@ -1,0 +1,4575 @@
+{
+  "generated_at": "2026-02-12T19:35:28.744829Z",
+  "integrity_algo": "sha3-512",
+  "integrity_hash": "a71bc9c85357da04d13a38072e0b817eb85a6856d3bf61553f64d57f7254aa67fd5a5ab1146d1024812dbb7b2ab4ff97949289fc27403ed1ff65fe68810a6952",
+  "packages": {
+    "array@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573089Z",
+      "name": "array",
+      "source_url": "https://hackage.haskell.org/package/array-0.5.8.0/array-0.5.8.0.tar.gz",
+      "version": "0.5.8.0"
+    },
+    "System.Runtime.WindowsRuntime@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.IO",
+        "System.ObjectModel",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.InteropServices",
+        "System.Threading",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480503Z",
+      "name": "System.Runtime.WindowsRuntime",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.windowsruntime/5.0.0-preview.5.20278.1/system.runtime.windowsruntime.5.0.0-preview.5.20278.1.nupkg",
+      "version": "5.0.0-preview.5.20278.1"
+    },
+    "cookie-signature@npm": {
+      "checksum": "57c7fc3cc293acab9fec54d73e15690ebe4a1793",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312850Z",
+      "name": "cookie-signature",
+      "source_url": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.2.2.tgz",
+      "version": "1.2.2"
+    },
+    "async@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "async",
+        "stm"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573267Z",
+      "name": "async",
+      "source_url": "https://hackage.haskell.org/package/async-2.2.6/async-2.2.6.tar.gz",
+      "version": "2.2.6"
+    },
+    "action_text-trix@gem": {
+      "checksum": "f645a2c21821b8449fd1d6770708f4031c91a2eedf9ef476e9be93c64e703a8a",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "railties"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645934Z",
+      "name": "action_text-trix",
+      "source_url": "https://rubygems.org/gems/action_text-trix-2.1.16.gem",
+      "version": "2.1.16"
+    },
+    "nio4r@gem": {
+      "checksum": "6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645748Z",
+      "name": "nio4r",
+      "source_url": "https://rubygems.org/gems/nio4r-2.7.5.gem",
+      "version": "2.7.5"
+    },
+    "setprototypeof@npm": {
+      "checksum": "66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312996Z",
+      "name": "setprototypeof",
+      "source_url": "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz",
+      "version": "1.2.0"
+    },
+    "uri@gem": {
+      "checksum": "379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645799Z",
+      "name": "uri",
+      "source_url": "https://rubygems.org/gems/uri-1.1.1.gem",
+      "version": "1.1.1"
+    },
+    "Microsoft.NETCore.Targets@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480299Z",
+      "name": "Microsoft.NETCore.Targets",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/microsoft.netcore.targets/6.0.0-preview.4.21253.7/microsoft.netcore.targets.6.0.0-preview.4.21253.7.nupkg",
+      "version": "6.0.0-preview.4.21253.7"
+    },
+    "containers@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "array",
+        "deepseq"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573205Z",
+      "name": "containers",
+      "source_url": "https://hackage.haskell.org/package/containers-0.6.8/containers-0.6.8.tar.gz",
+      "version": "0.6.8"
+    },
+    "vary@npm": {
+      "checksum": "2299f02c6ded30d4a5961b0b9f74524a18f634fc",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312931Z",
+      "name": "vary",
+      "source_url": "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz",
+      "version": "1.1.2"
+    },
+    "tsort@gem": {
+      "checksum": "9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645681Z",
+      "name": "tsort",
+      "source_url": "https://rubygems.org/gems/tsort-0.2.0.gem",
+      "version": "0.2.0"
+    },
+    "merge-descriptors@npm": {
+      "checksum": "ea922f660635a2249ee565e0449f951e6b603808",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312891Z",
+      "name": "merge-descriptors",
+      "source_url": "https://registry.npmjs.org/merge-descriptors/-/merge-descriptors-2.0.0.tgz",
+      "version": "2.0.0"
+    },
+    "serve-static@npm": {
+      "checksum": "7f186a4a4e5f5b663ad7a4294ff1bf37cf0e98a9",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "encodeurl",
+        "escape-html",
+        "parseurl",
+        "send"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312705Z",
+      "name": "serve-static",
+      "source_url": "https://registry.npmjs.org/serve-static/-/serve-static-2.2.1.tgz",
+      "version": "2.2.1"
+    },
+    "System.Runtime@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480392Z",
+      "name": "System.Runtime",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime/4.3.1/system.runtime.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "has-symbols@npm": {
+      "checksum": "fc9c6a783a084951d0b971fe1018de813707a338",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312580Z",
+      "name": "has-symbols",
+      "source_url": "https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "binary@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "array",
+        "bytestring",
+        "containers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572932Z",
+      "name": "binary",
+      "source_url": "https://hackage.haskell.org/package/binary-0.9.0.0/binary-0.9.0.0.tar.gz",
+      "version": "0.9.0.0"
+    },
+    "phoenix_template@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956071Z",
+      "name": "phoenix_template",
+      "source_url": "https://repo.hex.pm/tarballs/phoenix_template-1.0.4.tar",
+      "version": "1.0.4"
+    },
+    "serde_derive@cargo": {
+      "checksum": "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "proc-macro2",
+        "quote",
+        "syn"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849531Z",
+      "name": "serde_derive",
+      "source_url": "https://static.crates.io/crates/serde_derive/serde_derive-1.0.228.crate",
+      "version": "1.0.228"
+    },
+    "com.google.code.findbugs:jsr305@maven": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "maven",
+      "installed_at": "2026-02-12T19:29:09.865266Z",
+      "name": "com.google.code.findbugs:jsr305",
+      "source_url": "https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/1.3.7/jsr305-1.3.7.jar",
+      "version": "1.3.7"
+    },
+    "actioncable@gem": {
+      "checksum": "dc31efc34cca9cdefc5c691ddb8b4b214c0ea5cd1372108cbc1377767fb91969",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionpack",
+        "activesupport",
+        "nio4r",
+        "websocket-driver",
+        "zeitwerk"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645865Z",
+      "name": "actioncable",
+      "source_url": "https://rubygems.org/gems/actioncable-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "activestorage@gem": {
+      "checksum": "8a63a48c3999caeee26a59441f813f94681fc35cc41aba7ce1f836add04fba76",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionpack",
+        "activejob",
+        "activerecord",
+        "activesupport",
+        "marcel"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645979Z",
+      "name": "activestorage",
+      "source_url": "https://rubygems.org/gems/activestorage-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "debug@npm": {
+      "checksum": "c6ae432d9bd9662582fce08709b038c58e9e3d6a",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "ms"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312745Z",
+      "name": "debug",
+      "source_url": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "version": "4.4.3"
+    },
+    "psych@gem": {
+      "checksum": "eb7a57cef10c9d70173ff74e739d843ac3b2c019a003de48447b2963d81b1974",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "date",
+        "jar-dependencies"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645958Z",
+      "name": "psych",
+      "source_url": "https://rubygems.org/gems/psych-5.3.1.gem",
+      "version": "5.3.1"
+    },
+    "rails-html-sanitizer@gem": {
+      "checksum": "35fce2ca8242da8775c83b6ba9c1bcaad6751d9eb73c1abaa8403475ab89a560",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "loofah",
+        "nokogiri"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645766Z",
+      "name": "rails-html-sanitizer",
+      "source_url": "https://rubygems.org/gems/rails-html-sanitizer-1.6.2.gem",
+      "version": "1.6.2"
+    },
+    "System.Collections.Specialized@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections.NonGeneric",
+        "System.Globalization",
+        "System.Globalization.Extensions",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480326Z",
+      "name": "System.Collections.Specialized",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.collections.specialized/4.3.0/system.collections.specialized.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Xml.XDocument@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.Tools",
+        "System.Globalization",
+        "System.IO",
+        "System.Reflection",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Text.Encoding",
+        "System.Threading",
+        "System.Xml.ReaderWriter"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480616Z",
+      "name": "System.Xml.XDocument",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.xml.xdocument/4.3.0/system.xml.xdocument.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "prettyprinter@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "fail",
+        "semigroups",
+        "text",
+        "void"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573247Z",
+      "name": "prettyprinter",
+      "source_url": "https://hackage.haskell.org/package/prettyprinter-1.7.1/prettyprinter-1.7.1.tar.gz",
+      "version": "1.7.1"
+    },
+    "dunder-proto@npm": {
+      "checksum": "d7ae667e1dc83482f8b70fd0f6eefc50da30f58a",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "call-bind-apply-helpers",
+        "es-errors",
+        "gopd"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312685Z",
+      "name": "dunder-proto",
+      "source_url": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "bifunctors@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "foldable1-classes-compat",
+        "tagged"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573000Z",
+      "name": "bifunctors",
+      "source_url": "https://hackage.haskell.org/package/bifunctors-5.6.3/bifunctors-5.6.3.tar.gz",
+      "version": "5.6.3"
+    },
+    "test-framework-hunit@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "HUnit",
+        "extensible-exceptions",
+        "test-framework"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572988Z",
+      "name": "test-framework-hunit",
+      "source_url": "https://hackage.haskell.org/package/test-framework-hunit-0.3.0/test-framework-hunit-0.3.0.tar.gz",
+      "version": "0.3.0"
+    },
+    "System.Security.Cryptography.Encoding@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Collections",
+        "System.Collections.Concurrent",
+        "System.Linq",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding",
+        "runtime.native.System.Security.Cryptography.OpenSsl"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480546Z",
+      "name": "System.Security.Cryptography.Encoding",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.encoding/4.3.0/system.security.cryptography.encoding.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "loofah@gem": {
+      "checksum": "df5ed7ac3bac6a4ec802df3877ee5cc86d027299f8952e6243b3dac446b060e6",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "crass",
+        "nokogiri"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646013Z",
+      "name": "loofah",
+      "source_url": "https://rubygems.org/gems/loofah-2.25.0.gem",
+      "version": "2.25.0"
+    },
+    "runtime.rhel.7-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480408Z",
+      "name": "runtime.rhel.7-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.rhel.7-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.rhel.7-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "rake@gem": {
+      "checksum": "8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645817Z",
+      "name": "rake",
+      "source_url": "https://rubygems.org/gems/rake-13.3.1.gem",
+      "version": "13.3.1"
+    },
+    "System.Net.Sockets@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.IO",
+        "System.Net.Primitives",
+        "System.Runtime",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480450Z",
+      "name": "System.Net.Sockets",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.net.sockets/4.3.0/system.net.sockets.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "encodeurl@npm": {
+      "checksum": "7b8ea898077d7e409d3ac45474ea38eaf0857a58",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313036Z",
+      "name": "encodeurl",
+      "source_url": "https://registry.npmjs.org/encodeurl/-/encodeurl-2.0.0.tgz",
+      "version": "2.0.0"
+    },
+    "Newtonsoft.Json@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.CSharp",
+        "NETStandard.Library",
+        "System.ComponentModel.TypeConverter",
+        "System.Runtime.Serialization.Formatters",
+        "System.Runtime.Serialization.Primitives",
+        "System.Xml.XmlDocument"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480221Z",
+      "name": "Newtonsoft.Json",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/13.0.5-beta1/newtonsoft.json.13.0.5-beta1.nupkg",
+      "version": "13.0.5-beta1"
+    },
+    "ms@npm": {
+      "checksum": "574c8138ce1d2b5861f0b44579dbadd60c6615b2",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312972Z",
+      "name": "ms",
+      "source_url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "version": "2.1.3"
+    },
+    "System.Globalization.Extensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Globalization",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.InteropServices"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480292Z",
+      "name": "System.Globalization.Extensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.globalization.extensions/4.3.0/system.globalization.extensions.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "activerecord@gem": {
+      "checksum": "acfbe0cadfcc50fa208011fe6f4eb01cae682ebae0ef57145ba45380c74bcc44",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activemodel",
+        "activesupport",
+        "timeout"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645991Z",
+      "name": "activerecord",
+      "source_url": "https://rubygems.org/gems/activerecord-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "runtime.fedora.24-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480434Z",
+      "name": "runtime.fedora.24-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "Microsoft.NETCore.Platforms@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480163Z",
+      "name": "Microsoft.NETCore.Platforms",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/microsoft.netcore.platforms/8.0.0-preview.7.23375.6/microsoft.netcore.platforms.8.0.0-preview.7.23375.6.nupkg",
+      "version": "8.0.0-preview.7.23375.6"
+    },
+    "es-define-property@npm": {
+      "checksum": "983eb2f9a6724e9303f61addf011c72e09e0b0fa",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312556Z",
+      "name": "es-define-property",
+      "source_url": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "jar-dependencies@gem": {
+      "checksum": "2972b9fcba4b014e6446a84b5c09674a3e8648b95b71768e729f0e8e40568059",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645686Z",
+      "name": "jar-dependencies",
+      "source_url": "https://rubygems.org/gems/jar-dependencies-0.5.5.gem",
+      "version": "0.5.5"
+    },
+    "runtime.native.System.Security.Cryptography.Apple@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.Apple"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480266Z",
+      "name": "runtime.native.System.Security.Cryptography.Apple",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system.security.cryptography.apple/4.3.1/runtime.native.system.security.cryptography.apple.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "range-parser@npm": {
+      "checksum": "3cf37023d199e1c24d1a55b84800c2f3e6468031",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312723Z",
+      "name": "range-parser",
+      "source_url": "https://registry.npmjs.org/range-parser/-/range-parser-1.2.1.tgz",
+      "version": "1.2.1"
+    },
+    "tzinfo@gem": {
+      "checksum": "8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "concurrent-ruby"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645834Z",
+      "name": "tzinfo",
+      "source_url": "https://rubygems.org/gems/tzinfo-2.0.6.gem",
+      "version": "2.0.6"
+    },
+    "contravariant@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "StateVar"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573111Z",
+      "name": "contravariant",
+      "source_url": "https://hackage.haskell.org/package/contravariant-1.5.6/contravariant-1.5.6.tar.gz",
+      "version": "1.5.6"
+    },
+    "file-embed@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "bytestring",
+        "directory",
+        "file-embed",
+        "filepath"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573177Z",
+      "name": "file-embed",
+      "source_url": "https://hackage.haskell.org/package/file-embed-0.0.16.0/file-embed-0.0.16.0.tar.gz",
+      "version": "0.0.16.0"
+    },
+    "unpipe@npm": {
+      "checksum": "b2bf4ee8514aae6165b4817829d21b2ef49904ec",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312645Z",
+      "name": "unpipe",
+      "source_url": "https://registry.npmjs.org/unpipe/-/unpipe-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "websocket-driver@gem": {
+      "checksum": "ed0dba4b943c22f17f9a734817e808bc84cdce6a7e22045f5315aa57676d4962",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "base64",
+        "websocket-extensions"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645823Z",
+      "name": "websocket-driver",
+      "source_url": "https://rubygems.org/gems/websocket-driver-0.8.0.gem",
+      "version": "0.8.0"
+    },
+    "reline@gem": {
+      "checksum": "1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "io-console"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645853Z",
+      "name": "reline",
+      "source_url": "https://rubygems.org/gems/reline-0.6.3.gem",
+      "version": "0.6.3"
+    },
+    "activejob@gem": {
+      "checksum": "908dab3713b101859536375819f4156b07bdf4c232cc645e7538adb9e302f825",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activesupport",
+        "globalid"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645948Z",
+      "name": "activejob",
+      "source_url": "https://rubygems.org/gems/activejob-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "securerandom@gem": {
+      "checksum": "cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645859Z",
+      "name": "securerandom",
+      "source_url": "https://rubygems.org/gems/securerandom-0.4.1.gem",
+      "version": "0.4.1"
+    },
+    "transformers@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572914Z",
+      "name": "transformers",
+      "source_url": "https://hackage.haskell.org/package/transformers-0.6.3.0/transformers-0.6.3.0.tar.gz",
+      "version": "0.6.3.0"
+    },
+    "globalid@gem": {
+      "checksum": "05c639ad6eb4594522a0b07983022f04aa7254626ab69445a0e493aa3786ff11",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activesupport"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645718Z",
+      "name": "globalid",
+      "source_url": "https://rubygems.org/gems/globalid-1.3.0.gem",
+      "version": "1.3.0"
+    },
+    "System.Buffers@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480354Z",
+      "name": "System.Buffers",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.buffers/4.6.1/system.buffers.4.6.1.nupkg",
+      "version": "4.6.1"
+    },
+    "extensible-exceptions@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572872Z",
+      "name": "extensible-exceptions",
+      "source_url": "https://hackage.haskell.org/package/extensible-exceptions-0.1.1.0/extensible-exceptions-0.1.1.0.tar.gz",
+      "version": "0.1.1.0"
+    },
+    "System.Text.RegularExpressions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Globalization",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480487Z",
+      "name": "System.Text.RegularExpressions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.text.regularexpressions/4.3.1/system.text.regularexpressions.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "generic-deriving@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "containers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572903Z",
+      "name": "generic-deriving",
+      "source_url": "https://hackage.haskell.org/package/generic-deriving-1.9.0/generic-deriving-1.9.0.tar.gz",
+      "version": "1.9.0"
+    },
+    "mini_portile2@gem": {
+      "checksum": "0cd7c7f824e010c072e33f68bc02d85a00aeb6fce05bb4819c03dfd3c140c289",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646024Z",
+      "name": "mini_portile2",
+      "source_url": "https://rubygems.org/gems/mini_portile2-2.8.9.gem",
+      "version": "2.8.9"
+    },
+    "serde@cargo": {
+      "checksum": "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "serde_core"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849517Z",
+      "name": "serde",
+      "source_url": "https://static.crates.io/crates/serde/serde-1.0.228.crate",
+      "version": "1.0.228"
+    },
+    "System.Globalization@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480238Z",
+      "name": "System.Globalization",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.globalization/4.3.0/system.globalization.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "prettyprinter-ansi-terminal@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "semigroups"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572970Z",
+      "name": "prettyprinter-ansi-terminal",
+      "source_url": "https://hackage.haskell.org/package/prettyprinter-ansi-terminal-1.1.3/prettyprinter-ansi-terminal-1.1.3.tar.gz",
+      "version": "1.1.3"
+    },
+    "tagged@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "deepseq"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572994Z",
+      "name": "tagged",
+      "source_url": "https://hackage.haskell.org/package/tagged-0.8.10/tagged-0.8.10.tar.gz",
+      "version": "0.8.10"
+    },
+    "System.Xml.ReaderWriter@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.IO",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.InteropServices",
+        "System.Text.Encoding",
+        "System.Text.Encoding.Extensions",
+        "System.Text.RegularExpressions",
+        "System.Threading.Tasks",
+        "System.Threading.Tasks.Extensions"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480519Z",
+      "name": "System.Xml.ReaderWriter",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.xml.readerwriter/4.3.1/system.xml.readerwriter.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "telemetry@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956082Z",
+      "name": "telemetry",
+      "source_url": "https://repo.hex.pm/tarballs/telemetry-1.3.0.tar",
+      "version": "1.3.0"
+    },
+    "System.IO.FileSystem.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480422Z",
+      "name": "System.IO.FileSystem.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.io.filesystem.primitives/4.3.0/system.io.filesystem.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "base-orphans@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573228Z",
+      "name": "base-orphans",
+      "source_url": "https://hackage.haskell.org/package/base-orphans-0.9.4/base-orphans-0.9.4.tar.gz",
+      "version": "0.9.4"
+    },
+    "content-disposition@npm": {
+      "checksum": "a8b7bbeb2904befdfb6787e5c0c086959f605f9b",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312676Z",
+      "name": "content-disposition",
+      "source_url": "https://registry.npmjs.org/content-disposition/-/content-disposition-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "router@npm": {
+      "checksum": "019be620b711c87641167cc79b99090f00b146ef",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "debug",
+        "depd",
+        "is-promise",
+        "parseurl",
+        "path-to-regexp"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312690Z",
+      "name": "router",
+      "source_url": "https://registry.npmjs.org/router/-/router-2.2.0.tgz",
+      "version": "2.2.0"
+    },
+    "bytestring@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "data-array-byte",
+        "deepseq"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573023Z",
+      "name": "bytestring",
+      "source_url": "https://hackage.haskell.org/package/bytestring-0.12.2.0/bytestring-0.12.2.0.tar.gz",
+      "version": "0.12.2.0"
+    },
+    "nokogiri@gem": {
+      "checksum": "e304d21865f62518e04f2bf59f93bd3a97ca7b07e7f03952946d8e1c05f45695",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "mini_portile2",
+        "racc"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645963Z",
+      "name": "nokogiri",
+      "source_url": "https://rubygems.org/gems/nokogiri-1.19.0.gem",
+      "version": "1.19.0"
+    },
+    "prettyprint@gem": {
+      "checksum": "2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645841Z",
+      "name": "prettyprint",
+      "source_url": "https://rubygems.org/gems/prettyprint-0.2.0.gem",
+      "version": "0.2.0"
+    },
+    "rack@gem": {
+      "checksum": "5d74b6f75082a643f43c1e76b419c40f0e5527fcfee1e669ac1e6b73c0ccb6f6",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645806Z",
+      "name": "rack",
+      "source_url": "https://rubygems.org/gems/rack-3.2.4.gem",
+      "version": "3.2.4"
+    },
+    "actiontext@gem": {
+      "checksum": "0bf57da22a9c19d970779c3ce24a56be31b51c7640f2763ec64aa72e358d2d2d",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "action_text-trix",
+        "actionpack",
+        "activerecord",
+        "activestorage",
+        "activesupport",
+        "globalid",
+        "nokogiri"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645940Z",
+      "name": "actiontext",
+      "source_url": "https://rubygems.org/gems/actiontext-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "System.IO.Compression.ZipFile@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Buffers",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Text.Encoding"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480343Z",
+      "name": "System.IO.Compression.ZipFile",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.io.compression.zipfile/4.3.0/system.io.compression.zipfile.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "ansi-terminal-types@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "colour"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573135Z",
+      "name": "ansi-terminal-types",
+      "source_url": "https://hackage.haskell.org/package/ansi-terminal-types-1.1.3/ansi-terminal-types-1.1.3.tar.gz",
+      "version": "1.1.3"
+    },
+    "math-intrinsics@npm": {
+      "checksum": "a0dd74be81e2aa5c2f27e65ce283605ee4e2b7f9",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312547Z",
+      "name": "math-intrinsics",
+      "source_url": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "base64@gem": {
+      "checksum": "27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646028Z",
+      "name": "base64",
+      "source_url": "https://rubygems.org/gems/base64-0.3.0.gem",
+      "version": "0.3.0"
+    },
+    "side-channel-weakmap@npm": {
+      "checksum": "11dda19d5368e40ce9ec2bdc1fb0ecbc0790ecea",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "call-bound",
+        "es-errors",
+        "get-intrinsic",
+        "object-inspect",
+        "side-channel-map"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312962Z",
+      "name": "side-channel-weakmap",
+      "source_url": "https://registry.npmjs.org/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz",
+      "version": "1.0.2"
+    },
+    "directory@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "directory",
+        "filepath",
+        "os-string",
+        "time"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573116Z",
+      "name": "directory",
+      "source_url": "https://hackage.haskell.org/package/directory-1.3.10.0/directory-1.3.10.0.tar.gz",
+      "version": "1.3.10.0"
+    },
+    "async-generator-function@npm": {
+      "checksum": "9bcc76d7fd147171e7ead5d2a2cfc3579c99f28e",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313057Z",
+      "name": "async-generator-function",
+      "source_url": "https://registry.npmjs.org/async-generator-function/-/async-generator-function-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "cookie@npm": {
+      "checksum": "556369c472a2ba910f2979891b526b3436237ed7",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313041Z",
+      "name": "cookie",
+      "source_url": "https://registry.npmjs.org/cookie/-/cookie-0.7.2.tgz",
+      "version": "0.7.2"
+    },
+    "raw-body@npm": {
+      "checksum": "3e3ada5ae5568f9095d84376fd3a49b8fb000a51",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "bytes",
+        "http-errors",
+        "iconv-lite",
+        "unpipe"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312947Z",
+      "name": "raw-body",
+      "source_url": "https://registry.npmjs.org/raw-body/-/raw-body-3.0.2.tgz",
+      "version": "3.0.2"
+    },
+    "System.Globalization.Calendars@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Globalization",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480337Z",
+      "name": "System.Globalization.Calendars",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.globalization.calendars/4.3.0/system.globalization.calendars.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Reflection.Emit.Lightweight@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Reflection",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480283Z",
+      "name": "System.Reflection.Emit.Lightweight",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.emit.lightweight/4.7.0/system.reflection.emit.lightweight.4.7.0.nupkg",
+      "version": "4.7.0"
+    },
+    "bigdecimal@gem": {
+      "checksum": "8b07d3d065a9f921c80ceaea7c9d4ae596697295b584c296fe599dd0ad01c4a7",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645706Z",
+      "name": "bigdecimal",
+      "source_url": "https://rubygems.org/gems/bigdecimal-4.0.1.gem",
+      "version": "4.0.1"
+    },
+    "runtime.opensuse.42.1-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480347Z",
+      "name": "runtime.opensuse.42.1-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.opensuse.42.1-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.opensuse.42.1-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "path-to-regexp@npm": {
+      "checksum": "aa818a6981f99321003a08987d3cec9c3474cd1f",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312912Z",
+      "name": "path-to-regexp",
+      "source_url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-8.3.0.tgz",
+      "version": "8.3.0"
+    },
+    "tasty-hunit@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573234Z",
+      "name": "tasty-hunit",
+      "source_url": "https://hackage.haskell.org/package/tasty-hunit-0.10.2/tasty-hunit-0.10.2.tar.gz",
+      "version": "0.10.2"
+    },
+    "actionmailer@gem": {
+      "checksum": "f4c1d2060f653bfe908aa7fdc5a61c0e5279670de992146582f2e36f8b9175e9",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionpack",
+        "actionview",
+        "activejob",
+        "activesupport",
+        "mail",
+        "rails-dom-testing"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645896Z",
+      "name": "actionmailer",
+      "source_url": "https://rubygems.org/gems/actionmailer-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "activemodel@gem": {
+      "checksum": "e21358c11ce68aed3f9838b7e464977bc007b4446c6e4059781e1d5c03bcf33e",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activesupport"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645995Z",
+      "name": "activemodel",
+      "source_url": "https://rubygems.org/gems/activemodel-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "golang.org/x/sys@go": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "go",
+      "installed_at": "2026-02-12T19:27:09.065842Z",
+      "name": "golang.org/x/sys",
+      "source_url": "https://proxy.golang.org/golang.org/x/sys/@v/v0.41.0.zip",
+      "version": "v0.41.0"
+    },
+    "runtime.fedora.28-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480622Z",
+      "name": "runtime.fedora.28-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.fedora.28-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.fedora.28-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "criterion@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "file-embed"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572853Z",
+      "name": "criterion",
+      "source_url": "https://hackage.haskell.org/package/criterion-1.6.4.0/criterion-1.6.4.0.tar.gz",
+      "version": "1.6.4.0"
+    },
+    "erf@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572921Z",
+      "name": "erf",
+      "source_url": "https://hackage.haskell.org/package/erf-2.0.0.0/erf-2.0.0.0.tar.gz",
+      "version": "2.0.0.0"
+    },
+    "System.ObjectModel@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480364Z",
+      "name": "System.ObjectModel",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.objectmodel/4.3.0/system.objectmodel.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "runtime.ubuntu.18.04-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480302Z",
+      "name": "runtime.ubuntu.18.04-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.ubuntu.18.04-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.ubuntu.18.04-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "os-string@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "bytestring",
+        "deepseq",
+        "exceptions",
+        "os-string",
+        "quickcheck-classes-base",
+        "template-haskell-lift",
+        "template-haskell-quasiquoter"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573147Z",
+      "name": "os-string",
+      "source_url": "https://hackage.haskell.org/package/os-string-2.0.10/os-string-2.0.10.tar.gz",
+      "version": "2.0.10"
+    },
+    "System.Diagnostics.Debug@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480658Z",
+      "name": "System.Diagnostics.Debug",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.diagnostics.debug/4.3.0/system.diagnostics.debug.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "rackup@gem": {
+      "checksum": "6c79c26753778e90983761d677a48937ee3192b3ffef6bc963c0950f94688868",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "rack"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646032Z",
+      "name": "rackup",
+      "source_url": "https://rubygems.org/gems/rackup-2.3.1.gem",
+      "version": "2.3.1"
+    },
+    "System.Threading.Tasks@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480404Z",
+      "name": "System.Threading.Tasks",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.threading.tasks/4.3.0/system.threading.tasks.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "depd@npm": {
+      "checksum": "b696163cc757560d09cf22cc8fad1571b79e76df",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312493Z",
+      "name": "depd",
+      "source_url": "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz",
+      "version": "2.0.0"
+    },
+    "primitive@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "base-orphans",
+        "data-array-byte",
+        "deepseq",
+        "primitive",
+        "quickcheck-classes-base",
+        "tagged",
+        "tasty",
+        "tasty-quickcheck",
+        "transformers",
+        "transformers-compat"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573222Z",
+      "name": "primitive",
+      "source_url": "https://hackage.haskell.org/package/primitive-0.9.1.0/primitive-0.9.1.0.tar.gz",
+      "version": "0.9.1.0"
+    },
+    "prettyprinter-compat-ansi-wl-pprint@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "semigroups"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573188Z",
+      "name": "prettyprinter-compat-ansi-wl-pprint",
+      "source_url": "https://hackage.haskell.org/package/prettyprinter-compat-ansi-wl-pprint-1.1/prettyprinter-compat-ansi-wl-pprint-1.1.tar.gz",
+      "version": "1.1"
+    },
+    "exceptions@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573158Z",
+      "name": "exceptions",
+      "source_url": "https://hackage.haskell.org/package/exceptions-0.10.12/exceptions-0.10.12.tar.gz",
+      "version": "0.10.12"
+    },
+    "tasty@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "semigroups",
+        "time"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573217Z",
+      "name": "tasty",
+      "source_url": "https://hackage.haskell.org/package/tasty-1.5.3/tasty-1.5.3.tar.gz",
+      "version": "1.5.3"
+    },
+    "splitmix@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "HUnit",
+        "async",
+        "base-compat-batteries",
+        "bytestring",
+        "containers",
+        "criterion",
+        "deepseq",
+        "math-functions",
+        "process",
+        "random",
+        "splitmix",
+        "test-framework",
+        "test-framework-hunit",
+        "tf-random",
+        "time",
+        "vector"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572865Z",
+      "name": "splitmix",
+      "source_url": "https://hackage.haskell.org/package/splitmix-0.1.3/splitmix-0.1.3.tar.gz",
+      "version": "0.1.3"
+    },
+    "runtime.native.System.Net.Http@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480232Z",
+      "name": "runtime.native.System.Net.Http",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system.net.http/4.3.1/runtime.native.system.net.http.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "System.ComponentModel.TypeConverter@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Collections.NonGeneric",
+        "System.Collections.Specialized",
+        "System.ComponentModel",
+        "System.ComponentModel.Primitives",
+        "System.Globalization",
+        "System.Linq",
+        "System.Reflection",
+        "System.Reflection.Extensions",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480276Z",
+      "name": "System.ComponentModel.TypeConverter",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.componentmodel.typeconverter/4.3.0/system.componentmodel.typeconverter.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "connection_pool@gem": {
+      "checksum": "33fff5ba71a12d2aa26cb72b1db8bba2a1a01823559fb01d29eb74c286e62e0a",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645914Z",
+      "name": "connection_pool",
+      "source_url": "https://rubygems.org/gems/connection_pool-3.0.2.gem",
+      "version": "3.0.2"
+    },
+    "System.Runtime.Serialization.Formatters@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480444Z",
+      "name": "System.Runtime.Serialization.Formatters",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.serialization.formatters/11.0.0-preview.1.26104.118/system.runtime.serialization.formatters.11.0.0-preview.1.26104.118.nupkg",
+      "version": "11.0.0-preview.1.26104.118"
+    },
+    "mime@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956041Z",
+      "name": "mime",
+      "source_url": "https://repo.hex.pm/tarballs/mime-2.0.7.tar",
+      "version": "2.0.7"
+    },
+    "side-channel-map@npm": {
+      "checksum": "d6bb6b37902c6fef5174e5f533fab4c732a26f42",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "call-bound",
+        "es-errors",
+        "get-intrinsic",
+        "object-inspect"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312660Z",
+      "name": "side-channel-map",
+      "source_url": "https://registry.npmjs.org/side-channel-map/-/side-channel-map-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "websocket-extensions@gem": {
+      "checksum": "1c6ba63092cda343eb53fc657110c71c754c56484aad42578495227d717a8241",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645781Z",
+      "name": "websocket-extensions",
+      "source_url": "https://rubygems.org/gems/websocket-extensions-0.1.5.gem",
+      "version": "0.1.5"
+    },
+    "actionpack@gem": {
+      "checksum": "ced74147a1f0daafaa4bab7f677513fd4d3add574c7839958f7b4f1de44f8423",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionview",
+        "activesupport",
+        "nokogiri",
+        "rack",
+        "rack-session",
+        "rack-test",
+        "rails-dom-testing",
+        "rails-html-sanitizer",
+        "useragent"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645731Z",
+      "name": "actionpack",
+      "source_url": "https://rubygems.org/gems/actionpack-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "tasty-bench@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "tasty-bench"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573181Z",
+      "name": "tasty-bench",
+      "source_url": "https://hackage.haskell.org/package/tasty-bench-0.4.1/tasty-bench-0.4.1.tar.gz",
+      "version": "0.4.1"
+    },
+    "plug@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "mime",
+        "plug_crypto",
+        "telemetry"
+      ],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956075Z",
+      "name": "plug",
+      "source_url": "https://repo.hex.pm/tarballs/plug-1.19.1.tar",
+      "version": "1.19.1"
+    },
+    "tasty-quickcheck@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572859Z",
+      "name": "tasty-quickcheck",
+      "source_url": "https://hackage.haskell.org/package/tasty-quickcheck-0.11.1/tasty-quickcheck-0.11.1.tar.gz",
+      "version": "0.11.1"
+    },
+    "HUnit@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573012Z",
+      "name": "HUnit",
+      "source_url": "https://hackage.haskell.org/package/HUnit-1.6.2.0/HUnit-1.6.2.0.tar.gz",
+      "version": "1.6.2.0"
+    },
+    "mini_mime@gem": {
+      "checksum": "8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645847Z",
+      "name": "mini_mime",
+      "source_url": "https://rubygems.org/gems/mini_mime-1.1.5.gem",
+      "version": "1.1.5"
+    },
+    "crass@gem": {
+      "checksum": "dc516022a56e7b3b156099abc81b6d2b08ea1ed12676ac7a5657617f012bd45d",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645908Z",
+      "name": "crass",
+      "source_url": "https://rubygems.org/gems/crass-1.0.6.gem",
+      "version": "1.0.6"
+    },
+    "toidentifier@npm": {
+      "checksum": "3be34321a88a820ed1bd80dfaa33e479fbb8dd35",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312953Z",
+      "name": "toidentifier",
+      "source_url": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "System.Text.Encoding@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480583Z",
+      "name": "System.Text.Encoding",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.text.encoding/4.3.0/system.text.encoding.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.IO.Compression@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Buffers",
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Text.Encoding",
+        "System.Threading",
+        "System.Threading.Tasks",
+        "runtime.native.System",
+        "runtime.native.System.IO.Compression"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480480Z",
+      "name": "System.IO.Compression",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.io.compression/4.3.0/system.io.compression.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "on-finished@npm": {
+      "checksum": "58c8c44116e54845ad57f14ab10b03533184ac3f",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "ee-first"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312526Z",
+      "name": "on-finished",
+      "source_url": "https://registry.npmjs.org/on-finished/-/on-finished-2.4.1.tgz",
+      "version": "2.4.1"
+    },
+    "math-functions@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "data-default-class",
+        "deepseq",
+        "erf",
+        "math-functions",
+        "primitive",
+        "tasty",
+        "tasty-hunit",
+        "tasty-quickcheck",
+        "vector",
+        "vector-th-unbox"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573140Z",
+      "name": "math-functions",
+      "source_url": "https://hackage.haskell.org/package/math-functions-0.3.4.0/math-functions-0.3.4.0.tar.gz",
+      "version": "0.3.4.0"
+    },
+    "is-promise@npm": {
+      "checksum": "42ff9f84206c1991d26debf520dd5c01042dd2f3",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312451Z",
+      "name": "is-promise",
+      "source_url": "https://registry.npmjs.org/is-promise/-/is-promise-4.0.0.tgz",
+      "version": "4.0.0"
+    },
+    "media-typer@npm": {
+      "checksum": "6ab74b8f2d3320f2064b2a87a38e7931ff3a5561",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312987Z",
+      "name": "media-typer",
+      "source_url": "https://registry.npmjs.org/media-typer/-/media-typer-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "com.google.guava:guava@maven": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "com.google.code.findbugs:jsr305"
+      ],
+      "forth": "maven",
+      "installed_at": "2026-02-12T19:29:09.865312Z",
+      "name": "com.google.guava:guava",
+      "source_url": "https://repo1.maven.org/maven2/com/google/guava/guava/r09/guava-r09.jar",
+      "version": "r09"
+    },
+    "proc-macro2@cargo": {
+      "checksum": "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "unicode-ident"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849477Z",
+      "name": "proc-macro2",
+      "source_url": "https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.106.crate",
+      "version": "1.0.106"
+    },
+    "nested@pub": {
+      "checksum": "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pub",
+      "installed_at": "2026-02-12T19:27:11.015407Z",
+      "name": "nested",
+      "source_url": "https://pub.dev/api/archives/nested-1.0.0.tar.gz",
+      "version": "1.0.0"
+    },
+    "generic-random@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573170Z",
+      "name": "generic-random",
+      "source_url": "https://hackage.haskell.org/package/generic-random-1.3.0.0/generic-random-1.3.0.0.tar.gz",
+      "version": "1.3.0.0"
+    },
+    "side-channel@npm": {
+      "checksum": "c3fcff9c4da932784873335ec9765fa94ff66bc9",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "es-errors",
+        "object-inspect",
+        "side-channel-list",
+        "side-channel-map",
+        "side-channel-weakmap"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313011Z",
+      "name": "side-channel",
+      "source_url": "https://registry.npmjs.org/side-channel/-/side-channel-1.1.0.tgz",
+      "version": "1.1.0"
+    },
+    "hashable@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "bytestring",
+        "containers",
+        "data-array-byte",
+        "deepseq",
+        "filepath",
+        "hashable",
+        "os-string",
+        "primitive",
+        "tasty",
+        "tasty-hunit",
+        "tasty-quickcheck",
+        "text"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573200Z",
+      "name": "hashable",
+      "source_url": "https://hackage.haskell.org/package/hashable-1.5.1.0/hashable-1.5.1.0.tar.gz",
+      "version": "1.5.1.0"
+    },
+    "ipaddr.js@npm": {
+      "checksum": "bff38543eeb8984825079ff3a2a8e6cbd46781b3",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312700Z",
+      "name": "ipaddr.js",
+      "source_url": "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-1.9.1.tgz",
+      "version": "1.9.1"
+    },
+    "System.Console@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.IO",
+        "System.Runtime",
+        "System.Text.Encoding"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480158Z",
+      "name": "System.Console",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.console/4.3.1/system.console.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "runtime.opensuse.42.3-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480149Z",
+      "name": "runtime.opensuse.42.3-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.opensuse.42.3-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.opensuse.42.3-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "pp@gem": {
+      "checksum": "2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "prettyprint"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646009Z",
+      "name": "pp",
+      "source_url": "https://rubygems.org/gems/pp-0.6.3.gem",
+      "version": "0.6.3"
+    },
+    "System.Runtime.InteropServices@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Reflection",
+        "System.Reflection.Primitives",
+        "System.Runtime",
+        "System.Runtime.Handles"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480470Z",
+      "name": "System.Runtime.InteropServices",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.interopservices/4.3.0/system.runtime.interopservices.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "vector-th-unbox@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573099Z",
+      "name": "vector-th-unbox",
+      "source_url": "https://hackage.haskell.org/package/vector-th-unbox-0.2.2/vector-th-unbox-0.2.2.tar.gz",
+      "version": "0.2.2"
+    },
+    "irb@gem": {
+      "checksum": "168c4ddb93d8a361a045c41d92b2952c7a118fa73f23fe14e55609eb7a863aae",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "pp",
+        "prism",
+        "rdoc",
+        "reline"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645724Z",
+      "name": "irb",
+      "source_url": "https://rubygems.org/gems/irb-1.17.0.gem",
+      "version": "1.17.0"
+    },
+    "phoenix@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "phoenix_pubsub",
+        "phoenix_template",
+        "plug",
+        "plug_crypto",
+        "telemetry",
+        "websock_adapter"
+      ],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956061Z",
+      "name": "phoenix",
+      "source_url": "https://repo.hex.pm/tarballs/phoenix-1.8.3.tar",
+      "version": "1.8.3"
+    },
+    "text@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "data-array-byte",
+        "splitmix",
+        "tasty-inspection-testing",
+        "template-haskell-lift"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572833Z",
+      "name": "text",
+      "source_url": "https://hackage.haskell.org/package/text-2.1.4/text-2.1.4.tar.gz",
+      "version": "2.1.4"
+    },
+    "call-bound@npm": {
+      "checksum": "238de935d2a2a692928c538c7ccfa91067fd062a",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "call-bind-apply-helpers",
+        "get-intrinsic"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312418Z",
+      "name": "call-bound",
+      "source_url": "https://registry.npmjs.org/call-bound/-/call-bound-1.0.4.tgz",
+      "version": "1.0.4"
+    },
+    "ee-first@npm": {
+      "checksum": "590c61156b0ae2f4f0255732a158b266bc56b21d",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312502Z",
+      "name": "ee-first",
+      "source_url": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz",
+      "version": "1.1.1"
+    },
+    "regex-base@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "array",
+        "bytestring",
+        "containers",
+        "fail",
+        "mtl",
+        "text"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572847Z",
+      "name": "regex-base",
+      "source_url": "https://hackage.haskell.org/package/regex-base-0.94.0.0/regex-base-0.94.0.0.tar.gz",
+      "version": "0.94.0.0"
+    },
+    "net-pop@gem": {
+      "checksum": "848b4e982013c15b2f0382792268763b748cce91c9e91e36b0f27ed26420dff3",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "net-protocol"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645736Z",
+      "name": "net-pop",
+      "source_url": "https://rubygems.org/gems/net-pop-0.1.2.gem",
+      "version": "0.1.2"
+    },
+    "es-errors@npm": {
+      "checksum": "05f75a25dab98e4fb1dcd5e1472c0546d5057c8f",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312883Z",
+      "name": "es-errors",
+      "source_url": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+      "version": "1.3.0"
+    },
+    "System.ComponentModel@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480566Z",
+      "name": "System.ComponentModel",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.componentmodel/4.3.0/system.componentmodel.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "io-console@gem": {
+      "checksum": "d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645774Z",
+      "name": "io-console",
+      "source_url": "https://rubygems.org/gems/io-console-0.8.2.gem",
+      "version": "0.8.2"
+    },
+    "System.AppContext@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480649Z",
+      "name": "System.AppContext",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.appcontext/4.3.0/system.appcontext.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "thor@gem": {
+      "checksum": "e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645700Z",
+      "name": "thor",
+      "source_url": "https://rubygems.org/gems/thor-1.5.0.gem",
+      "version": "1.5.0"
+    },
+    "minitest@gem": {
+      "checksum": "7854c74f48e2e975969062833adc4013f249a4b212f5e7b9d5c040bf838d54bb",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "prism"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645829Z",
+      "name": "minitest",
+      "source_url": "https://rubygems.org/gems/minitest-6.0.1.gem",
+      "version": "6.0.1"
+    },
+    "System.Runtime.CompilerServices.Unsafe@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480309Z",
+      "name": "System.Runtime.CompilerServices.Unsafe",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.compilerservices.unsafe/7.0.0-preview.2.22152.2/system.runtime.compilerservices.unsafe.7.0.0-preview.2.22152.2.nupkg",
+      "version": "7.0.0-preview.2.22152.2"
+    },
+    "vector@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "base-orphans",
+        "deepseq",
+        "primitive",
+        "random",
+        "tasty",
+        "tasty-hunit",
+        "tasty-quickcheck",
+        "transformers",
+        "vector",
+        "vector-stream"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573047Z",
+      "name": "vector",
+      "source_url": "https://hackage.haskell.org/package/vector-0.13.2.0/vector-0.13.2.0.tar.gz",
+      "version": "0.13.2.0"
+    },
+    "chalk@npm": {
+      "checksum": "1b48bf0963ec158dce2aacf69c093ae2dd2092d8",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:35:28.744812Z",
+      "name": "chalk",
+      "source_url": "https://registry.npmjs.org/chalk/-/chalk-5.4.1.tgz",
+      "version": "5.4.1"
+    },
+    "runtime.ubuntu.16.04-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480320Z",
+      "name": "runtime.ubuntu.16.04-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "runtime.ubuntu.14.04-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480609Z",
+      "name": "runtime.ubuntu.14.04-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "tf-random@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573123Z",
+      "name": "tf-random",
+      "source_url": "https://hackage.haskell.org/package/tf-random-0.5/tf-random-0.5.tar.gz",
+      "version": "0.5"
+    },
+    "System.Diagnostics.DiagnosticSource@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Memory",
+        "System.Runtime.CompilerServices.Unsafe"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480418Z",
+      "name": "System.Diagnostics.DiagnosticSource",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.diagnostics.diagnosticsource/11.0.0-preview.1.26104.118/system.diagnostics.diagnosticsource.11.0.0-preview.1.26104.118.nupkg",
+      "version": "11.0.0-preview.1.26104.118"
+    },
+    "mime-db@npm": {
+      "checksum": "cddb3ee4f9c64530dff640236661d42cb6a314f5",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312597Z",
+      "name": "mime-db",
+      "source_url": "https://registry.npmjs.org/mime-db/-/mime-db-1.54.0.tgz",
+      "version": "1.54.0"
+    },
+    "System.Collections.NonGeneric@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480579Z",
+      "name": "System.Collections.NonGeneric",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.collections.nongeneric/4.3.0/system.collections.nongeneric.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "racc@gem": {
+      "checksum": "4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645693Z",
+      "name": "racc",
+      "source_url": "https://rubygems.org/gems/racc-1.8.1.gem",
+      "version": "1.8.1"
+    },
+    "negotiator@npm": {
+      "checksum": "b6c91bb47172d69f93cfd7c357bbb529019b5f6a",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312936Z",
+      "name": "negotiator",
+      "source_url": "https://registry.npmjs.org/negotiator/-/negotiator-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "type-is@npm": {
+      "checksum": "64f6cf03f92fce4015c2b224793f6bdd4b068c97",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "content-type",
+        "media-typer",
+        "mime-types"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313027Z",
+      "name": "type-is",
+      "source_url": "https://registry.npmjs.org/type-is/-/type-is-2.0.1.tgz",
+      "version": "2.0.1"
+    },
+    "runtime.fedora.23-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480627Z",
+      "name": "runtime.fedora.23-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "filepath@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "bytestring",
+        "deepseq",
+        "exceptions",
+        "filepath",
+        "generic-deriving",
+        "generic-random",
+        "os-string",
+        "quickcheck-classes-base",
+        "tasty",
+        "tasty-bench",
+        "tasty-quickcheck",
+        "template-haskell-lift",
+        "template-haskell-quasiquoter"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573129Z",
+      "name": "filepath",
+      "source_url": "https://hackage.haskell.org/package/filepath-1.5.5.0/filepath-1.5.5.0.tar.gz",
+      "version": "1.5.5.0"
+    },
+    "websock_adapter@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "plug",
+        "websock"
+      ],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956089Z",
+      "name": "websock_adapter",
+      "source_url": "https://repo.hex.pm/tarballs/websock_adapter-0.5.9.tar",
+      "version": "0.5.9"
+    },
+    "actionview@gem": {
+      "checksum": "80455b2588911c9b72cec22d240edacb7c150e800ef2234821269b2b2c3e2e5b",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activesupport",
+        "builder",
+        "erubi",
+        "rails-dom-testing",
+        "rails-html-sanitizer"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645919Z",
+      "name": "actionview",
+      "source_url": "https://rubygems.org/gems/actionview-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "generator-function@npm": {
+      "checksum": "0e75dd410d1243687a0ba2e951b94eedb8f737a2",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312516Z",
+      "name": "generator-function",
+      "source_url": "https://registry.npmjs.org/generator-function/-/generator-function-2.0.1.tgz",
+      "version": "2.0.1"
+    },
+    "runtime.ubuntu.16.10-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480573Z",
+      "name": "runtime.ubuntu.16.10-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "ansi-wl-pprint@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "ansi-terminal",
+        "ansi-wl-pprint",
+        "prettyprinter",
+        "prettyprinter-ansi-terminal",
+        "prettyprinter-compat-ansi-wl-pprint",
+        "text"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572957Z",
+      "name": "ansi-wl-pprint",
+      "source_url": "https://hackage.haskell.org/package/ansi-wl-pprint-1.0.2/ansi-wl-pprint-1.0.2.tar.gz",
+      "version": "1.0.2"
+    },
+    "drb@gem": {
+      "checksum": "0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645883Z",
+      "name": "drb",
+      "source_url": "https://rubygems.org/gems/drb-2.2.3.gem",
+      "version": "2.2.3"
+    },
+    "es-object-atoms@npm": {
+      "checksum": "1c4f2c4837327597ce69d2ca190a7fdd172338c1",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "es-errors"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312621Z",
+      "name": "es-object-atoms",
+      "source_url": "https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.1.1.tgz",
+      "version": "1.1.1"
+    },
+    "ansi-terminal@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "ansi-terminal",
+        "ansi-terminal-types",
+        "colour"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573035Z",
+      "name": "ansi-terminal",
+      "source_url": "https://hackage.haskell.org/package/ansi-terminal-1.1.5/ansi-terminal-1.1.5.tar.gz",
+      "version": "1.1.5"
+    },
+    "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480464Z",
+      "name": "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.osx.10.10-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.osx.10.10-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "prism@gem": {
+      "checksum": "7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645871Z",
+      "name": "prism",
+      "source_url": "https://rubygems.org/gems/prism-1.9.0.gem",
+      "version": "1.9.0"
+    },
+    "System.Reflection.Extensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Reflection",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480272Z",
+      "name": "System.Reflection.Extensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.extensions/4.3.0/system.reflection.extensions.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "fresh@npm": {
+      "checksum": "8dd7df6a1b3a1b3a5cf186c05a5dd267622635a4",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312468Z",
+      "name": "fresh",
+      "source_url": "https://registry.npmjs.org/fresh/-/fresh-2.0.0.tgz",
+      "version": "2.0.0"
+    },
+    "old-locale@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573253Z",
+      "name": "old-locale",
+      "source_url": "https://hackage.haskell.org/package/old-locale-1.0.0.0/old-locale-1.0.0.0.tar.gz",
+      "version": "1.0.0.0"
+    },
+    "System.Threading.Timer@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480248Z",
+      "name": "System.Threading.Timer",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.threading.timer/4.3.0/system.threading.timer.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "express@npm": {
+      "checksum": "8f21d15b6d327f92b4794ecf8cb08a72f956ac04",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "accepts",
+        "body-parser",
+        "content-disposition",
+        "content-type",
+        "cookie",
+        "cookie-signature",
+        "debug",
+        "depd",
+        "encodeurl",
+        "escape-html",
+        "etag",
+        "finalhandler",
+        "fresh",
+        "http-errors",
+        "merge-descriptors",
+        "mime-types",
+        "on-finished",
+        "once",
+        "parseurl",
+        "proxy-addr",
+        "qs",
+        "range-parser",
+        "router",
+        "send",
+        "serve-static",
+        "statuses",
+        "type-is",
+        "vary"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312606Z",
+      "name": "express",
+      "source_url": "https://registry.npmjs.org/express/-/express-5.2.1.tgz",
+      "version": "5.2.1"
+    },
+    "safer-buffer@npm": {
+      "checksum": "44fa161b0187b9549dd84bb91802f9bd8385cd6a",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312714Z",
+      "name": "safer-buffer",
+      "source_url": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+      "version": "2.1.2"
+    },
+    "stm@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "nats",
+        "semigroups"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572807Z",
+      "name": "stm",
+      "source_url": "https://hackage.haskell.org/package/stm-2.5.3.0/stm-2.5.3.0.tar.gz",
+      "version": "2.5.3.0"
+    },
+    "System.Collections.Concurrent@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.Tracing",
+        "System.Globalization",
+        "System.Reflection",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480675Z",
+      "name": "System.Collections.Concurrent",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.collections.concurrent/4.3.0/system.collections.concurrent.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "vector-stream@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572841Z",
+      "name": "vector-stream",
+      "source_url": "https://hackage.haskell.org/package/vector-stream-0.1.0.0/vector-stream-0.1.0.0.tar.gz",
+      "version": "0.1.0.0"
+    },
+    "phoenix_pubsub@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956066Z",
+      "name": "phoenix_pubsub",
+      "source_url": "https://repo.hex.pm/tarballs/phoenix_pubsub-2.2.0.tar",
+      "version": "2.2.0"
+    },
+    "function-bind@npm": {
+      "checksum": "2c02d864d97f3ea6c8830c464cbd11ab6eab7a1c",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312612Z",
+      "name": "function-bind",
+      "source_url": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz",
+      "version": "1.1.2"
+    },
+    "System.IO.FileSystem@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.IO",
+        "System.IO.FileSystem.Primitives",
+        "System.Runtime",
+        "System.Runtime.Handles",
+        "System.Text.Encoding",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480639Z",
+      "name": "System.IO.FileSystem",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.io.filesystem/4.3.0/system.io.filesystem.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "data-default@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "containers",
+        "data-default",
+        "mtl"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573211Z",
+      "name": "data-default",
+      "source_url": "https://hackage.haskell.org/package/data-default-0.8.0.0/data-default-0.8.0.0.tar.gz",
+      "version": "0.8.0.0"
+    },
+    "github.com/mattn/go-colorable@go": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "github.com/mattn/go-isatty",
+        "golang.org/x/sys"
+      ],
+      "forth": "go",
+      "installed_at": "2026-02-12T19:27:09.065829Z",
+      "name": "github.com/mattn/go-colorable",
+      "source_url": "https://proxy.golang.org/github.com/mattn/go-colorable/@v/v0.1.14.zip",
+      "version": "v0.1.14"
+    },
+    "data-default-class@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "data-default"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573060Z",
+      "name": "data-default-class",
+      "source_url": "https://hackage.haskell.org/package/data-default-class-0.2.0.0/data-default-class-0.2.0.0.tar.gz",
+      "version": "0.2.0.0"
+    },
+    "System.Reflection.Emit@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.IO",
+        "System.Reflection",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.InteropServices"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480600Z",
+      "name": "System.Reflection.Emit",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.emit/4.7.0/system.reflection.emit.4.7.0.nupkg",
+      "version": "4.7.0"
+    },
+    "System.Diagnostics.Contracts@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480252Z",
+      "name": "System.Diagnostics.Contracts",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.diagnostics.contracts/4.3.0/system.diagnostics.contracts.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "runtime.native.System@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480539Z",
+      "name": "runtime.native.System",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system/4.3.1/runtime.native.system.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "runtime.fedora.27-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480398Z",
+      "name": "runtime.fedora.27-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.fedora.27-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.fedora.27-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "System.Security.Cryptography.Csp@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.IO",
+        "System.Reflection",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480194Z",
+      "name": "System.Security.Cryptography.Csp",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.csp/4.3.0/system.security.cryptography.csp.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "template-haskell-lift@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "ghc-internal"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572883Z",
+      "name": "template-haskell-lift",
+      "source_url": "https://hackage.haskell.org/package/template-haskell-lift-0.1.0.0/template-haskell-lift-0.1.0.0.tar.gz",
+      "version": "0.1.0.0"
+    },
+    "deepseq@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572976Z",
+      "name": "deepseq",
+      "source_url": "https://hackage.haskell.org/package/deepseq-1.6.0.0/deepseq-1.6.0.0.tar.gz",
+      "version": "1.6.0.0"
+    },
+    "foldable1-classes-compat@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "base-orphans",
+        "bifunctor-classes-compat",
+        "tagged"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573083Z",
+      "name": "foldable1-classes-compat",
+      "source_url": "https://hackage.haskell.org/package/foldable1-classes-compat-0.1.3/foldable1-classes-compat-0.1.3.tar.gz",
+      "version": "0.1.3"
+    },
+    "urllib3@pypi": {
+      "checksum": "bf272323e553dfb2e87d9bfd225ca7b0f467b919d7bbd355436d3fd37cb0acd4",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pypi",
+      "installed_at": "2026-02-12T19:25:36.490996Z",
+      "name": "urllib3",
+      "source_url": "https://files.pythonhosted.org/packages/39/08/aaaad47bc4e9dc8c725e68f9d04865dbcb2052843ff09c97b08904852d84/urllib3-2.6.3-py3-none-any.whl",
+      "version": "2.6.3"
+    },
+    "time@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573018Z",
+      "name": "time",
+      "source_url": "https://hackage.haskell.org/package/time-1.12.2/time-1.12.2.tar.gz",
+      "version": "1.12.2"
+    },
+    "regex-posix@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "array",
+        "bytestring",
+        "containers",
+        "fail",
+        "regex-base",
+        "regex-posix-clib"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573164Z",
+      "name": "regex-posix",
+      "source_url": "https://hackage.haskell.org/package/regex-posix-0.96.0.0/regex-posix-0.96.0.0.tar.gz",
+      "version": "0.96.0.0"
+    },
+    "jason@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:35:15.163350Z",
+      "name": "jason",
+      "source_url": "https://repo.hex.pm/tarballs/jason-1.5.0-alpha.2.tar",
+      "version": "1.5.0-alpha.2"
+    },
+    "send@npm": {
+      "checksum": "9eab743b874f3550f40a26867bf286ad60d3f3ed",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "debug",
+        "encodeurl",
+        "escape-html",
+        "etag",
+        "fresh",
+        "http-errors",
+        "mime-types",
+        "ms",
+        "on-finished",
+        "range-parser",
+        "statuses"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312754Z",
+      "name": "send",
+      "source_url": "https://registry.npmjs.org/send/-/send-1.2.1.tgz",
+      "version": "1.2.1"
+    },
+    "get-proto@npm": {
+      "checksum": "150b3f2743869ef3e851ec0c49d15b1d14d00ee1",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "dunder-proto",
+        "es-object-atoms"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312572Z",
+      "name": "get-proto",
+      "source_url": "https://registry.npmjs.org/get-proto/-/get-proto-1.0.1.tgz",
+      "version": "1.0.1"
+    },
+    "NETStandard.Library@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Threading",
+        "System.Console",
+        "Microsoft.NETCore.Platforms",
+        "System.Runtime.InteropServices.RuntimeInformation",
+        "System.Resources.ResourceManager",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Reflection.Primitives",
+        "System.Runtime.Extensions",
+        "System.IO",
+        "System.Collections",
+        "System.Globalization",
+        "System.Diagnostics.Tracing",
+        "System.Threading.Timer",
+        "System.Reflection.Extensions",
+        "System.Runtime.Handles",
+        "System.Reflection",
+        "System.Globalization.Calendars",
+        "System.IO.Compression.ZipFile",
+        "System.ObjectModel",
+        "System.Security.Cryptography.Primitives",
+        "System.Runtime",
+        "System.Threading.Tasks",
+        "System.IO.FileSystem.Primitives",
+        "System.Runtime.Numerics",
+        "System.Net.Sockets",
+        "System.Runtime.InteropServices",
+        "Microsoft.Win32.Primitives",
+        "System.IO.Compression",
+        "System.Text.RegularExpressions",
+        "System.Net.Http",
+        "System.Security.Cryptography.Algorithms",
+        "System.Xml.ReaderWriter",
+        "System.Security.Cryptography.Encoding",
+        "System.Net.Primitives",
+        "System.Text.Encoding",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.Xml.XDocument",
+        "System.Diagnostics.Tools",
+        "System.IO.FileSystem",
+        "System.AppContext",
+        "System.Text.Encoding.Extensions",
+        "System.Diagnostics.Debug",
+        "System.Collections.Concurrent"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480388Z",
+      "name": "NETStandard.Library",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg",
+      "version": "2.0.3"
+    },
+    "System.Numerics.Vectors@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480529Z",
+      "name": "System.Numerics.Vectors",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.numerics.vectors/4.6.1/system.numerics.vectors.4.6.1.nupkg",
+      "version": "4.6.1"
+    },
+    "logger@gem": {
+      "checksum": "196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646017Z",
+      "name": "logger",
+      "source_url": "https://rubygems.org/gems/logger-1.7.0.gem",
+      "version": "1.7.0"
+    },
+    "runtime.native.System.IO.Compression@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480361Z",
+      "name": "runtime.native.System.IO.Compression",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system.io.compression/4.3.2/runtime.native.system.io.compression.4.3.2.nupkg",
+      "version": "4.3.2"
+    },
+    "System.Security.Cryptography.Algorithms@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Collections",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.Numerics",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding",
+        "runtime.native.System.Security.Cryptography.Apple",
+        "runtime.native.System.Security.Cryptography.OpenSsl"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480513Z",
+      "name": "System.Security.Cryptography.Algorithms",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.algorithms/4.3.1/system.security.cryptography.algorithms.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "System.Net.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime",
+        "System.Runtime.Handles"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480556Z",
+      "name": "System.Net.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.net.primitives/4.3.1/system.net.primitives.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "System.Linq@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480596Z",
+      "name": "System.Linq",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.linq/4.3.0/system.linq.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Xml.XmlDocument@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Text.Encoding",
+        "System.Threading",
+        "System.Xml.ReaderWriter"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480454Z",
+      "name": "System.Xml.XmlDocument",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.xml.xmldocument/4.3.0/system.xml.xmldocument.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "get-intrinsic@npm": {
+      "checksum": "7f03d6cc8df96ae803c35cf23590510f28357173",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "async-function",
+        "async-generator-function",
+        "call-bind-apply-helpers",
+        "es-define-property",
+        "es-errors",
+        "es-object-atoms",
+        "function-bind",
+        "generator-function",
+        "get-proto",
+        "gopd",
+        "has-symbols",
+        "hasown",
+        "math-intrinsics"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312541Z",
+      "name": "get-intrinsic",
+      "source_url": "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.3.1.tgz",
+      "version": "1.3.1"
+    },
+    "unicode-ident@cargo": {
+      "checksum": "537dd038a89878be9b64dd4bd1b260315c1bb94f4d784956b81e27a088d9a09e",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849544Z",
+      "name": "unicode-ident",
+      "source_url": "https://static.crates.io/crates/unicode-ident/unicode-ident-1.0.23.crate",
+      "version": "1.0.23"
+    },
+    "timeout@gem": {
+      "checksum": "6d722ad619f96ee383a0c557ec6eb8c4ecb08af3af62098a0be5057bf00de1af",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645928Z",
+      "name": "timeout",
+      "source_url": "https://rubygems.org/gems/timeout-0.6.0.gem",
+      "version": "0.6.0"
+    },
+    "System.Diagnostics.Tools@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480633Z",
+      "name": "System.Diagnostics.Tools",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.diagnostics.tools/4.3.0/system.diagnostics.tools.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "call-bind-apply-helpers@npm": {
+      "checksum": "4b5428c222be985d79c3d82657479dbe0b59b2d6",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "es-errors",
+        "function-bind"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312507Z",
+      "name": "call-bind-apply-helpers",
+      "source_url": "https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz",
+      "version": "1.0.2"
+    },
+    "semigroups@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573072Z",
+      "name": "semigroups",
+      "source_url": "https://hackage.haskell.org/package/semigroups-0.20.1/semigroups-0.20.1.tar.gz",
+      "version": "0.20.1"
+    },
+    "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.Apple@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480460Z",
+      "name": "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.Apple",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.osx.10.10-x64.runtime.native.system.security.cryptography.apple/4.3.1/runtime.osx.10.10-x64.runtime.native.system.security.cryptography.apple.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "runtime.opensuse.13.2-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480642Z",
+      "name": "runtime.opensuse.13.2-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.opensuse.13.2-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.opensuse.13.2-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "builder@gem": {
+      "checksum": "497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645811Z",
+      "name": "builder",
+      "source_url": "https://rubygems.org/gems/builder-3.3.0.gem",
+      "version": "3.3.0"
+    },
+    "provider@pub": {
+      "checksum": "4abbd070a04e9ddc287673bf5a030c7ca8b685ff70218720abab8b092f53dd84",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "collection",
+        "nested"
+      ],
+      "forth": "pub",
+      "installed_at": "2026-02-12T19:27:11.015415Z",
+      "name": "provider",
+      "source_url": "https://pub.dev/api/archives/provider-6.1.5.tar.gz",
+      "version": "6.1.5"
+    },
+    "bifunctor-classes-compat@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "tagged"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573053Z",
+      "name": "bifunctor-classes-compat",
+      "source_url": "https://hackage.haskell.org/package/bifunctor-classes-compat-0.1.1/bifunctor-classes-compat-0.1.1.tar.gz",
+      "version": "0.1.1"
+    },
+    "base-compat-batteries@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573078Z",
+      "name": "base-compat-batteries",
+      "source_url": "https://hackage.haskell.org/package/base-compat-batteries-0.15.0/base-compat-batteries-0.15.0.tar.gz",
+      "version": "0.15.0"
+    },
+    "object-inspect@npm": {
+      "checksum": "8375265e21bc20d0fa582c22e1b13485d6e00213",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312907Z",
+      "name": "object-inspect",
+      "source_url": "https://registry.npmjs.org/object-inspect/-/object-inspect-1.13.4.tgz",
+      "version": "1.13.4"
+    },
+    "System.Runtime.Serialization.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Resources.ResourceManager",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480208Z",
+      "name": "System.Runtime.Serialization.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.serialization.primitives/4.3.0/system.runtime.serialization.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "rails@gem": {
+      "checksum": "5069061b23dfa8706b9f0159ae8b9d35727359103178a26962b868a680ba7d95",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actioncable",
+        "actionmailbox",
+        "actionmailer",
+        "actionpack",
+        "actiontext",
+        "actionview",
+        "activejob",
+        "activemodel",
+        "activerecord",
+        "activestorage",
+        "activesupport",
+        "bundler",
+        "railties"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645787Z",
+      "name": "rails",
+      "source_url": "https://rubygems.org/gems/rails-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "net-protocol@gem": {
+      "checksum": "aa73e0cba6a125369de9837b8d8ef82a61849360eba0521900e2c3713aa162a8",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "timeout"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645967Z",
+      "name": "net-protocol",
+      "source_url": "https://rubygems.org/gems/net-protocol-0.2.2.gem",
+      "version": "0.2.2"
+    },
+    "System.Security.Cryptography.Cng@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Formats.Asn1",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480665Z",
+      "name": "System.Security.Cryptography.Cng",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.cng/6.0.0-preview.4.21253.7/system.security.cryptography.cng.6.0.0-preview.4.21253.7.nupkg",
+      "version": "6.0.0-preview.4.21253.7"
+    },
+    "charset-normalizer@pypi": {
+      "checksum": "e824f1492727fa856dd6eda4f7cee25f8518a12f3c4a56a74e8095695089cf6d",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pypi",
+      "installed_at": "2026-02-12T19:25:36.490974Z",
+      "name": "charset-normalizer",
+      "source_url": "https://files.pythonhosted.org/packages/1f/b8/6d51fc1d52cbd52cd4ccedd5b5b2f0f6a11bbf6765c782298b0f3e808541/charset_normalizer-3.4.4-cp310-cp310-macosx_10_9_universal2.whl",
+      "version": "3.4.4"
+    },
+    "rack-session@gem": {
+      "checksum": "0b6dc07dea7e4b583f58a48e8b806d4c9f1c6c9214ebc202ec94562cbea2e4e9",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "base64",
+        "rack"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645711Z",
+      "name": "rack-session",
+      "source_url": "https://rubygems.org/gems/rack-session-2.1.1.gem",
+      "version": "2.1.1"
+    },
+    "System.Linq.Expressions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.IO",
+        "System.Linq",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Emit.Lightweight",
+        "System.Reflection.Extensions",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480606Z",
+      "name": "System.Linq.Expressions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.linq.expressions/4.3.0/system.linq.expressions.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Runtime.Numerics@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Globalization",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480437Z",
+      "name": "System.Runtime.Numerics",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.numerics/4.3.0/system.runtime.numerics.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Threading.Tasks.Extensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Runtime.CompilerServices.Unsafe"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480525Z",
+      "name": "System.Threading.Tasks.Extensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.threading.tasks.extensions/4.6.3/system.threading.tasks.extensions.4.6.3.nupkg",
+      "version": "4.6.3"
+    },
+    "github.com/fatih/color@go": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "github.com/mattn/go-colorable",
+        "github.com/mattn/go-isatty",
+        "golang.org/x/sys"
+      ],
+      "forth": "go",
+      "installed_at": "2026-02-12T19:27:09.065801Z",
+      "name": "github.com/fatih/color",
+      "source_url": "https://proxy.golang.org/github.com/fatih/color/@v/v1.18.0.zip",
+      "version": "v1.18.0"
+    },
+    "syn@cargo": {
+      "checksum": "6e614ed320ac28113fa64972c4262d5dbc89deacdfd00c34a3e4cea073243c12",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "proc-macro2",
+        "unicode-ident"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849537Z",
+      "name": "syn",
+      "source_url": "https://static.crates.io/crates/syn/syn-2.0.115.crate",
+      "version": "2.0.115"
+    },
+    "quote@cargo": {
+      "checksum": "21b2ebcf727b7760c461f091f9f0f539b77b8e87f2fd88131e7f1b433b3cece4",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "proc-macro2"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849509Z",
+      "name": "quote",
+      "source_url": "https://static.crates.io/crates/quote/quote-1.0.44.crate",
+      "version": "1.0.44"
+    },
+    "wrappy@npm": {
+      "checksum": "8aae4fc6b4cd6be32a4553985bcf32b3ee131e4e",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312867Z",
+      "name": "wrappy",
+      "source_url": "https://registry.npmjs.org/wrappy/-/wrappy-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "inherits@npm": {
+      "checksum": "0fa2c64f932917c3433a0ded55363aae37416b7c",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313065Z",
+      "name": "inherits",
+      "source_url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+      "version": "2.0.4"
+    },
+    "mtl@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "transformers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572939Z",
+      "name": "mtl",
+      "source_url": "https://hackage.haskell.org/package/mtl-2.3.2/mtl-2.3.2.tar.gz",
+      "version": "2.3.2"
+    },
+    "mime-types@npm": {
+      "checksum": "39002d4182575d5af036ffa118100f2524b2e2ab",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "mime-db"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312651Z",
+      "name": "mime-types",
+      "source_url": "https://registry.npmjs.org/mime-types/-/mime-types-3.0.2.tgz",
+      "version": "3.0.2"
+    },
+    "mail@gem": {
+      "checksum": "6fa6673ecd71c60c2d996260f9ee3dd387d4673b8169b502134659ece6d34941",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "mini_mime",
+        "net-imap",
+        "net-pop",
+        "net-smtp"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645667Z",
+      "name": "mail",
+      "source_url": "https://rubygems.org/gems/mail-2.9.0.beta1.gem",
+      "version": "2.9.0.beta1"
+    },
+    "i18n@gem": {
+      "checksum": "285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "concurrent-ruby"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645987Z",
+      "name": "i18n",
+      "source_url": "https://rubygems.org/gems/i18n-1.14.8.gem",
+      "version": "1.14.8"
+    },
+    "forwarded@npm": {
+      "checksum": "2269936428aad4c15c7ebe9779a84bf0b2a81811",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312897Z",
+      "name": "forwarded",
+      "source_url": "https://registry.npmjs.org/forwarded/-/forwarded-0.2.0.tgz",
+      "version": "0.2.0"
+    },
+    "System.Security.Cryptography.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Threading",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480380Z",
+      "name": "System.Security.Cryptography.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.primitives/4.3.0/system.security.cryptography.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "net-smtp@gem": {
+      "checksum": "ed96a0af63c524fceb4b29b0d352195c30d82dd916a42f03c62a3a70e5b70736",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "net-protocol"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646006Z",
+      "name": "net-smtp",
+      "source_url": "https://rubygems.org/gems/net-smtp-0.5.1.gem",
+      "version": "0.5.1"
+    },
+    "iconv-lite@npm": {
+      "checksum": "d0bdeac3f12b4835b7359c2ad89c422a4d1cc72e",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "safer-buffer"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312532Z",
+      "name": "iconv-lite",
+      "source_url": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.7.2.tgz",
+      "version": "0.7.2"
+    },
+    "System.Runtime.Handles@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480286Z",
+      "name": "System.Runtime.Handles",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.handles/4.3.0/system.runtime.handles.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "bundler@gem": {
+      "checksum": "4e43c13acf18c417926053d00f964a45c54f71721b33066336a0d7db5de73f08",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646035Z",
+      "name": "bundler",
+      "source_url": "https://rubygems.org/gems/bundler-4.0.6.gem",
+      "version": "4.0.6"
+    },
+    "finalhandler@npm": {
+      "checksum": "a2c517a6559852bcdb06d1f8bd7f51b68fad8099",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "debug",
+        "encodeurl",
+        "escape-html",
+        "on-finished",
+        "parseurl",
+        "statuses"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313017Z",
+      "name": "finalhandler",
+      "source_url": "https://registry.npmjs.org/finalhandler/-/finalhandler-2.1.1.tgz",
+      "version": "2.1.1"
+    },
+    "System.IO@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime",
+        "System.Text.Encoding",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480214Z",
+      "name": "System.IO",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.io/4.3.0/system.io.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "quickcheck-classes-base@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "bifunctors",
+        "containers",
+        "contravariant",
+        "fail",
+        "semigroups",
+        "tagged",
+        "transformers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573041Z",
+      "name": "quickcheck-classes-base",
+      "source_url": "https://hackage.haskell.org/package/quickcheck-classes-base-0.6.2.0/quickcheck-classes-base-0.6.2.0.tar.gz",
+      "version": "0.6.2.0"
+    },
+    "System.Net.Http@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.Win32.Primitives",
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Diagnostics.DiagnosticSource",
+        "System.Diagnostics.Tracing",
+        "System.Globalization",
+        "System.Globalization.Extensions",
+        "System.IO",
+        "System.IO.Compression",
+        "System.IO.FileSystem",
+        "System.Net.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.WindowsRuntime",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Security.Cryptography.X509Certificates",
+        "System.Text.Encoding",
+        "System.Text.Encoding.Extensions",
+        "System.Threading",
+        "System.Threading.Tasks",
+        "runtime.native.System",
+        "runtime.native.System.Net.Http",
+        "runtime.native.System.Security.Cryptography.OpenSsl"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480509Z",
+      "name": "System.Net.Http",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.net.http/4.3.4/system.net.http.4.3.4.nupkg",
+      "version": "4.3.4"
+    },
+    "test-framework@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "HUnit",
+        "QuickCheck",
+        "ansi-terminal",
+        "ansi-wl-pprint",
+        "base-orphans",
+        "bytestring",
+        "containers",
+        "libxml",
+        "old-locale",
+        "random",
+        "regex-posix",
+        "semigroups",
+        "time",
+        "xml"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572946Z",
+      "name": "test-framework",
+      "source_url": "https://hackage.haskell.org/package/test-framework-0.8.2.0/test-framework-0.8.2.0.tar.gz",
+      "version": "0.8.2.0"
+    },
+    "websock@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956086Z",
+      "name": "websock",
+      "source_url": "https://repo.hex.pm/tarballs/websock-0.5.3.tar",
+      "version": "0.5.3"
+    },
+    "System.Runtime.InteropServices.RuntimeInformation@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Reflection",
+        "System.Reflection.Extensions",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.InteropServices",
+        "System.Threading",
+        "runtime.native.System"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480170Z",
+      "name": "System.Runtime.InteropServices.RuntimeInformation",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.interopservices.runtimeinformation/4.3.0/system.runtime.interopservices.runtimeinformation.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "bytes@npm": {
+      "checksum": "8b0beeb98605adf1b128fa4386403c009e0221a5",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312666Z",
+      "name": "bytes",
+      "source_url": "https://registry.npmjs.org/bytes/-/bytes-3.1.2.tgz",
+      "version": "3.1.2"
+    },
+    "System.Collections@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480225Z",
+      "name": "System.Collections",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.collections/4.3.0/system.collections.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "serde_core@cargo": {
+      "checksum": "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "serde_derive"
+      ],
+      "forth": "cargo",
+      "installed_at": "2026-02-12T19:25:33.849524Z",
+      "name": "serde_core",
+      "source_url": "https://static.crates.io/crates/serde_core/serde_core-1.0.228.crate",
+      "version": "1.0.228"
+    },
+    "nats@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "binary",
+        "hashable"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572982Z",
+      "name": "nats",
+      "source_url": "https://hackage.haskell.org/package/nats-1.1.2/nats-1.1.2.tar.gz",
+      "version": "1.1.2"
+    },
+    "etag@npm": {
+      "checksum": "41ae2eeb65efa62268aebfea83ac7d79299b0887",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312587Z",
+      "name": "etag",
+      "source_url": "https://registry.npmjs.org/etag/-/etag-1.8.1.tgz",
+      "version": "1.8.1"
+    },
+    "proxy-addr@npm": {
+      "checksum": "f19fe69ceab311eeb94b42e70e8c2070f9ba1025",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "forwarded",
+        "ipaddr.js"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312921Z",
+      "name": "proxy-addr",
+      "source_url": "https://registry.npmjs.org/proxy-addr/-/proxy-addr-2.0.7.tgz",
+      "version": "2.0.7"
+    },
+    "System.Reflection@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.IO",
+        "System.Reflection.Primitives",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480330Z",
+      "name": "System.Reflection",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection/4.3.0/system.reflection.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "railties@gem": {
+      "checksum": "1289ece76b4f7668fc46d07e55cc992b5b8751f2ad85548b7da351b8c59f8055",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionpack",
+        "activesupport",
+        "irb",
+        "rackup",
+        "rake",
+        "thor",
+        "tsort",
+        "zeitwerk"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645760Z",
+      "name": "railties",
+      "source_url": "https://rubygems.org/gems/railties-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "data-array-byte@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573005Z",
+      "name": "data-array-byte",
+      "source_url": "https://hackage.haskell.org/package/data-array-byte-0.1.0.1/data-array-byte-0.1.0.1.tar.gz",
+      "version": "0.1.0.1"
+    },
+    "activesupport@gem": {
+      "checksum": "88842578ccd0d40f658289b0e8c842acfe9af751afee2e0744a7873f50b6fdae",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "base64",
+        "bigdecimal",
+        "concurrent-ruby",
+        "connection_pool",
+        "drb",
+        "i18n",
+        "json",
+        "logger",
+        "minitest",
+        "securerandom",
+        "tzinfo",
+        "uri"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645890Z",
+      "name": "activesupport",
+      "source_url": "https://rubygems.org/gems/activesupport-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "System.Resources.ResourceManager@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Globalization",
+        "System.Reflection",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480177Z",
+      "name": "System.Resources.ResourceManager",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.resources.resourcemanager/4.3.0/system.resources.resourcemanager.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "accepts@npm": {
+      "checksum": "bbcf4ba5075467f3f2131eab3cffc73c2f5d7895",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "mime-types",
+        "negotiator"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312738Z",
+      "name": "accepts",
+      "source_url": "https://registry.npmjs.org/accepts/-/accepts-2.0.0.tgz",
+      "version": "2.0.0"
+    },
+    "template-haskell-quasiquoter@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "ghc-internal"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573194Z",
+      "name": "template-haskell-quasiquoter",
+      "source_url": "https://hackage.haskell.org/package/template-haskell-quasiquoter-0.1.0.0/template-haskell-quasiquoter-0.1.0.0.tar.gz",
+      "version": "0.1.0.0"
+    },
+    "erb@gem": {
+      "checksum": "28ecdd99c5472aebd5674d6061e3c6b0a45c049578b071e5a52c2a7f13c197e5",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645971Z",
+      "name": "erb",
+      "source_url": "https://rubygems.org/gems/erb-6.0.1.gem",
+      "version": "6.0.1"
+    },
+    "tasty-inspection-testing@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572952Z",
+      "name": "tasty-inspection-testing",
+      "source_url": "https://hackage.haskell.org/package/tasty-inspection-testing-0.2.1/tasty-inspection-testing-0.2.1.tar.gz",
+      "version": "0.2.1"
+    },
+    "ghc-internal@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572877Z",
+      "name": "ghc-internal",
+      "source_url": "https://hackage.haskell.org/package/ghc-internal-9.1401.0/ghc-internal-9.1401.0.tar.gz",
+      "version": "9.1401.0"
+    },
+    "transformers-compat@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "fail",
+        "generic-deriving",
+        "mtl",
+        "transformers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573105Z",
+      "name": "transformers-compat",
+      "source_url": "https://hackage.haskell.org/package/transformers-compat-0.7.2/transformers-compat-0.7.2.tar.gz",
+      "version": "0.7.2"
+    },
+    "rack-test@gem": {
+      "checksum": "005a36692c306ac0b4a9350355ee080fd09ddef1148a5f8b2ac636c720f5c463",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "rack"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645983Z",
+      "name": "rack-test",
+      "source_url": "https://rubygems.org/gems/rack-test-2.2.0.gem",
+      "version": "2.2.0"
+    },
+    "json@gem": {
+      "checksum": "fe112755501b8d0466b5ada6cf50c8c3f41e897fa128ac5d263ec09eedc9f986",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645793Z",
+      "name": "json",
+      "source_url": "https://rubygems.org/gems/json-2.18.1.gem",
+      "version": "2.18.1"
+    },
+    "qs@npm": {
+      "checksum": "b5634cf9d9ad9898e31fba3504e866e8efb6798c",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "side-channel"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312873Z",
+      "name": "qs",
+      "source_url": "https://registry.npmjs.org/qs/-/qs-6.14.2.tgz",
+      "version": "6.14.2"
+    },
+    "idna@pypi": {
+      "checksum": "69297d5da0cc9281c77efffb4e730254dd45943f45bbfb461de5991713989b1e",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pypi",
+      "installed_at": "2026-02-12T19:25:36.490981Z",
+      "name": "idna",
+      "source_url": "https://files.pythonhosted.org/packages/6d/15/61933d1999bc5ad8cad612d67f02fa5b16a423076ea0816e39c2e797af12/idna-3.9-py3-none-any.whl",
+      "version": "3.9"
+    },
+    "async-function@npm": {
+      "checksum": "509c9fca60eaf85034c6829838188e4e4c8ffb2b",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312635Z",
+      "name": "async-function",
+      "source_url": "https://registry.npmjs.org/async-function/-/async-function-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "System.Reflection.TypeExtensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Debug",
+        "System.Linq",
+        "System.Reflection",
+        "System.Reflection.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480497Z",
+      "name": "System.Reflection.TypeExtensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.typeextensions/4.7.0/system.reflection.typeextensions.4.7.0.nupkg",
+      "version": "4.7.0"
+    },
+    "System.ValueTuple@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480535Z",
+      "name": "System.ValueTuple",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.valuetuple/4.6.1/system.valuetuple.4.6.1.nupkg",
+      "version": "4.6.1"
+    },
+    "System.Security.Cryptography.X509Certificates@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.Globalization.Calendars",
+        "System.IO",
+        "System.IO.FileSystem",
+        "System.IO.FileSystem.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.Numerics",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Cng",
+        "System.Security.Cryptography.Csp",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.OpenSsl",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding",
+        "System.Threading",
+        "runtime.native.System",
+        "runtime.native.System.Net.Http",
+        "runtime.native.System.Security.Cryptography.OpenSsl"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480181Z",
+      "name": "System.Security.Cryptography.X509Certificates",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.x509certificates/4.3.2/system.security.cryptography.x509certificates.4.3.2.nupkg",
+      "version": "4.3.2"
+    },
+    "date@gem": {
+      "checksum": "750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646021Z",
+      "name": "date",
+      "source_url": "https://rubygems.org/gems/date-3.5.1.gem",
+      "version": "3.5.1"
+    },
+    "System.Reflection.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480198Z",
+      "name": "System.Reflection.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.primitives/4.3.0/system.reflection.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "System.Dynamic.Runtime@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Collections",
+        "System.Diagnostics.Debug",
+        "System.Globalization",
+        "System.Linq",
+        "System.Linq.Expressions",
+        "System.ObjectModel",
+        "System.Reflection",
+        "System.Reflection.Emit",
+        "System.Reflection.Emit.ILGeneration",
+        "System.Reflection.Primitives",
+        "System.Reflection.TypeExtensions",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Threading"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480316Z",
+      "name": "System.Dynamic.Runtime",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.dynamic.runtime/4.3.0/system.dynamic.runtime.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "rails-dom-testing@gem": {
+      "checksum": "8acc7953a7b911ca44588bf08737bc16719f431a1cc3091a292bca7317925c1d",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "activesupport",
+        "minitest",
+        "nokogiri"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645674Z",
+      "name": "rails-dom-testing",
+      "source_url": "https://rubygems.org/gems/rails-dom-testing-2.3.0.gem",
+      "version": "2.3.0"
+    },
+    "erubi@gem": {
+      "checksum": "a082103b0885dbc5ecf1172fede897f9ebdb745a4b97a5e8dc63953db1ee4ad9",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645639Z",
+      "name": "erubi",
+      "source_url": "https://rubygems.org/gems/erubi-1.13.1.gem",
+      "version": "1.13.1"
+    },
+    "statuses@npm": {
+      "checksum": "8f75eecef765b5e1cfcdc080da59409ed424e382",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312477Z",
+      "name": "statuses",
+      "source_url": "https://registry.npmjs.org/statuses/-/statuses-2.0.2.tgz",
+      "version": "2.0.2"
+    },
+    "StateVar@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573153Z",
+      "name": "StateVar",
+      "source_url": "https://hackage.haskell.org/package/StateVar-1.2.2/StateVar-1.2.2.tar.gz",
+      "version": "1.2.2"
+    },
+    "side-channel-list@npm": {
+      "checksum": "10cb5984263115d3b7a0e336591e290a830af8ad",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "es-errors",
+        "object-inspect"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312565Z",
+      "name": "side-channel-list",
+      "source_url": "https://registry.npmjs.org/side-channel-list/-/side-channel-list-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "Microsoft.Win32.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480476Z",
+      "name": "Microsoft.Win32.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/microsoft.win32.primitives/4.3.0/microsoft.win32.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "colour@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573095Z",
+      "name": "colour",
+      "source_url": "https://hackage.haskell.org/package/colour-2.3.6/colour-2.3.6.tar.gz",
+      "version": "2.3.6"
+    },
+    "System.Threading@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Runtime",
+        "System.Threading.Tasks"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480120Z",
+      "name": "System.Threading",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.threading/4.3.0/system.threading.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "Microsoft.CSharp@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "NETStandard.Library",
+        "System.Dynamic.Runtime",
+        "System.Reflection.TypeExtensions"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480370Z",
+      "name": "Microsoft.CSharp",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/microsoft.csharp/4.7.0/microsoft.csharp.4.7.0.nupkg",
+      "version": "4.7.0"
+    },
+    "zeitwerk@gem": {
+      "checksum": "2bef90f356bdafe9a6c2bd32bcd804f83a4f9b8bc27f3600fff051eb3edcec8b",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645998Z",
+      "name": "zeitwerk",
+      "source_url": "https://rubygems.org/gems/zeitwerk-2.7.4.gem",
+      "version": "2.7.4"
+    },
+    "random@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "data-array-byte"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572897Z",
+      "name": "random",
+      "source_url": "https://hackage.haskell.org/package/random-1.3.1/random-1.3.1.tar.gz",
+      "version": "1.3.1"
+    },
+    "useragent@gem": {
+      "checksum": "700e6413ad4bb954bb63547fa098dddf7b0ebe75b40cc6f93b8d54255b173844",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.646002Z",
+      "name": "useragent",
+      "source_url": "https://rubygems.org/gems/useragent-0.16.11.gem",
+      "version": "0.16.11"
+    },
+    "process@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "filepath"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572927Z",
+      "name": "process",
+      "source_url": "https://hackage.haskell.org/package/process-1.6.26.0/process-1.6.26.0.tar.gz",
+      "version": "1.6.26.0"
+    },
+    "concurrent-ruby@gem": {
+      "checksum": "6b56837e1e7e5292f9864f34b69c5a2cbc75c0cf5338f1ce9903d10fa762d5ab",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645901Z",
+      "name": "concurrent-ruby",
+      "source_url": "https://rubygems.org/gems/concurrent-ruby-1.3.6.gem",
+      "version": "1.3.6"
+    },
+    "runtime.debian.9-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480562Z",
+      "name": "runtime.debian.9-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.debian.9-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.debian.9-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "libxml@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "bytestring",
+        "mtl"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572964Z",
+      "name": "libxml",
+      "source_url": "https://hackage.haskell.org/package/libxml-0.1.1/libxml-0.1.1.tar.gz",
+      "version": "0.1.1"
+    },
+    "QuickCheck@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "QuickCheck",
+        "containers",
+        "data-array-byte",
+        "deepseq",
+        "process",
+        "random",
+        "splitmix",
+        "transformers"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573066Z",
+      "name": "QuickCheck",
+      "source_url": "https://hackage.haskell.org/package/QuickCheck-2.17.1.0/QuickCheck-2.17.1.0.tar.gz",
+      "version": "2.17.1.0"
+    },
+    "hasown@npm": {
+      "checksum": "003eaf91be7adc372e84ec59dc37252cedb80003",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "function-bind"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312486Z",
+      "name": "hasown",
+      "source_url": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
+      "version": "2.0.2"
+    },
+    "requests@pypi": {
+      "checksum": "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "certifi",
+        "charset_normalizer",
+        "idna",
+        "urllib3"
+      ],
+      "forth": "pypi",
+      "installed_at": "2026-02-12T19:25:36.490989Z",
+      "name": "requests",
+      "source_url": "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl",
+      "version": "2.32.5"
+    },
+    "rdoc@gem": {
+      "checksum": "8650f76cd4009c3b54955eb5d7e3a075c60a57276766ebf36f9085e8c9f23192",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "erb",
+        "psych",
+        "tsort"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645754Z",
+      "name": "rdoc",
+      "source_url": "https://rubygems.org/gems/rdoc-7.2.0.gem",
+      "version": "7.2.0"
+    },
+    "parseurl@npm": {
+      "checksum": "9da19e7bee8d12dff0513ed5b76957793bc2e8d4",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312627Z",
+      "name": "parseurl",
+      "source_url": "https://registry.npmjs.org/parseurl/-/parseurl-1.3.3.tgz",
+      "version": "1.3.3"
+    },
+    "escape-html@npm": {
+      "checksum": "0258eae4d3d0c0974de1c169188ef0051d1d1988",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312461Z",
+      "name": "escape-html",
+      "source_url": "https://registry.npmjs.org/escape-html/-/escape-html-1.0.3.tgz",
+      "version": "1.0.3"
+    },
+    "System.Formats.Asn1@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Memory",
+        "System.ValueTuple"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480428Z",
+      "name": "System.Formats.Asn1",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.formats.asn1/11.0.0-preview.1.26104.118/system.formats.asn1.11.0.0-preview.1.26104.118.nupkg",
+      "version": "11.0.0-preview.1.26104.118"
+    },
+    "collection@pub": {
+      "checksum": "2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pub",
+      "installed_at": "2026-02-12T19:27:11.015380Z",
+      "name": "collection",
+      "source_url": "https://pub.dev/api/archives/collection-1.19.1.tar.gz",
+      "version": "1.19.1"
+    },
+    "xml@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "bytestring",
+        "text"
+      ],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572889Z",
+      "name": "xml",
+      "source_url": "https://hackage.haskell.org/package/xml-1.3.14/xml-1.3.14.tar.gz",
+      "version": "1.3.14"
+    },
+    "System.ComponentModel.Primitives@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.ComponentModel",
+        "System.Resources.ResourceManager",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480669Z",
+      "name": "System.ComponentModel.Primitives",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.componentmodel.primitives/4.3.0/system.componentmodel.primitives.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "actionmailbox@gem": {
+      "checksum": "058b2fb1980e5d5a894f675475fcfa45c62631103d5a2596d9610ec81581889b",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "actionpack",
+        "activejob",
+        "activerecord",
+        "activestorage",
+        "activesupport",
+        "mail"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645742Z",
+      "name": "actionmailbox",
+      "source_url": "https://rubygems.org/gems/actionmailbox-8.1.2.gem",
+      "version": "8.1.2"
+    },
+    "runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.debian.9-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.fedora.23-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.fedora.24-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.fedora.27-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.fedora.28-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.opensuse.13.2-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.opensuse.42.1-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.opensuse.42.3-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.osx.10.10-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.rhel.7-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.ubuntu.14.04-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.ubuntu.16.04-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.ubuntu.16.10-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+        "runtime.ubuntu.18.04-x64.runtime.native.System.Security.Cryptography.OpenSsl"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480374Z",
+      "name": "runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system.security.cryptography.openssl/4.3.3/runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "void@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.572909Z",
+      "name": "void",
+      "source_url": "https://hackage.haskell.org/package/void-0.7.4/void-0.7.4.tar.gz",
+      "version": "0.7.4"
+    },
+    "System.Memory@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Buffers",
+        "System.Numerics.Vectors",
+        "System.Runtime.CompilerServices.Unsafe"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480552Z",
+      "name": "System.Memory",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.memory/4.6.3/system.memory.4.6.3.nupkg",
+      "version": "4.6.3"
+    },
+    "once@npm": {
+      "checksum": "583b1aa775961d4b113ac17d9c50baef9dd76bd1",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "wrappy"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312730Z",
+      "name": "once",
+      "source_url": "https://registry.npmjs.org/once/-/once-1.4.0.tgz",
+      "version": "1.4.0"
+    },
+    "marcel@gem": {
+      "checksum": "fdcfcfa33cc52e93c4308d40e4090a5d4ea279e160a7f6af988260fa970e0bee",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645877Z",
+      "name": "marcel",
+      "source_url": "https://rubygems.org/gems/marcel-1.1.0.gem",
+      "version": "1.1.0"
+    },
+    "System.Text.Encoding.Extensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime",
+        "System.Text.Encoding"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480652Z",
+      "name": "System.Text.Encoding.Extensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.text.encoding.extensions/4.3.0/system.text.encoding.extensions.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "plug_crypto@hex": {
+      "checksum": null,
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "hex",
+      "installed_at": "2026-02-12T19:25:26.956079Z",
+      "name": "plug_crypto",
+      "source_url": "https://repo.hex.pm/tarballs/plug_crypto-2.1.1.tar",
+      "version": "2.1.1"
+    },
+    "System.Reflection.Emit.ILGeneration@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "System.Reflection",
+        "System.Reflection.Primitives",
+        "System.Resources.ResourceManager",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480188Z",
+      "name": "System.Reflection.Emit.ILGeneration",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.reflection.emit.ilgeneration/4.7.0/system.reflection.emit.ilgeneration.4.7.0.nupkg",
+      "version": "4.7.0"
+    },
+    "certifi@pypi": {
+      "checksum": "9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c",
+      "checksum_algo": "sha256",
+      "dependencies": [],
+      "forth": "pypi",
+      "installed_at": "2026-02-12T19:25:36.490944Z",
+      "name": "certifi",
+      "source_url": "https://files.pythonhosted.org/packages/e6/ad/3cc14f097111b4de0040c83a525973216457bbeeb63739ef1ed275c1c021/certifi-2026.1.4-py3-none-any.whl",
+      "version": "2026.1.4"
+    },
+    "System.Diagnostics.Tracing@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480242Z",
+      "name": "System.Diagnostics.Tracing",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.diagnostics.tracing/4.3.0/system.diagnostics.tracing.4.3.0.nupkg",
+      "version": "4.3.0"
+    },
+    "net-imap@gem": {
+      "checksum": "08caacad486853c61676cca0c0c47df93db02abc4a8239a8b67eb0981428acc6",
+      "checksum_algo": "sha256",
+      "dependencies": [
+        "date",
+        "net-protocol"
+      ],
+      "forth": "gem",
+      "installed_at": "2026-02-12T19:27:06.645975Z",
+      "name": "net-imap",
+      "source_url": "https://rubygems.org/gems/net-imap-0.6.2.gem",
+      "version": "0.6.2"
+    },
+    "regex-posix-clib@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573029Z",
+      "name": "regex-posix-clib",
+      "source_url": "https://hackage.haskell.org/package/regex-posix-clib-2.7/regex-posix-clib-2.7.tar.gz",
+      "version": "2.7"
+    },
+    "gopd@npm": {
+      "checksum": "89f56b8217bdbc8802bd299df6d7f1081d7e51a1",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313051Z",
+      "name": "gopd",
+      "source_url": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+      "version": "1.2.0"
+    },
+    "content-type@npm": {
+      "checksum": "8b773162656d1d1086784c8f23a54ce6d73d7918",
+      "checksum_algo": "sha1",
+      "dependencies": [],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.313003Z",
+      "name": "content-type",
+      "source_url": "https://registry.npmjs.org/content-type/-/content-type-1.0.5.tgz",
+      "version": "1.0.5"
+    },
+    "github.com/mattn/go-isatty@go": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "golang.org/x/sys"
+      ],
+      "forth": "go",
+      "installed_at": "2026-02-12T19:27:09.065836Z",
+      "name": "github.com/mattn/go-isatty",
+      "source_url": "https://proxy.golang.org/github.com/mattn/go-isatty/@v/v0.0.20.zip",
+      "version": "v0.0.20"
+    },
+    "body-parser@npm": {
+      "checksum": "1a32cdb966beaf68de50a9dfbe5b58f83cb8890c",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "bytes",
+        "content-type",
+        "debug",
+        "http-errors",
+        "iconv-lite",
+        "on-finished",
+        "qs",
+        "raw-body",
+        "type-is"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312978Z",
+      "name": "body-parser",
+      "source_url": "https://registry.npmjs.org/body-parser/-/body-parser-2.2.2.tgz",
+      "version": "2.2.2"
+    },
+    "System.Runtime.Extensions@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "Microsoft.NETCore.Targets",
+        "System.Runtime"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480204Z",
+      "name": "System.Runtime.Extensions",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.runtime.extensions/4.3.1/system.runtime.extensions.4.3.1.nupkg",
+      "version": "4.3.1"
+    },
+    "http-errors@npm": {
+      "checksum": "36d2f65bc909c8790018dd36fb4d93da6caae06b",
+      "checksum_algo": "sha1",
+      "dependencies": [
+        "depd",
+        "inherits",
+        "setprototypeof",
+        "statuses",
+        "toidentifier"
+      ],
+      "forth": "npm",
+      "installed_at": "2026-02-12T19:25:21.312764Z",
+      "name": "http-errors",
+      "source_url": "https://registry.npmjs.org/http-errors/-/http-errors-2.0.1.tgz",
+      "version": "2.0.1"
+    },
+    "System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [
+        "Microsoft.NETCore.Platforms",
+        "System.Collections",
+        "System.Formats.Asn1",
+        "System.IO",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions",
+        "System.Runtime.Handles",
+        "System.Runtime.InteropServices",
+        "System.Runtime.Numerics",
+        "System.Security.Cryptography.Algorithms",
+        "System.Security.Cryptography.Encoding",
+        "System.Security.Cryptography.Primitives",
+        "System.Text.Encoding"
+      ],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480493Z",
+      "name": "System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.openssl/6.0.0-preview.4.21253.7/system.security.cryptography.openssl.6.0.0-preview.4.21253.7.nupkg",
+      "version": "6.0.0-preview.4.21253.7"
+    },
+    "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl@nuget": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "nuget",
+      "installed_at": "2026-02-12T19:29:07.480590Z",
+      "name": "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl",
+      "source_url": "https://api.nuget.org/v3-flatcontainer/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl/4.3.3/runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.3.nupkg",
+      "version": "4.3.3"
+    },
+    "fail@hackage": {
+      "checksum": null,
+      "checksum_algo": null,
+      "dependencies": [],
+      "forth": "hackage",
+      "installed_at": "2026-02-12T19:28:21.573241Z",
+      "name": "fail",
+      "source_url": "https://hackage.haskell.org/package/fail-4.9.0.0/fail-4.9.0.0.tar.gz",
+      "version": "4.9.0.0"
+    }
+  },
+  "version": "2"
+}

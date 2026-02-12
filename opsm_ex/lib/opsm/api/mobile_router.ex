@@ -105,7 +105,7 @@ defmodule Opsm.Api.MobileRouter do
   end
 
   post "/api/audit/lockfile" do
-    payload = conn.body_params
+    _payload = conn.body_params
 
     send_json(conn, 200, %{
       issues: [

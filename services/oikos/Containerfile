@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Oikos: Repository sustainability and health analysis service
+# Rust service with Chainguard Wolfi base
+
+FROM cgr.dev/chainguard/rust:latest AS builder
+
+WORKDIR /build
+
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+COPY src ./src
+RUN cargo build --release
+
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+RUN addgroup -g 1000 oikos && \
+    adduser -D -u 1000 -G oikos oikos
+
+WORKDIR /app
+
+COPY --from=builder --chown=oikos:oikos \
+    /build/target/release/oikos /app/
+
+USER oikos
+
+EXPOSE 8083
+
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD ["/app/oikos", "health"]
+
+CMD ["/app/oikos"]
+
+LABEL org.opencontainers.image.title="Oikos" \
+      org.opencontainers.image.description="Repository sustainability analysis" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.licenses="PMPL-1.0-or-later"

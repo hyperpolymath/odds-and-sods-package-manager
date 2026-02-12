@@ -1,25 +1,21 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Palimpsest: License analysis and compatibility service
-# Gleam service with Chainguard Wolfi base
+# Rust service with Chainguard Wolfi base
 
-FROM cgr.dev/chainguard/wolfi-base:latest AS builder
-
-RUN apk add --no-cache \
-    erlang \
-    gleam \
-    rebar3 \
-    git
+FROM cgr.dev/chainguard/rust:latest AS builder
 
 WORKDIR /build
 
-COPY gleam.toml manifest.toml ./
-COPY src ./src
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && \
+    echo "fn main() {}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
 
-RUN gleam build
+COPY src ./src
+RUN cargo build --release
 
 FROM cgr.dev/chainguard/wolfi-base:latest
-
-RUN apk add --no-cache erlang
 
 RUN addgroup -g 1000 palimpsest && \
     adduser -D -u 1000 -G palimpsest palimpsest
@@ -27,7 +23,7 @@ RUN addgroup -g 1000 palimpsest && \
 WORKDIR /app
 
 COPY --from=builder --chown=palimpsest:palimpsest \
-    /build/build /app/
+    /build/target/release/palimpsest-license /app/
 
 RUN mkdir -p /data && chown palimpsest:palimpsest /data
 
@@ -36,9 +32,9 @@ USER palimpsest
 EXPOSE 8082
 
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD ["erlang", "-eval", "io:format(\"healthy\")."]
+    CMD ["/app/palimpsest-license", "health"]
 
-CMD ["/app/prod/erlang-shipment/bin/palimpsest", "start"]
+CMD ["/app/palimpsest-license"]
 
 LABEL org.opencontainers.image.title="Palimpsest" \
       org.opencontainers.image.description="License analysis and compatibility" \

@@ -47,39 +47,42 @@ defmodule Opsm.Verified.Url do
   - Must not target localhost/internal IPs
   - Must have a valid hostname
   """
-  @spec validate(String.t()) :: {:ok, t()} | {:error, atom()}
+  @spec validate(String.t()) :: {:ok, t()} | {:error, atom() | {:invalid_scheme, String.t()}}
   def validate(url_string) when is_binary(url_string) do
     if String.contains?(url_string, "::1") do
       {:error, :blocked_host}
     else
-      case URI.parse(url_string) do
-        %URI{scheme: scheme, host: host} when scheme != nil and host != nil ->
-          cond do
-            scheme not in @allowed_schemes ->
-              {:error, {:invalid_scheme, scheme}}
+      parsed = URI.parse(url_string)
 
-            host in @blocked_hosts ->
-              {:error, :blocked_host}
+      cond do
+        is_nil(parsed.scheme) ->
+          {:error, :missing_scheme}
 
-            is_private_or_loopback_ip?(host) or String.starts_with?(host, "169.254.") ->
-              {:error, :blocked_host}
+        # Check scheme before host - dangerous/invalid schemes should be
+        # reported as scheme errors even if host is also missing
+        parsed.scheme not in @allowed_schemes ->
+          {:error, {:invalid_scheme, parsed.scheme}}
 
-            true ->
-              parsed = URI.parse(url_string)
-              validated = %__MODULE__{
-                scheme: parsed.scheme,
-                host: parsed.host,
-                port: parsed.port,
-                path: parsed.path || "/",
-                query: parsed.query,
-                original: url_string
-              }
+        is_nil(parsed.host) or parsed.host == "" ->
+          {:error, :missing_host}
 
-              {:ok, validated}
-          end
+        parsed.host in @blocked_hosts ->
+          {:error, :blocked_host}
 
-        _ ->
-          {:error, :invalid_url}
+        is_private_or_loopback_ip?(parsed.host) or String.starts_with?(parsed.host, "169.254.") ->
+          {:error, :blocked_host}
+
+        true ->
+          validated = %__MODULE__{
+            scheme: parsed.scheme,
+            host: parsed.host,
+            port: parsed.port,
+            path: parsed.path || "/",
+            query: parsed.query,
+            original: url_string
+          }
+
+          {:ok, validated}
       end
     end
   end

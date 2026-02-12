@@ -389,7 +389,7 @@ defmodule Opsm.Lockfile do
         entry = %{
           name: Map.get(value, "name", ""),
           version: Map.get(value, "version", ""),
-          forth: String.to_atom(Map.get(value, "forth", "unknown")),
+          forth: Opsm.Validation.safe_to_forth(Map.get(value, "forth", "unknown")),
           checksum: Map.get(value, "checksum"),
           checksum_algo: Map.get(value, "checksum_algo"),
           source_url: Map.get(value, "source_url"),

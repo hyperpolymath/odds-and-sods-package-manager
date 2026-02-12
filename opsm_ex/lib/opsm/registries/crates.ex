@@ -32,7 +32,10 @@ defmodule Opsm.Registries.Crates do
         end
 
         version_info = Enum.find(versions, fn v -> v["num"] == target_version end)
-        {:ok, parse_crate(crate, version_info, target_version)}
+
+        # Fetch real dependencies from the release-specific endpoint
+        {runtime_deps, dev_deps} = fetch_release_deps(name, target_version)
+        {:ok, parse_crate(crate, version_info, target_version, runtime_deps, dev_deps)}
 
       {:error, :not_found} ->
         {:error, :not_found}
@@ -102,6 +105,33 @@ defmodule Opsm.Registries.Crates do
     end
   end
 
+  # Fetch dependencies from the version-specific API endpoint, split by kind
+  defp fetch_release_deps(name, version) do
+    url = "#{@base_url}/crates/#{URI.encode(name)}/#{version}/dependencies"
+
+    case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
+      {:ok, body} ->
+        deps = body["dependencies"] || []
+
+        runtime =
+          deps
+          |> Enum.filter(fn d -> d["kind"] == "normal" and not (d["optional"] || false) end)
+          |> Enum.map(fn d -> {d["crate_id"], d["req"]} end)
+          |> Map.new()
+
+        dev =
+          deps
+          |> Enum.filter(fn d -> d["kind"] == "dev" end)
+          |> Enum.map(fn d -> {d["crate_id"], d["req"]} end)
+          |> Map.new()
+
+        {runtime, dev}
+
+      _ ->
+        {%{}, %{}}
+    end
+  end
+
   @doc """
   Get dependencies for a specific version.
   """
@@ -133,7 +163,7 @@ defmodule Opsm.Registries.Crates do
 
   # Parsers
 
-  defp parse_crate(crate, version_info, version) do
+  defp parse_crate(crate, version_info, version, deps, dev_deps) do
     checksum = if version_info, do: version_info["checksum"], else: nil
 
     %ResolvedPackage{
@@ -151,10 +181,10 @@ defmodule Opsm.Registries.Crates do
         license: version_info["license"],
         homepage: crate["homepage"],
         repository: crate["repository"],
-        authors: [],  # crates.io doesn't return authors in crate endpoint
+        authors: [],
         keywords: crate["keywords"] || [],
-        dependencies: %{},  # Fetched separately
-        dev_dependencies: %{},
+        dependencies: deps,
+        dev_dependencies: dev_deps,
         source_forth: :cargo,
         raw_manifest: crate
       },

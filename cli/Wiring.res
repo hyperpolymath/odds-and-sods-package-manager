@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: PMPL-1.0
-// Wiring.res - Command orchestration for OPSM CLI
-
+@@warning("-44-45")
 open Types
 
 // =============================================================================

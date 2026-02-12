@@ -83,8 +83,15 @@ defmodule Opsm.ValidationTest do
     end
 
     test "accepts valid http URLs" do
-      assert {:ok, _} = Validation.validate_url("http://localhost:8080")
-      assert {:ok, _} = Validation.validate_url("http://127.0.0.1:3000/api")
+      assert {:ok, _} = Validation.validate_url("http://example.com")
+      assert {:ok, _} = Validation.validate_url("http://registry.npmjs.org/lodash")
+    end
+
+    test "rejects localhost and loopback URLs (SSRF prevention)" do
+      assert {:error, reason} = Validation.validate_url("http://localhost:8080")
+      assert reason =~ "blocked"
+      assert {:error, reason} = Validation.validate_url("http://127.0.0.1:3000/api")
+      assert reason =~ "blocked"
     end
 
     test "rejects file:// URLs" do
