@@ -18,7 +18,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:4051 https://*.github.com https://*.gitlab.com; style-src 'self' 'unsafe-inline'; script-src 'self'"
     }
   },
   "bundle": {
