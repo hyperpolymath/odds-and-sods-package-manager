@@ -10,6 +10,9 @@ defmodule Opsm.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize transport protocol cache (ETS tables for QUIC/HTTP3 negotiation)
+    Opsm.Transport.Quic.init()
+
     children = [
       RegistryGateway.Store,
       {Bandit, plug: RegistryGateway.Router, scheme: :http, port: registry_port(), ip: {127, 0, 0, 1}},

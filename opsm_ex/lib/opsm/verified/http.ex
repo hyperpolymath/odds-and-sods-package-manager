@@ -22,6 +22,25 @@ defmodule Opsm.Verified.Http do
         ]
 
   @doc """
+  Make a verified GET request using QUIC/HTTP3 transport with automatic fallback.
+
+  Leverages `Opsm.Transport.Quic` for protocol negotiation:
+  QUIC/HTTP3 → HTTP/2 → HTTP/1.1. Falls back transparently when QUIC is unavailable.
+  """
+  @spec get_quic(String.t(), http_options()) :: {:ok, map()} | {:error, term()}
+  def get_quic(url_string, opts \\ []) do
+    Opsm.Transport.Quic.get(url_string, opts)
+  end
+
+  @doc """
+  Make a verified GET request using QUIC transport and parse JSON response.
+  """
+  @spec get_json_quic(String.t(), http_options()) :: {:ok, map() | list()} | {:error, term()}
+  def get_json_quic(url_string, opts \\ []) do
+    Opsm.Transport.Quic.get_json(url_string, opts)
+  end
+
+  @doc """
   Make a verified GET request.
 
   URL is validated before request. Returns `{:ok, response}` or `{:error, reason}`.
