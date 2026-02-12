@@ -14,7 +14,7 @@ defmodule Opsm.Slsa.Provenance do
   """
 
   alias Opsm.Types.{SlsaProvenance, BuildMaterial, SlsaVerificationResult}
-  alias Opsm.Crypto.Signatures
+  alias Opsm.Crypto.{Signatures, HybridSignatures}
 
   @slsa_predicate_type "https://slsa.dev/provenance/v1"
   @opsm_builder_id "https://opsm.dev/builders/elixir-mix"
@@ -80,16 +80,30 @@ defmodule Opsm.Slsa.Provenance do
       slsa_level: calculate_level(builder_id, source_digest, materials)
     }
 
-    # Sign if key provided
-    provenance = if signing_key do
-      case sign_provenance(provenance, signing_key) do
-        {:ok, sig} ->
-          %{provenance | signature: sig, signature_algo: :ed25519}
-        {:error, _} ->
-          provenance
-      end
-    else
-      provenance
+    # Sign if key provided (supports both classical and hybrid)
+    hybrid_keypair = Keyword.get(opts, :hybrid_keypair)
+
+    provenance = cond do
+      hybrid_keypair ->
+        # Hybrid Ed25519 + Dilithium5 signing
+        case sign_provenance_hybrid(provenance, hybrid_keypair) do
+          {:ok, sig, algo} ->
+            %{provenance | signature: sig, signature_algo: algo}
+          {:error, _} ->
+            provenance
+        end
+
+      signing_key ->
+        # Classical Ed25519 signing
+        case sign_provenance(provenance, signing_key) do
+          {:ok, sig} ->
+            %{provenance | signature: sig, signature_algo: :ed25519}
+          {:error, _} ->
+            provenance
+        end
+
+      true ->
+        provenance
     end
 
     {:ok, provenance}
@@ -300,16 +314,50 @@ defmodule Opsm.Slsa.Provenance do
   end
 
   defp check_signature(provenance, public_key, result) do
+    algo = provenance.signature_algo || :ed25519
     envelope = to_envelope(provenance)
-    case Signatures.verify_payload(envelope, provenance.signature, public_key, provenance.signature_algo || :ed25519) do
-      :ok -> {true, result}
-      {:error, reason} -> {false, add_error(result, "Signature invalid: #{reason}")}
+
+    case algo do
+      :hybrid_ed25519_dilithium5 ->
+        # Hybrid verification — public_key should be a map with :ed25519_pk and :dilithium5_pk
+        sig_info = %{signature: provenance.signature, algorithm: algo}
+        case HybridSignatures.verify_payload(envelope, sig_info, public_key) do
+          :ok -> {true, result}
+          {:ok, :classical_only} -> {true, add_warning(result, "Only classical Ed25519 verified (PQ NIF not loaded)")}
+          {:ok, :pq_not_verified} -> {true, add_warning(result, "PQ signature not verified (NIF not loaded)")}
+          {:error, reason} -> {false, add_error(result, "Hybrid signature invalid: #{reason}")}
+        end
+
+      :ed25519_only ->
+        # Classical Ed25519 from hybrid keypair
+        pk = if is_map(public_key) and Map.has_key?(public_key, :ed25519_pk),
+          do: public_key.ed25519_pk,
+          else: public_key
+        case Signatures.verify_payload(envelope, provenance.signature, pk, :ed25519) do
+          :ok -> {true, result}
+          {:error, reason} -> {false, add_error(result, "Signature invalid: #{reason}")}
+        end
+
+      _ ->
+        # Classical Ed25519
+        case Signatures.verify_payload(envelope, provenance.signature, public_key, algo) do
+          :ok -> {true, result}
+          {:error, reason} -> {false, add_error(result, "Signature invalid: #{reason}")}
+        end
     end
   end
 
   defp sign_provenance(provenance, secret_key) do
     envelope = to_envelope(provenance)
     Signatures.sign_payload(envelope, secret_key, :ed25519)
+  end
+
+  defp sign_provenance_hybrid(provenance, hybrid_keypair) do
+    envelope = to_envelope(provenance)
+    case HybridSignatures.sign_payload(envelope, hybrid_keypair) do
+      {:ok, %{signature: sig, algorithm: algo}} -> {:ok, sig, algo}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   defp add_warning(result, msg), do: %{result | warnings: [msg | result.warnings]}

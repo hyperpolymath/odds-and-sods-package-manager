@@ -6,8 +6,11 @@ defmodule Opsm.Crypto.Signatures do
   Supports:
   - Ed25519 (default, fast, 128-bit security)
   - HMAC-SHA256 (symmetric, for internal use)
+  - Hybrid Ed25519 + Dilithium5 (via HybridSignatures module)
+  - Dilithium5, SPHINCS+ (via PostQuantum module, requires NIF)
 
-  Post-quantum algorithms (Dilithium5, SPHINCS+) will be added in Phase 2.
+  See `Opsm.Crypto.HybridSignatures` for production hybrid signatures.
+  See `Opsm.Crypto.PostQuantum` for direct PQ algorithm access.
   """
 
   @doc """
