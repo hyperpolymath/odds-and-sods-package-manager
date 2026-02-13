@@ -5,7 +5,6 @@ defmodule Opsm.SmartInstall do
   """
 
   alias Opsm.Federation
-  alias Opsm.Package.Installer
   alias Opsm.Package.Native
 
   @backends MapSet.new([
@@ -139,20 +138,28 @@ defmodule Opsm.SmartInstall do
     end
   end
 
-  defp execute_non_port_backend("git", pkgs, dry_run, scope, _native, _global, _dev) do
+  defp execute_non_port_backend("git", pkgs, dry_run, _scope, _native, _global, _dev) do
     Enum.map(pkgs, fn pkg ->
-      case Installer.install(:git, pkg, version: "latest", scope: scope, dry_run: dry_run) do
-        {:ok, _} -> {:ok, pkg, "installed via opsm git registry"}
-        {:error, reason} -> {:error, pkg, reason}
+      if dry_run do
+        {:dry_run, pkg, "would clone and build #{pkg} via git pipeline"}
+      else
+        case Opsm.Git.Pipeline.from_url(pkg, []) do
+          {:ok, result} -> {:ok, pkg, "installed via git pipeline (#{result.build_system})"}
+          {:error, reason} -> {:error, pkg, reason}
+        end
       end
     end)
   end
 
-  defp execute_non_port_backend("source", pkgs, dry_run, scope, _native, _global, _dev) do
+  defp execute_non_port_backend("source", pkgs, dry_run, _scope, _native, _global, _dev) do
     Enum.map(pkgs, fn pkg ->
-      case Installer.install(:git, pkg, version: "latest", scope: scope, dry_run: dry_run) do
-        {:ok, _} -> {:ok, pkg, "installed from source via git registry"}
-        {:error, reason} -> {:error, pkg, reason}
+      if dry_run do
+        {:dry_run, pkg, "would clone and build #{pkg} from source"}
+      else
+        case Opsm.Git.Pipeline.from_url(pkg, []) do
+          {:ok, result} -> {:ok, pkg, "built from source (#{result.build_system})"}
+          {:error, reason} -> {:error, pkg, reason}
+        end
       end
     end)
   end

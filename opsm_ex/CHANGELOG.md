@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-13
+
+### Added
+
+**Phase 1 — Git Clone / Build / Run Pipeline:**
+- `Opsm.Git.Clone` — Safe git clone with SSRF prevention, ref pinning, shallow/sparse support
+- `Opsm.Git.BuildDetector` — Priority-ordered build system detection (15 systems: just, make, cargo, mix, npm, python, go, zig, bundler, pub, gradle, maven, cabal, stack, dune)
+- `Opsm.Git.Builder` — Build execution per system with dependency installation and run support
+- `Opsm.Git.Pipeline` — Full clone→detect→deps→build orchestration from URL or local path
+- Wired `git:` and `source:` SmartInstall backends to the new pipeline
+
+**Phase 2 — System PM Version Querying & Export:**
+- `Opsm.Federation.SystemQuery` — Query installed packages from 8 system PMs (dpkg, rpm, pacman, brew, nix, flatpak, snap, guix)
+- `Federation.query_system_pm/2` — Unified query interface
+- Real `export_to_port/2` implementation — generates native manifests with dependency name mapping
+- Added `dpkg-query`, `rpm`, `fpm`, `apt-cache` to SafeExec allowlist
+
+**Phase 3 — Manifest Conversion Expansion:**
+- `Opsm.Manifest.Writer` — Bidirectional manifest conversion to 7 formats (package.json, Cargo.toml, mix.exs, pyproject.toml, pubspec.yaml, go.mod, opsm.toml)
+- `Opsm.Manifest.OpsmToml` — Native OPSM manifest format parser/writer with build/run config
+- Extended `ManifestFinder` candidates: opsm.toml, pubspec.yaml, go.mod, Gemfile, build.zig, justfile, requirements.txt, setup.py, Makefile
+- Extended `Federation.convert_manifest/1`: pubspec.yaml, go.mod, Gemfile, opsm.toml
+
+**Phase 4 — Cross-Ecosystem Dependency Mapping:**
+- `Opsm.Federation.DepMapper` — Maps package names across ecosystems (50+ known mappings)
+- Heuristic fallbacks: python3-, node-, ruby-, rubygem-, elixir- prefixes
+- Integrated into `export_to_port/2` for automatic dependency name translation
+
+**Phase 5 — Tests:**
+- 84 new tests (all passing): git pipeline, build detector, builder, manifest writer, opsm.toml, system query, dep mapper, integration roundtrip
+
+### Changed
+- SafeExec allowlist expanded with 16 build tools and 4 system PM query tools
+- SmartInstall git/source backends now use `Git.Pipeline` instead of bare `Installer.install`
+
 ## [1.0.1] - 2026-02-05
 
 ### Added

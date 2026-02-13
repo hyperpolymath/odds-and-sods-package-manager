@@ -18,6 +18,7 @@ defmodule Opsm.SafeExec do
                        "yum",
                        "rpm-ostree",
                        "apt-get",
+                       "apt-cache",
                        "pacman",
                        "brew",
                        "nix-env",
@@ -30,7 +31,30 @@ defmodule Opsm.SafeExec do
                        "toolbox",
                        "distrobox",
                        "podman",
-                       "docker"
+                       "docker",
+                       # Build tools (Phase 1: git build pipeline)
+                       "just",
+                       "make",
+                       "cargo",
+                       "mix",
+                       "deno",
+                       "go",
+                       "zig",
+                       "pip",
+                       "bundle",
+                       "dart",
+                       "gradle",
+                       "mvn",
+                       "cabal",
+                       "stack",
+                       "dune",
+                       "python",
+                       "python3",
+                       # System PM query tools (Phase 2)
+                       "dpkg-query",
+                       "rpm",
+                       "fpm",
+                       "nix-env"
                      ])
 
   @doc """

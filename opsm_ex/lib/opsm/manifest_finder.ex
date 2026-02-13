@@ -8,10 +8,19 @@ defmodule Opsm.ManifestFinder do
   alias Opsm.Validation
 
   @manifest_candidates [
+    "opsm.toml",
     "package.json",
     "Cargo.toml",
     "mix.exs",
     "pyproject.toml",
+    "pubspec.yaml",
+    "go.mod",
+    "Gemfile",
+    "build.zig",
+    "justfile",
+    "requirements.txt",
+    "setup.py",
+    "Makefile",
     "manifest.ncl",
     "opsm.ncl",
     "project.ncl",

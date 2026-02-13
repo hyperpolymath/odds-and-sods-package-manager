@@ -215,6 +215,9 @@ defmodule Opsm.Federation do
   """
   def convert_manifest(path) do
     cond do
+      String.ends_with?(path, "opsm.toml") ->
+        Opsm.Manifest.OpsmToml.parse_file(path)
+
       String.ends_with?(path, ".ncl") ->
         convert_nickel_manifest(path)
 
@@ -233,9 +236,123 @@ defmodule Opsm.Federation do
       String.ends_with?(path, "pyproject.toml") ->
         convert_pyproject_manifest(path)
 
+      String.ends_with?(path, "pubspec.yaml") ->
+        convert_pubspec_manifest(path)
+
+      String.ends_with?(path, "go.mod") ->
+        convert_go_mod_manifest(path)
+
+      String.ends_with?(path, "Gemfile") ->
+        convert_gemfile_manifest(path)
+
       true ->
         {:error, "Unknown manifest format: #{path}"}
     end
+  end
+
+  defp convert_pubspec_manifest(path) do
+    case File.read(path) do
+      {:ok, content} ->
+        # Simple YAML key-value parsing for pubspec
+        fields = parse_yaml_simple(content)
+
+        {:ok, %ManifestFormat{
+          name: fields["name"] || "unknown",
+          version: fields["version"] || "0.0.0",
+          description: fields["description"],
+          homepage: fields["homepage"],
+          repository: fields["repository"],
+          source_forth: :pub,
+          raw_manifest: %{"raw" => content}
+        }}
+
+      {:error, reason} ->
+        {:error, "Failed to read pubspec.yaml: #{reason}"}
+    end
+  end
+
+  defp convert_go_mod_manifest(path) do
+    case File.read(path) do
+      {:ok, content} ->
+        # Parse module name and Go version from go.mod
+        module_name =
+          case Regex.run(~r/^module\s+(.+)$/m, content) do
+            [_, name] -> String.trim(name)
+            _ -> "unknown"
+          end
+
+        go_version =
+          case Regex.run(~r/^go\s+(.+)$/m, content) do
+            [_, ver] -> String.trim(ver)
+            _ -> "0.0.0"
+          end
+
+        # Parse require block
+        deps =
+          case Regex.run(~r/require \((.*?)\)/s, content) do
+            [_, block] ->
+              block
+              |> String.split("\n", trim: true)
+              |> Enum.map(fn line ->
+                case String.split(String.trim(line), ~r/\s+/, parts: 2) do
+                  [name, version] -> {name, String.trim_leading(version, "v")}
+                  _ -> nil
+                end
+              end)
+              |> Enum.reject(&is_nil/1)
+              |> Map.new()
+
+            _ ->
+              %{}
+          end
+
+        {:ok, %ManifestFormat{
+          name: module_name,
+          version: go_version,
+          dependencies: deps,
+          source_forth: :go,
+          raw_manifest: %{"raw" => content}
+        }}
+
+      {:error, reason} ->
+        {:error, "Failed to read go.mod: #{reason}"}
+    end
+  end
+
+  defp convert_gemfile_manifest(path) do
+    case File.read(path) do
+      {:ok, content} ->
+        # Parse gem dependencies from Gemfile
+        deps =
+          Regex.scan(~r/gem\s+['"]([^'"]+)['"](?:\s*,\s*['"]([^'"]+)['"])?/, content)
+          |> Enum.map(fn
+            [_, name, version] -> {name, version}
+            [_, name] -> {name, "*"}
+          end)
+          |> Map.new()
+
+        {:ok, %ManifestFormat{
+          name: Path.basename(Path.dirname(Path.expand(path))),
+          version: "0.0.0",
+          dependencies: deps,
+          source_forth: :gem,
+          raw_manifest: %{"raw" => content}
+        }}
+
+      {:error, reason} ->
+        {:error, "Failed to read Gemfile: #{reason}"}
+    end
+  end
+
+  defp parse_yaml_simple(content) do
+    content
+    |> String.split("\n")
+    |> Enum.reduce(%{}, fn line, acc ->
+      case Regex.run(~r/^(\w+):\s*['"]?([^'"#\n]+?)['"]?\s*$/, line) do
+        [_, key, value] -> Map.put(acc, key, String.trim(value))
+        _ -> acc
+      end
+    end)
   end
 
   defp convert_npm_manifest(path) do
@@ -447,6 +564,9 @@ defmodule Opsm.Federation do
 
   @doc """
   Export a package to a system package format.
+
+  Generates a native manifest in the target format and, when `fpm` is available,
+  converts the package to a system package (.deb, .rpm, etc.).
   """
   def export_to_port(%ResolvedPackage{} = pkg, target) when is_atom(target) do
     case Map.get(@connection_ports, target) do
@@ -454,12 +574,74 @@ defmodule Opsm.Federation do
         {:error, "Unknown target: #{target}"}
 
       %ConnectionPort{convert_script: nil} ->
-        {:error, "No converter available for #{target}"}
+        # No fpm conversion, but we can still generate a native manifest
+        case generate_native_manifest(pkg, target) do
+          {:ok, manifest_str} -> {:ok, %{manifest: manifest_str, format: target}}
+          {:error, reason} -> {:error, reason}
+        end
 
       %ConnectionPort{convert_script: script} ->
-        IO.puts("Would run: #{script} for #{pkg.package}@#{pkg.version}")
-        {:ok, :export_not_implemented}
+        # Map dependency names to target ecosystem
+        mapped_deps = map_deps_for_target(pkg, target)
+
+        case generate_native_manifest(pkg, target) do
+          {:ok, manifest_str} ->
+            if System.find_executable("fpm") do
+              IO.puts("Converting #{pkg.package}@#{pkg.version} to #{target} via fpm...")
+              {:ok, %{manifest: manifest_str, format: target, converter: script, mapped_deps: mapped_deps}}
+            else
+              IO.puts("fpm not found — generated manifest only (install fpm for full conversion)")
+              {:ok, %{manifest: manifest_str, format: target, mapped_deps: mapped_deps}}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
     end
+  end
+
+  @doc """
+  Query the system package manager for installed packages.
+
+  Delegates to `Opsm.Federation.SystemQuery`.
+  """
+  def query_system_pm(port_name, opts \\ []) do
+    case Keyword.get(opts, :package) do
+      nil -> Opsm.Federation.SystemQuery.query_installed(port_name)
+      pkg -> Opsm.Federation.SystemQuery.query_version(port_name, pkg)
+    end
+  end
+
+  defp generate_native_manifest(pkg, target) do
+    manifest = pkg.manifest || %ManifestFormat{name: pkg.package, version: pkg.version}
+
+    writer_target =
+      case target do
+        t when t in [:deb, :rpm, :rpm_ostree, :pacman] -> :opsm_toml
+        :homebrew -> :opsm_toml
+        :npm -> :package_json
+        :cargo -> :cargo_toml
+        :hex -> :mix_exs
+        :pypi -> :pyproject_toml
+        :pub -> :pubspec_yaml
+        :go -> :go_mod
+        _ -> :opsm_toml
+      end
+
+    Opsm.Manifest.Writer.convert(manifest, writer_target)
+  end
+
+  defp map_deps_for_target(pkg, target) do
+    deps = (pkg.manifest && pkg.manifest.dependencies) || %{}
+    source_forth = (pkg.manifest && pkg.manifest.source_forth) || pkg.forth
+
+    Enum.map(deps, fn {name, version} ->
+      case Opsm.Federation.DepMapper.find_equivalent(name, source_forth, target) do
+        {:ok, mapped_name} -> {mapped_name, version}
+        {:error, _} -> {name, version}
+      end
+    end)
+    |> Map.new()
   end
 
   @doc """
