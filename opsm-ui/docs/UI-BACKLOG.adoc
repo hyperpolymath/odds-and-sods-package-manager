@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM UI Backlog
+:toc: preamble
+:toclevels: 2
+
+== Epics
+
+=== E1: Three‑Mode Shell
+
+**Goal:** WYSIWYG, WYSIWYGM, WYMIWYG with global + per‑section overrides.
+
+**Acceptance:**
+
+* Global mode switcher updates UI density and controls.
+* Per‑section override persists per user.
+* Mode state shown in header and sidebar badges.
+
+=== E2: Smart‑Install Composer
+
+**Goal:** Convert input into a dry‑run plan with warnings.
+
+**Acceptance:**
+
+* Input supports bracketed backend groups.
+* Plan preview shows backend grouping + availability.
+* Warnings list shows conflicts, unsupported platforms.
+
+=== E3: Trust & Risk Surfacing
+
+**Goal:** Make safety visible at every step.
+
+**Acceptance:**
+
+* Trust badges on every package card.
+* Risk banner for unmaintained/compromised packages.
+* Apply blocked unless admin approval present.
+
+=== E4: “Incorporate” Capture Flow
+
+**Goal:** Zotero‑style capture for repo URLs.
+
+**Acceptance:**
+
+* Capture button in header and context menus.
+* Auto‑detect repo type + install path.
+* One‑click “Track in OPSM.”
+
+=== E5: Audit + History
+
+**Goal:** Make dry‑runs and applies fully traceable.
+
+**Acceptance:**
+
+* Audit timeline with timestamps and policy decisions.
+* History list supports rollback entry preview.
+
+=== E6: UX Performance
+
+**Goal:** Always‑fast interactions.
+
+**Acceptance:**
+
+* Local cache results <1s.
+* Resolver status visible with explanation.
+
+== Screens
+
+1) **Home** — status, updates, quick actions
+2) **Store/Search** — package cards + trust badges
+3) **Composer** — input + plan + warnings
+4) **Workspace** — lockfile & dependency graphs
+5) **Policies** — allow/deny + approvals
+6) **Audit** — timeline + evidence
+7) **History** — operations + rollback
+

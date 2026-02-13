@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Dogfooding Audit (Wave 1)
+:toc: preamble
+:toclevels: 2
+
+== Scope
+
+Selected repos for first wave:
+
+* _pathroot
+* cadre-tea-router
+* rescript-tauri
+* hybrid-automation-router
+* feedback-o-tron
+* verisimdb
+* gitbot-fleet
+* .git-private-farm
+* hypatia
+* git-dispatcher
+* reposystem
+* elixir-mcp-server
+* dnfinition
+* poly-db-mcp
+* poly-container-mcp
+* poly-k8s-mcp
+* poly-observability-mcp
+
+== Readiness Signals
+
+Presence of build markers (quick check):
+
+[cols="1,1,1,1,1,1,1,1,1"]
+|===
+|Repo |opsm.toml |mix.exs |Cargo.toml |package.json |deno.json |pyproject.toml |go.mod |Containerfile
+
+|_pathroot |No |No |No |No |Yes |No |No |No
+|cadre-tea-router |No |No |No |Yes |No |No |No |No
+|rescript-tauri |No |No |No |Yes |Yes |No |No |No
+|hybrid-automation-router |No |Yes |No |No |No |No |No |No
+|feedback-o-tron |No |No |No |No |No |No |No |No
+|verisimdb |No |No |Yes |No |No |No |No |No
+|gitbot-fleet |No |No |No |No |No |No |No |No
+|.git-private-farm |No |No |No |No |No |No |No |Yes
+|hypatia |No |No |Yes |No |No |No |No |No
+|git-dispatcher |No |No |No |No |No |No |No |No
+|reposystem |No |No |Yes |No |No |No |No |Yes
+|elixir-mcp-server |No |Yes |No |No |No |No |No |No
+|dnfinition |No |No |No |No |No |No |No |No
+|poly-db-mcp |No |No |No |Yes |Yes |No |No |Yes
+|poly-container-mcp |No |No |No |Yes |Yes |No |No |Yes
+|poly-k8s-mcp |No |No |No |Yes |Yes |No |No |Yes
+|poly-observability-mcp |No |No |No |Yes |Yes |No |No |Yes
+|===
+
+== Immediate Actions
+
+1. Add `opsm.toml` to wave‑1 repos (minimal config).
+2. Create per‑repo install profiles (native vs container vs toolbox).
+3. Map package‑managerless language support to top repos (fallback build paths).
+4. Integrate `_pathroot` for install destination management.
+

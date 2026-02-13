@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM UI Information Architecture
+:toc: preamble
+:toclevels: 2
+
+== Global Navigation
+
+* Home
+* Store/Search
+* Workspace
+* Policies
+* Audit
+* History
+* Settings
+
+== Per‑Mode Layout
+
+=== WYSIWYG
+
+* Home
+* Store/Search
+* History
+* Settings
+
+=== WYSIWYGM
+
+* Home
+* Policies
+* Audit
+* History
+* Settings
+
+=== WYMIWYG
+
+* Home
+* Workspace
+* Policies
+* Audit
+* History
+* Settings
+
+== Key Objects
+
+* Package
+* Registry
+* Lockfile
+* Policy
+* Attestation
+* Audit Event
+
+== Data Flows
+
+* Search → Package → Install → History
+* Workspace → Lockfile → Resolve → Apply
+* Audit → Findings → Policy → Enforcement
+

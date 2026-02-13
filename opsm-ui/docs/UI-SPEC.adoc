@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM UI Specification (Tauri + ReScript)
+:toc: preamble
+:toclevels: 3
+
+== Purpose
+
+Define a shared, recognisable UI across all platforms while keeping OPSM modular and
+lightweight. The UI must scale from casual users to platform maintainers and developers
+without forcing a single complexity level everywhere.
+
+== Guiding Principles
+
+* **Default simple, advanced on demand**: WYSIWYG is default; power features live behind mode switch.
+* **Mode separation**: avoid mixing “consumer” and “maintainer” controls on the same surface.
+* **Policy‑bounded automation**: suggestions are explainable and reversible.
+* **Always‑safe operations**: destructive actions require explicit confirmation and rollback plan.
+* **Portable UX**: same mental model on desktop, mobile, and browser extensions.
+
+== Three‑Mode Model (Vuze‑style)
+
+=== 1) WYSIWYG (Regular Users)
+
+Focus: install, update, remove, search.
+
+* App‑store style grid/list
+* One‑click install and update
+* Safety defaults enabled
+* Minimal settings visible
+
+=== 2) WYSIWYGM (Platform Maintainers / Admins)
+
+Focus: fleet policy, governance, deployments.
+
+* Policy panel (allow/deny, registries, license rules)
+* Audit + compliance dashboard
+* Rollout controls (staged, canary, rollback)
+* Dependency crawler & indexing tools
+
+=== 3) WYMIWYG (Developers)
+
+Focus: dependency graphs, lockfiles, provenance, patching.
+
+* Resolver explanation + conflict graph
+* Lockfile editor and diff view
+* Provenance/attestation details
+* Micropatcher workflow (surgical patch suggestions)
+
+== Mode Switching
+
+* **Default:** WYSIWYG on first run
+* **Global mode toggle** with **per‑section overrides**
+  - Example: a power user can keep global WYMIWYG but use WYSIWYG in “Store” section
+* **Wizard‑driven setup** to select persona + install strategy
+
+== Primary Surfaces
+
+* **Home**: status, updates, environment summary
+* **Store/Search**: discovery, package pages, install
+* **Workspace**: projects, lockfiles, dependency graphs
+* **Policies**: registry rules, license policy, trust settings
+* **Audit**: provenance, CVE status, SLSA, SBOM export
+* **History**: operations + rollback points
+
+== Zotero‑style “Incorporate” Flow
+
+A capture action that turns web findings into a managed artifact.
+
+* **Browser extension button**: “Incorporate into OPSM”
+* Auto‑detect:
+  - repo/registry
+  - language ecosystem
+  - install metadata
+* Confirmed import becomes a tracked package or local source
+
+== Cross‑Platform Shell
+
+* **Primary shell:** Tauri + ReScript (single UI across OSes)
+* **Optional web/admin:** LiveView for light‑weight dashboards
+* **Extension UI:** minimal capture view + history
+* **Local API:** REST on localhost for plan/apply; GraphQL/gRPC planned
+* **Payloads:** Nickel-first authoring, JSON transport supported
+
+== Accessibility
+
+* WCAG 2.2 AA minimum
+* Full keyboard navigation
+* Screen‑reader annotated controls
+* High‑contrast mode available in all modes
+
+== Visual Identity
+
+* Single identity system for all platforms
+* Distinct status color language (safe/unknown/risky)
+* Avoid platform‑specific look; keep OPSM‑specific signature
+
+== Performance Targets
+
+* <150ms UI response for common actions
+* Search <1s for local cache hits
+* Lazy load heavy graphs in dev mode
+
+== Security & Safety
+
+* No auto‑execute of install scripts without explicit toggle
+* Show provenance + trust score on package pages
+* Always show rollback plan before apply
+
+
+== Deployment & Port Strategy
+
+* **Admin UI (privileged):** TLS on port **443** with full controls; requires elevated privileges.
+* **Enterprise Software Center (user):** TLS on port **64443** with read access and approved‑only installs.
+* **Users may run dry‑runs** on high port to validate feasibility before requesting approval.
+
+== Protocols
+
+* QUIC + TLS by default.
+* UDP support for approved workflows.
+* Optional protocol add‑ons (RTSP, Gopher, Tor/Onion) gated by policy.
+* SDP‑wrapped transport profiles for negotiated capabilities.
+
+== Security Controls
+
+* Approved‑only install queue for non‑privileged users.
+* Explicit audit trail for approvals.
+* Dry‑run previews show expected install plan, conflicts, and policy violations.
+
+== Required Integrations
+
+* **http-capability**: capability negotiation and negotiated transport profiles.
+* **consent-aware-http**: consent checks and explicit user intent recording.
+* **palimpsest-license**: licensing policy + display.
+* **rsr-template-repo**: base template and compliance alignment.
+
+== Design System (Initial)
+
+=== Tokens
+
+* **Color tokens:** primary, success, warning, danger, neutral
+* **Spacing:** 4/8/12/16/24/32
+* **Typography:** headline, title, body, mono
+
+=== Components
+
+* App shell (header/sidebar/footer)
+* Mode switcher (global + per‑section)
+* Package card (summary + trust badges)
+* Resolver panel (graph + explanation)
+* Policy editor (rules + toggles)
+* Audit timeline
+
+=== Navigation Skeleton
+
+[source]
+----
+OPSM UI
+├── Home
+├── Store/Search
+├── Workspace
+├── Policies
+├── Audit
+├── History
+└── Settings
+----

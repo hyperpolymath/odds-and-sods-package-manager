@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Install & Containment Matrix
+:toc: preamble
+:toclevels: 2
+
+== Strategy Matrix
+
+[cols="1,1,1,2"]
+|===
+|Environment |Primary Path |Fallbacks |Notes
+
+|Immutable OS (Silverblue)
+|toolbox/distrobox
+|container image, VM
+|Use opsm policy to keep base OS clean
+
+|Desktop Linux
+|native + opsm lockfile
+|containerized + toolbox
+|Prefer native if policy allows
+
+|Server
+|container + opsm lockfile
+|VM, bare metal
+|Staged rollout + rollback
+
+|Mobile
+|Tauri shell
+|web view (LiveView)
+|APIs via opsm_mobile/api
+
+|RISC‑V/Minix/edge
+|minimal bundle
+|container/VM
+|Focus on low footprint
+|===
+
+== _pathroot Integration
+
+OPSM uses `_pathroot` to resolve install destinations and environment policies:
+
+* system paths
+* per‑project paths
+* user sandbox paths
+
+== Policy Hooks
+
+* Allow/deny language families (e.g., ¬python)
+* Force container for untrusted sources
+* Auto‑suggest alternatives
+

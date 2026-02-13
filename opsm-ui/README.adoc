@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM UI
+:toc: preamble
+:toclevels: 2
+
+Cross‑platform UI spec and identity system for OPSM (Tauri + ReScript).
+
+== Contents
+
+* link:docs/UI-SPEC.adoc[UI Specification]
+* link:docs/IA.adoc[Information Architecture]
+* link:docs/SETUP-WIZARD.adoc[Setup Wizard]
+* link:docs/DOGFOODING-AUDIT.adoc[Dogfooding Audit]
+* link:docs/INSTALL-MATRIX.adoc[Install Matrix]
+* link:docs/UI-BACKLOG.adoc[UI Backlog]
+
+== Dependencies & Standards
+
+This repo follows `rsr-template-repo` conventions and expects integration with:
+
+* `http-capability`
+* `consent-aware-http`
+* `palimpsest-license`

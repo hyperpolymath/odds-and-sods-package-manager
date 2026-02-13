@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Setup Wizard
+:toc: preamble
+:toclevels: 2
+
+== Goals
+
+* Select user persona (WYSIWYG / WYSIWYGM / WYMIWYG)
+* Select install strategy (native / container / toolbox / VM)
+* Configure path management (_pathroot or modshells)
+
+== Steps
+
+1. **Persona**
+   - Regular user
+   - Platform maintainer
+   - Developer
+
+2. **Install Strategy**
+   - Native system install
+   - Containerized (Svalinn/Vordr/Cerro‑Torre)
+   - Toolbox/Distrobox (immutable systems)
+   - VM/Hypervisor
+
+3. **Path Management**
+   - Use `_pathroot`
+   - Use `modshells`
+   - Manual paths
+
+4. **Trust Defaults**
+   - Allow only verified packages
+   - Allow unsigned with warnings
+   - Custom policy (advanced)
+
+5. **Finish**
+   - Generate config
+   - Open Home
+
