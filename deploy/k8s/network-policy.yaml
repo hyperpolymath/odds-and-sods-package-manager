@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Network policies: microservices only reachable from opsm core,
+# svalinn gateway is the only public-facing component.
+
+---
+# Default deny all ingress in the opsm namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: opsm
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# Allow svalinn to receive external traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-svalinn-ingress
+  namespace: opsm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: svalinn
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 8443
+          protocol: TCP
+        - port: 443
+          protocol: UDP
+
+---
+# Allow opsm core to receive traffic from svalinn
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-opsm-from-svalinn
+  namespace: opsm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: opsm
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: svalinn
+      ports:
+        - port: 4050
+          protocol: TCP
+        - port: 4051
+          protocol: TCP
+
+---
+# Allow microservices to receive traffic from opsm core only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-microservices-from-opsm
+  namespace: opsm
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: opsm
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - attestation
+          - verification
+          - license
+          - cicd
+          - sustainability
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: opsm
+              app.kubernetes.io/component: core
+      ports:
+        - port: 7001
+          protocol: TCP
+        - port: 7002
+          protocol: TCP
+        - port: 7003
+          protocol: TCP
+        - port: 7004
+          protocol: TCP
+        - port: 7005
+          protocol: TCP

@@ -1,0 +1,234 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# selur-compose configuration for OPSM full stack.
+# Usage: selur-compose up -f deploy/selur-compose.yaml
+#
+# Services:
+#   opsm          - Core Elixir application (registry gateway + mobile API)
+#   claim-forge   - Attestation generation (port 7001)
+#   checky-monkey - Code verification (port 7002)
+#   palimpsest    - License analysis (port 7003)
+#   cicd-hyper-a  - Registry and CI/CD hub (port 7004)
+#   oikos         - Ecosystem sustainability (port 7005)
+#   svalinn       - Edge gateway with policy enforcement (port 8443)
+
+version: "3"
+
+services:
+  # ==========================================================================
+  # Core: OPSM Elixir Application
+  # ==========================================================================
+  opsm:
+    build:
+      context: ../opsm_ex
+      containerfile: Containerfile
+    image: opsm:1.2.0
+    container_name: opsm-core
+    restart: unless-stopped
+    ports:
+      - "4050:4050"   # Registry gateway
+      - "4051:4051"   # Mobile API
+    environment:
+      - MIX_ENV=prod
+      - OPSM_CLAIM_FORGE_URL=http://claim-forge:7001
+      - OPSM_CHECKY_MONKEY_URL=http://checky-monkey:7002
+      - OPSM_PALIMPSEST_URL=http://palimpsest:7003
+      - OPSM_CICD_HYPER_A_URL=http://cicd-hyper-a:7004
+      - OPSM_OIKOS_URL=http://oikos:7005
+    volumes:
+      - opsm-data:/app/data
+      - opsm-cache:/app/cache
+    healthcheck:
+      test: ["/app/bin/opsm", "eval", "Opsm.RegistryGateway.Store.health_check()"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      claim-forge:
+        condition: service_healthy
+      checky-monkey:
+        condition: service_healthy
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  # ==========================================================================
+  # Microservice: Claim Forge (attestation generation)
+  # ==========================================================================
+  claim-forge:
+    build:
+      context: ../services/claim-forge
+      containerfile: Containerfile
+    image: opsm-claim-forge:latest
+    container_name: opsm-claim-forge
+    restart: unless-stopped
+    expose:
+      - "7001"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDR=0.0.0.0:7001
+    healthcheck:
+      test: ["CMD", "/app/claim-forge", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # ==========================================================================
+  # Microservice: Checky Monkey (code verification)
+  # ==========================================================================
+  checky-monkey:
+    build:
+      context: ../services/checky-monkey
+      containerfile: Containerfile
+    image: opsm-checky-monkey:latest
+    container_name: opsm-checky-monkey
+    restart: unless-stopped
+    expose:
+      - "7002"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDR=0.0.0.0:7002
+    healthcheck:
+      test: ["CMD", "/app/checky-monkey", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # ==========================================================================
+  # Microservice: Palimpsest License (license analysis)
+  # ==========================================================================
+  palimpsest:
+    build:
+      context: ../services/palimpsest-license
+      containerfile: Containerfile
+    image: opsm-palimpsest:latest
+    container_name: opsm-palimpsest
+    restart: unless-stopped
+    expose:
+      - "7003"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDR=0.0.0.0:7003
+    healthcheck:
+      test: ["CMD", "/app/palimpsest-license", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # ==========================================================================
+  # Microservice: CICD-Hyper-A (registry and CI/CD hub)
+  # ==========================================================================
+  cicd-hyper-a:
+    build:
+      context: ../services/cicd-hyper-a
+      containerfile: Containerfile
+    image: opsm-cicd-hyper-a:latest
+    container_name: opsm-cicd-hyper-a
+    restart: unless-stopped
+    expose:
+      - "7004"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDR=0.0.0.0:7004
+    healthcheck:
+      test: ["CMD", "/app/cicd-hyper-a", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # ==========================================================================
+  # Microservice: Oikos (ecosystem sustainability analysis)
+  # ==========================================================================
+  oikos:
+    build:
+      context: ../services/oikos
+      containerfile: Containerfile
+    image: opsm-oikos:latest
+    container_name: opsm-oikos
+    restart: unless-stopped
+    expose:
+      - "7005"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDR=0.0.0.0:7005
+    healthcheck:
+      test: ["CMD", "/app/oikos", "health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    networks:
+      - opsm-internal
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+  # ==========================================================================
+  # Edge Gateway: Svalinn (HTTP gateway with policy enforcement)
+  # ==========================================================================
+  svalinn:
+    build:
+      context: ../services/svalinn
+      containerfile: Containerfile
+    image: opsm-svalinn:latest
+    container_name: opsm-svalinn
+    restart: unless-stopped
+    ports:
+      - "8443:8443"    # HTTPS ingress
+      - "443:443"      # QUIC/HTTP3 (UDP)
+    environment:
+      - RUST_LOG=info
+      - UPSTREAM_URL=http://opsm:4050
+      - BIND_ADDR=0.0.0.0:8443
+      - QUIC_BIND_ADDR=0.0.0.0:443
+    healthcheck:
+      test: ["CMD", "/app/svalinn", "health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      opsm:
+        condition: service_healthy
+    networks:
+      - opsm-internal
+      - opsm-public
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+volumes:
+  opsm-data:
+    driver: local
+  opsm-cache:
+    driver: local
+
+networks:
+  opsm-internal:
+    driver: bridge
+    internal: true
+  opsm-public:
+    driver: bridge

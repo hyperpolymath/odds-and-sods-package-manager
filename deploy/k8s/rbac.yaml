@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opsm
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/part-of: opsm
+automountServiceAccountToken: false

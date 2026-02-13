@@ -1,11 +1,35 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Multi-stage Containerfile for OPSM (Elixir)
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <jonathan.jewell@open.ac.uk>
+#
+# Multi-stage Containerfile for OPSM (Elixir + Rust NIFs)
 # Uses Chainguard Wolfi for minimal attack surface
+# Build: podman build -t opsm:1.2.0 -f Containerfile .
+# Seal:  selur seal opsm:1.2.0
+# Sign:  cerro-torre sign opsm:1.2.0
 
-# Stage 1: Build
+# Stage 1: Rust NIF builder (post-quantum crypto + QUIC transport)
+FROM cgr.dev/chainguard/wolfi-base:latest AS rust-builder
+
+RUN apk add --no-cache \
+    rust \
+    cargo \
+    build-base \
+    openssl-dev \
+    pkgconf
+
+WORKDIR /nif
+
+# Build post-quantum crypto NIF
+COPY native/pq_crypto native/pq_crypto
+RUN cd native/pq_crypto && cargo build --release
+
+# Build QUIC transport NIF
+COPY native/quic_transport native/quic_transport
+RUN cd native/quic_transport && cargo build --release
+
+# Stage 2: Elixir build
 FROM cgr.dev/chainguard/wolfi-base:latest AS builder
 
-# Install build dependencies
 RUN apk add --no-cache \
     elixir \
     erlang \
@@ -15,16 +39,21 @@ RUN apk add --no-cache \
 
 WORKDIR /build
 
-# Copy mix files
+# Copy mix files first for dependency caching
 COPY mix.exs mix.lock ./
 
-# Install dependencies
 RUN mix local.hex --force && \
     mix local.rebar --force && \
     mix deps.get --only prod
 
 # Copy application code
 COPY lib lib
+COPY config config
+COPY priv priv
+
+# Copy pre-built Rust NIFs
+COPY --from=rust-builder /nif/native/pq_crypto/target/release/libpq_crypto.so priv/native/pq_crypto.so
+COPY --from=rust-builder /nif/native/quic_transport/target/release/libquic_transport.so priv/native/quic_transport.so
 
 # Compile release
 ENV MIX_ENV=prod
@@ -32,10 +61,9 @@ RUN mix deps.compile && \
     mix compile && \
     mix release
 
-# Stage 2: Runtime
+# Stage 3: Minimal runtime
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-# Install runtime dependencies only
 RUN apk add --no-cache \
     libstdc++ \
     openssl \
@@ -56,21 +84,22 @@ RUN mkdir -p /app/data /app/cache /app/logs && \
 
 USER opsm
 
-# Health check
+# Health check against the registry gateway
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["/app/bin/opsm", "eval", "System.cmd(\"echo\", [\"healthy\"])"]
+    CMD ["/app/bin/opsm", "eval", "Opsm.RegistryGateway.Store.health_check()"]
 
-# Expose API port
-EXPOSE 4466
+# Expose ports: registry gateway (4050), mobile API (4051)
+EXPOSE 4050 4051
 
-# Default command: run API server
+# Default command: run OTP application
 CMD ["/app/bin/opsm", "start"]
 
-# Labels for OCI metadata
+# OCI metadata
 LABEL org.opencontainers.image.title="OPSM" \
-      org.opencontainers.image.description="Universal package manager with cryptographic security" \
-      org.opencontainers.image.version="1.0.1" \
+      org.opencontainers.image.description="Universal package manager with post-quantum crypto, QUIC/HTTP3, and 42 registry adapters" \
+      org.opencontainers.image.version="1.2.0" \
       org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
       org.opencontainers.image.licenses="PMPL-1.0-or-later" \
       org.opencontainers.image.source="https://github.com/hyperpolymath/odds-and-sods-package-manager" \
-      org.opencontainers.image.vendor="hyperpolymath"
+      org.opencontainers.image.vendor="hyperpolymath" \
+      org.opencontainers.image.base.name="cgr.dev/chainguard/wolfi-base:latest"

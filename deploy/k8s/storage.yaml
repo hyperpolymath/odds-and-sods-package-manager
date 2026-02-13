@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: opsm-data
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/part-of: opsm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard

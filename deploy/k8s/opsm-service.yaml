@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+apiVersion: v1
+kind: Service
+metadata:
+  name: opsm
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/component: core
+    app.kubernetes.io/part-of: opsm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/component: core
+  ports:
+    - name: registry
+      port: 4050
+      targetPort: registry
+      protocol: TCP
+    - name: mobile-api
+      port: 4051
+      targetPort: mobile-api
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opsm-mobile
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/component: mobile-api
+    app.kubernetes.io/part-of: opsm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: opsm
+    app.kubernetes.io/component: core
+  ports:
+    - name: mobile-api
+      port: 4051
+      targetPort: mobile-api
+      protocol: TCP

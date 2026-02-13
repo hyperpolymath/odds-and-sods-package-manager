@@ -1,0 +1,362 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Rust microservices: claim-forge, checky-monkey, palimpsest, cicd-hyper-a, oikos
+
+---
+# ==========================================================================
+# Claim Forge — Attestation Generation
+# ==========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claim-forge
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: claim-forge
+    app.kubernetes.io/component: attestation
+    app.kubernetes.io/part-of: opsm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: claim-forge
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: claim-forge
+        app.kubernetes.io/component: attestation
+        app.kubernetes.io/part-of: opsm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: claim-forge
+          image: opsm-claim-forge:latest
+          ports:
+            - containerPort: 7001
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: BIND_ADDR
+              value: "0.0.0.0:7001"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7001
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claim-forge
+  namespace: opsm
+spec:
+  selector:
+    app.kubernetes.io/name: claim-forge
+  ports:
+    - port: 7001
+      targetPort: 7001
+
+---
+# ==========================================================================
+# Checky Monkey — Code Verification
+# ==========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checky-monkey
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: checky-monkey
+    app.kubernetes.io/component: verification
+    app.kubernetes.io/part-of: opsm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: checky-monkey
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: checky-monkey
+        app.kubernetes.io/component: verification
+        app.kubernetes.io/part-of: opsm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: checky-monkey
+          image: opsm-checky-monkey:latest
+          ports:
+            - containerPort: 7002
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: BIND_ADDR
+              value: "0.0.0.0:7002"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7002
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checky-monkey
+  namespace: opsm
+spec:
+  selector:
+    app.kubernetes.io/name: checky-monkey
+  ports:
+    - port: 7002
+      targetPort: 7002
+
+---
+# ==========================================================================
+# Palimpsest License — License Analysis
+# ==========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: palimpsest
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: palimpsest
+    app.kubernetes.io/component: license
+    app.kubernetes.io/part-of: opsm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: palimpsest
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: palimpsest
+        app.kubernetes.io/component: license
+        app.kubernetes.io/part-of: opsm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: palimpsest
+          image: opsm-palimpsest:latest
+          ports:
+            - containerPort: 7003
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: BIND_ADDR
+              value: "0.0.0.0:7003"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7003
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: palimpsest
+  namespace: opsm
+spec:
+  selector:
+    app.kubernetes.io/name: palimpsest
+  ports:
+    - port: 7003
+      targetPort: 7003
+
+---
+# ==========================================================================
+# CICD-Hyper-A — Registry and CI/CD Hub
+# ==========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cicd-hyper-a
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: cicd-hyper-a
+    app.kubernetes.io/component: cicd
+    app.kubernetes.io/part-of: opsm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cicd-hyper-a
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cicd-hyper-a
+        app.kubernetes.io/component: cicd
+        app.kubernetes.io/part-of: opsm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cicd-hyper-a
+          image: opsm-cicd-hyper-a:latest
+          ports:
+            - containerPort: 7004
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: BIND_ADDR
+              value: "0.0.0.0:7004"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7004
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cicd-hyper-a
+  namespace: opsm
+spec:
+  selector:
+    app.kubernetes.io/name: cicd-hyper-a
+  ports:
+    - port: 7004
+      targetPort: 7004
+
+---
+# ==========================================================================
+# Oikos — Ecosystem Sustainability Analysis
+# ==========================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oikos
+  namespace: opsm
+  labels:
+    app.kubernetes.io/name: oikos
+    app.kubernetes.io/component: sustainability
+    app.kubernetes.io/part-of: opsm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: oikos
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: oikos
+        app.kubernetes.io/component: sustainability
+        app.kubernetes.io/part-of: opsm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: oikos
+          image: opsm-oikos:latest
+          ports:
+            - containerPort: 7005
+          env:
+            - name: RUST_LOG
+              value: info
+            - name: BIND_ADDR
+              value: "0.0.0.0:7005"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7005
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oikos
+  namespace: opsm
+spec:
+  selector:
+    app.kubernetes.io/name: oikos
+  ports:
+    - port: 7005
+      targetPort: 7005

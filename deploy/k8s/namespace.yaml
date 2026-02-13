@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: opsm
+  labels:
+    app.kubernetes.io/part-of: opsm
+    app.kubernetes.io/managed-by: kubectl
