@@ -457,16 +457,46 @@ defmodule Opsm.Federation do
   - Resolving ambiguous package requests
   """
   def agentic_resolve(query, opts \\ []) do
-    # For now, returns a placeholder - actual implementation
-    # would integrate with an LLM/agent service
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi])
+    alias Opsm.Registries.Registry
+
+    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
+    timeout = Keyword.get(opts, :timeout, 15_000)
+
+    # Search across all specified registries in parallel
+    tasks = Enum.map(forths, fn forth ->
+      Task.async(fn ->
+        try do
+          case Registry.search(forth, query, limit: 5) do
+            {:ok, results} ->
+              Enum.map(results, fn r -> Map.put(r, :forth, forth) end)
+            {:error, _} -> []
+          end
+        rescue
+          _ -> []
+        end
+      end)
+    end)
+
+    results = Task.yield_many(tasks, timeout)
+
+    candidates =
+      results
+      |> Enum.flat_map(fn
+        {_task, {:ok, items}} when is_list(items) -> items
+        {task, nil} -> Task.shutdown(task, :brutal_kill); []
+        _ -> []
+      end)
+      |> Enum.sort_by(fn c ->
+        # Exact name match scores highest
+        if String.downcase(c[:name] || "") == String.downcase(query), do: 0, else: 1
+      end)
 
     {:ok, %{
       query: query,
-      candidates: [],
+      candidates: candidates,
       forths_searched: forths,
-      status: :not_implemented,
-      message: "Agentic fetch requires agent service integration"
+      status: :ok,
+      message: "Found #{length(candidates)} candidates across #{length(forths)} registries"
     }}
   end
 
@@ -835,9 +865,14 @@ defmodule Opsm.Federation do
     end
   end
 
-  defp resolve_from_forth(%ForthConfig{federation_mode: :manifest_convert} = forth, _request) do
-    # Would make HTTP request to registry API
-    {:error, "Registry fetch not yet implemented for #{forth.name}"}
+  defp resolve_from_forth(%ForthConfig{federation_mode: :manifest_convert} = forth, request) do
+    alias Opsm.Registries.Registry
+
+    case Registry.fetch(forth.name, request.package, request.version || "latest") do
+      {:ok, _pkg} = result -> result
+      {:error, :not_found} -> {:error, "#{request.package} not found in #{forth.name}"}
+      {:error, reason} -> {:error, "Registry fetch failed for #{forth.name}: #{inspect(reason)}"}
+    end
   end
 
   defp resolve_from_forth(%ForthConfig{federation_mode: :connection_port} = forth, request) do

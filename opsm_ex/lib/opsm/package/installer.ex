@@ -15,6 +15,8 @@ defmodule Opsm.Package.Installer do
   alias Opsm.Errors
   alias Opsm.Resolver
   alias Opsm.Lockfile
+  alias Opsm.Slsa
+  alias Opsm.Crypto.PqTrust
 
   @user_install_dir Path.expand("~/.local/share/opsm/packages")
   @system_install_dir "/usr/local/share/opsm/packages"
@@ -166,9 +168,35 @@ defmodule Opsm.Package.Installer do
     IO.puts("  Running trust checks...")
     result = try do
       {:ok, trust_result} = Pipeline.verify(package)
-      case handle_trust_result(trust_result, package, scope, dry_run) do
+
+      # Generate PQ trust attestation (non-blocking — failures don't halt install)
+      pq_attestation = try do
+        PqTrust.trust_attestation(package.package, version, package.checksum)
+      rescue
+        _ -> nil
+      end
+
+      # Generate SLSA provenance (non-blocking)
+      slsa_provenance = try do
+        pkg_info = %{name: package.package, version: version, forth: package.forth,
+                     tarball_url: package.tarball_url}
+        case Slsa.generate_provenance(pkg_info) do
+          {:ok, statement} -> statement
+          _ -> nil
+        end
+      rescue
+        _ -> nil
+      end
+
+      # Attach attestations to package for lockfile
+      enriched = %{package |
+        attestations: List.wrap(pq_attestation) ++ List.wrap(Map.get(package, :attestations)),
+        slsa_provenance: slsa_provenance
+      }
+
+      case handle_trust_result(trust_result, enriched, scope, dry_run) do
         {:ok, :dry_run} -> {:ok, :dry_run}
-        {:ok, _} -> {:ok, package}
+        {:ok, _} -> {:ok, enriched}
         {:error, reason} -> {:error, {package.package, reason}}
       end
     rescue
@@ -237,6 +265,12 @@ defmodule Opsm.Package.Installer do
           {pkg.checksum, pkg.checksum_algo}
         end
 
+        # Extract SLSA metadata if provenance was generated
+        slsa_meta = case Map.get(pkg, :slsa_provenance) do
+          nil -> %{slsa_level: nil, slsa_provenance_uri: nil}
+          prov -> Slsa.lockfile_metadata(%{statement: prov})
+        end
+
         Lockfile.add_package(acc, %{
           name: pkg.package,
           version: version,
@@ -244,7 +278,9 @@ defmodule Opsm.Package.Installer do
           checksum: checksum,
           checksum_algo: algo,
           source_url: pkg.tarball_url,
-          dependencies: dep_names
+          dependencies: dep_names,
+          slsa_level: slsa_meta.slsa_level,
+          slsa_provenance_uri: slsa_meta.slsa_provenance_uri
         })
       end)
 

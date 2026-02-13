@@ -4,25 +4,65 @@ defmodule Opsm.Registries.Registry do
   Unified registry dispatcher.
   Routes package requests to the appropriate registry client.
   Includes caching for improved performance.
+
+  Supports 101 registry adapters across:
+  - Major language ecosystems (npm, cargo, hex, pypi, gem, go, pub, hackage, nuget, maven)
+  - Extended language ecosystems (packagist, cpan, cran, conda, cocoapods, opam, clojars, etc.)
+  - System package managers (apt, rpm, alpine, homebrew, nix, flatpak, snap, guix, etc.)
+  - Container/cloud registries (docker hub, helm, buildpacks, k8s operators, etc.)
+  - IDE/editor plugins (vscode, jetbrains, sublime, vim, eclipse, emacs)
+  - CDN/asset registries (jsdelivr, cdnjs, webjars)
+  - Niche/custom ecosystems (eclexia, oblibeny, agentic, etc.)
   """
 
-  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, Nimble, Idris2, Git, Agentic,
-    Oblibeny, MyLang, JuliaTheViper, ErrorLang, Eclexia,
-    RubyGems, GoModules, PubDev, Hackage, NuGet, Maven,
-    Packagist, Cpan, Cran, Conda, CocoaPods, Opam, Clojars,
+  # Major ecosystems
+  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, RubyGems, GoModules, PubDev,
+    Hackage, NuGet, Maven}
+
+  # Extended language ecosystems
+  alias Opsm.Registries.{Packagist, Cpan, Cran, Conda, CocoaPods, Opam, Clojars,
     LuaRocks, Terraform, Jsr, Conan, SwiftPM, Elm, Vcpkg, JuliaGeneral,
-    Homebrew, Nix, Apt, Rpm, Alpine, Flatpak, Snap, Guix}
+    Dub, Shard, Raku, Raco, Chicken, Alire, Stackage, Pear, Pecl,
+    SbtPlugins, GradlePlugins, DenoX, CargoBinstall, Bower}
+
+  # System package managers
+  alias Opsm.Registries.{Homebrew, HomebrewCask, Nix, NixFlakes, NixDarwin,
+    Apt, Rpm, Alpine, Flatpak, Snap, Guix, Macports, Portage, Xbps,
+    Zypper, Aur, Pacstall, Solus, Spack, Pkgsrc, Freebsd, FpmRegistry}
+
+  # Container/cloud/infra registries
+  alias Opsm.Registries.{DockerHub, Helm, Buildpacks, K8sOperators, Pulumi,
+    TektonHub, AnsibleGalaxy, ChefSupermarket, PuppetForge, ScoopApi, WingetApi}
+
+  # IDE/editor/plugin registries
+  alias Opsm.Registries.{VscodeMarketplace, Jetbrains, Sublime, VimPlugins,
+    EclipseMarketplace, Melpa, Elpa, Grafana, OpenUpm, Godot}
+
+  # CDN/asset/meta registries
+  alias Opsm.Registries.{JsDelivr, Cdnjs, WebJars, GithubPackages, GitlabPackages,
+    WordPress, WordPressThemes, Wapm, Bioconductor, Astrolabe, Vpm}
+
+  # Niche/custom ecosystems
+  alias Opsm.Registries.{Nimble, Idris2, Git, Agentic, Oblibeny, MyLang,
+    JuliaTheViper, ErrorLang, Eclexia}
+
   alias Opsm.Cache
 
   @registry_modules %{
-    # Major ecosystems (10)
+    # =========================================================================
+    # Major Language Ecosystems (10 modules, 20 aliases)
+    # =========================================================================
     npm: Npm,
+    node: Npm,
     cargo: Crates,
     crates: Crates,
+    rust: Crates,
     hex: Hex,
     elixir: Hex,
+    erlang: Hex,
     pypi: Pypi,
     python: Pypi,
+    pip: Pypi,
     gem: RubyGems,
     rubygems: RubyGems,
     ruby: RubyGems,
@@ -36,10 +76,14 @@ defmodule Opsm.Registries.Registry do
     nuget: NuGet,
     dotnet: NuGet,
     csharp: NuGet,
+    fsharp: NuGet,
     maven: Maven,
     java: Maven,
     kotlin: Maven,
-    # Expanded ecosystems (15)
+
+    # =========================================================================
+    # Extended Language Ecosystems (29 modules)
+    # =========================================================================
     packagist: Packagist,
     php: Packagist,
     composer: Packagist,
@@ -71,11 +115,48 @@ defmodule Opsm.Registries.Registry do
     vcpkg: Vcpkg,
     julia: JuliaGeneral,
     juliageneral: JuliaGeneral,
-    # System package managers (8)
+    dub: Dub,
+    dlang: Dub,
+    shard: Shard,
+    crystal: Shard,
+    raku: Raku,
+    perl6: Raku,
+    raco: Raco,
+    racket: Raco,
+    chicken: Chicken,
+    scheme: Chicken,
+    alire: Alire,
+    ada: Alire,
+    stackage: Stackage,
+    haskell_stackage: Stackage,
+    pear: Pear,
+    php_pear: Pear,
+    pecl: Pecl,
+    php_pecl: Pecl,
+    sbt_plugins: SbtPlugins,
+    sbt: SbtPlugins,
+    scala: SbtPlugins,
+    gradle_plugins: GradlePlugins,
+    gradle: GradlePlugins,
+    deno_x: DenoX,
+    deno_land: DenoX,
+    cargo_binstall: CargoBinstall,
+    binstall: CargoBinstall,
+    bower: Bower,
+
+    # =========================================================================
+    # System Package Managers (22 modules)
+    # =========================================================================
     homebrew: Homebrew,
     brew: Homebrew,
+    homebrew_cask: HomebrewCask,
+    cask: HomebrewCask,
     nix: Nix,
     nixpkgs: Nix,
+    nix_flakes: NixFlakes,
+    flakes: NixFlakes,
+    nix_darwin: NixDarwin,
+    darwin: NixDarwin,
     apt: Apt,
     deb: Apt,
     debian: Apt,
@@ -91,7 +172,106 @@ defmodule Opsm.Registries.Registry do
     snap: Snap,
     snapcraft: Snap,
     guix: Guix,
-    # Niche/custom ecosystems (5)
+    macports: Macports,
+    ports: Macports,
+    portage: Portage,
+    gentoo: Portage,
+    emerge: Portage,
+    xbps: Xbps,
+    void: Xbps,
+    zypper: Zypper,
+    opensuse: Zypper,
+    suse: Zypper,
+    aur: Aur,
+    arch: Aur,
+    pacstall: Pacstall,
+    solus: Solus,
+    eopkg: Solus,
+    spack: Spack,
+    hpc: Spack,
+    pkgsrc: Pkgsrc,
+    netbsd: Pkgsrc,
+    freebsd: Freebsd,
+    pkg_freebsd: Freebsd,
+    fpm: FpmRegistry,
+
+    # =========================================================================
+    # Container / Cloud / Infra Registries (11 modules)
+    # =========================================================================
+    docker: DockerHub,
+    docker_hub: DockerHub,
+    oci: DockerHub,
+    helm: Helm,
+    helm_charts: Helm,
+    buildpacks: Buildpacks,
+    cnb: Buildpacks,
+    k8s_operators: K8sOperators,
+    olm: K8sOperators,
+    pulumi: Pulumi,
+    tekton: TektonHub,
+    tekton_hub: TektonHub,
+    ansible: AnsibleGalaxy,
+    ansible_galaxy: AnsibleGalaxy,
+    chef: ChefSupermarket,
+    chef_supermarket: ChefSupermarket,
+    puppet: PuppetForge,
+    puppet_forge: PuppetForge,
+    scoop: ScoopApi,
+    scoop_api: ScoopApi,
+    winget: WingetApi,
+    winget_api: WingetApi,
+
+    # =========================================================================
+    # IDE / Editor / Plugin Registries (10 modules)
+    # =========================================================================
+    vscode: VscodeMarketplace,
+    vscode_marketplace: VscodeMarketplace,
+    jetbrains: Jetbrains,
+    intellij: Jetbrains,
+    sublime: Sublime,
+    sublime_text: Sublime,
+    vim: VimPlugins,
+    vim_plugins: VimPlugins,
+    neovim: VimPlugins,
+    eclipse: EclipseMarketplace,
+    eclipse_marketplace: EclipseMarketplace,
+    melpa: Melpa,
+    emacs: Melpa,
+    elpa: Elpa,
+    gnu_elpa: Elpa,
+    grafana: Grafana,
+    grafana_plugins: Grafana,
+    openupm: OpenUpm,
+    unity: OpenUpm,
+    godot: Godot,
+    godot_asset: Godot,
+
+    # =========================================================================
+    # CDN / Asset / Meta Registries (11 modules)
+    # =========================================================================
+    jsdelivr: JsDelivr,
+    cdn: JsDelivr,
+    cdnjs: Cdnjs,
+    webjars: WebJars,
+    github_packages: GithubPackages,
+    ghcr: GithubPackages,
+    gitlab_packages: GitlabPackages,
+    gitlab_registry: GitlabPackages,
+    wordpress: WordPress,
+    wp_plugins: WordPress,
+    wordpress_themes: WordPressThemes,
+    wp_themes: WordPressThemes,
+    wapm: Wapm,
+    wasm: Wapm,
+    bioconductor: Bioconductor,
+    bioc: Bioconductor,
+    astrolabe: Astrolabe,
+    vpm: Vpm,
+    vrchat: Vpm,
+
+    # =========================================================================
+    # Niche / Custom Ecosystems (9 modules)
+    # =========================================================================
     nimble: Nimble,
     nim: Nimble,
     idris2: Idris2,
@@ -109,6 +289,32 @@ defmodule Opsm.Registries.Registry do
     eclexia: Eclexia,
     ecl: Eclexia
   }
+
+  # All primary forth names (for search_all / exists_all? defaults)
+  @all_primary_forths [
+    # Major
+    :npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
+    # Extended
+    :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
+    :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
+    :dub, :shard, :raku, :raco, :chicken, :alire, :stackage, :pear, :pecl,
+    :sbt_plugins, :gradle_plugins, :deno_x, :cargo_binstall, :bower,
+    # System
+    :homebrew, :homebrew_cask, :nix, :nix_flakes, :nix_darwin,
+    :apt, :rpm, :alpine, :flatpak, :snap, :guix, :macports, :portage,
+    :xbps, :zypper, :aur, :pacstall, :solus, :spack, :pkgsrc, :freebsd, :fpm,
+    # Container/cloud
+    :docker, :helm, :buildpacks, :k8s_operators, :pulumi, :tekton,
+    :ansible, :chef, :puppet, :scoop, :winget,
+    # IDE/editor
+    :vscode, :jetbrains, :sublime, :vim, :eclipse, :melpa, :elpa,
+    :grafana, :openupm, :godot,
+    # CDN/meta
+    :jsdelivr, :cdnjs, :webjars, :github_packages, :gitlab_packages,
+    :wordpress, :wordpress_themes, :wapm, :bioconductor, :astrolabe, :vpm,
+    # Niche
+    :nimble, :idris2, :eclexia
+  ]
 
   @doc """
   Fetch package from specified registry.
@@ -171,10 +377,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def search_all(query, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
-                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
-                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
+    forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -189,7 +392,7 @@ defmodule Opsm.Registries.Registry do
     Enum.map(results, fn
       {forth, {:ok, packages}} -> {forth, packages}
       {forth, {:error, _}} -> {forth, []}
-      {:error, forth} -> {forth, []}
+      {:error, _} -> {:unknown, []}
     end)
     |> Map.new()
   end
@@ -200,10 +403,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def exists_all?(package, opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
-                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
-                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
+    forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 10_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -216,7 +416,7 @@ defmodule Opsm.Registries.Registry do
 
     Enum.map(results, fn
       {forth, exists} when is_boolean(exists) -> {forth, exists}
-      {:error, forth} -> {forth, false}
+      {:error, _} -> {:unknown, false}
     end)
     |> Map.new()
   end
@@ -227,10 +427,7 @@ defmodule Opsm.Registries.Registry do
   Handles task failures gracefully.
   """
   def fetch_all(package, version \\ "latest", opts \\ []) do
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
-                        :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-                        :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
-                        :homebrew, :nix, :apt, :rpm, :alpine, :flatpak, :snap, :guix])
+    forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     tasks = Enum.map(forths, fn forth ->
@@ -262,13 +459,30 @@ defmodule Opsm.Registries.Registry do
   end
 
   @doc """
-  List all supported registries.
+  List all supported registries (primary forth names only).
   """
   def supported_registries do
+    @all_primary_forths
+    |> Enum.sort()
+  end
+
+  @doc """
+  List all forth aliases (including aliases).
+  """
+  def all_forth_aliases do
     @registry_modules
     |> Map.keys()
-    |> Enum.uniq()
     |> Enum.sort()
+  end
+
+  @doc """
+  Count of unique registry adapter modules.
+  """
+  def adapter_count do
+    @registry_modules
+    |> Map.values()
+    |> Enum.uniq()
+    |> length()
   end
 
   @doc """

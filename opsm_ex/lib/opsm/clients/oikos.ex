@@ -50,6 +50,77 @@ defmodule Opsm.Clients.Oikos do
     end
   end
 
+  @doc """
+  Analyze a package for sustainability scoring.
+
+  Attempts repository analysis if the package has a repository URL.
+  Falls back to heuristic scoring based on package metadata.
+  """
+  def analyze_package(%__MODULE__{} = oikos, package_name, package_version, opts \\ []) do
+    repo_url = Keyword.get(opts, :repository_url)
+    forth = Keyword.get(opts, :forth, :unknown)
+
+    cond do
+      # If we have a repo URL, use full repository analysis
+      repo_url != nil ->
+        request = %OikosAnalysisRequest{
+          repository_url: repo_url,
+          branch: "main",
+          commit_sha: nil
+        }
+
+        case analyze_repository(oikos, request) do
+          {:ok, response} -> {:ok, response.overall_score}
+          {:error, _} -> {:ok, heuristic_score(package_name, package_version, forth)}
+        end
+
+      # No repo URL — use heuristic scoring
+      true ->
+        {:ok, heuristic_score(package_name, package_version, forth)}
+    end
+  end
+
+  @doc """
+  Batch analyze multiple packages for sustainability.
+
+  Returns a map of `"name@version" => score`.
+  """
+  def analyze_packages(%__MODULE__{} = oikos, packages) do
+    packages
+    |> Task.async_stream(fn {name, version, opts} ->
+      {:ok, score} = analyze_package(oikos, name, version, opts)
+      {"#{name}@#{version}", score}
+    end, max_concurrency: 5, timeout: 10_000, on_timeout: :kill_task)
+    |> Enum.reduce(%{}, fn
+      {:ok, {key, score}}, acc -> Map.put(acc, key, score)
+      {:exit, _}, acc -> acc
+    end)
+  end
+
+  # Heuristic scoring based on package metadata when oikos service is unavailable
+  defp heuristic_score(name, version, forth) do
+    base = 50
+
+    # Bonus for well-known ecosystems
+    ecosystem_bonus = case forth do
+      f when f in [:npm, :cargo, :hex, :pypi, :gem, :go] -> 10
+      f when f in [:pub, :hackage, :nuget, :maven] -> 8
+      _ -> 0
+    end
+
+    # Bonus for semver-compliant versions (indicates maturity)
+    version_bonus = case Version.parse(version || "") do
+      {:ok, %{major: m}} when m >= 1 -> 15
+      {:ok, _} -> 5
+      :error -> 0
+    end
+
+    # Penalty for very short names (potential typosquatting)
+    name_penalty = if String.length(name || "") < 3, do: -10, else: 0
+
+    min(100, max(0, base + ecosystem_bonus + version_bonus + name_penalty))
+  end
+
   # Decoders
 
   defp decode_analysis_response(json) do

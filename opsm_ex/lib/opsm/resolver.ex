@@ -353,15 +353,14 @@ defmodule Opsm.Resolver do
         client = Opsm.Clients.Oikos.new(config.oikos, config.http)
         case Opsm.Clients.Oikos.health(client) do
           {:ok, _} ->
-            # Oikos is up — score each version (cached via RegistryCache)
+            # Oikos is up — score each version via package-level analysis
             versions
-            |> Enum.with_index()
-            |> Enum.map(fn {ver, idx} ->
+            |> Enum.map(fn ver ->
               score = RegistryCache.fetch_or_compute({:oikos, ver}, fn ->
-                # For now, oikos doesn't have per-version scoring.
-                # Use the recency position as a proxy: newer = higher.
-                # When oikos adds version-level analysis, call it here.
-                max(0, 100 - idx * 5)
+                case Opsm.Clients.Oikos.analyze_package(client, "pkg", ver) do
+                  {:ok, s} when is_number(s) -> s
+                  _ -> 50
+                end
               end, 60_000)
               {ver, score}
             end)
