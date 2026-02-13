@@ -55,7 +55,11 @@
        "5 high-severity seams fixed (D1, D2, S1, S2, F1)"
        "panic-attack assail scan: 0 actionable findings"
        "QUIC/HTTP3 transport with automatic protocol negotiation and 0-RTT resumption"
-       "CLI commands: install, remove, search, info, list, pin, unpin, clean, history, undo, reinstall"))
+       "CLI commands: install, remove, search, info, list, pin, unpin, clean, history, undo, reinstall"
+       "PQ NIF compiled (.so built): real NIF probe with persistent_term caching"
+       "Sustainability preference wired through installer to resolver"
+       "PQ signature verification: correct signed-message blob handling (Dilithium5 + SPHINCS+)"
+       "Rustler auto-discovery NIF registration"))
     (registries
       ("npm" "cargo/crates" "hex/elixir" "pypi/python"
        "rubygems/ruby" "go/golang" "pub/dart/flutter" "hackage/haskell"
@@ -105,7 +109,7 @@
        "2026-02-13: Eclexia language integration (already wired)"
        "2026-02-13: Version bumped to 2.0.0 in mix.exs"))
     (next-work
-      ("Build PQ NIF .so (cargo build --release in native/opsm_pq_nif)"
-       "Wire sustainability preference through to resolver scoring"
-       "End-to-end integration tests with real registry calls"
-       "Mobile wrapper (Tauri 2.x) polish"))))
+      ("End-to-end integration tests with real registry calls"
+       "Mobile wrapper (Tauri 2.x) polish"
+       "PQ NIF signature verification: verify opened message matches expected"
+       "Interactive TUI (ratatui-based, aptitude-style)"))))

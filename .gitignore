@@ -75,6 +75,13 @@ htmlcov/
 *.log
 /logs/
 
+# NIF build artifacts
+opsm_ex/native/*/Cargo.lock
+opsm_ex/priv/native/
+
+# Crash recovery artifacts
+ai-cli-crash-capture/
+
 # Temp
 /tmp/
 *.tmp

@@ -32,7 +32,26 @@ defmodule Opsm.Crypto.PostQuantum do
   Use this before calling PQ operations to decide whether to use hybrid mode.
   """
   def available? do
-    function_exported?(@nif_module, :dilithium5_keypair, 0)
+    case :persistent_term.get({__MODULE__, :nif_loaded}, nil) do
+      nil ->
+        loaded =
+          try do
+            case @nif_module.dilithium5_keypair() do
+              {:ok, _} -> true
+              _ -> false
+            end
+          rescue
+            _ -> false
+          catch
+            _, _ -> false
+          end
+
+        :persistent_term.put({__MODULE__, :nif_loaded}, loaded)
+        loaded
+
+      value ->
+        value
+    end
   end
 
   # ==========================================================================

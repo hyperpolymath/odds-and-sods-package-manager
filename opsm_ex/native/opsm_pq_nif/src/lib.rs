@@ -12,12 +12,12 @@ use pqcrypto_dilithium::dilithium5;
 use pqcrypto_kyber::kyber1024;
 use pqcrypto_sphincsplus::sphincsshake256fsimple as sphincs;
 use pqcrypto_traits::kem::{
-    Ciphertext as KemCt, PublicKey as KemPk, SecretKey as KemSk, SharedSecret,
+    Ciphertext as KemCiphertext, PublicKey as KemPk, SecretKey as KemSk, SharedSecret,
 };
 use pqcrypto_traits::sign::{
-    DetachedSignature, PublicKey as SignPk, SecretKey as SignSk, SignedMessage,
+    PublicKey as SignPk, SecretKey as SignSk, SignedMessage,
 };
-use rustler::{Atom, Binary, Env, NewBinary, Term};
+use rustler::{Binary, Encoder, Env, NewBinary, Term};
 
 mod atoms {
     rustler::atoms! {
@@ -112,15 +112,17 @@ fn dilithium5_verify<'a>(
 ) -> Term<'a> {
     match dilithium5::PublicKey::from_bytes(public_key.as_slice()) {
         Ok(pk) => {
-            // The signature binary is the full signed-message blob from sign().
-            // Reconstruct it for open().
-            let mut signed_msg_bytes = Vec::with_capacity(signature.len() + message.len());
-            signed_msg_bytes.extend_from_slice(signature.as_slice());
-            signed_msg_bytes.extend_from_slice(message.as_slice());
-
-            match dilithium5::SignedMessage::from_bytes(&signed_msg_bytes) {
+            // signature is the full signed-message blob from sign() (sig || msg).
+            match dilithium5::SignedMessage::from_bytes(signature.as_slice()) {
                 Ok(sm) => match dilithium5::open(&sm, &pk) {
-                    Ok(_) => atoms::ok().encode(env),
+                    Ok(opened) => {
+                        // Verify the opened message matches the expected message.
+                        if opened == message.as_slice() {
+                            atoms::ok().encode(env)
+                        } else {
+                            (atoms::error(), "Message mismatch").encode(env)
+                        }
+                    }
                     Err(_) => (atoms::error(), "Signature verification failed").encode(env),
                 },
                 Err(_) => (atoms::error(), "Invalid signed message format").encode(env),
@@ -209,13 +211,16 @@ fn sphincs_plus_verify<'a>(
 ) -> Term<'a> {
     match sphincs::PublicKey::from_bytes(public_key.as_slice()) {
         Ok(pk) => {
-            let mut signed_msg_bytes = Vec::with_capacity(signature.len() + message.len());
-            signed_msg_bytes.extend_from_slice(signature.as_slice());
-            signed_msg_bytes.extend_from_slice(message.as_slice());
-
-            match sphincs::SignedMessage::from_bytes(&signed_msg_bytes) {
+            // signature is the full signed-message blob from sign() (sig || msg).
+            match sphincs::SignedMessage::from_bytes(signature.as_slice()) {
                 Ok(sm) => match sphincs::open(&sm, &pk) {
-                    Ok(_) => atoms::ok().encode(env),
+                    Ok(opened) => {
+                        if opened == message.as_slice() {
+                            atoms::ok().encode(env)
+                        } else {
+                            (atoms::error(), "Message mismatch").encode(env)
+                        }
+                    }
                     Err(_) => (atoms::error(), "Signature verification failed").encode(env),
                 },
                 Err(_) => (atoms::error(), "Invalid signed message format").encode(env),
@@ -336,17 +341,4 @@ fn kyber1024_decapsulate<'a>(
 // NIF registration
 // =============================================================================
 
-rustler::init!(
-    "Elixir.Opsm.Crypto.PostQuantum.Nif",
-    [
-        dilithium5_keypair,
-        dilithium5_sign,
-        dilithium5_verify,
-        sphincs_plus_keypair,
-        sphincs_plus_sign,
-        sphincs_plus_verify,
-        kyber1024_keypair,
-        kyber1024_encapsulate,
-        kyber1024_decapsulate,
-    ]
-);
+rustler::init!("Elixir.Opsm.Crypto.PostQuantum.Nif");

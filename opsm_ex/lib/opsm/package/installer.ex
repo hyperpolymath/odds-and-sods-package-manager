@@ -31,6 +31,7 @@ defmodule Opsm.Package.Installer do
     version = Keyword.get(opts, :version, "latest")
     scope = Keyword.get(opts, :scope, :user)
     dry_run = Keyword.get(opts, :dry_run, false)
+    sustainability = Keyword.get(opts, :sustainability_preference, false)
 
     # Validate inputs for security
     with {:ok, _} <- Validation.validate_package_name(package_name, forth),
@@ -40,7 +41,7 @@ defmodule Opsm.Package.Installer do
 
       # Check toolchain (skip for dry-run — resolution doesn't need local tools)
       if dry_run do
-        do_install(forth, package_name, version, scope, dry_run)
+        do_install(forth, package_name, version, scope, dry_run, sustainability)
       else
         case Federation.check_toolchain(forth) do
           {:error, info} ->
@@ -49,7 +50,7 @@ defmodule Opsm.Package.Installer do
             {:error, :missing_toolchain}
 
           _ ->
-            do_install(forth, package_name, version, scope, dry_run)
+            do_install(forth, package_name, version, scope, dry_run, sustainability)
         end
       end
     else
@@ -112,7 +113,7 @@ defmodule Opsm.Package.Installer do
 
   # Internal functions
 
-  defp do_install(forth, package_name, version, scope, dry_run) do
+  defp do_install(forth, package_name, version, scope, dry_run, sustainability) do
     # Build root dependency for resolver
     root_dep = %{
       name: package_name,
@@ -122,7 +123,7 @@ defmodule Opsm.Package.Installer do
 
     IO.puts("  Resolving dependencies for #{package_name}...")
 
-    case Resolver.resolve([root_dep], forth: forth) do
+    case Resolver.resolve([root_dep], forth: forth, sustainability_preference: sustainability) do
       {:ok, resolution} ->
         # Resolution successful - we have a map of package_name => {version, ResolvedPackage}
         IO.puts("  Resolved #{map_size(resolution)} package(s)")

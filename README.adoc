@@ -1,18 +1,19 @@
 = OPSM (Odds and Sods Package Manager)
-:revdate: 2026-02-05
-:version: 1.1.0
+:revdate: 2026-02-13
+:version: 2.0.0
 :toc: macro
 :toclevels: 3
 
-image:https://img.shields.io/badge/Status-v1.1.0%20Released-success?style=flat[v1.1.0 Released]
+image:https://img.shields.io/badge/Status-v2.0.0-success?style=flat[v2.0.0]
+image:https://img.shields.io/badge/Registries-101-blue?style=flat[101 Registries]
 image:https://img.shields.io/badge/Elixir-Inside-4e2a8e?style=flat&logo=elixir[Elixir Inside]
-image:https://img.shields.io/badge/Idris-Inside-blueviolet?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyIDJMMyA3djEwbDkgNSA5LTVWN2wtOS01em0wIDJsNyA0djhsLTcgNC03LTRWOGw3LTR6Ii8+PC9zdmc+[Idris Inside]
+image:https://img.shields.io/badge/Rust-NIF-orange?style=flat&logo=rust[Rust NIF]
 image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
-image:https://img.shields.io/badge/Tests-250%20passing-success?style=flat[Tests Passing]
+image:https://img.shields.io/badge/Tests-547%20%2B%2040%20props-success?style=flat[Tests Passing]
 
-**A federated, multi-language package manager with cryptographic security guarantees, formal verification, 5-microservice trust pipeline, 4-service container security pipeline, and human-assisted discovery for obscure languages.**
+**A federated, universal package manager with 101 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and formal verification.**
 
-*Latest Release: February 5, 2026 | Version: 1.1.0 | Test Coverage: 100% (116 crypto tests + 250 core tests + container security tests passing)*
+*Latest: February 13, 2026 | Version: 2.0.0 | 547 core tests + 40 property tests + 49 integration tests*
 
 toc::[]
 
@@ -20,14 +21,16 @@ toc::[]
 
 OPSM is the **first universal package manager** that combines:
 
-1. **Cryptographic Security** - Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512 primitives with lockfile integrity and encrypted API key storage
-2. **Container Security Pipeline** - 4-service verification (vulnerability scanning, image signing, policy verification, runtime monitoring)
-3. **Multi-Language Support** - 8 ecosystems today (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic), 100+ planned for v2.0
-4. **Trust Pipeline** - 5-microservice verification before every publish (attestations, signatures, licenses, sustainability, provenance)
-5. **Formal Verification** - Proven library with mathematical security guarantees (SSRF/DoS prevention via property-based testing)
-6. **Human-Assisted Discovery (HAD)** - Agentic agents find packages in obscure languages without centralized registries
-7. **Federation-First** - Event propagation, distributed architecture, no single points of failure
-8. **Cross-Registry Resolution** - PubGrub dependency resolver handles transitive dependencies across ecosystems
+1. **101 Registry Adapters** - npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 91 more ecosystems
+2. **Post-Quantum Cryptography** - Hybrid Ed25519+Dilithium5 signatures, Kyber-1024 KEM, SPHINCS+ (Rust NIF)
+3. **SLSA Level 3 Compliance** - Provenance generation, signature verification, policy enforcement
+4. **PubGrub Dependency Resolver** - Semver, PEP 440, Go MVS support with ETS caching
+5. **Trust Pipeline** - 5-microservice verification (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
+6. **Container Security** - 4 Rust services (svalinn, selur, vordr, cerro-torre)
+7. **Sustainability Scoring** - Oikos-based real package-level analysis integrated into resolver
+8. **Formal Verification** - Proven library (SSRF/DoS prevention via property-based testing)
+9. **Federation-First** - Event propagation, distributed architecture, cross-registry search
+10. **Human-Assisted Discovery** - 3 agentic agents for obscure language packages
 
 **Unlike npm/cargo/pip:** OPSM works across languages and verifies every package through a trust pipeline.
 
@@ -80,81 +83,60 @@ OPSM v1.1.0 introduces a comprehensive container security pipeline with 4 dedica
 
 **See:** link:services/svalinn/README.md[Svalinn], link:services/selur/README.md[Selur], link:services/vordr/README.md[Vordr], link:services/cerro-torre/README.md[Cerro-Torre]
 
-== Current Status (v1.1.0 - Released)
+== Current Status (v2.0.0)
 
-**✅ Production Ready** - Released February 5, 2026
+**Core:**
+- ✅ **101 registry adapters** across all major ecosystems (npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 91 more)
+- ✅ **PubGrub dependency resolver** with semver, PEP 440, and Go MVS support
+- ✅ **ETS-based registry cache** with TTL for resolver performance
+- ✅ **Version constraint engine**: caret, tilde, wildcard, comparison, AND/OR combinators
 
-**Core Features:**
-- ✅ **Cryptographic Security** (v1.0.1): Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512, ChaCha20-DRBG
-- ✅ **Lockfile Crypto** (v1.0.1): SHA3-512 integrity hashing, BLAKE2b checksums, optional encryption
-- ✅ **API Key Storage** (v1.0.1): Encrypted storage with ChaCha20-Poly1305, Argon2id verification
-- ✅ **Container Security Pipeline** (v1.1.0): 4 Rust microservices for scanning, signing, verification, monitoring
-- ✅ 8 registry adapters (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic)
-- ✅ PubGrub dependency resolver with version constraint parsing
-- ✅ Trust pipeline (5 microservices: claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
-- ✅ HAR integration (3 agents: github-search, web-scraper, mirror-finder)
-- ✅ Verified library (SSRF prevention, JSON DoS prevention, Result monad) with Idris2 proven bindings
-- ✅ Federation events (security advisories, package updates)
-- ✅ 116 crypto tests + 250 core tests + container security tests passing (100% pass rate)
+**Security:**
+- ✅ **Post-quantum cryptography** (Rust NIF): hybrid Ed25519+Dilithium5, Kyber-1024 KEM, SPHINCS+
+- ✅ **PQ NIF compiled** with real availability probe and `persistent_term` caching
+- ✅ **SLSA Level 3**: provenance generation, signature verification, policy enforcement
+- ✅ **Cryptographic primitives**: Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512
+- ✅ **Container security pipeline**: 4 Rust microservices (svalinn, selur, vordr, cerro-torre)
 
-**Standards Compliance:**
-- ✅ RFC 9106 (Argon2id)
-- ✅ RFC 7539 (ChaCha20-Poly1305)
-- ✅ FIPS 202 (SHA3-512, BLAKE2b)
-- ✅ NIST SP 800-90Ar1 (ChaCha20-DRBG)
+**Ecosystem:**
+- ✅ **Trust pipeline**: 5 microservices (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
+- ✅ **Oikos sustainability scoring** integrated into resolver with `--sustainability` flag
+- ✅ **Federation**: 9 language forths + 9 system connection ports
+- ✅ **Agentic cross-registry search**: parallel search across all registries
+- ✅ **HAR integration**: 3 discovery agents (github-search, web-scraper, mirror-finder)
 
-**See:** link:CRYPTO-INTEGRATION-COMPLETE.md[Crypto Integration Report] | link:CRYPTO-USAGE-EXAMPLES.md[Crypto Usage Examples] | link:SECURITY-STANDARDS.scm[Security Standards] | link:RELEASE-v1.0.0.md[v1.0.0 Release Notes] | link:docs/v2.0-PLAN.md[Roadmap to v2.0] | link:docs/CLI-FEATURE-COMPARISON.md[CLI Feature Comparison]
+**Tooling:**
+- ✅ **CLI commands**: install, remove, search, info, list, pin, unpin, clean, history, undo, reinstall, autoremove
+- ✅ **Manifest conversion**: 10 formats (package.json, Cargo.toml, mix.exs, pyproject.toml, pubspec.yaml, go.mod, Gemfile, opsm.toml, .ipkg, .ncl)
+- ✅ **Git clone/build/run pipeline**: 15 build systems, SSRF-safe, ref pinning
+- ✅ **System PM querying**: dpkg, rpm, pacman, brew, nix, flatpak, snap, guix
+- ✅ **547 core tests + 40 properties + 49 integration tests**
+
+**See:** link:CRYPTO-INTEGRATION-COMPLETE.md[Crypto Integration Report] | link:RELEASE-v1.0.0.md[v1.0.0 Release Notes] | link:docs/v2.0-PLAN.md[Roadmap] | link:docs/CLI-FEATURE-COMPARISON.md[CLI Comparison]
 
 == Supported Ecosystems
 
-OPSM currently supports **8 package registries:**
+OPSM supports **101 registry adapters** across all major ecosystems:
 
-[cols="1,2,3,1"]
+[cols="2,3"]
 |===
-| Ecosystem | Registry | Languages | Status
+| Category | Registries
 
-| **npm**
-| https://registry.npmjs.org
-| JavaScript, TypeScript
-| ✅ Operational
+| **Language Ecosystems**
+| npm, Hex, Crates, PyPI, RubyGems, Go, Pub/Dart, Hackage, NuGet, Maven, Packagist/PHP, CPAN/Perl, CRAN/R, Conda, CocoaPods, OPAM/OCaml, Clojars, LuaRocks, JSR/Deno, Conan/C++, Swift/SPM, Elm, vcpkg, Julia, Dub/D, Shard/Crystal, Raku, Raco/Racket, Chicken/Scheme, Alire/Ada, Stackage, Nimble, Idris2, Eclexia
 
-| **Hex**
-| https://hex.pm
-| Elixir, Erlang
-| ✅ Operational
+| **System Package Managers**
+| apt/deb, rpm/dnf, Alpine/apk, Flatpak, Snap, Guix, Nix, MacPorts, Portage/Gentoo, XBPS/Void, Zypper/openSUSE, AUR/Arch, Pacstall, Solus/eopkg, Spack/HPC, pkgsrc/NetBSD, FreeBSD, Homebrew, Homebrew Cask, Nix Flakes, Nix Darwin, Scoop, WinGet, fpm
 
-| **Crates**
-| https://crates.io
-| Rust
-| ✅ Operational
+| **Container & Cloud**
+| Docker/OCI, Helm, Buildpacks/CNB, K8s Operators/OLM, Pulumi, Tekton, Ansible/Galaxy, Chef/Supermarket, Puppet/Forge
 
-| **PyPI**
-| https://pypi.org
-| Python
-| ✅ Operational
+| **Editor Plugins**
+| VS Code, JetBrains, Sublime, Vim/Neovim, Eclipse, MELPA/Emacs, ELPA, Grafana
 
-| **Nimble**
-| https://nimble.directory
-| Nim
-| ✅ Operational
-
-| **Idris2**
-| Curated (15 packages)
-| Idris2
-| ✅ Operational
-
-| **Git**
-| Any git repository
-| Universal
-| ✅ Operational
-
-| **Agentic**
-| HAR queue (human-assisted)
-| Obscure languages
-| ✅ Operational (3 agents)
+| **Other**
+| GitHub Packages/GHCR, GitLab Packages, jsDelivr, cdnjs, WebJars, WordPress, OpenUPM/Unity, Godot, WAPM/WASM, Bioconductor, VPM/VRChat, Git (any repo), Agentic/HAR
 |===
-
-**Coming in v2.0:** 100+ language adapters (Java, C#, Ruby, Go, PHP, Swift, OCaml, Haskell, and 90+ more)
 
 == Installation
 
@@ -190,11 +172,11 @@ sudo cp opsm /usr/local/bin/
 [source,bash]
 ----
 opsm --version
-# OPSM 1.0.0
+# OPSM 2.0.0
 
 # Run tests
 mix test
-# 250 tests, 0 failures
+# 547 tests, 0 failures
 ----
 
 == Quick Start
@@ -301,7 +283,7 @@ opsm audit https://github.com/owner/repo
     └─────────────────────────────────────────────────────┘
 ----
 
-=== Registry Adapters (8 Ecosystems)
+=== Registry Adapters (101 Ecosystems)
 
 Each registry adapter implements a common interface:
 
@@ -490,6 +472,8 @@ odds-and-sods-package-manager/
 │   │       │   ├── idris2.ex
 │   │       │   ├── git.ex
 │   │       │   └── agentic.ex
+│   │       ├── crypto/
+│   │       │   └── post_quantum.ex  # PQ NIF wrapper (probe + cache)
 │   │       ├── clients/             # Trust service clients
 │   │       │   ├── claim_forge.ex
 │   │       │   ├── checky_monkey.ex
@@ -497,9 +481,13 @@ odds-and-sods-package-manager/
 │   │       │   ├── oikos.ex
 │   │       │   └── cicd_hyper_a.ex
 │   │       └── package/
-│   │           ├── installer.ex
+│   │           ├── installer.ex     # Install pipeline (sustainability wiring)
 │   │           └── publisher.ex
-│   ├── test/                        # 250 tests (97.6% passing)
+│   ├── native/
+│   │   └── opsm_pq_nif/            # Rust NIF crate (Dilithium5/Kyber-1024/SPHINCS+)
+│   │       ├── Cargo.toml
+│   │       └── src/lib.rs
+│   ├── test/                        # 547 tests + 40 properties
 │   │   ├── opsm/
 │   │   │   ├── resolver_test.exs
 │   │   │   ├── version_constraint_test.exs
@@ -544,15 +532,16 @@ odds-and-sods-package-manager/
 │   ├── ARCHITECTURE.adoc            # System architecture
 │   ├── TESTING.md                   # Testing guide
 │   └── adding-language-adapters.adoc
+├── .machine_readable/                # SCM state files
+│   ├── STATE.scm                    # Project state checkpoint
+│   ├── META.scm                     # Architecture decisions (ADRs)
+│   └── ECOSYSTEM.scm               # Ecosystem positioning
 ├── ROADMAP.adoc                     # Release roadmap
 ├── RELEASE-v1.0.0.md                # v1.0.0 release notes
-├── STATE.scm                        # Project state checkpoint
-├── META.scm                         # Architecture decisions (ADRs)
-├── ECOSYSTEM.scm                    # Ecosystem positioning
 └── README.adoc                      # This file
 ----
 
-== Developsment
+== Development
 
 === Running Tests
 
@@ -613,8 +602,8 @@ OPSM requires 5 trust services to be running for publish operations:
 
 [source,bash]
 ----
-# Start all services (requires Docker)
-docker-compose -f deploy/docker-compose.yml up -d
+# Start all services (requires Podman)
+selur-compose -f deploy/selur-compose.yml up -d
 
 # Or deploy systemd services (see RELEASE-v1.0.0.md)
 sudo systemctl start claim-forge
@@ -646,71 +635,39 @@ journalctl -u opsm-har-github-search -f
 
 See link:docs/v2.0-PLAN.md[v2.0 Planning Document] for comprehensive roadmap.
 
-=== v1.0.0 - Stable Core ✅ (Released)
+=== v1.0.0 - Stable Core ✅
 
-**Released:** January 23, 2026
+**Released:** January 23, 2026 — 8 registry adapters, PubGrub resolver, trust pipeline, HAR agents, verified library, 250 tests
 
-- ✅ 8 registry adapters
-- ✅ PubGrub dependency resolver
-- ✅ Trust pipeline (5 microservices)
-- ✅ HAR integration (3 agents)
-- ✅ Verified library (security guarantees)
-- ✅ Federation events
-- ✅ 250 tests, 0 failures
+=== v1.1.0 - Production Hardening ✅
 
-=== v1.1.0 - Production Hardening (Q1 2026)
+**Released:** February 5, 2026 — Container security pipeline (4 Rust services), CLI commands (remove, autoremove, history, undo), crypto integration
 
-**Target:** March 2026 (5 weeks)
+=== v2.0.0 - Universal Registry ✅
 
-**Focus:** Real-world testing, performance, mobile completion
+**Released:** February 13, 2026
 
-- [ ] Complete mobile wrapper (Tauri 2.0 + ReScript TEA)
-- [ ] Real-world package testing (50+ packages: express, phoenix, tokio, requests)
-- [ ] Performance optimizations (10x speedup for large graphs)
-- [ ] Parallel downloads (Task.async_stream)
-- [ ] New commands: `remove`, `update`, `upgrade`, `show`, `autoremove`
-- [ ] Flags: `--yes`, `--quiet`, `--dry-run`, `--json`
-- [ ] History tracking and undo (`opsm history`, `opsm history undo`)
+- ✅ 101 registry adapters across all major ecosystems
+- ✅ Post-quantum crypto: Dilithium5+Ed25519 hybrid, Kyber-1024 KEM, SPHINCS+ (Rust NIF)
+- ✅ SLSA Level 3 compliance (provenance, verification, policy)
+- ✅ Oikos sustainability scoring integrated into resolver
+- ✅ Manifest conversion (10 formats), bidirectional writer (7 outputs)
+- ✅ Git clone/build/run pipeline (15 build systems)
+- ✅ System PM querying (8 package managers)
+- ✅ Agentic cross-registry parallel search
+- ✅ 547 core tests + 40 properties + 49 integration tests
 
-**See:** link:docs/v2.0-PLAN.md#v110---production-hardening-q1-2026[v1.1 Detailed Plan]
+=== Next: v2.1.0 - Polish (Q1 2026)
 
-=== v1.5.0 - Enhanced Trust & Security (Q2 2026)
-
-**Target:** June 2026 (8 weeks)
-
-**Focus:** Proven library NIFs, SLSA compliance, supply chain provenance
-
-- [ ] Idris2 NIF bindings (proven library with mathematical correctness proofs)
-- [ ] SLSA attestation compliance (Level 3 target)
-- [ ] Supply chain provenance tracking
-- [ ] CVE database integration (NVD, OSV)
+- [ ] End-to-end integration tests with real registry calls
+- [ ] Mobile wrapper (Tauri 2.x) polish
 - [ ] Interactive TUI (ratatui-based, aptitude-style)
-
-**See:** link:docs/v2.0-PLAN.md#v150---enhanced-trust--security-q2-2026[v1.5 Detailed Plan]
-
-=== v2.0.0 - Scale & Intelligence (Q3 2026)
-
-**Target:** September 2026 (18 weeks)
-
-**Focus:** 100+ languages, ML discovery, distributed architecture
-
-- [ ] 100+ language adapters (Java, C#, Ruby, Go, PHP, Swift, and 90+ more)
-- [ ] ML-based package discovery (semantic search, recommendations)
-- [ ] Malware detection (AST analysis, behavioral sandbox)
-- [ ] Distributed resolver (multi-region, Redis-backed cache)
-- [ ] IPFS-native artifact storage
-- [ ] Enterprise features (private registries, compliance reporting)
-
-**See:** link:docs/v2.0-PLAN.md#v200---scale--intelligence-q3-2026[v2.0 Detailed Plan]
+- [ ] ML-based package discovery (semantic search)
+- [ ] CVE database integration (NVD, OSV)
 
 === v10.0.0 - Federated Ecosystem (Future)
 
 **Vision:** Self-governing, self-healing, globally distributed package ecosystem
-
-- [ ] Cross-forge governance (DAO-style)
-- [ ] Automated ecosystem health monitoring
-- [ ] Multi-region federation (10+ global hubs)
-- [ ] Formally verified multi-language operations
 
 **Timeline:** 2027+
 
@@ -870,9 +827,9 @@ Special thanks to the Elixir, Rust, and ReScript communities for excellent tooli
 
 ---
 
-**Status:** v1.0.0 Released | **Next:** v1.1 Production Hardening (Q1 2026)
+**Status:** v2.0.0 Released | **Next:** v2.1 Polish (Q1 2026)
 
-For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:STATE.scm[STATE.scm].
+For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:.machine_readable/STATE.scm[STATE.scm].
 
 == Problems → Solutions
 
