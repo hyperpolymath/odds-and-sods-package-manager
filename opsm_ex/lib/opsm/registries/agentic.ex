@@ -104,8 +104,9 @@ defmodule Opsm.Registries.Agentic do
   def versions(name) do
     case fetch_package(name) do
       {:ok, pkg} ->
-        # Try to extract versions from metadata
-        versions = get_in(pkg.metadata, ["versions"]) || [pkg.version]
+        # Extract versions from raw_manifest if available
+        raw = (pkg.manifest && pkg.manifest.raw_manifest) || %{}
+        versions = raw["versions"] || [pkg.version]
         {:ok, versions}
 
       {:error, reason} ->
