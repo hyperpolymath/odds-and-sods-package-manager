@@ -50,7 +50,7 @@
        "Native toolchain delegation (npm, cargo, mix, pip, gem, go, dart)"
        "Mobile wrapper (Tauri 2.x + ReScript TEA) with CSP and configurable API"
        "Deno-based CLI build (zero npm dependency)"
-       "498 core tests + 40 properties + 1 doctest"
+       "547 core tests + 40 properties + 1 doctest"
        "Safe atom conversion prevents atom table exhaustion"
        "5 high-severity seams fixed (D1, D2, S1, S2, F1)"
        "panic-attack assail scan: 0 actionable findings"
@@ -95,12 +95,17 @@
        "2026-02-13: Bidirectional manifest conversion (7 output formats)"
        "2026-02-13: Cross-ecosystem dependency name mapping (50+ mappings)"
        "2026-02-13: Native opsm.toml manifest format"
-       "2026-02-13: Real export_to_port implementation"))
+       "2026-02-13: Real export_to_port implementation"
+       "2026-02-13: PQ NIF module + Rust native crate (Dilithium5/Kyber-1024/SPHINCS+)"
+       "2026-02-13: --sustainability CLI flag for resolver"
+       "2026-02-13: Real autoremove command (orphan dependency detection)"
+       "2026-02-13: Fixed proven dependency (SafeColor, SafeCurrency, SafeJson, SafeFloat, SafePhone)"
+       "2026-02-13: AST-based Mix.exs manifest parsing (replaces regex)"
+       "2026-02-13: 49 integration tests for SLSA/PQ trust/manifest pipelines"
+       "2026-02-13: Eclexia language integration (already wired)"
+       "2026-02-13: Version bumped to 2.0.0 in mix.exs"))
     (next-work
-      ("Build and test PQ NIF (Rust native extensions for Dilithium5/Kyber-1024/SPHINCS+)"
-       "Add --sustainability CLI flag for resolver"
-       "Implement autoremove command in maintenance.ex"
-       "Fix proven dependency compilation errors"
-       "Improve Mix.exs manifest parsing (replace regex with proper evaluation)"
-       "End-to-end integration tests for SLSA and PQ trust pipeline"
-       "Eclexia language integration"))))
+      ("Build PQ NIF .so (cargo build --release in native/opsm_pq_nif)"
+       "Wire sustainability preference through to resolver scoring"
+       "End-to-end integration tests with real registry calls"
+       "Mobile wrapper (Tauri 2.x) polish"))))

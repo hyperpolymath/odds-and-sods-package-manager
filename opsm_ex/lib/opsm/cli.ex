@@ -52,7 +52,8 @@ defmodule Opsm.CLI do
         native: :boolean,
         dev: :boolean,
         apply: :boolean,
-        port: :integer
+        port: :integer,
+        sustainability: :boolean
       ],
       aliases: [
         h: :help,
@@ -61,7 +62,8 @@ defmodule Opsm.CLI do
         q: :quiet,
         n: :dry_run,
         g: :global,
-        D: :dev
+        D: :dev,
+        s: :sustainability
       ]
     )
 
@@ -395,19 +397,21 @@ defmodule Opsm.CLI do
     native? = Keyword.get(opts, :native, false)
     global? = Keyword.get(opts, :global, false)
     dev? = Keyword.get(opts, :dev, false)
+    sustainability? = Keyword.get(opts, :sustainability, false)
     scope = cond do
       Keyword.get(opts, :systemwide) -> "systemwide"
       true -> "user"
     end
 
     if dry_run?, do: IO.puts("[DRY RUN]")
+    if sustainability?, do: IO.puts("[SUSTAINABILITY] Preferring packages with higher sustainability scores")
 
     if forth do
       # Specific registry requested
-      do_install_from_forth(forth, package, version, allow, scope, dry_run?, json?, native?, global?, dev?)
+      do_install_from_forth(forth, package, version, allow, scope, dry_run?, json?, native?, global?, dev?, sustainability?)
     else
       # No registry specified - discover across all
-      do_install_discover(package, version, allow, scope, dry_run?, json?)
+      do_install_discover(package, version, allow, scope, dry_run?, json?, sustainability?)
     end
   end
 
@@ -428,7 +432,8 @@ defmodule Opsm.CLI do
           scope: scope,
           native: Keyword.get(opts, :native, false),
           global: Keyword.get(opts, :global, false),
-          dev: Keyword.get(opts, :dev, false)
+          dev: Keyword.get(opts, :dev, false),
+          sustainability_preference: Keyword.get(opts, :sustainability, false)
         )
 
       print_smart_results(results)
@@ -1534,7 +1539,7 @@ defmodule Opsm.CLI do
 
   # Install helpers
 
-  defp do_install_from_forth(forth, package, version, _allow, scope, dry_run?, _json?, native?, global?, dev?) do
+  defp do_install_from_forth(forth, package, version, _allow, scope, dry_run?, _json?, native?, global?, dev?, sustainability? \\ false) do
     alias Opsm.Package.Installer
     alias Opsm.Package.Native
 
@@ -1573,7 +1578,8 @@ defmodule Opsm.CLI do
       case Installer.install(forth_atom, package,
              version: version,
              scope: scope_atom,
-             dry_run: dry_run?) do
+             dry_run: dry_run?,
+             sustainability_preference: sustainability?) do
         {:ok, _} ->
           System.halt(0)
 
@@ -1584,7 +1590,7 @@ defmodule Opsm.CLI do
     end
   end
 
-  defp do_install_discover(package, version, _allow, _scope, _dry_run?, json?) do
+  defp do_install_discover(package, version, _allow, _scope, _dry_run?, json?, _sustainability?) do
     alias Opsm.Registries.Registry
 
     IO.puts("Discovering: #{package}")

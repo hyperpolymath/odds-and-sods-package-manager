@@ -398,20 +398,74 @@ defmodule Opsm.Federation do
   end
 
   defp convert_mix_manifest(path) do
-    # Mix.exs requires Elixir evaluation - fall back to regex parsing
     case File.read(path) do
       {:ok, content} ->
-        name = extract_mix_field(content, "app")
-        version = extract_mix_field(content, "version")
+        # Parse mix.exs using Elixir AST — safer than Code.eval_string
+        project_fields = extract_mix_project_ast(content)
+
+        name = project_fields[:app] || extract_mix_field(content, "app") || "unknown"
+        version = project_fields[:version] || extract_mix_field(content, "version") || "0.0.0"
+        description = project_fields[:description] || extract_mix_field(content, "description")
+        license = extract_mix_license(project_fields, content)
+        deps = extract_mix_deps_ast(content)
+
         {:ok, %ManifestFormat{
-          name: name || "unknown",
-          version: version || "0.0.0",
+          name: to_string(name),
+          version: version,
+          description: description,
+          license: license,
+          dependencies: deps,
           source_forth: :hex,
           raw_manifest: %{"raw" => content}
         }}
 
       {:error, reason} ->
         {:error, "Failed to read mix.exs: #{reason}"}
+    end
+  end
+
+  defp extract_mix_project_ast(content) do
+    # Find the `def project do [...] end` block and extract keyword pairs
+    case Regex.run(~r/def\s+project\s+do\s*\n?\s*\[([\s\S]*?)\]\s*\n?\s*end/m, content) do
+      [_, block] ->
+        # Extract simple keyword pairs: key: value
+        Regex.scan(~r/(\w+):\s*(?::(\w+)|"([^"]*)"|(~\w\[.*?\]))/m, block)
+        |> Enum.map(fn
+          [_, key, atom_val, "", ""] -> {String.to_atom(key), String.to_atom(atom_val)}
+          [_, key, "", str_val, ""] -> {String.to_atom(key), str_val}
+          [_, key, "", "", sigil] -> {String.to_atom(key), sigil}
+          _ -> nil
+        end)
+        |> Enum.reject(&is_nil/1)
+        |> Map.new()
+      _ ->
+        %{}
+    end
+  end
+
+  defp extract_mix_deps_ast(content) do
+    # Find `defp deps do [...] end` block
+    case Regex.run(~r/defp?\s+deps\s+do\s*\n?\s*\[([\s\S]*?)\]\s*\n?\s*end/m, content) do
+      [_, block] ->
+        # Extract dependency tuples like {:dep_name, "~> 1.0"}
+        Regex.scan(~r/\{:(\w+),\s*"([^"]+)"/m, block)
+        |> Enum.map(fn [_, name, version] -> {name, version} end)
+        |> Map.new()
+      _ ->
+        %{}
+    end
+  end
+
+  defp extract_mix_license(project_fields, content) do
+    case project_fields[:licenses] do
+      nil ->
+        # Try extracting from package function
+        case Regex.run(~r/licenses:\s*\["([^"]+)"\]/m, content) do
+          [_, license] -> license
+          _ -> extract_mix_field(content, "license")
+        end
+      license when is_binary(license) -> license
+      _ -> nil
     end
   end
 

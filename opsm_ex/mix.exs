@@ -5,7 +5,7 @@ defmodule Opsm.MixProject do
   def project do
     [
       app: :opsm,
-      version: "1.2.0",
+      version: "2.0.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -28,18 +28,21 @@ defmodule Opsm.MixProject do
   defp deps do
     [
       {:req, "~> 0.5"},
+      {:castore, "~> 1.0"},
       {:toml, "~> 0.7"},
       {:optimus, "~> 0.5"},
       {:jason, "~> 1.4"},
-      # Temporarily disabled - has multiple compilation errors (SafeColor guards, SafeCurrency abs/1)
-      # TODO: Create PR to hyperpolymath/proven with fixes
-      # {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
+      {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"},
       # v1.0.1 Security primitives (SECURITY-STANDARDS.scm Phase 1)
       {:argon2_elixir, "~> 4.0"},
       # Note: BLAKE2b from :crypto module (built-in, no dependency needed)
+      # Note: Rustler Elixir dep NOT needed — NIF loaded via @on_load :erlang.load_nif/2
+      # The Rust crate `rustler` is a Cargo dependency in native/opsm_pq_nif/Cargo.toml
+      # Build with: cd native/opsm_pq_nif && cargo build --release
+      # Then copy: cp target/release/libopsm_pq_nif.so priv/native/libopsm_pq_nif.so
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end

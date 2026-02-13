@@ -315,17 +315,82 @@ defmodule Opsm.Maintenance do
   (Dependencies of removed packages)
   """
   def autoremove(opts \\ []) do
-    _dry_run = Keyword.get(opts, :dry_run, false)
+    dry_run = Keyword.get(opts, :dry_run, false)
+    db_path = Path.expand("~/.local/share/opsm/installed.json")
+    lockfile_path = Path.expand("~/.local/share/opsm/lockfile.json")
 
-    # This would require dependency tracking
-    # For now, just report that there's nothing to remove
     IO.puts("Checking for unused dependencies...")
-    IO.puts("")
-    IO.puts("No unused dependencies found")
-    IO.puts("")
-    IO.puts("Note: Autoremove requires dependency tracking which is not yet implemented")
 
-    {:ok, []}
+    # Load installed packages
+    installed = case File.read(db_path) do
+      {:ok, data} ->
+        case Jason.decode(data) do
+          {:ok, pkgs} when is_map(pkgs) -> pkgs
+          _ -> %{}
+        end
+      {:error, _} -> %{}
+    end
+
+    # Load lockfile to determine dependency graph
+    lockfile_deps = case File.read(lockfile_path) do
+      {:ok, data} ->
+        case Jason.decode(data) do
+          {:ok, lock} when is_map(lock) ->
+            lock["packages"] || []
+          _ -> []
+        end
+      {:error, _} -> []
+    end
+
+    # Build set of packages that are dependencies of other packages
+    all_dep_names = lockfile_deps
+      |> Enum.flat_map(fn pkg ->
+        (pkg["dependencies"] || [])
+      end)
+      |> MapSet.new()
+
+    # Find packages that were installed as dependencies (not explicitly)
+    # and are no longer required by any other package
+    orphans = installed
+      |> Enum.filter(fn {_name, info} ->
+        info["auto_installed"] == true
+      end)
+      |> Enum.reject(fn {name, _info} ->
+        MapSet.member?(all_dep_names, name)
+      end)
+      |> Enum.map(fn {name, info} -> {name, info["version"] || "unknown"} end)
+
+    if orphans == [] do
+      IO.puts("")
+      IO.puts("No unused dependencies found")
+      {:ok, []}
+    else
+      IO.puts("")
+      IO.puts("Found #{length(orphans)} unused dependencies:")
+      for {name, version} <- orphans do
+        IO.puts("  #{name}@#{version}")
+      end
+      IO.puts("")
+
+      if dry_run do
+        IO.puts("[DRY RUN] Would remove #{length(orphans)} packages")
+        {:ok, orphans}
+      else
+        # Remove each orphan
+        removed = Enum.map(orphans, fn {name, _version} ->
+          updated = Map.delete(installed, name)
+          db_path |> Path.dirname() |> File.mkdir_p!()
+          File.write!(db_path, Jason.encode!(updated, pretty: true))
+
+          # Record in history
+          record_history("autoremove", %{"package" => name})
+          name
+        end)
+
+        IO.puts("Removed #{length(removed)} unused dependencies")
+        {:ok, removed}
+      end
+    end
   end
 
   # ============================================
