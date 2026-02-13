@@ -13,6 +13,7 @@ defmodule Opsm.Verified.Http do
   """
 
   alias Opsm.Verified.{Url, Json, Result}
+  alias Opsm.Network.Ipv6
   require Logger
 
   @type http_options :: [
@@ -48,6 +49,7 @@ defmodule Opsm.Verified.Http do
   @spec get(String.t(), http_options()) :: {:ok, map()} | {:error, term()}
   def get(url_string, opts \\ []) do
     with {:ok, validated_url} <- Url.validate(url_string),
+         :ok <- validate_ipv6_policy(validated_url.host),
          {:ok, response} <- do_get(Url.to_string(validated_url), opts) do
       {:ok, response}
     end
@@ -86,6 +88,7 @@ defmodule Opsm.Verified.Http do
           {:ok, map()} | {:error, term()}
   def post_json(url_string, body, opts \\ []) do
     with {:ok, validated_url} <- Url.validate(url_string),
+         :ok <- validate_ipv6_policy(validated_url.host),
          {:ok, json_body} <- Json.encode(body),
          {:ok, response} <- do_post(Url.to_string(validated_url), json_body, opts) do
       {:ok, response}
@@ -152,6 +155,16 @@ defmodule Opsm.Verified.Http do
       exception ->
         Logger.error("HTTP GET exception for #{url}: #{inspect(exception)}")
         {:error, {:exception, exception}}
+    end
+  end
+
+  # Validate IPv6 policy for outbound requests.
+  # In :enforce_ipv6 mode, blocks connections to hosts without AAAA records.
+  defp validate_ipv6_policy(host) do
+    if Ipv6.mode() == :enforce_ipv6 do
+      Ipv6.validate_host(host)
+    else
+      :ok
     end
   end
 
