@@ -838,3 +838,8 @@ See link:problems-solutions/README.adoc[problems-solutions] for real-world failu
 == Help
 
 See link:docs/HELP.adoc[HELP].
+
+
+== Architecture
+
+See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
