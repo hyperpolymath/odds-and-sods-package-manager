@@ -1,0 +1,21 @@
+type Query {
+  packageMetadata(name: String!, version: String): PackageMetadata!
+  search(query: String!): [PackageMetadata!]!
+}
+
+type Mutation {
+  install(name: String!, version: String, dryRun: Boolean = false): TransactionResult!
+}
+
+type PackageMetadata {
+  name: String!
+  version: String!
+  license: String!
+  dependencies: [String!]!
+}
+
+type TransactionResult {
+  transactionId: ID!
+  status: String!
+  errorMessage: String
+}

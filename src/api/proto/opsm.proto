@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package opsm.api.v1;
+
+service OpsmService {
+  rpc GetPackageMetadata(PackageRequest) returns (PackageMetadata);
+  rpc InstallPackage(InstallRequest) returns (TransactionResult);
+  rpc SearchRegistries(SearchRequest) returns (SearchResponse);
+}
+
+message PackageRequest {
+  string name = 1;
+  string version = 2;
+}
+
+message PackageMetadata {
+  string name = 1;
+  string version = 2;
+  string license = 3;
+  repeated string dependencies = 4;
+}
+
+message InstallRequest {
+  string name = 1;
+  string version = 2;
+  bool dry_run = 3;
+}
+
+message TransactionResult {
+  string transaction_id = 1;
+  string status = 2;
+  string error_message = 3;
+}
+
+message SearchRequest {
+  string query = 1;
+}
+
+message SearchResponse {
+  repeated PackageMetadata results = 1;
+}
