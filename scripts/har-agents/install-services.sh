@@ -56,7 +56,7 @@ create_user() {
 }
 
 create_queue_dir() {
-    local queue_dir="${OPSM_HAR_QUEUE_DIR:-/tmp/opsm-har-ingest}"
+    local queue_dir="${OPSM_HAR_QUEUE_DIR:-"$HYPATIA_TMPDIR/opsm-har-ingest"}"
     log "Creating HAR queue directory at $queue_dir..."
     mkdir -p "${queue_dir}"/{results,processed}
     chown -R opsm:opsm "${queue_dir}"

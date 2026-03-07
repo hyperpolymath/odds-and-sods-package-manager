@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-readonly QUEUE_DIR="${OPSM_HAR_QUEUE_DIR:-/tmp/opsm-har-ingest}"
+readonly QUEUE_DIR="${OPSM_HAR_QUEUE_DIR:-"$HYPATIA_TMPDIR/opsm-har-ingest"}"
 readonly POLL_INTERVAL=5
 readonly SWH_API="https://archive.softwareheritage.org/api/1"
 readonly WAYBACK_API="https://archive.org/wayback/available"
