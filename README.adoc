@@ -1,5 +1,5 @@
 = OPSM (Odds and Sods Package Manager)
-:revdate: 2026-02-13
+:revdate: 2026-03-08
 :version: 2.0.0
 :toc: macro
 :toclevels: 3
@@ -13,7 +13,7 @@ image:https://img.shields.io/badge/Tests-547%20%2B%2040%20props-success?style=fl
 
 **A federated, universal package manager with 101 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and formal verification.**
 
-*Latest: February 13, 2026 | Version: 2.0.0 | 547 core tests + 40 property tests + 49 integration tests*
+*Latest: March 8, 2026 | Version: 2.0.0 | 547 core tests + 40 property tests + 49 integration tests*
 
 toc::[]
 

@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: PMPL-1.0-or-later -->
 <!-- TOPOLOGY.md — Project architecture map and completion dashboard -->
-<!-- Last updated: 2026-02-19 -->
+<!-- Last updated: 2026-03-08 -->
 
 # OPSM (Odds and Sods Package Manager) — Project Topology
 
@@ -70,9 +70,17 @@ REPO INFRASTRUCTURE
   Justfile Automation               ██████████ 100%    Standard build/test tasks
   .machine_readable/                ██████████ 100%    STATE tracking active
   Test Suite                        ██████████ 100%    547 core + 40 property tests
+  Dependabot Vulnerabilities        ██████████ 100%    30 vulns fixed (2026-03-08)
+  3-Forge Mirroring                 ██████████ 100%    GitHub + GitLab + Bitbucket
+
+UPCOMING (this week)
+  E2E Integration Tests             ░░░░░░░░░░   0%    Real registry calls
+  Mobile Wrapper Polish             ░░░░░░░░░░   0%    Tauri 2.x
+  PQ NIF Verify Match               ░░░░░░░░░░   0%    Opened message validation
+  Interactive TUI                   ░░░░░░░░░░   0%    ratatui-based, aptitude-style
 
 ─────────────────────────────────────────────────────────────────────────────
-OVERALL:                            ██████████ 100%    v2.0.0 Universal Package Manager
+OVERALL:                            █████████░  90%    v2.0.0 — core done, 4 items remaining
 ```
 
 ## Key Dependencies
