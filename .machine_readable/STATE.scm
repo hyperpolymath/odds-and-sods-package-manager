@@ -6,7 +6,7 @@
     (version "2.0.0")
     (schema-version "1.0")
     (created "2026-01-18")
-    (updated "2026-02-13")
+    (updated "2026-03-08")
     (project "odds-and-sods-package-manager")
     (repo "hyperpolymath/odds-and-sods-package-manager"))
 
@@ -108,8 +108,16 @@
        "2026-02-13: 49 integration tests for SLSA/PQ trust/manifest pipelines"
        "2026-02-13: Eclexia language integration (already wired)"
        "2026-02-13: Version bumped to 2.0.0 in mix.exs"))
+    (recent-maintenance
+      ("2026-03-08: Root cruft cleanup — removed 12 session/status files"
+       "2026-03-08: Moved SECURITY-STANDARDS.scm to .machine_readable/"
+       "2026-03-08: Moved docs to docs/ (CRYPTO-USAGE-EXAMPLES, CONTAINER-INTEGRATION)"
+       "2026-03-08: Removed stale template justfile and v1.0.0 tarball"
+       "2026-03-08: Fixed Mustfile SPDX typo (PLMP → PMPL)"
+       "2026-03-08: 30 Dependabot vulnerabilities flagged (4 high)"))
     (next-work
-      ("End-to-end integration tests with real registry calls"
+      ("Fix 30 Dependabot vulnerabilities (4 high, 25 moderate, 1 low)"
+       "End-to-end integration tests with real registry calls"
        "Mobile wrapper (Tauri 2.x) polish"
        "PQ NIF signature verification: verify opened message matches expected"
        "Interactive TUI (ratatui-based, aptitude-style)"))))
