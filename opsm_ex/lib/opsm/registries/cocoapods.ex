@@ -213,12 +213,19 @@ defmodule Opsm.Registries.CocoaPods do
 
   @doc """
   Get source URL for a specific version.
-  CocoaPods typically stores source in git repos, not tarballs.
+
+  CocoaPods does not host centralized tarballs. Instead, each pod's
+  `podspec.json` declares a `source` field pointing to the upstream
+  repository (usually a git URL with a tag). This function fetches
+  the podspec for the given version and extracts the source URL,
+  preferring HTTP archives over git tag archives.
+
+  Returns `{:ok, url}` where `url` may be:
+  - An HTTP archive URL (if the podspec declares `source.http`)
+  - A git tag archive URL (constructed from `source.git` + `source.tag`)
+  - A fallback URL to the podspec JSON on the CocoaPods Specs repo
   """
   def tarball_url(name, version) do
-    # CocoaPods doesn't have a central tarball URL.
-    # The source is in the podspec's "source" field (usually a git repo).
-    # Return a placeholder or try to fetch from the podspec.
     url = "#{@api_url}/pods/#{name}/specs/#{version}"
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"source" => %{"http" => http_url}}} ->

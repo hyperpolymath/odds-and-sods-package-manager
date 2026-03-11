@@ -90,14 +90,18 @@ fn dilithium5_verify<'a>(
 ) -> Term<'a> {
     match dilithium5::PublicKey::from_bytes(public_key.as_slice()) {
         Ok(pk) => {
-            // Reconstruct signed message (signature || message) for open()
-            let mut signed_msg_bytes = Vec::with_capacity(signature.len() + message.len());
-            signed_msg_bytes.extend_from_slice(signature.as_slice());
-            signed_msg_bytes.extend_from_slice(message.as_slice());
-
-            match dilithium5::SignedMessage::from_bytes(&signed_msg_bytes) {
+            // `signature` is the full signed-message blob (sig || msg) from sign().
+            // Do NOT re-append message -- open() extracts it from the blob.
+            match dilithium5::SignedMessage::from_bytes(signature.as_slice()) {
                 Ok(sm) => match dilithium5::open(&sm, &pk) {
-                    Ok(_) => atoms::ok().encode(env),
+                    Ok(opened) => {
+                        // Verify the opened message matches the expected message.
+                        if opened == message.as_slice() {
+                            atoms::ok().encode(env)
+                        } else {
+                            (atoms::error(), "Message mismatch").encode(env)
+                        }
+                    }
                     Err(_) => (atoms::error(), "Signature verification failed").encode(env),
                 },
                 Err(_) => (atoms::error(), "Invalid signed message format").encode(env),
@@ -165,13 +169,18 @@ fn sphincs_plus_verify<'a>(
 ) -> Term<'a> {
     match sphincs::PublicKey::from_bytes(public_key.as_slice()) {
         Ok(pk) => {
-            let mut signed_msg_bytes = Vec::with_capacity(signature.len() + message.len());
-            signed_msg_bytes.extend_from_slice(signature.as_slice());
-            signed_msg_bytes.extend_from_slice(message.as_slice());
-
-            match sphincs::SignedMessage::from_bytes(&signed_msg_bytes) {
+            // `signature` is the full signed-message blob (sig || msg) from sign().
+            // Do NOT re-append message -- open() extracts it from the blob.
+            match sphincs::SignedMessage::from_bytes(signature.as_slice()) {
                 Ok(sm) => match sphincs::open(&sm, &pk) {
-                    Ok(_) => atoms::ok().encode(env),
+                    Ok(opened) => {
+                        // Verify the opened message matches the expected message.
+                        if opened == message.as_slice() {
+                            atoms::ok().encode(env)
+                        } else {
+                            (atoms::error(), "Message mismatch").encode(env)
+                        }
+                    }
                     Err(_) => (atoms::error(), "Signature verification failed").encode(env),
                 },
                 Err(_) => (atoms::error(), "Invalid signed message format").encode(env),

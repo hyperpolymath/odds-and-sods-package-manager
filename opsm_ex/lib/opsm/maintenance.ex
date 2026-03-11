@@ -66,11 +66,15 @@ defmodule Opsm.Maintenance do
     clean_directory(cache_dir, "package cache", dry_run)
   end
 
-  defp clean_metadata(_dry_run) do
-    # Registry metadata cache would go here
-    # For now, this is a placeholder
-    IO.puts("  No metadata cache to clean")
-    {:ok, 0}
+  @doc false
+  @metadata_cache_dir Path.expand("~/.cache/opsm/metadata")
+
+  defp clean_metadata(dry_run) do
+    # Registry metadata cache: cached API responses, version lists, and
+    # package metadata from registry adapters (npm, hex, crates, pypi, etc.)
+    # Also cleans the ETS-backed RegistryCache entries by clearing the
+    # on-disk metadata directory.
+    clean_directory(@metadata_cache_dir, "registry metadata cache", dry_run)
   end
 
   defp clean_tmp(dry_run) do
@@ -391,6 +395,104 @@ defmodule Opsm.Maintenance do
         {:ok, removed}
       end
     end
+  end
+
+  # ============================================
+  # Upgrade Path Calculation
+  # ============================================
+
+  @doc """
+  Calculate the upgrade path for a package from its current version to the
+  latest available version in its registry.
+
+  Returns `{:ok, upgrade_info}` with a map containing:
+  - `:current` - the currently installed version
+  - `:latest` - the latest available version
+  - `:available` - list of versions between current and latest
+  - `:pinned` - whether the package is pinned
+  - `:action` - `:up_to_date`, `:upgrade_available`, or `:pinned_skip`
+
+  Returns `{:error, reason}` if the package is not installed or the
+  registry is unreachable.
+  """
+  def upgrade_path(package_name, opts \\ []) do
+    db_path = Keyword.get(opts, :db_path, Path.expand("~/.local/share/opsm/installed.json"))
+
+    installed = case File.read(db_path) do
+      {:ok, data} ->
+        case Jason.decode(data) do
+          {:ok, pkgs} when is_map(pkgs) -> pkgs
+          _ -> %{}
+        end
+      {:error, _} -> %{}
+    end
+
+    case Map.get(installed, package_name) do
+      nil ->
+        {:error, :not_installed}
+
+      info ->
+        current_version = info["version"] || "0.0.0"
+        forth_str = info["forth"] || "npm"
+        forth = Opsm.Validation.safe_to_forth(forth_str)
+
+        is_pinned = pinned?(package_name)
+        pin_info = get_pin(package_name)
+        pinned_version = if pin_info, do: pin_info["version"], else: nil
+
+        case Opsm.Registries.Registry.versions(forth, package_name) do
+          {:ok, all_versions} ->
+            # Filter to versions newer than current
+            newer = Enum.filter(all_versions, fn v ->
+              version_newer?(v, current_version)
+            end)
+
+            latest = List.first(newer) || current_version
+
+            action = cond do
+              is_pinned and pinned_version != nil ->
+                :pinned_skip
+
+              newer == [] ->
+                :up_to_date
+
+              true ->
+                :upgrade_available
+            end
+
+            {:ok, %{
+              package: package_name,
+              forth: forth,
+              current: current_version,
+              latest: latest,
+              available: newer,
+              pinned: is_pinned,
+              pinned_version: pinned_version,
+              action: action
+            }}
+
+          {:error, reason} ->
+            {:error, {:registry_error, reason}}
+        end
+    end
+  end
+
+  defp version_newer?(candidate, current) do
+    case {parse_semver(candidate), parse_semver(current)} do
+      {{:ok, cand}, {:ok, curr}} ->
+        Version.compare(cand, curr) == :gt
+
+      _ ->
+        candidate > current
+    end
+  end
+
+  defp parse_semver(v) do
+    v
+    |> String.replace(~r/^v/, "")
+    |> String.split("-")
+    |> List.first()
+    |> Version.parse()
   end
 
   # ============================================

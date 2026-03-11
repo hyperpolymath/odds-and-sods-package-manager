@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.MixProject do
   use Mix.Project
 
@@ -6,7 +6,8 @@ defmodule Opsm.MixProject do
     [
       app: :opsm,
       version: "2.0.0",
-      elixir: "~> 1.14",
+      # Requires Elixir 1.16+ (OTP 26+). Tested on Elixir 1.19.5 / OTP 28.
+      elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       escript: escript(),
@@ -78,7 +79,7 @@ defmodule Opsm.MixProject do
         "Roadmap" => "https://github.com/hyperpolymath/odds-and-sods-package-manager/blob/main/ROADMAP.adoc",
         "Changelog" => "https://github.com/hyperpolymath/odds-and-sods-package-manager/releases"
       },
-      maintainers: ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+      maintainers: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
     ]
   end
 end

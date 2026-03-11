@@ -213,14 +213,55 @@ defmodule Opsm.Registries.Opam do
 
   @doc """
   Get tarball URL for a specific version.
-  OPAM uses archive URLs specified in the opam file.
+
+  OPAM packages declare their source archive URL in the `url { src: "..." }`
+  field of the opam file. This function fetches the opam file and extracts
+  that URL. If the `url.src` field is not found (e.g., virtual packages or
+  packages with only git sources), returns the opam file URL as a fallback.
   """
   def tarball_url(name, version) do
-    # Standard OPAM archive URL pattern
-    # Most packages follow: https://github.com/ocaml/{name}/archive/{version}.tar.gz
-    # But this varies per package - would need to parse url field from opam file
-    # For now, return a placeholder that signals we need the opam file
-    {:ok, "#{@base_url}/packages/#{name}/#{name}.#{version}/opam"}
+    opam_url = "#{@base_url}/packages/#{name}/#{name}.#{version}/opam"
+
+    case VerifiedHttp.get(opam_url, receive_timeout: 10_000) do
+      {:ok, %{body: body}} when is_binary(body) ->
+        case extract_archive_url(body) do
+          nil -> {:ok, opam_url}
+          archive_url -> {:ok, archive_url}
+        end
+
+      {:ok, body} when is_binary(body) ->
+        case extract_archive_url(body) do
+          nil -> {:ok, opam_url}
+          archive_url -> {:ok, archive_url}
+        end
+
+      _ ->
+        {:ok, opam_url}
+    end
+  end
+
+  # Extract the archive URL from the opam file's url { src: "..." } block.
+  # The format is:
+  #   url {
+  #     src: "https://github.com/.../archive/v1.0.0.tar.gz"
+  #     checksum: "sha256=..."
+  #   }
+  defp extract_archive_url(opam_content) do
+    opam_content
+    |> String.split("\n")
+    |> Enum.reduce_while(nil, fn line, _acc ->
+      trimmed = String.trim(line)
+
+      if String.starts_with?(trimmed, "src:") do
+        url = trimmed
+          |> String.replace_prefix("src:", "")
+          |> String.trim()
+          |> String.trim("\"")
+        {:halt, url}
+      else
+        {:cont, nil}
+      end
+    end)
   end
 
   # Parsers
@@ -231,15 +272,17 @@ defmodule Opsm.Registries.Opam do
     homepage = extract_field(opam_content, "homepage")
     synopsis = extract_field(opam_content, "synopsis")
     authors = extract_authors(opam_content)
+    archive_url = extract_archive_url(opam_content)
+    {checksum, checksum_algo} = extract_checksum(opam_content)
 
     %ResolvedPackage{
       package: name,
       version: version,
       forth: :opam,
       registry_url: "#{@base_url}/packages/#{name}/#{name}.#{version}/",
-      tarball_url: nil,  # Would need to parse url field from opam file
-      checksum: nil,
-      checksum_algo: nil,
+      tarball_url: archive_url,
+      checksum: checksum,
+      checksum_algo: checksum_algo,
       manifest: %ManifestFormat{
         name: name,
         version: version,
@@ -257,6 +300,34 @@ defmodule Opsm.Registries.Opam do
       attestations: [],
       resolved_deps: []
     }
+  end
+
+  # Extract checksum from the opam file's url { checksum: "sha256=..." } block.
+  # Returns {hash_value, hash_algorithm} or {nil, nil}.
+  defp extract_checksum(opam_content) do
+    opam_content
+    |> String.split("\n")
+    |> Enum.reduce_while({nil, nil}, fn line, _acc ->
+      trimmed = String.trim(line)
+
+      if String.starts_with?(trimmed, "checksum:") do
+        raw = trimmed
+          |> String.replace_prefix("checksum:", "")
+          |> String.trim()
+          |> String.trim("\"")
+
+        result = case String.split(raw, "=", parts: 2) do
+          ["sha256", value] -> {value, :sha256}
+          ["sha512", value] -> {value, :sha512}
+          ["md5", value] -> {value, :md5}
+          _ -> {nil, nil}
+        end
+
+        {:halt, result}
+      else
+        {:cont, {nil, nil}}
+      end
+    end)
   end
 
   defp extract_field(content, field_name) do
