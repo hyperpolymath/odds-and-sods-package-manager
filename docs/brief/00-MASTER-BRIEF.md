@@ -1,0 +1,274 @@
+# OPSM master brief
+
+## Product identity
+
+**Public identity:** a package manager.
+
+**Actual scope:** a package manager with integrated configuration, target-aware placement, strict trust and reversibility, and an upward path into broader provisioning.
+
+## Core promise
+
+**Get the software where it needs to go, in the form it needs to take, with the least friction and surprise.**
+
+## Plain-language description
+
+OPSM is a federated package manager that does not stop at package boundaries. It can discover, compare, plan, install, configure, and safely place software across multiple ecosystems and target types, while explaining trust, compatibility, consequences, and rollback.
+
+## Core v1 scope
+
+Discover, compare, plan, install, configure, apply essential environment wiring, perform essential local service enablement, and handle essential secrets setup.
+
+This includes:
+- package acquisition
+- source comparison
+- trust and attestation analysis
+- target selection
+- install profile selection
+- architecture selection
+- config format selection
+- rollback/checkpoint planning
+- essential local setup so the software is actually usable
+
+This does **not** yet mean full enterprise provisioning or fleet management.
+
+## Primary user goals in v1
+
+1. install software for self
+2. test software in isolation
+3. set up development environments
+4. fetch and hand off to someone else
+5. maintain multiple or archived versions
+
+## First-class core objects
+
+- Package
+- Source
+- Target
+- ActionPlan
+- InstallProfile
+- VersionPolicy
+- ArchitecturePolicy
+- LifecycleMode
+- ExecutionMode
+- ConfigurationOverlay
+- ArtifactBundle
+- TrustRecord
+- ReversibilityRecord
+
+Also core in practice:
+- service requirement
+- secret requirement
+- provenance / attestation evidence
+- reputation / community signal record
+- target suitability
+
+## Core source model
+
+Supported in v1:
+- distro package managers
+- language package managers
+- Flatpak / Snap / Nix / Guix
+- OCI / container registries
+- GitHub / GitLab releases
+- raw README install instructions
+- arbitrary web pages
+- local files
+- ISO / image artifacts
+
+README and arbitrary web-page instructions may be used for planning, but require confirmation before execution and must preserve provenance.
+
+## Core target model
+
+### Target families in v1
+
+#### Local
+- host
+- container
+- toolbox
+- distrobox
+- local VM
+
+#### Portable / media
+- USB
+- external disk
+- disk image
+- handoff/export bundle
+
+#### Device / peripheral
+- printer firmware
+- attached device update
+- embedded/peripheral target
+
+#### Cloud
+- cloud-bound target
+- cloud image / cloud instance destination, narrowly defined
+
+#### Deferred upward
+- general remote machines
+- remote fleets
+- enterprise remote control
+
+## Lifecycle model
+
+Canonical lifecycle modes in v1:
+- `ephemeral`
+- `persistent`
+- `archived`
+- `relay_only`
+
+## Execution model
+
+Canonical execution modes in v1:
+- `installed_local`
+- `portable_run`
+- `side_by_side`
+- `passthrough_download`
+- `sdk_only`
+
+## Portable definition
+
+Portable in v1 means a separable, movable, non-host-default software form, including self-contained bundles, removable-media installs, handoff-ready packages, and isolated portable runtime forms.
+
+## Pass-through definition
+
+Pass-through in v1 means acquire, verify, and optionally repackage software for use somewhere else, without treating the current machine as the final install target.
+
+## Multiple-version policy
+
+Multiple versions require explicit `side_by_side` intent.
+
+- allow on the same machine when technically safe
+- push toward isolated targets when risky
+- archived and portable forms are preferred coexistence paths
+- full per-package-family policy is deferred upward
+
+## Configuration model
+
+Both declarative and imperative are first-class.
+
+Preferred organising model:
+- declarative
+
+Also supported:
+- imperative
+- hybrid
+- translation both ways where possible
+
+Canonical layer:
+- a2ml / k9 are canonical
+- Nickel is a major companion
+- multiple formats compile into one internal model
+
+## Trust and reversibility
+
+Trust and reversibility are always-visible cross-cutting lenses, not ordinary metadata fields.
+
+Trust model priority:
+1. signed publisher identity
+2. allowlist / registry policy
+3. heuristic score with explanation
+4. package-manager metadata only as transitional fallback
+
+Reversibility is strict across:
+- package operations
+- configuration
+- essential service enablement
+- essential secrets-related setup
+
+## Key subsystem roles
+
+### VeriSim
+Canonical internal store.
+
+### JanusKey
+Reversible kernel for state mutation and recovery.
+
+### Panic Attack
+Integrated analysis engine for on-download and on-run assessment.
+
+### PanLL
+Richer GUI/front-end panel space, with separate panel space for core package-management/configuration and the later provisioning layer.
+
+### Feedback-o-Tron
+Template, telemetry, and upstream feedback subsystem.
+
+## Recommendation strategy
+
+Default recommendation strategy: **safest overall**, with reversibility as the strongest secondary principle and always visible.
+
+## UI model
+
+First UI question:
+
+**What do you want to do?**
+
+Main UI style:
+- dashboard with contextual wizards
+
+## Risk response ladder
+
+Use graded safer alternatives instead of jumping from allow to block:
+- normal
+- caution
+- risky
+- dangerous
+- forbidden
+
+Downgrade options include:
+- minimal
+- containerised
+- watched
+- neutered
+- VM
+- relay-only
+
+## Blocking and warning policy
+
+### Block by default
+- deprecated packages
+- incompatible builds / architectures
+- replacing critical packages
+
+### Warn by default
+- unsigned packages
+- near-EOL runtimes
+- mixed trust chains
+
+Escalate when multiple warning factors combine.
+
+## Database and persistence in v1
+
+Store:
+- package metadata cache
+- trust records
+- compatibility cache
+- install history
+- reversibility logs
+- configuration overlays
+- target inventory
+- artifact hashes
+- archived manifests
+- reputation/community signals
+
+Secondary but useful:
+- upstream feedback submissions
+
+## Plugin system
+
+One unified extension system with typed roles for:
+- package-manager adapters
+- metadata/parser adapters
+- installer/provisioner backends
+- UI modules
+- policy and analysis helpers
+
+## V1 non-goals
+
+Deferred upward:
+- full organisational identity integration
+- enterprise policy/directory integration
+- remote fleet management
+- broad remote-machine orchestration
+- full cloud control-plane management
+- full hypervisor orchestration
+- full operational/service orchestration beyond local essentials

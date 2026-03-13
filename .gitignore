@@ -1,75 +1,44 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # RSR-compliant .gitignore
 
-# OS & Editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
+# Ada/SPARK
+*.ali
+/bin/
+/obj/
 
 # Build
-/target/
 /_build/
 /build/
 /dist/
 /out/
+/target/
+
+# Chapel
+*.chpl.tmp.*
+
+# Crash recovery artifacts
+ai-cli-crash-capture/
 
 # Dependencies
+/.elixir_ls/
+/deps/
 /node_modules/
 /vendor/
-/deps/
-/.elixir_ls/
-
-# Rust
-# Cargo.lock  # Keep for binaries
 
 # Elixir
+*.ez
 /cover/
 /doc/
-*.ez
 erl_crash.dump
-
-# Julia
-*.jl.cov
-*.jl.mem
-/Manifest.toml
-
-# ReScript
-/lib/bs/
-/.bsb.lock
-*.ast
-*.cmt
-
-# Python (SaltStack only)
-__pycache__/
-*.py[cod]
-.venv/
-
-# Ada/SPARK
-*.ali
-/obj/
-/bin/
 
 # Haskell
 /.stack-work/
 /dist-newstyle/
 
-# Chapel
-*.chpl.tmp.*
-
-# Secrets
-.env
-.env.*
-*.pem
-*.key
-secrets/
-
-# Test/Coverage
-/coverage/
-htmlcov/
+# Julia
+*.jl.cov
+*.jl.mem
+/Manifest.toml
 
 # Logs
 *.log
@@ -79,10 +48,41 @@ htmlcov/
 opsm_ex/native/*/Cargo.lock
 opsm_ex/priv/native/
 
-# Crash recovery artifacts
-ai-cli-crash-capture/
+# OS & Editor
+*.swo
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
+
+# Python (SaltStack only)
+*.py[cod]
+.venv/
+__pycache__/
+
+# ReScript
+*.ast
+*.cmt
+/.bsb.lock
+/lib/bs/
+
+# Rust
+# Cargo.lock  # Keep for binaries
+
+# Secrets
+*.key
+*.pem
+.env
+.env.*
+secrets/
 
 # Temp
-/tmp/
-*.tmp
 *.bak
+*.tmp
+/tmp/
+
+# Test/Coverage
+/coverage/
+htmlcov/
