@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Pinned runtime versions for OPSM
+# Managed via asdf (https://asdf-vm.com)
+elixir 1.19.5-otp-28
+erlang 28.3.1
+# Note: Rust managed via asdf global (nightly). Not pinned here to avoid
+# conflicting with cargo-audit and other cargo subcommands.
