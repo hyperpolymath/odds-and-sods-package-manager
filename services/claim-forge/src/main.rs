@@ -3,6 +3,7 @@
 //!
 //! Generates SLSA provenance attestations and signs artifacts with Ed25519.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, State},
     http::StatusCode,

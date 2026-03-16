@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 
+#![forbid(unsafe_code)]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::LazyLock;

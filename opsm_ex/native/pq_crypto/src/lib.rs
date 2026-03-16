@@ -7,6 +7,7 @@
 // - ML-KEM-1024 (Kyber-1024) — FIPS 203 key encapsulation
 // - SLH-DSA (SPHINCS+-256f) — FIPS 205 hash-based signatures
 
+#![forbid(unsafe_code)]
 use pqcrypto_dilithium::dilithium5;
 use pqcrypto_kyber::kyber1024;
 use pqcrypto_sphincsplus::sphincsshake256fsimple as sphincs;

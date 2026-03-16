@@ -3,6 +3,7 @@
 //!
 //! Validates container configurations against security policies.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, State},
     http::StatusCode,

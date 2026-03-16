@@ -4,6 +4,7 @@
 //! Provides fuzzing, property testing, type checking, formal verification,
 //! and mutation testing capabilities for package source code.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,

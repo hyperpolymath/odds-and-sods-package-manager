@@ -3,6 +3,7 @@
 //!
 //! Integrates Trivy and Grype for comprehensive vulnerability detection.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, State},
     http::StatusCode,

@@ -5,6 +5,7 @@
 //! test coverage, community health, security posture, dependency health,
 //! release maturity, and code quality.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,

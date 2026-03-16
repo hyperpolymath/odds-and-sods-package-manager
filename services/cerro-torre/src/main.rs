@@ -3,6 +3,7 @@
 //!
 //! Monitors container runtime security using eBPF and Falco.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, State},
     http::StatusCode,

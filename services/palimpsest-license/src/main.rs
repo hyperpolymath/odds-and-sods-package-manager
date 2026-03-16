@@ -4,6 +4,7 @@
 //! Analyzes artifacts for license declarations, checks compatibility
 //! between licenses, and provides SPDX license metadata.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,

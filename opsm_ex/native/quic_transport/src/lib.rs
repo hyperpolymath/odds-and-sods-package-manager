@@ -4,6 +4,7 @@
 // QUIC/HTTP3 transport NIF for OPSM.
 // Uses quinn (QUIC) + h3 (HTTP/3) to provide fast registry fetches.
 
+#![forbid(unsafe_code)]
 use rustler::{Atom, Binary, Encoder, Env, NifResult, OwnedBinary, ResourceArc, Term};
 use std::net::ToSocketAddrs;
 use std::sync::Arc;

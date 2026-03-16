@@ -4,6 +4,7 @@
 //! Handles package publishing, manifest validation, federation sync
 //! across registries, and ruleset enforcement.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, Path, State},
     http::StatusCode,

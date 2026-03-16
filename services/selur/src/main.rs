@@ -3,6 +3,7 @@
 //!
 //! Integrates Cosign for cryptographic signing of container images.
 
+#![forbid(unsafe_code)]
 use axum::{
     extract::{Json, State},
     http::StatusCode,
