@@ -1,0 +1,503 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# SECURITY-STANDARDS.a2ml — Migrated from SECURITY-STANDARDS.scm
+
+[metadata]
+version = "0.1.0"
+last-updated = "2026-03-16"
+migrated-from = "SECURITY-STANDARDS.scm"
+
+[content]
+# - 1.0.0
+# - )
+# - 2026-02-04
+# - )
+# - 2026-02-04
+# - )
+# - 2026-02-04
+# - )
+# - OPSM (Odds and Sods Package Manager)
+# - )
+# - Jonathan D.A. Jewell
+# - )
+# - NIST FIPS 202
+# -  
+# - NIST FIPS 203
+# -  
+# - NIST FIPS 204
+# -  
+# - NIST SP 800-90Ar1
+# -  
+# - WCAG 2.3 AAA
+# - )))
+# - PasswordHashing
+# - )
+# - Argon2id
+# - )
+# - memory=512MiB iterations=8 lanes=4
+# - )
+# - —
+# - )
+# - Maximum memory/iterations for GPU/ASIC resistance; aligns with proactive security stance.
+# - )
+# - user-authentication
+# -  
+# - API-key-storage
+# -  
+# - lockfile-integrity
+# - ))
+# - rust-argon2 crate with explicit parameters
+# - )
+# - required
+# - ))
+# - GeneralHashing
+# - )
+# - SHA3-512
+# - )
+# - 512-bit
+# - )
+# - FIPS 202
+# - )
+# - Post-quantum secure; use for provenance, key derivation, and long-term storage. (Originally SHAKE256, changed to SHA3-512 for :crypto API compatibility)
+# - )
+# - package-provenance
+# -  
+# - tarball-checksums
+# -  
+# - content-addressing
+# -  
+# - lockfile-hashing
+# - ))
+# - Erlang :crypto.hash(:sha3_512, data)
+# - )
+# - BLAKE2b (512-bit) for performance-critical paths
+# - )
+# - required
+# - ))
+# - PQSignatures
+# - )
+# - Dilithium5-AES (hybrid)
+# - )
+# - ML-DSA-87 (FIPS 204)
+# - )
+# - Hybrid with AES-256 for belt-and-suspenders security. SPHINCS+ as conservative backup.
+# - )
+# - package-signing
+# -  
+# - attestation-signing
+# -  
+# - trust-pipeline-verification
+# - ))
+# - pqcrypto-dilithium crate + AES-256-GCM hybrid wrapper
+# - )
+# - SPHINCS+ (FIPS 205) for conservative PQ backup
+# - )
+# - required-v1.5
+# - ))
+# - PQKeyExchange
+# - )
+# - Kyber-1024 + SHAKE256-KDF
+# - )
+# - ML-KEM-1024 (FIPS 203)
+# - )
+# - Kyber-1024 for KEM, SHAKE256 for key derivation. SPHINCS+ as backup.
+# - )
+# - federation-key-exchange
+# -  
+# - mirror-synchronization
+# -  
+# - trust-service-communication
+# - ))
+# - pqcrypto-kyber crate + sha3 SHAKE256
+# - )
+# - SPHINCS+ for key exchange if Kyber compromised
+# - )
+# - required-v2.0
+# - ))
+# - ClassicalSigs
+# - )
+# - Ed448 + Dilithium5 (hybrid)
+# - )
+# - —
+# - )
+# - Ed448 for classical compatibility; Dilithium5 for PQ. SPHINCS+ as backup. Terminate Ed25519/SHA-1 immediately.
+# - )
+# - git-commit-signing
+# -  
+# - legacy-compatibility
+# -  
+# - hybrid-verification
+# - ))
+# - ed25519-dalek (Ed448 when available) + pqcrypto-dilithium
+# - )
+# - Ed25519
+# -  
+# - ECDSA-P256
+# -  
+# - RSA
+# -  
+# - SHA-1
+# - ))
+# - 2026-06-01
+# - )
+# - required-v1.5
+# - ))
+# - Symmetric
+# - )
+# - ChaCha20-Poly1305
+# - )
+# - 256-bit
+# - )
+# - 96-bit
+# - )
+# - RFC 7539
+# - )
+# - 256-bit keys for quantum margin; 96-bit nonces sufficient with proper key rotation. (Originally XChaCha20-Poly1305, changed to ChaCha20-Poly1305 for :crypto availability)
+# - )
+# - lockfile-encryption
+# -  
+# - sensitive-config
+# -  
+# - credential-storage
+# - ))
+# - Erlang :crypto.crypto_one_time_aead(:chacha20_poly1305, ...)
+# - )
+# - required
+# - ))
+# - KeyDerivation
+# - )
+# - HKDF-SHAKE512
+# - )
+# - FIPS 202
+# - )
+# - Post-quantum KDF; use with all secret key material.
+# - )
+# - API-key-derivation
+# -  
+# - session-keys
+# -  
+# - encryption-keys
+# - ))
+# - hkdf crate + sha3 SHAKE512
+# - )
+# - required
+# - ))
+# - RNG
+# - )
+# - ChaCha20-DRBG
+# - )
+# - 512-bit
+# - )
+# - SP 800-90Ar1
+# - )
+# - CSPRNG for deterministic, high-entropy needs.
+# - )
+# - key-generation
+# -  
+# - nonce-generation
+# -  
+# - salt-generation
+# - ))
+# - rand_chacha crate with ChaCha20Core
+# - )
+# - required
+# - ))
+# - UserFriendlyHashNames
+# - )
+# - Base32(SHAKE256(hash)) → Wordlist
+# - )
+# - —
+# - )
+# - Memorable, deterministic mapping (e.g., \
+# - Gigantic-Giraffe-7\
+# -  for drivers).
+# - )
+# - package-version-names
+# -  
+# - mirror-identification
+# -  
+# - HAR-task-IDs
+# - ))
+# - custom wordlist generator with SHAKE256 + base32
+# - )
+# - PGP wordlist or custom curated list
+# - )
+# - required-v1.5
+# - ))
+# - DatabaseHashing
+# - )
+# - BLAKE2b (512-bit) + SHA3-512
+# - )
+# - FIPS 202 (SHA3-512)
+# - )
+# - BLAKE2b for speed (built-in to :crypto), SHA3-512 for long-term storage. (Originally BLAKE3 + SHAKE256, changed for compilation stability and API compatibility)
+# - )
+# - package-content-addressing
+# -  
+# - metadata-hashing
+# -  
+# - cache-keys
+# - ))
+# - Erlang :crypto.hash(:blake2b, data) for hot paths, :crypto.hash(:sha3_512, data) for cold storage
+# - )
+# - required
+# - ))
+# - Fallback
+# - )
+# - SPHINCS+
+# - )
+# - FIPS 205 (draft)
+# - )
+# - Conservative PQ backup for all hybrid classical+PQ systems; use if primary PQ algorithm is ever compromised.
+# - )
+# - emergency-fallback
+# -  
+# - conservative-signature-verification
+# -  
+# - long-term-archival
+# - ))
+# - pqcrypto-sphincsplus crate
+# - )
+# - required-v1.5
+# - )))
+# - SemanticXMLGraphQL
+# - )
+# - Virtuoso (VOS) + SPARQL 1.2
+# - )
+# - —
+# - )
+# - Supports WCAG 2.3 AAA, ARIA, and formal verification for accessibility/compliance.
+# - )
+# - package-metadata-storage
+# -  
+# - provenance-graphs
+# -  
+# - accessibility-data
+# - ))
+# - OpenLink Virtuoso Open-Source Edition
+# - )
+# - required-v2.0
+# - ))
+# - VMExecution
+# - )
+# - GraalVM (with formal verification)
+# - )
+# - —
+# - )
+# - Aligns with preference for introspective, reversible design.
+# - )
+# - polyglot-runtime
+# -  
+# - sandboxed-package-execution
+# -  
+# - formal-verification
+# - ))
+# - GraalVM CE with Truffle framework
+# - )
+# - required-v2.0
+# - ))
+# - ProtocolStack
+# - )
+# - QUIC + HTTP/3 + IPv6
+# - )
+# - HTTP/1.1
+# -  
+# - IPv4
+# -  
+# - SHA-1
+# - ))
+# - —
+# - )
+# - Terminate HTTP/1.1, IPv4, and SHA-1 per \
+# - danger zone\
+# -  policy.
+# - )
+# - federation-communication
+# -  
+# - registry-fetches
+# -  
+# - trust-service-APIs
+# - ))
+# - reqwest with HTTP/3 + quinn QUIC
+# - )
+# - 2026-06-01
+# - )
+# - required-v2.0
+# - ))
+# - Accessibility
+# - )
+# - WCAG 2.3 AAA + ARIA + Semantic XML
+# - )
+# - CSS-first, HTML-second; full compliance with accessibility requirements.
+# - )
+# - mobile-UI
+# -  
+# - web-dashboard
+# -  
+# - documentation
+# -  
+# - error-messages
+# - ))
+# - ReScript TEA with ARIA attributes, semantic HTML
+# - )
+# - required
+# - ))
+# - FormalVerification
+# - )
+# - Coq/Isabelle (for crypto primitives)
+# - )
+# - —
+# - )
+# - Proactive attestation and transparent logic per system design principles.
+# - )
+# - verified-library
+# -  
+# - cryptographic-proofs
+# -  
+# - protocol-correctness
+# - ))
+# - Idris2 proven library with Coq/Isabelle proofs (v1.5)
+# - )
+# - required-v1.5
+# - )))
+# - Argon2id password hashing (512 MiB, 8 iter, 4 lanes) ✅
+# - SHA3-512 general hashing (FIPS 202) ✅
+# - ChaCha20-Poly1305 symmetric encryption (RFC 7539) ✅
+# - ChaCha20-DRBG random number generation (NIST SP 800-90Ar1) ✅
+# - BLAKE2b + SHA3-512 database hashing (hybrid strategy) ✅
+# - 100% test coverage (70 tests passing) ✅
+# - WCAG 2.3 AAA accessibility compliance
+# - )
+# - Argon2id password hashing
+# - SHA3-512 general hashing (originally SHAKE256)
+# - ChaCha20-Poly1305 symmetric encryption (originally XChaCha20-Poly1305)
+# - HKDF-SHAKE512 key derivation
+# - ChaCha20-DRBG random number generation
+# - BLAKE2b + SHA3-512 database hashing (originally BLAKE3 + SHAKE256)
+# - WCAG 2.3 AAA accessibility compliance
+# - )
+# - Dilithium5-AES hybrid signatures
+# - Ed448 + Dilithium5 hybrid classical signatures
+# - SPHINCS+ fallback implementation
+# - User-friendly hash names (wordlist mapping)
+# - Idris2 proven library with formal verification
+# - Terminate Ed25519, ECDSA-P256, RSA, SHA-1
+# - )
+# - Kyber-1024 + SHAKE256-KDF key exchange
+# - QUIC + HTTP/3 + IPv6 protocol stack
+# - Virtuoso + SPARQL 1.2 semantic database
+# - GraalVM formal verification runtime
+# - Disable IPv4, HTTP/1.1, HTTP/2 support
+# - ))
+# - OPSM assumes adversaries with quantum computers (Grover's algorithm, Shor's algorithm)
+# - Supply chain attacks (malicious packages, typosquatting, dependency confusion)
+# - Network adversaries (MITM, traffic analysis, replay attacks)
+# - Insider threats (malicious registry operators, compromised trust services)
+# - Physical access (side-channel attacks, cold boot attacks)
+# - )
+# - User's local machine (trusted computing base)
+# - OPSM CLI and mobile wrapper (trusted)
+# - Phoenix API (trusted within localhost boundary)
+# - Trust services (semi-trusted, verified via attestations)
+# - Package registries (untrusted, verified via trust pipeline)
+# - Network infrastructure (untrusted, encrypted and authenticated)
+# - )
+# - Hybrid classical + PQ cryptography (belt-and-suspenders)
+# - Formal verification of critical components (Idris2 proven library)
+# - Property-based testing (40 security tests)
+# - SPHINCS+ fallback for all PQ systems
+# - Explicit error handling (Result monad, no panics)
+# - Input validation (Verified library: URL, JSON, Result)
+# - Sandboxed execution (GraalVM, capability-based security)
+# - )
+# - FIPS 202: SHA-3 family (SHAKE256, SHAKE512)
+# - FIPS 203: ML-KEM (Kyber-1024)
+# - FIPS 204: ML-DSA (Dilithium5)
+# - FIPS 205: SLH-DSA (SPHINCS+)
+# - SP 800-90Ar1: Deterministic Random Bit Generators (ChaCha20-DRBG)
+# - WCAG 2.3 AAA: Accessibility (UI, documentation, error messages)
+# - GDPR: Data privacy (no telemetry without consent, right to be forgotten)
+# - SLSA: Supply chain levels (v1.5+)
+# - ))
+# - Ed25519
+# - )
+# - Quantum vulnerability (Shor's algorithm)
+# - )
+# - Ed448 + Dilithium5 hybrid
+# - )
+# - 2026-06-01
+# - )
+# - Hybrid signatures in v1.5, Ed25519 disabled in v2.0
+# - ))
+# - SHA-1
+# - )
+# - Collision attacks, quantum vulnerability
+# - )
+# - SHAKE3-512
+# - )
+# - 2026-02-04
+# - )
+# - Immediate termination, SHAKE256 required
+# - ))
+# - ECDSA-P256
+# - )
+# - Quantum vulnerability (Shor's algorithm)
+# - )
+# - Ed448 + Dilithium5 hybrid
+# - )
+# - 2026-06-01
+# - )
+# - Hybrid signatures in v1.5, ECDSA disabled in v2.0
+# - ))
+# - RSA
+# - )
+# - Quantum vulnerability (Shor's algorithm), large key sizes
+# - )
+# - Dilithium5-AES
+# - )
+# - 2026-06-01
+# - )
+# - Dilithium5 in v1.5, RSA disabled in v2.0
+# - ))
+# - IPv4
+# - )
+# - Security concerns, address exhaustion
+# - )
+# - IPv6
+# - )
+# - 2026-06-01
+# - )
+# - IPv6-only in v2.0, dual-stack in v1.5
+# - ))
+# - HTTP/1.1
+# - )
+# - Cleartext headers, performance, security issues
+# - )
+# - HTTP/3 + QUIC
+# - )
+# - 2026-06-01
+# - )
+# - HTTP/3 in v2.0, HTTP/2 fallback in v1.5
+# - )))
+# - Failed authentication attempts (Argon2id verification)
+# - Invalid signatures (Dilithium5, Ed448, SPHINCS+)
+# - Checksum mismatches (SHAKE256, BLAKE3)
+# - Trust pipeline failures (attestation, verification, license)
+# - Network anomalies (QUIC connection failures, certificate issues)
+# - )
+# - Automated rollback to SPHINCS+ if Dilithium5/Kyber compromised
+# - Lockfile integrity verification on every operation
+# - Trust service health monitoring (5 microservices)
+# - HAR agent failure detection and fallback to manual review
+# - Federation event propagation for security advisories
+# - )
+# - All cryptographic operations (with algorithm, key size, timestamp)
+# - All package installations (with provenance, attestations)
+# - All trust pipeline verifications (with service responses)
+# - All federation events (with signatures, timestamps)
+# - All user actions (with consent, privacy-preserving)
+# - ))))
+# - Return the algorithm specification for a given security category.
+# - Return the implementation priorities for a given OPSM version.
+# - Check if an algorithm or protocol is deprecated.
