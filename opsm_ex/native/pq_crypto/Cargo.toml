@@ -3,7 +3,7 @@
 [package]
 name = "pq_crypto"
 version = "0.1.0"
-authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 edition = "2021"
 description = "Post-quantum cryptographic NIFs for OPSM (Dilithium5, Kyber-1024, SPHINCS+)"
 license = "PMPL-1.0-or-later"
