@@ -245,7 +245,7 @@ defmodule Opsm.Registries.Eclexia do
     |> String.trim()
   end
 
-  defp parse_authors(nil), do: ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+  defp parse_authors(nil), do: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
   defp parse_authors(str) when is_binary(str) do
     # TOML array in string form: ["Author One", "Author Two"]
     str

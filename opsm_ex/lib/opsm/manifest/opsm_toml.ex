@@ -10,7 +10,7 @@ defmodule Opsm.Manifest.OpsmToml do
   version = "1.0.0"
   license = "PMPL-1.0-or-later"
   description = "A useful tool"
-  authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+  authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
   keywords = ["tool", "utility"]
 
   [dependencies]

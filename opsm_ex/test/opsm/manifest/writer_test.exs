@@ -12,7 +12,7 @@ defmodule Opsm.Manifest.WriterTest do
     license: "PMPL-1.0-or-later",
     homepage: "https://example.com",
     repository: "https://github.com/hyperpolymath/my-tool",
-    authors: ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"],
+    authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
     keywords: ["tool", "utility"],
     dependencies: %{"req" => "0.5.0", "jason" => "1.4.0"},
     dev_dependencies: %{"stream_data" => "0.6.0"},

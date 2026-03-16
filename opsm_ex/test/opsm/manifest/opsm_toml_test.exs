@@ -11,7 +11,7 @@ defmodule Opsm.Manifest.OpsmTomlTest do
   version = "1.0.0"
   license = "PMPL-1.0-or-later"
   description = "A useful tool"
-  authors = ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"]
+  authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
   keywords = ["tool", "utility"]
 
   [dependencies]
@@ -36,7 +36,7 @@ defmodule Opsm.Manifest.OpsmTomlTest do
       assert manifest.version == "1.0.0"
       assert manifest.license == "PMPL-1.0-or-later"
       assert manifest.description == "A useful tool"
-      assert "Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" in manifest.authors
+      assert "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" in manifest.authors
       assert "tool" in manifest.keywords
     end
 

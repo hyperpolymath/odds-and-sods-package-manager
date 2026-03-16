@@ -15,7 +15,7 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
     license: "PMPL-1.0-or-later",
     homepage: "https://example.com/roundtrip",
     repository: "https://github.com/hyperpolymath/roundtrip-test",
-    authors: ["Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>"],
+    authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
     keywords: ["test", "roundtrip"],
     dependencies: %{"dep_a" => "1.0.0", "dep_b" => "2.3.0"},
     dev_dependencies: %{"test_dep" => "0.5.0"},

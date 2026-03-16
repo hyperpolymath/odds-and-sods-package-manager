@@ -37,5 +37,5 @@ CMD ["/app/cicd-hyper-a"]
 LABEL org.opencontainers.image.title="CICD-Hyper-A" \
       org.opencontainers.image.description="CI/CD pipeline and package publishing" \
       org.opencontainers.image.version="1.0.0" \
-      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" \
       org.opencontainers.image.licenses="PMPL-1.0-or-later"

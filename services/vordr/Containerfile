@@ -45,5 +45,5 @@ CMD ["/app/vordr"]
 LABEL org.opencontainers.image.title="Vordr" \
       org.opencontainers.image.description="Runtime verification and policy enforcement" \
       org.opencontainers.image.version="1.0.0" \
-      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" \
       org.opencontainers.image.licenses="PMPL-1.0-or-later"

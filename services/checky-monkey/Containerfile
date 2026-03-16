@@ -47,5 +47,5 @@ CMD ["/app/checky-monkey", "serve"]
 LABEL org.opencontainers.image.title="Checky-Monkey" \
       org.opencontainers.image.description="Code verification and fuzzing service" \
       org.opencontainers.image.version="1.0.0" \
-      org.opencontainers.image.authors="Jonathan D.A. Jewell <jonathan.jewell@open.ac.uk>" \
+      org.opencontainers.image.authors="Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" \
       org.opencontainers.image.licenses="PMPL-1.0-or-later"
