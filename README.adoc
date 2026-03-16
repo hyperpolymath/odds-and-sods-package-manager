@@ -533,9 +533,9 @@ odds-and-sods-package-manager/
 │   ├── TESTING.md                   # Testing guide
 │   └── adding-language-adapters.adoc
 ├── .machine_readable/                # SCM state files
-│   ├── STATE.scm                    # Project state checkpoint
-│   ├── META.scm                     # Architecture decisions (ADRs)
-│   └── ECOSYSTEM.scm               # Ecosystem positioning
+│   ├── .machine_readable/6a2/STATE.a2ml                    # Project state checkpoint
+│   ├── .machine_readable/6a2/META.a2ml                     # Architecture decisions (ADRs)
+│   └── .machine_readable/6a2/ECOSYSTEM.a2ml               # Ecosystem positioning
 ├── ROADMAP.adoc                     # Release roadmap
 ├── RELEASE-v1.0.0.md                # v1.0.0 release notes
 └── README.adoc                      # This file
@@ -829,7 +829,7 @@ Special thanks to the Elixir, Rust, and ReScript communities for excellent tooli
 
 **Status:** v2.0.0 Released | **Next:** v2.1 Polish (Q1 2026)
 
-For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:.machine_readable/STATE.scm[STATE.scm].
+For the latest updates, see link:ROADMAP.adoc[ROADMAP.adoc] and link:`.machine_readable/6a2/STATE.a2ml`[.machine_readable/6a2/STATE.a2ml].
 
 == Problems → Solutions
 
