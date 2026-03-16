@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Clade declaration — part of the gv-clade-index registry
+# See: https://github.com/hyperpolymath/gv-clade-index
+
+[identity]
+uuid = "8d0e4d70-0d5d-58c4-a0eb-ff46b91b7de2"
+primary-forge = "github"
+primary-owner = "hyperpolymath"
+canonical-name = "odds-and-sods-package-manager"
+prefixed-name = "dx-odds-and-sods-package-manager"
+
+[clade]
+primary = "dx"
+secondary = []
+assigned = "2026-03-16"
+rationale = ""
+
+[forges]
+github = "hyperpolymath/odds-and-sods-package-manager"
+gitlab = "hyperpolymath/odds-and-sods-package-manager"
+bitbucket = "hyperpolymath/odds-and-sods-package-manager"
+
+[lineage]
+type = "standalone"
+parent = "Miscellaneous package manager"
+born = "2026-03-16"
