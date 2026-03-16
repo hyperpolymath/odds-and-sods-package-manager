@@ -1,6 +1,6 @@
 # Clone the repository
 
-git clone https://{{FORGE}}/{{OWNER}}/{{REPO}}.git cd {{REPO}}
+git clone https://github.com/hyperpolymath/odds-and-sods-package-manager.git cd odds-and-sods-package-manager
 
 # Using Nix (recommended for reproducibility)
 
@@ -8,7 +8,7 @@ nix develop
 
 # Or using toolbox/distrobox
 
-toolbox create {{REPO}}-dev toolbox enter {{REPO}}-dev
+toolbox create odds-and-sods-package-manager-dev toolbox enter odds-and-sods-package-manager-dev
 
 # Install dependencies manually
 
@@ -20,7 +20,7 @@ just check # or: cargo check / mix compile / etc. just test # Run test suite
 ### Repository Structure
 ```
 
-{{REPO}}/ ├── src/ # Source code (Perimeter 1-2) ├── lib/ # Library code (Perimeter 1-2) ├──
+odds-and-sods-package-manager/ ├── src/ # Source code (Perimeter 1-2) ├── lib/ # Library code (Perimeter 1-2) ├──
 extensions/ # Extensions (Perimeter 2) ├── plugins/ # Plugins (Perimeter 2) ├── tools/ # Tooling
 (Perimeter 2) ├── docs/ # Documentation (Perimeter 3) │ ├── architecture/ # ADRs, specs
 (Perimeter 2) │ └── proposals/ # RFCs (Perimeter 3) ├── examples/ # Examples (Perimeter 3) ├── spec/
@@ -41,7 +41,7 @@ LICENSE ├── MAINTAINERS.md ├── README.adoc ├── SECURITY.md ├
 
 **Before reporting**:
 1. Search existing issues
-2. Check if it's already fixed in `{{MAIN_BRANCH}}`
+2. Check if it's already fixed in `main`
 3. Determine which perimeter the bug affects
 
 **When reporting**:
@@ -74,10 +74,10 @@ Use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md) an
 
 Look for issues labelled:
 
-- [`good first issue`](https://{{FORGE}}/{{OWNER}}/{{REPO}}/labels/good%20first%20issue) — Simple Perimeter 3 tasks
-- [`help wanted`](https://{{FORGE}}/{{OWNER}}/{{REPO}}/labels/help%20wanted) — Community help needed
-- [`documentation`](https://{{FORGE}}/{{OWNER}}/{{REPO}}/labels/documentation) — Docs improvements
-- [`perimeter-3`](https://{{FORGE}}/{{OWNER}}/{{REPO}}/labels/perimeter-3) — Community sandbox scope
+- [`good first issue`](https://github.com/hyperpolymath/odds-and-sods-package-manager/labels/good%20first%20issue) — Simple Perimeter 3 tasks
+- [`help wanted`](https://github.com/hyperpolymath/odds-and-sods-package-manager/labels/help%20wanted) — Community help needed
+- [`documentation`](https://github.com/hyperpolymath/odds-and-sods-package-manager/labels/documentation) — Docs improvements
+- [`perimeter-3`](https://github.com/hyperpolymath/odds-and-sods-package-manager/labels/perimeter-3) — Community sandbox scope
 
 ---
 
