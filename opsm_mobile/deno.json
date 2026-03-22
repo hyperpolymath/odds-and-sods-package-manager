@@ -18,7 +18,9 @@
     "tauri": "cargo tauri dev",
     "tauri:build": "cargo tauri build",
     "tauri:android": "cargo tauri android init && cargo tauri android build",
-    "tauri:ios": "cargo tauri ios init && cargo tauri ios build"
+    "tauri:ios": "cargo tauri ios init && cargo tauri ios build",
+    "gossamer:dev": "deno task dev & gossamer dev --config gossamer.conf.json",
+    "gossamer:build": "deno task build && gossamer build --config gossamer.conf.json"
   },
   "fmt": {
     "files": {
