@@ -1,0 +1,125 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= OPSM Runtime Extension
+:revdate: 2026-03-23
+:toc: macro
+
+**Tool and runtime version management for OPSM.**
+
+Manages developer tool versions (compilers, runtimes, CLIs) with the same
+trust pipeline, formal verification, and federation that OPSM brings to
+package management. Reads `.tool-versions` for asdf compatibility.
+
+toc::[]
+
+== Architecture
+
+[source]
+----
+runtime/
+├── contract/                    # Nickel contract (the spec)
+│   └── runtime-plugin.ncl       # RuntimePlugin type definition
+├── core/                        # hyperpolymath-maintained plugins (71)
+│   ├── zig.ncl
+│   ├── deno.ncl
+│   ├── erlang.ncl
+│   └── ...
+├── community/                   # Community-contributed plugins
+├── tools/                       # Developer tooling
+│   ├── convert-asdf-plugins.sh  # Batch converter: asdf → Nickel
+│   ├── minter/
+│   │   ├── mint-runtime-plugin.sh    # Interactive plugin creator
+│   │   └── generate-rsr-repo.sh      # RSR repo generator
+│   ├── provisioner/
+│   │   └── provision.sh              # Bootstrap installer
+│   └── configurator/
+│       └── configure.sh              # Version management CLI
+├── panel-harness/               # PanLL integration
+│   ├── manifest.json            # Panel manifest v2
+│   └── panel.html               # Runtime manager UI
+└── README.adoc                  # This file
+----
+
+== Quick Start
+
+=== Create a new plugin (interactive)
+
+[source,bash]
+----
+./runtime/tools/minter/mint-runtime-plugin.sh
+----
+
+=== Create a new plugin (one-liner)
+
+[source,bash]
+----
+./runtime/tools/minter/mint-runtime-plugin.sh --quick age FiloSottile/age age
+----
+
+=== Install a runtime
+
+[source,bash]
+----
+./runtime/tools/provisioner/provision.sh runtime/core/just.ncl 1.46.0
+----
+
+=== Install from .tool-versions
+
+[source,bash]
+----
+./runtime/tools/provisioner/provision.sh --from-tool-versions .tool-versions
+----
+
+=== Generate a standalone RSR repo for a plugin
+
+[source,bash]
+----
+./runtime/tools/minter/generate-rsr-repo.sh runtime/core/zig.ncl
+----
+
+== Contributing a Plugin
+
+**Option A: Single file PR (recommended)**
+
+1. Create a `.ncl` file using the minter or by hand
+2. Place it in `runtime/community/`
+3. Open a PR — the Nickel contract validates your definition
+
+**Option B: Standalone repo**
+
+1. Run `generate-rsr-repo.sh` with your `.ncl` file
+2. Push to your own GitHub repo
+3. We periodically vendor community repos into `runtime/community/`
+
+Either way, you get full attribution (git blame, contributor field in Nickel).
+
+== Faceted Classification
+
+Plugins are classified across orthogonal facets, not a tree:
+
+[cols="1,3"]
+|===
+| Facet | Values
+
+| **Function** | Runtime, Compiler, Linter, Formatter, BuildTool, PackageManager, Database, Security, Server, CLI, Editor, ContainerTool
+| **Ecosystem** | beam, rust, javascript, python, jvm, go, zig, haskell, system, ...
+| **Usage** | Interactive (REPL), Batch (compiler), Daemon (server), Oneshot (CLI)
+| **Tier** | Core (hyperpolymath), Community (contributed), Experimental (auto-converted), Upstream (vendored)
+|===
+
+== PanLL Integration
+
+The panel harness at `panel-harness/` provides:
+
+- Visual runtime browser with faceted filtering
+- One-click install with trust pipeline results
+- Per-panel version switching (PanLL environment injection)
+- Project `.tool-versions` editor
+- Trust dashboard with SLSA provenance and attestation scores
+
+== Acknowledgements
+
+OPSM's runtime plugin catalogue builds on the pioneering work of the asdf
+plugin ecosystem. We gratefully acknowledge the hundreds of plugin authors
+whose work established the patterns and tool mappings that informed our
+Nickel definitions. Original asdf plugins remain available at their
+respective repositories and are credited in each OPSM plugin file.

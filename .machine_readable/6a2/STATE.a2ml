@@ -4,11 +4,22 @@
 
 [metadata]
 project = "odds-and-sods-package-manager"
-version = "0.1.0"
-last-updated = "2026-03-15"
+version = "2.0.0"
+last-updated = "2026-03-23"
 status = "active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 0
-phase = "In development"
+completion-percentage = 45
+phase = "Active development"
+
+[runtime-extension]
+added = "2026-03-23"
+status = "initial-implementation"
+core-plugins = 71
+community-plugins = 0
+contract-version = "1.0.0"
+tools = ["minter", "provisioner", "configurator", "convert-asdf-plugins"]
+panel-harness = "manifest.json + panel.html"
+rsr-generator = true
+notes = "Nickel-based runtime/tool version management. Faceted classification. PanLL panel harness. .tool-versions compatibility."

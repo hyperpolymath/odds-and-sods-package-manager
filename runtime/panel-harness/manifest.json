@@ -1,0 +1,87 @@
+{
+  "$schema": "https://hyperpolymath.github.io/panll/schemas/panel-manifest-v2.json",
+  "panel": {
+    "id": "opsm-runtime-manager",
+    "name": "OPSM Runtime Manager",
+    "version": "1.0.0",
+    "description": "Visual runtime/tool version management panel for PanLL workspaces",
+    "author": "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>",
+    "license": "PMPL-1.0-or-later",
+    "runtime": "gossamer",
+    "entry": "panel.html",
+    "icon": "runtime-icon.svg",
+    "category": "developer-tools",
+    "min_panll_version": "0.5.0"
+  },
+  "capabilities": {
+    "filesystem": ["read:~/.opsm", "write:~/.opsm"],
+    "network": ["github.com", "api.github.com"],
+    "ipc": ["opsm-core"],
+    "environment": ["read", "write"]
+  },
+  "layout": {
+    "default_width": 480,
+    "default_height": 600,
+    "min_width": 320,
+    "min_height": 400,
+    "resizable": true,
+    "dockable": ["left", "right", "bottom"]
+  },
+  "views": [
+    {
+      "id": "installed",
+      "name": "Installed Runtimes",
+      "description": "List of installed tools with version status, EOL, CVE badges"
+    },
+    {
+      "id": "available",
+      "name": "Available Plugins",
+      "description": "Browse and install from core/community plugin catalogue"
+    },
+    {
+      "id": "project",
+      "name": "Project Versions",
+      "description": "Per-project .tool-versions management with one-click install"
+    },
+    {
+      "id": "trust",
+      "name": "Trust Dashboard",
+      "description": "OPSM trust pipeline results, attestation scores, SLSA provenance"
+    }
+  ],
+  "actions": [
+    {
+      "id": "install",
+      "label": "Install Runtime",
+      "command": "opsm runtime install {{tool}} {{version}}",
+      "confirm": true
+    },
+    {
+      "id": "switch",
+      "label": "Switch Version",
+      "command": "opsm runtime set {{tool}} {{version}}",
+      "confirm": false
+    },
+    {
+      "id": "update",
+      "label": "Update to Latest",
+      "command": "opsm runtime install {{tool}} latest",
+      "confirm": true
+    },
+    {
+      "id": "uninstall",
+      "label": "Uninstall",
+      "command": "opsm runtime uninstall {{tool}} {{version}}",
+      "confirm": true
+    }
+  ],
+  "panll_integration": {
+    "environment_injection": true,
+    "per_panel_versions": true,
+    "workspace_tool_versions": true,
+    "status_bar_widget": {
+      "show_active_versions": true,
+      "click_to_switch": true
+    }
+  }
+}

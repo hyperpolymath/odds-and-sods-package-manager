@@ -83,6 +83,12 @@ secrets/
 *.tmp
 /tmp/
 
+# Release artifacts
+*.tar
+
+# Runtime extension
+/runtime/community/*.ncl.bak
+
 # Test/Coverage
 /coverage/
 htmlcov/
