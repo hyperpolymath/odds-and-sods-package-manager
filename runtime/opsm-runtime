@@ -1,0 +1,397 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
+#
+# opsm-runtime — Unified CLI for OPSM Runtime Extension
+# =====================================================
+# Wraps provisioner, configurator, and shim management into a single
+# command. This is the bootstrap CLI; production OPSM will integrate
+# these through the Elixir core.
+#
+# Usage:
+#   opsm-runtime install <tool> <version>    Install and shim a tool
+#   opsm-runtime remove <tool> [version]     Remove a tool version
+#   opsm-runtime list                        Show installed tools + versions
+#   opsm-runtime set <tool> <version>        Set version (local .tool-versions)
+#   opsm-runtime set -g <tool> <version>     Set version (global)
+#   opsm-runtime which <command>             Show which binary resolves
+#   opsm-runtime reshim [tool]               Recreate shims for a tool (or all)
+#   opsm-runtime import [.tool-versions]     Import from asdf format
+#   opsm-runtime doctor                      Check health of OPSM runtime setup
+
+set -uo pipefail
+
+# Resolve symlinks to find the real script directory (where plugins live)
+_source="${BASH_SOURCE[0]}"
+while [[ -L "$_source" ]]; do
+  _dir="$(cd "$(dirname "$_source")" && pwd)"
+  _source="$(readlink "$_source")"
+  [[ "$_source" != /* ]] && _source="$_dir/$_source"
+done
+SCRIPT_DIR="$(cd "$(dirname "$_source")" && pwd)"
+PROVISIONER="$SCRIPT_DIR/tools/provisioner/provision.sh"
+CONFIGURATOR="$SCRIPT_DIR/tools/configurator/configure.sh"
+# Use installed binary if available, fall back to build directory
+if [[ -x "$HOME/.opsm/bin/opsm-shim" ]]; then
+  SHIM_BINARY="$HOME/.opsm/bin/opsm-shim"
+else
+  SHIM_BINARY="$SCRIPT_DIR/shim/zig-out/bin/opsm-shim"
+fi
+PLUGIN_DIR="$SCRIPT_DIR/core"
+COMMUNITY_DIR="$SCRIPT_DIR/community"
+
+OPSM_DIR="${OPSM_CONFIG_DIR:-$HOME/.opsm}"
+RUNTIME_DIR="${OPSM_RUNTIME_DIR:-$OPSM_DIR/runtimes}"
+SHIM_DIR="${OPSM_SHIM_DIR:-$OPSM_DIR/shims}"
+
+# --- Colours ---
+if [[ -t 1 ]]; then
+  BOLD='\033[1m' GREEN='\033[0;32m' BLUE='\033[0;34m'
+  RED='\033[0;31m' YELLOW='\033[0;33m' CYAN='\033[0;36m' NC='\033[0m'
+else
+  BOLD='' GREEN='' BLUE='' RED='' YELLOW='' CYAN='' NC=''
+fi
+
+info()  { echo -e "${BLUE}[opsm]${NC} $*"; }
+ok()    { echo -e "${GREEN}[opsm]${NC} $*"; }
+err()   { echo -e "${RED}[opsm]${NC} $*" >&2; }
+warn()  { echo -e "${YELLOW}[opsm]${NC} $*"; }
+
+# --- Find plugin .ncl file for a tool ---
+find_plugin() {
+  local tool="$1"
+  for dir in "$PLUGIN_DIR" "$COMMUNITY_DIR"; do
+    if [[ -f "$dir/${tool}.ncl" ]]; then
+      echo "$dir/${tool}.ncl"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# --- Extract executables from .ncl plugin ---
+get_executables() {
+  local ncl_file="$1"
+  if command -v nickel &>/dev/null; then
+    nickel export "$ncl_file" 2>/dev/null | jq -r '.executables[]?' 2>/dev/null || true
+  else
+    # Fallback: grep extraction
+    grep -A10 'executables' "$ncl_file" 2>/dev/null | grep -oP '"[^"]+"' | tr -d '"' || true
+  fi
+}
+
+# --- Create shims for a tool ---
+create_shims() {
+  local tool="$1"
+  local ncl_file
+  ncl_file=$(find_plugin "$tool") || {
+    # No plugin — create shim for tool name only
+    warn "No .ncl plugin for $tool — creating shim for '$tool' only"
+    mkdir -p "$SHIM_DIR"
+    ln -sf "$SHIM_BINARY" "$SHIM_DIR/$tool"
+    ok "Shim: $SHIM_DIR/$tool"
+    return 0
+  }
+
+  mkdir -p "$SHIM_DIR"
+
+  # Always create shim for the tool name itself
+  ln -sf "$SHIM_BINARY" "$SHIM_DIR/$tool"
+  ok "Shim: $SHIM_DIR/$tool"
+
+  # Create shims for all declared executables
+  local exes
+  exes=$(get_executables "$ncl_file")
+  for exe in $exes; do
+    if [[ "$exe" != "$tool" ]]; then
+      ln -sf "$SHIM_BINARY" "$SHIM_DIR/$exe"
+      ok "Shim: $SHIM_DIR/$exe"
+    fi
+  done
+}
+
+# --- Commands ---
+
+cmd_install() {
+  local tool="${1:?Usage: opsm-runtime install <tool> <version>}"
+  local version="${2:?Usage: opsm-runtime install <tool> <version>}"
+
+  local ncl_file
+  ncl_file=$(find_plugin "$tool") || {
+    err "No OPSM plugin for: $tool"
+    err "Available plugins: $(ls "$PLUGIN_DIR"/*.ncl 2>/dev/null | xargs -I{} basename {} .ncl | tr '\n' ' ')"
+    return 1
+  }
+
+  info "${BOLD}Installing $tool $version${NC}"
+
+  # 1. Provision (download + extract) — skip bash shims, we use Zig dispatcher
+  OPSM_SKIP_BASH_SHIMS=1 "$PROVISIONER" "$ncl_file" "$version" || {
+    err "Provisioning failed for $tool $version"
+    return 1
+  }
+
+  # 2. Create shims
+  create_shims "$tool"
+
+  # 3. Set as current version (always set global on install)
+  "$CONFIGURATOR" set --global "$tool" "$version"
+  ok "Set $tool $version as global default"
+
+  echo
+  ok "${BOLD}$tool $version${NC} ready!"
+  info "Test with: $tool --version"
+}
+
+cmd_remove() {
+  local tool="${1:?Usage: opsm-runtime remove <tool> [version]}"
+  local version="${2:-}"
+
+  if [[ -n "$version" ]]; then
+    local install_dir="$RUNTIME_DIR/$tool/$version"
+    if [[ -d "$install_dir" ]]; then
+      rm -rf "$install_dir"
+      ok "Removed $tool $version"
+    else
+      err "$tool $version is not installed"
+      return 1
+    fi
+  else
+    # Remove all versions + shims
+    if [[ -d "$RUNTIME_DIR/$tool" ]]; then
+      rm -rf "$RUNTIME_DIR/$tool"
+      ok "Removed all versions of $tool"
+    fi
+
+    # Remove shims
+    local ncl_file
+    ncl_file=$(find_plugin "$tool" 2>/dev/null) || true
+    rm -f "$SHIM_DIR/$tool"
+    if [[ -n "$ncl_file" ]]; then
+      for exe in $(get_executables "$ncl_file"); do
+        rm -f "$SHIM_DIR/$exe"
+      done
+    fi
+    ok "Removed shims for $tool"
+  fi
+}
+
+cmd_list() {
+  echo -e "${BOLD}OPSM Installed Runtimes${NC}"
+  echo
+
+  if [[ ! -d "$RUNTIME_DIR" ]] || [[ -z "$(ls -A "$RUNTIME_DIR" 2>/dev/null)" ]]; then
+    info "No runtimes installed yet."
+    info "Install with: opsm-runtime install <tool> <version>"
+    return 0
+  fi
+
+  for tool_dir in "$RUNTIME_DIR"/*/; do
+    [[ -d "$tool_dir" ]] || continue
+    local tool
+    tool=$(basename "$tool_dir")
+
+    # Get current version from .tool-versions resolution
+    local current_ver=""
+    local current_source=""
+    if [[ -f "$SHIM_DIR/$tool" ]]; then
+      # Walk up to find .tool-versions
+      local tv_ver
+      tv_ver=$(grep "^$tool " .tool-versions 2>/dev/null | awk '{print $2}' || true)
+      if [[ -n "$tv_ver" ]]; then
+        current_ver="$tv_ver"
+        current_source="local"
+      else
+        tv_ver=$(grep "^$tool " "$OPSM_DIR/tool-versions" "$OPSM_DIR/.tool-versions" 2>/dev/null | head -1 | awk '{print $2}' || true)
+        if [[ -n "$tv_ver" ]]; then
+          current_ver="$tv_ver"
+          current_source="global"
+        fi
+      fi
+    fi
+
+    # List installed versions
+    local versions
+    versions=$(ls "$tool_dir" 2>/dev/null | tr '\n' ' ')
+
+    if [[ -n "$current_ver" ]]; then
+      echo -e "  ${GREEN}${tool}${NC}  ${BOLD}${current_ver}${NC}  (${current_source})"
+    else
+      echo -e "  ${YELLOW}${tool}${NC}  ${BOLD}not set${NC}"
+    fi
+    echo -e "    installed: ${CYAN}${versions}${NC}"
+  done
+}
+
+cmd_reshim() {
+  local tool="${1:-}"
+
+  if [[ -z "$tool" ]]; then
+    # Reshim all installed tools
+    info "Reshimming all installed tools..."
+    mkdir -p "$SHIM_DIR"
+    # Always install the shim binary
+    cp "$SHIM_BINARY" "$SHIM_DIR/opsm-shim" 2>/dev/null || true
+
+    for tool_dir in "$RUNTIME_DIR"/*/; do
+      [[ -d "$tool_dir" ]] || continue
+      local t
+      t=$(basename "$tool_dir")
+      create_shims "$t"
+    done
+    ok "All shims updated"
+  else
+    create_shims "$tool"
+  fi
+}
+
+cmd_which() {
+  local command="${1:?Usage: opsm-runtime which <command>}"
+
+  if [[ -L "$SHIM_DIR/$command" || -f "$SHIM_DIR/$command" ]]; then
+    # Run the shim in dry-run-ish mode — check what it would resolve to
+    # We can't easily do this without actually exec'ing, so let's trace manually
+    "$CONFIGURATOR" which "$command" 2>/dev/null || {
+      # Fallback: check if the command exists in any installed runtime
+      for tool_dir in "$RUNTIME_DIR"/*/; do
+        [[ -d "$tool_dir" ]] || continue
+        local found
+        found=$(find "$tool_dir" -name "$command" -type f -executable 2>/dev/null | head -1)
+        if [[ -n "$found" ]]; then
+          echo "$found"
+          return 0
+        fi
+      done
+      err "No OPSM-managed binary found for: $command"
+      return 1
+    }
+  else
+    err "No OPSM shim for: $command"
+    err "Is $command installed? Run: opsm-runtime list"
+    return 1
+  fi
+}
+
+cmd_doctor() {
+  echo -e "${BOLD}OPSM Runtime Doctor${NC}"
+  echo
+
+  # Check directories
+  local issues=0
+
+  echo -n "  Config dir ($OPSM_DIR): "
+  if [[ -d "$OPSM_DIR" ]]; then echo -e "${GREEN}exists${NC}"; else echo -e "${YELLOW}missing${NC}"; mkdir -p "$OPSM_DIR"; fi
+
+  echo -n "  Runtime dir ($RUNTIME_DIR): "
+  if [[ -d "$RUNTIME_DIR" ]]; then echo -e "${GREEN}exists${NC}"; else echo -e "${YELLOW}missing${NC}"; mkdir -p "$RUNTIME_DIR"; fi
+
+  echo -n "  Shim dir ($SHIM_DIR): "
+  if [[ -d "$SHIM_DIR" ]]; then echo -e "${GREEN}exists${NC}"; else echo -e "${YELLOW}missing${NC}"; mkdir -p "$SHIM_DIR"; fi
+
+  echo -n "  Shim binary: "
+  if [[ -x "$SHIM_BINARY" ]]; then
+    echo -e "${GREEN}found${NC} ($SHIM_BINARY)"
+  else
+    echo -e "${RED}MISSING${NC} — run: cd runtime/shim && zig build -Doptimize=ReleaseSafe"
+    issues=$((issues + 1))
+  fi
+
+  echo -n "  Shim dir on PATH: "
+  if echo "$PATH" | tr ':' '\n' | grep -q "$SHIM_DIR"; then
+    echo -e "${GREEN}yes${NC}"
+  else
+    echo -e "${YELLOW}no${NC} — add: export PATH=\"$SHIM_DIR:\$PATH\""
+    issues=$((issues + 1))
+  fi
+
+  echo -n "  Nickel: "
+  if command -v nickel &>/dev/null; then
+    echo -e "${GREEN}$(nickel --version 2>/dev/null || echo 'found')${NC}"
+  else
+    echo -e "${YELLOW}not found${NC} (fallback grep extraction will be used)"
+  fi
+
+  echo -n "  Plugin definitions: "
+  local count
+  count=$(ls "$PLUGIN_DIR"/*.ncl 2>/dev/null | wc -l)
+  echo -e "${GREEN}${count} plugins${NC} in core/"
+
+  echo -n "  Global tool-versions: "
+  if [[ -f "$OPSM_DIR/tool-versions" ]]; then
+    local tv_count
+    tv_count=$(grep -cve '^\s*#\|^\s*$' "$OPSM_DIR/tool-versions" 2>/dev/null || echo 0)
+    echo -e "${GREEN}${tv_count} tools configured${NC}"
+  else
+    echo -e "${YELLOW}not found${NC} (no global defaults set)"
+  fi
+
+  # Count installed runtimes
+  echo -n "  Installed runtimes: "
+  local rt_count=0
+  for d in "$RUNTIME_DIR"/*/; do [[ -d "$d" ]] && rt_count=$((rt_count + 1)); done
+  echo -e "${GREEN}${rt_count}${NC}"
+
+  # Count shims
+  echo -n "  Active shims: "
+  local shim_count
+  shim_count=$(ls "$SHIM_DIR" 2>/dev/null | wc -l)
+  echo -e "${GREEN}${shim_count}${NC}"
+
+  echo
+  if [[ $issues -eq 0 ]]; then
+    ok "Everything looks good!"
+  else
+    warn "$issues issue(s) found — see above"
+  fi
+}
+
+# --- Main dispatch ---
+
+case "${1:-help}" in
+  install)   shift; cmd_install "$@" ;;
+  remove|uninstall) shift; cmd_remove "$@" ;;
+  list|ls)   cmd_list ;;
+  set)       shift; "$CONFIGURATOR" set "$@" ;;
+  which)     shift; cmd_which "$@" ;;
+  reshim)    shift; cmd_reshim "$@" ;;
+  import)    shift; "$CONFIGURATOR" import "$@" ;;
+  export)    shift; "$CONFIGURATOR" export "$@" ;;
+  env)       shift; "$CONFIGURATOR" env "$@" ;;
+  doctor)    cmd_doctor ;;
+  help|--help|-h)
+    echo -e "${BOLD}opsm-runtime${NC} — OPSM Tool Version Manager"
+    echo
+    echo "Usage: opsm-runtime <command> [args...]"
+    echo
+    echo "Commands:"
+    echo "  install <tool> <version>     Download, install, and create shims"
+    echo "  remove <tool> [version]      Remove a tool (or specific version)"
+    echo "  list                         Show installed runtimes and versions"
+    echo "  set [-g] <tool> <version>    Set version in .tool-versions"
+    echo "  which <command>              Show which binary a command resolves to"
+    echo "  reshim [tool]                Recreate shims (all tools if none specified)"
+    echo "  import [file]                Import from .tool-versions"
+    echo "  export [file]                Export to .tool-versions"
+    echo "  env <tool>                   Show environment variables for a tool"
+    echo "  doctor                       Check OPSM runtime health"
+    echo
+    echo "Examples:"
+    echo "  opsm-runtime install zig 0.15.2"
+    echo "  opsm-runtime install deno 2.6.10"
+    echo "  opsm-runtime set zig 0.15.2"
+    echo "  opsm-runtime set -g deno 2.6.10"
+    echo "  opsm-runtime list"
+    echo "  opsm-runtime doctor"
+    echo
+    echo "Directories:"
+    echo "  Config:    $OPSM_DIR"
+    echo "  Runtimes:  $RUNTIME_DIR"
+    echo "  Shims:     $SHIM_DIR"
+    echo "  Plugins:   $PLUGIN_DIR"
+    ;;
+  *)
+    err "Unknown command: $1"
+    echo "Run 'opsm-runtime help' for usage."
+    exit 1
+    ;;
+esac

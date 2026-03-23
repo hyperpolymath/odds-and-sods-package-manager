@@ -42,7 +42,7 @@ let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
         archive_format = 'TarGz,
       },
     ],
-    strip_components = 1,
+    strip_components = 0,
   },
 
   executables = ["cue"],

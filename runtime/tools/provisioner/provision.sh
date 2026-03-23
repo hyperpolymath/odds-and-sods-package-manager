@@ -59,21 +59,28 @@ detect_platform() {
 
 # --- Nickel field extraction (using nickel export or grep fallback) ---
 ncl_field() {
-  local file="$1" field="$2"
+  local file="$1" field="$2" result=""
+  # Try nickel export first, fall back to grep if it fails or returns empty
   if command -v nickel &>/dev/null; then
-    nickel export "$file" 2>/dev/null | jq -r ".$field // empty" 2>/dev/null || true
-  else
-    # Fallback: grep-based extraction for simple string fields
-    grep -oP "${field}\s*=\s*\"?\K[^\"]*" "$file" 2>/dev/null | head -1 || true
+    result=$(nickel export "$file" 2>/dev/null | jq -r ".$field // empty" 2>/dev/null || true)
   fi
+  if [[ -z "$result" ]]; then
+    # Fallback: grep-based extraction for simple string fields
+    result=$(grep -oP "${field}\s*=\s*\"?\K[^\",]*" "$file" 2>/dev/null | head -1 | sed 's/[[:space:]]*$//' || true)
+  fi
+  echo "$result"
 }
 
 ncl_array() {
-  local file="$1" field="$2"
+  local file="$1" field="$2" result=""
   if command -v nickel &>/dev/null; then
-    nickel export "$file" 2>/dev/null | jq -r ".$field[]? // empty" 2>/dev/null || true
+    result=$(nickel export "$file" 2>/dev/null | jq -r ".$field[]? // empty" 2>/dev/null || true)
+  fi
+  if [[ -z "$result" ]]; then
+    # Extract array values: find the field, grab quoted strings until closing bracket
+    grep -A10 "^\s*${field}\s*=" "$file" 2>/dev/null | sed -n '/\[/,/\]/p' | grep -oP '"[^"]+"' | tr -d '"' || true
   else
-    grep -A5 "${field}\s*=" "$file" 2>/dev/null | grep -oP '"[^"]+"' | tr -d '"' || true
+    echo "$result"
   fi
 }
 
@@ -123,6 +130,8 @@ fi
 TOOL_NAME=$(ncl_field "$PLUGIN_FILE" "name")
 REPO_URL=$(ncl_field "$PLUGIN_FILE" "repository")
 HEALTH_CMD=$(ncl_field "$PLUGIN_FILE" "health_check")
+STRIP_COMPONENTS=$(ncl_field "$PLUGIN_FILE" "strip_components" | grep -oP '^\d+' || echo "1")
+STRIP_COMPONENTS="${STRIP_COMPONENTS:-1}"  # default to 1 if not specified
 
 if [[ -z "$TOOL_NAME" ]]; then
   err "Could not extract tool name from: $PLUGIN_FILE"
@@ -147,79 +156,273 @@ mkdir -p "$INSTALL_DIR"
 DOWNLOAD_DIR=$(mktemp -d)
 trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
 
-# Construct download URL from GitHub releases (most common case)
-# In production, the Elixir core handles this with full platform mapping
-OWNER_REPO=$(echo "$REPO_URL" | sed 's|https://github.com/||;s|\.git$||')
+IFS='-' read -r PLAT_OS PLAT_ARCH <<< "$PLATFORM"
 
-if [[ -n "$OWNER_REPO" && "$OWNER_REPO" != "$REPO_URL" ]]; then
-  # Try GitHub releases API
-  info "Fetching release info from GitHub..."
-  RELEASE_URL="https://api.github.com/repos/${OWNER_REPO}/releases/tags/v${VERSION}"
-  RELEASE_JSON=$(curl -sSL "$RELEASE_URL" 2>/dev/null || true)
+# --- Extract helper ---
+extract_archive() {
+  local file="$1" dest="$2" strip="${3:-$STRIP_COMPONENTS}"
+  local fname
+  fname=$(basename "$file")
+  case "$fname" in
+    *.tar.gz|*.tgz) tar xzf "$file" -C "$dest" --strip-components="$strip" ;;
+    *.tar.xz)       tar xJf "$file" -C "$dest" --strip-components="$strip" ;;
+    *.tar.bz2)      tar xjf "$file" -C "$dest" --strip-components="$strip" ;;
+    *.zip)           unzip -qo "$file" -d "$dest" ;;
+    *)
+      # Raw binary — name it after the tool
+      mv "$file" "${dest}/${TOOL_NAME}"
+      chmod +x "${dest}/${TOOL_NAME}"
+      ;;
+  esac
+}
 
-  if [[ -z "$RELEASE_JSON" ]] || echo "$RELEASE_JSON" | jq -e '.message' &>/dev/null; then
-    # Try without v prefix
-    RELEASE_URL="https://api.github.com/repos/${OWNER_REPO}/releases/tags/${VERSION}"
-    RELEASE_JSON=$(curl -sSL "$RELEASE_URL" 2>/dev/null || true)
+# --- Download URL construction ---
+# Check for a direct_url field in the plugin (custom download source)
+DIRECT_URL=$(ncl_field "$PLUGIN_FILE" "direct_url")
+
+# Read version_source to choose download strategy
+VERSION_SOURCE=$(ncl_field "$PLUGIN_FILE" "version_source")
+
+download_from_direct_url() {
+  # Plugin specifies an exact URL template with {{version}}, {{os}}, {{arch}} placeholders
+  local url="$1"
+  url="${url//\{\{version\}\}/$VERSION}"
+  url="${url//\{\{os\}\}/$PLAT_OS}"
+  url="${url//\{\{arch\}\}/$PLAT_ARCH}"
+  # Also handle x86_64/aarch64 aliases
+  if [[ "$PLAT_ARCH" == "amd64" ]]; then
+    url="${url//\{\{arch64\}\}/x86_64}"
+  elif [[ "$PLAT_ARCH" == "arm64" ]]; then
+    url="${url//\{\{arch64\}\}/aarch64}"
   fi
+  local fname
+  fname=$(basename "$url")
+  info "Downloading: ${fname}"
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
 
-  if [[ -n "$RELEASE_JSON" ]] && ! echo "$RELEASE_JSON" | jq -e '.message' &>/dev/null; then
-    # Find matching asset for our platform
-    IFS='-' read -r os arch <<< "$PLATFORM"
-    ASSET_URL=$(echo "$RELEASE_JSON" | jq -r \
-      --arg os "$os" --arg arch "$arch" \
-      '[.assets[].browser_download_url |
-        select(test($os; "i")) |
-        select(test($arch; "i") or test(
-          if $arch == "amd64" then "x86_64|x64"
-          elif $arch == "arm64" then "aarch64"
-          else $arch end; "i"))] |
-        map(select(test("sha256|\.sig|\.asc|\.md5|\.sbom"; "i") | not)) |
-        first // empty' 2>/dev/null || true)
-
-    if [[ -n "$ASSET_URL" ]]; then
-      FILENAME=$(basename "$ASSET_URL")
-      info "Downloading: ${FILENAME}"
-      curl -sSL -o "${DOWNLOAD_DIR}/${FILENAME}" "$ASSET_URL"
-
-      # Extract based on file type
-      case "$FILENAME" in
-        *.tar.gz|*.tgz)
-          tar xzf "${DOWNLOAD_DIR}/${FILENAME}" -C "$INSTALL_DIR" --strip-components=1 2>/dev/null \
-            || tar xzf "${DOWNLOAD_DIR}/${FILENAME}" -C "$INSTALL_DIR"
-          ;;
-        *.tar.xz)
-          tar xJf "${DOWNLOAD_DIR}/${FILENAME}" -C "$INSTALL_DIR" --strip-components=1 2>/dev/null \
-            || tar xJf "${DOWNLOAD_DIR}/${FILENAME}" -C "$INSTALL_DIR"
-          ;;
-        *.zip)
-          unzip -q "${DOWNLOAD_DIR}/${FILENAME}" -d "$INSTALL_DIR"
-          ;;
-        *)
-          # Raw binary
-          mv "${DOWNLOAD_DIR}/${FILENAME}" "${INSTALL_DIR}/${TOOL_NAME}"
-          chmod +x "${INSTALL_DIR}/${TOOL_NAME}"
-          ;;
-      esac
-    else
-      err "No matching release asset found for ${PLATFORM}"
-      err "Available assets:"
-      echo "$RELEASE_JSON" | jq -r '.assets[].name' 2>/dev/null
-      exit 1
+download_from_github_releases() {
+  local owner_repo="$1"
+  info "Fetching release info from GitHub..."
+  local release_json=""
+  for tag_prefix in "v" ""; do
+    local url="https://api.github.com/repos/${owner_repo}/releases/tags/${tag_prefix}${VERSION}"
+    release_json=$(curl -sSL "$url" 2>/dev/null || true)
+    if [[ -n "$release_json" ]] && ! echo "$release_json" | jq -e '.message' &>/dev/null; then
+      break
     fi
-  else
-    err "Could not fetch release: ${VERSION} from ${OWNER_REPO}"
+    release_json=""
+  done
+
+  if [[ -z "$release_json" ]]; then
+    err "Could not fetch release: ${VERSION} from ${owner_repo}"
     exit 1
   fi
-else
-  err "Non-GitHub repositories not yet supported in bootstrap provisioner"
-  err "Repository: $REPO_URL"
-  exit 1
-fi
+
+  local asset_url
+  asset_url=$(echo "$release_json" | jq -r \
+    --arg os "$PLAT_OS" --arg arch "$PLAT_ARCH" \
+    '[.assets[].browser_download_url |
+      select(test($os; "i")) |
+      select(test($arch; "i") or test(
+        if $arch == "amd64" then "x86_64|x64"
+        elif $arch == "arm64" then "aarch64"
+        else $arch end; "i"))] |
+      map(select(test("sha256|SHA256|\\.sig|\\.asc|\\.md5|\\.sbom|CHANGELOG|\\.txt$|\\.h$|\\.hh$|-c-api"; "i") | not)) |
+      first // empty' 2>/dev/null || true)
+
+  if [[ -z "$asset_url" ]]; then
+    err "No matching release asset found for ${PLATFORM}"
+    err "Available assets:"
+    echo "$release_json" | jq -r '.assets[].name' 2>/dev/null
+    exit 1
+  fi
+
+  local fname
+  fname=$(basename "$asset_url")
+  info "Downloading: ${fname}"
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$asset_url"
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+# =================================================================
+# Custom download handlers for tools with non-GitHub distributions
+# =================================================================
+
+download_zig() {
+  # Zig distributes via ziglang.org with a JSON version index
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x86_64" ;;
+    arm64) arch_name="aarch64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://ziglang.org/download/${VERSION}/zig-${arch_name}-${PLAT_OS}-${VERSION}.tar.xz"
+  info "Downloading from ziglang.org..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_golang() {
+  # Go distributes via go.dev/dl/
+  local url="https://go.dev/dl/go${VERSION}.${PLAT_OS}-${PLAT_ARCH}.tar.gz"
+  info "Downloading from go.dev..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_nodejs() {
+  # Node.js distributes via nodejs.org
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x64" ;;
+    arm64) arch_name="arm64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://nodejs.org/dist/v${VERSION}/node-v${VERSION}-${PLAT_OS}-${arch_name}.tar.xz"
+  info "Downloading from nodejs.org..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_julia() {
+  # Julia distributes via julialang-s3.julialang.org
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x86_64" ;;
+    arm64) arch_name="aarch64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  # Julia version format: major.minor.patch -> major.minor for URL path
+  local major_minor
+  major_minor=$(echo "$VERSION" | grep -oP '^\d+\.\d+')
+  local url="https://julialang-s3.julialang.org/bin/${PLAT_OS}/x64/${major_minor}/julia-${VERSION}-${PLAT_OS}-${arch_name}.tar.gz"
+  info "Downloading from julialang.org..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_dart() {
+  # Dart distributes via storage.googleapis.com
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x64" ;;
+    arm64) arch_name="arm64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://storage.googleapis.com/dart-archive/channels/stable/release/${VERSION}/sdk/dartsdk-${PLAT_OS}-${arch_name}-release.zip"
+  info "Downloading from storage.googleapis.com..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_kubectl() {
+  # kubectl distributes via dl.k8s.io
+  local url="https://dl.k8s.io/release/v${VERSION}/bin/${PLAT_OS}/${PLAT_ARCH}/kubectl"
+  info "Downloading from dl.k8s.io..."
+  curl -sSL -o "${DOWNLOAD_DIR}/kubectl" "$url" || { err "Download failed: $url"; exit 1; }
+  mv "${DOWNLOAD_DIR}/kubectl" "${INSTALL_DIR}/kubectl"
+  chmod +x "${INSTALL_DIR}/kubectl"
+}
+
+download_nim() {
+  # Nim distributes via nim-lang.org
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x64" ;;
+    arm64) arch_name="arm64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://nim-lang.org/download/nim-${VERSION}-linux_${arch_name}.tar.xz"
+  info "Downloading from nim-lang.org..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_cue() {
+  # CUE distributes via GitHub but needs specific asset name filtering
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="amd64" ;;
+    arm64) arch_name="arm64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://github.com/cue-lang/cue/releases/download/v${VERSION}/cue_v${VERSION}_${PLAT_OS}_${arch_name}.tar.gz"
+  info "Downloading CUE from GitHub..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+download_wasmtime() {
+  # Wasmtime — need the CLI, not the C API
+  local arch_name
+  case "$PLAT_ARCH" in
+    amd64) arch_name="x86_64" ;;
+    arm64) arch_name="aarch64" ;;
+    *) arch_name="$PLAT_ARCH" ;;
+  esac
+  local url="https://github.com/bytecodealliance/wasmtime/releases/download/v${VERSION}/wasmtime-v${VERSION}-${arch_name}-${PLAT_OS}.tar.xz"
+  info "Downloading Wasmtime CLI..."
+  local fname
+  fname=$(basename "$url")
+  curl -sSL -o "${DOWNLOAD_DIR}/${fname}" "$url" || { err "Download failed: $url"; exit 1; }
+  extract_archive "${DOWNLOAD_DIR}/${fname}" "$INSTALL_DIR"
+}
+
+# =================================================================
+# Dispatch: choose download strategy based on tool name
+# =================================================================
+
+case "$TOOL_NAME" in
+  zig)       download_zig ;;
+  golang)    download_golang ;;
+  nodejs)    download_nodejs ;;
+  julia)     download_julia ;;
+  dart)      download_dart ;;
+  kubectl)   download_kubectl ;;
+  nim)       download_nim ;;
+  cue)       download_cue ;;
+  wasmtime)  download_wasmtime ;;
+  *)
+    # Default: try GitHub Releases
+    OWNER_REPO=$(echo "$REPO_URL" | sed 's|https://github.com/||;s|\.git$||')
+    if [[ -n "$OWNER_REPO" && "$OWNER_REPO" != "$REPO_URL" ]]; then
+      download_from_github_releases "$OWNER_REPO"
+    elif [[ -n "$DIRECT_URL" ]]; then
+      download_from_direct_url "$DIRECT_URL"
+    else
+      err "No download handler for: $TOOL_NAME (repo: $REPO_URL)"
+      err "Add a custom handler in provisioner or set direct_url in the plugin"
+      exit 1
+    fi
+    ;;
+esac
 
 # --- Create shims ---
-mkdir -p "$SHIM_DIR"
+# Extract executables list (needed for health check even if we skip shim creation)
 EXECUTABLES=$(ncl_array "$PLUGIN_FILE" "executables")
+
+# Skip bash shim creation if OPSM_SKIP_BASH_SHIMS is set
+# (opsm-runtime uses the Zig dispatcher instead)
+if [[ -n "${OPSM_SKIP_BASH_SHIMS:-}" ]]; then
+  ok "Skipping bash shims (Zig dispatcher in use)"
+else
+mkdir -p "$SHIM_DIR"
 
 for exe in $EXECUTABLES; do
   # Find the actual binary (might be in bin/ subdirectory)
@@ -243,12 +446,13 @@ SHIM
     warn "Binary not found: ${exe} (searched ${INSTALL_DIR})"
   fi
 done
+fi  # end OPSM_SKIP_BASH_SHIMS check
 
 # --- Health check ---
 if [[ -n "$HEALTH_CMD" ]]; then
   info "Running health check: ${HEALTH_CMD}"
   # Add install dir to PATH for the check
-  FIRST_EXE=$(echo "$EXECUTABLES" | head -1)
+  FIRST_EXE=$(echo "${EXECUTABLES:-$TOOL_NAME}" | head -1)
   BIN_DIR=$(dirname "$(find "$INSTALL_DIR" -name "$FIRST_EXE" -type f 2>/dev/null | head -1)" 2>/dev/null || echo "$INSTALL_DIR")
 
   if PATH="${BIN_DIR}:${PATH}" eval "$HEALTH_CMD" &>/dev/null; then

@@ -382,17 +382,25 @@ defmodule Opsm.Registries.Registry do
 
     tasks = Enum.map(forths, fn forth ->
       Task.async(fn ->
-        result = search(forth, query, opts)
-        {forth, result}
+        try do
+          result = search(forth, query, opts)
+          {forth, result}
+        rescue
+          e -> {forth, {:error, Exception.message(e)}}
+        catch
+          kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
+        end
       end)
     end)
 
     results = safe_await_many(tasks, timeout)
 
-    Enum.map(results, fn
-      {forth, {:ok, packages}} -> {forth, packages}
-      {forth, {:error, _}} -> {forth, []}
-      {:error, _} -> {:unknown, []}
+    results
+    |> Enum.flat_map(fn
+      {forth, {:ok, packages}} when is_atom(forth) or is_binary(forth) -> [{forth, packages}]
+      {forth, {:error, _}} when is_atom(forth) or is_binary(forth) -> [{forth, []}]
+      {:error, _} -> []
+      _ -> []
     end)
     |> Map.new()
   end
@@ -432,18 +440,24 @@ defmodule Opsm.Registries.Registry do
 
     tasks = Enum.map(forths, fn forth ->
       Task.async(fn ->
-        result = fetch(forth, package, version)
-        {forth, result}
+        try do
+          result = fetch(forth, package, version)
+          {forth, result}
+        rescue
+          e -> {forth, {:error, Exception.message(e)}}
+        catch
+          kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
+        end
       end)
     end)
 
     results = safe_await_many(tasks, timeout)
 
-    Enum.filter(results, fn
-      {_, {:ok, _}} -> true
-      _ -> false
+    results
+    |> Enum.flat_map(fn
+      {forth, {:ok, pkg}} when is_atom(forth) or is_binary(forth) -> [{forth, pkg}]
+      _ -> []
     end)
-    |> Enum.map(fn {forth, {:ok, pkg}} -> {forth, pkg} end)
     |> Map.new()
   end
 

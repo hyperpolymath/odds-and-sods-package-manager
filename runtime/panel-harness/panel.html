@@ -242,10 +242,27 @@
     // =========================================================================
     // OPSM Runtime Manager — PanLL Panel Script
     // =========================================================================
-    // Communicates with OPSM via PanLL's IPC bridge (gossamer.ipc).
-    // Falls back to direct CLI invocation when not in PanLL.
+    // Communicates with OPSM via Gossamer's IPC bridge.
+    // The Gossamer CLI binds an 'opsm_runtime' handler that shells out
+    // to opsm-runtime. Falls back to placeholder when not in Gossamer.
 
     const panll = window.__panll || null;
+
+    // Gossamer IPC helper — invokes opsm-runtime via the shell-exec handler
+    async function opsmInvoke(cmd, tool, version) {
+      if (typeof window.__gossamer_invoke === 'function') {
+        const payload = { cmd };
+        if (tool) payload.tool = tool;
+        if (version) payload.version = version;
+        const result = await window.__gossamer_invoke('opsm_runtime', payload);
+        // Result is JSON: {output: "...", exit_code: 0}
+        if (typeof result === 'string') {
+          try { return JSON.parse(result); } catch(_) { return { output: result, exit_code: 0 }; }
+        }
+        return result;
+      }
+      throw new Error('Gossamer IPC not available — run PanLL via gossamer dev');
+    }
 
     // --- Tab switching ---
     document.querySelectorAll('.tab').forEach(tab => {
@@ -283,46 +300,77 @@
     async function loadInstalled() {
       const list = document.getElementById('runtime-list');
       try {
-        let runtimes;
-        if (panll) {
-          // PanLL mode: use IPC
-          runtimes = await panll.ipc.invoke('opsm-core', 'runtime.list');
+        const result = await opsmInvoke('list');
+        const output = result.output || result;
+        // Parse the text output into HTML
+        if (typeof output === 'string' && output.includes('Installed')) {
+          // Render as preformatted text with ANSI stripped
+          const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+          list.innerHTML = `<pre style="padding:12px;font-size:12px;line-height:1.6;white-space:pre-wrap;">${clean}</pre>`;
         } else {
-          // Standalone: show placeholder
-          list.innerHTML = `
-            <div class="empty-state">
-              <h3>OPSM Runtime Manager</h3>
-              <p>Connect to PanLL workspace or run 'opsm runtime list' in terminal.</p>
-              <p style="margin-top: 12px; font-size: 11px;">
-                71 core plugins · community plugins · trust pipeline
-              </p>
-            </div>`;
-          return;
+          list.innerHTML = `<pre style="padding:12px;">${JSON.stringify(output, null, 2)}</pre>`;
         }
-        list.innerHTML = runtimes.map(renderRuntime).join('');
       } catch (err) {
-        list.innerHTML = `<div class="empty-state"><p>Error: ${err.message}</p></div>`;
+        list.innerHTML = `
+          <div class="empty-state">
+            <h3>OPSM Runtime Manager</h3>
+            <p>${err.message}</p>
+            <p style="margin-top: 12px; font-size: 11px;">
+              Run PanLL via Gossamer to enable IPC, or use 'opsm-runtime list' in terminal.
+            </p>
+          </div>`;
       }
     }
 
     async function switchVersion(tool) {
-      if (panll) {
-        // PanLL can inject env vars into the current panel — the killer feature
-        const versions = await panll.ipc.invoke('opsm-core', 'runtime.versions', { tool });
-        // Show version picker (simplified — production uses a proper dropdown)
-        const version = prompt(`Switch ${tool} to version:`, versions[0]);
-        if (version) {
-          await panll.env.set(tool, version);
-          await panll.ipc.invoke('opsm-core', 'runtime.activate', { tool, version });
+      const version = prompt(`Switch ${tool} to version:`);
+      if (version) {
+        try {
+          await opsmInvoke('set', tool, version);
           loadInstalled();
+        } catch (err) {
+          alert('Failed: ' + err.message);
         }
       }
     }
 
     async function updateTool(tool) {
-      if (panll) {
-        await panll.ipc.invoke('opsm-core', 'runtime.install', { tool, version: 'latest' });
+      try {
+        const result = await opsmInvoke('install', tool, 'latest');
+        alert(result.output || 'Done');
         loadInstalled();
+      } catch (err) {
+        alert('Failed: ' + err.message);
+      }
+    }
+
+    async function installTool() {
+      const tool = prompt('Tool name (e.g., deno, zig, just):');
+      if (!tool) return;
+      const version = prompt(`Version for ${tool}:`);
+      if (!version) return;
+      try {
+        const result = await opsmInvoke('install', tool, version);
+        alert(result.output || 'Installed!');
+        loadInstalled();
+      } catch (err) {
+        alert('Install failed: ' + err.message);
+      }
+    }
+
+    async function runDoctor() {
+      try {
+        const result = await opsmInvoke('doctor');
+        const clean = (result.output || '').replace(/\x1b\[[0-9;]*m/g, '');
+        document.getElementById('trust-content').innerHTML =
+          `<pre style="padding:12px;font-size:12px;line-height:1.6;white-space:pre-wrap;">${clean}</pre>`;
+        // Switch to trust tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelector('[data-view="trust"]').classList.add('active');
+        document.getElementById('view-trust').classList.add('active');
+      } catch (err) {
+        alert('Doctor failed: ' + err.message);
       }
     }
 

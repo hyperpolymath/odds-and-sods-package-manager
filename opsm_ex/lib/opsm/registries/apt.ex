@@ -83,15 +83,21 @@ defmodule Opsm.Registries.Apt do
   def search(query, _opts \\ []) do
     url = "#{@debian_api}/search/#{URI.encode(query)}/"
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, body} ->
+      {:ok, body} when is_map(body) ->
         results = (body["results"] || %{})
+        |> then(fn r when is_map(r) -> r; _ -> %{} end)
         |> Map.get("exact", %{})
+        |> then(fn r when is_map(r) -> r; _ -> %{} end)
         |> Map.get("source", [])
+        |> then(fn r when is_list(r) -> r; _ -> [] end)
         |> Enum.take(20)
-        |> Enum.map(fn pkg ->
+        |> Enum.map(fn pkg when is_map(pkg) ->
           %{name: pkg["name"], version: nil, description: nil}
         end)
         {:ok, results}
+
+      {:ok, _} ->
+        {:ok, []}
 
       {:error, reason} -> {:error, reason}
     end
