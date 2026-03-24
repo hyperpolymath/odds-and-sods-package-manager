@@ -921,6 +921,13 @@ defmodule Opsm.Package.Installer do
     # Remove files
     case File.rm_rf(installed["path"]) do
       {:ok, _} ->
+        # Extended cleanup: desktop shortcuts, services, config, etc.
+        cleanup_actions = Opsm.Package.Cleanup.cleanup(installed["name"])
+        if cleanup_actions != [] do
+          IO.puts("Extended cleanup:")
+          IO.puts(Opsm.Package.Cleanup.format_report(cleanup_actions))
+        end
+
         # Update database
         db = load_installed_db()
         updated = Enum.reject(db, fn pkg -> pkg["name"] == installed["name"] end)
