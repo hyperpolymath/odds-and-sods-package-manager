@@ -1,0 +1,17 @@
+-- SPDX-License-Identifier: PMPL-1.0-or-later
+-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+-- opsm-abi.ipkg — Idris2 formal proofs for OPSM Bennett reversible uninstall.
+
+package opsmabi
+version = 0.1.0
+authors = "Jonathan D.A. Jewell"
+license = "PMPL-1.0-or-later"
+brief = "Idris2 formal proofs for OPSM Bennett reversible uninstall"
+
+sourcedir = "."
+
+modules = Types
+        , Layout
+        , Foreign
+
+depends = base >= 0.6.0
