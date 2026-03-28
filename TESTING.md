@@ -256,7 +256,7 @@ Test HAR agent discovery:
 
 ```bash
 # Start HAR agents (in separate terminals)
-cd /var/mnt/eclipse/repos/odds-and-sods-package-manager/scripts/har-agents
+cd /var$REPOS_DIR/odds-and-sods-package-manager/scripts/har-agents
 ./github-search.sh &
 ./web-scraper.jl &
 ./mirror-finder.sh &

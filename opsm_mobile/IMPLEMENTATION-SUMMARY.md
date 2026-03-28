@@ -93,26 +93,26 @@ A complete **Tauri 2.0 mobile wrapper** for OPSM using **ReScript TEA architectu
 
 ### Successfully Integrated
 
-1. **cadre-router** (/var/mnt/eclipse/repos/cadre-router/)
+1. **cadre-router** (/var$REPOS_DIR/cadre-router/)
    - Used for type-safe URL routing
    - Route variants as first-class types
    - Parser combinators (top, s, andThen, map)
    - Bidirectional serialization
 
-2. **cadre-tea-router** (/var/mnt/eclipse/repos/cadre-tea-router/)
+2. **cadre-tea-router** (/var$REPOS_DIR/cadre-tea-router/)
    - Used for TEA routing integration
    - urlChanges subscription
    - push/replace navigation commands
    - getCurrentUrl helper
 
-3. **rescript-tea** (/var/mnt/eclipse/repos/rescript-tea/)
+3. **rescript-tea** (/var$REPOS_DIR/rescript-tea/)
    - Used for The Elm Architecture implementation
    - Cmd type for side effects
    - Sub type for subscriptions
    - Tea.Json for decoding
    - MakeWithDispatch functor
 
-4. **rescript-tauri** (/var/mnt/eclipse/repos/rescript-tauri/)
+4. **rescript-tauri** (/var$REPOS_DIR/rescript-tauri/)
    - Used for Tauri API bindings
    - Tauri_Command module for type-safe commands
    - defineCommand, execute, executeWithRetry
@@ -122,7 +122,7 @@ A complete **Tauri 2.0 mobile wrapper** for OPSM using **ReScript TEA architectu
 
 - rescript-wasm-runtime: For WebAssembly integration (v2.0)
 - rescript-zig-ffi: For Zig FFI if needed (v2.0)
-- Other 16 ReScript libraries in /var/mnt/eclipse/repos/rescript-*
+- Other 16 ReScript libraries in /var$REPOS_DIR/rescript-*
 
 ## Key Design Decisions
 
