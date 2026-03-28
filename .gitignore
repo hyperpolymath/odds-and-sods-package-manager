@@ -92,3 +92,7 @@ secrets/
 # Test/Coverage
 /coverage/
 htmlcov/
+
+# ReScript/OCaml compiler artifacts
+*.cmti
+*.cmi
