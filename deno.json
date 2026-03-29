@@ -16,12 +16,12 @@
     "check": "deno run --allow-read --allow-write --allow-env --allow-sys --allow-run npm:rescript build"
   },
   "imports": {
-    "@std/cli": "jsr:@std/cli@^1.0.0",
-    "@std/fs": "jsr:@std/fs@^1.0.0",
-    "@std/path": "jsr:@std/path@^1.0.0",
-    "@std/toml": "jsr:@std/toml@^1.0.0",
+    "@std/cli": "jsr:@std/cli@^1.0.28",
+    "@std/fs": "jsr:@std/fs@^1.0.23",
+    "@std/path": "jsr:@std/path@^1.1.4",
+    "@std/toml": "jsr:@std/toml@^1.0.11",
     "@proven/": "../proven/bindings/deno/",
-    "@rescript/core": "npm:@rescript/core@^1.0.0",
+    "@rescript/core": "npm:@rescript/core@^1.6.1",
     "rescript": "^12.0.0"
   },
   "fmt": {
