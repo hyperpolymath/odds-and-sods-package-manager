@@ -1,0 +1,342 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# stapeln.toml — Layer-based container build for OPSM
+#
+# stapeln builds containers as composable layers (German: "to stack").
+# Each layer is independently cacheable, verifiable, and signable.
+#
+# OPSM is a multi-component system:
+#   - opsm_ex/       Elixir OTP application (core API + CLI)
+#   - native/        Rust NIFs (pq_crypto, quic_transport, opsm_pq_nif)
+#   - runtime/       Nickel plugin configs (83 core plugins) + Zig shim dispatcher
+#   - services/      Satellite services (selur, vordr, svalinn, claim-forge, etc.)
+
+[metadata]
+name = "opsm"
+version = "2.0.0"
+description = "Universal package manager with post-quantum crypto, QUIC/HTTP3, Nickel runtime, and 83 registry adapters"
+author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+license = "PMPL-1.0-or-later"
+registry = "ghcr.io/hyperpolymath"
+
+[build]
+containerfile = "opsm_ex/Containerfile"
+context = "opsm_ex"
+runtime = "podman"
+
+# ── Layer Definitions ──────────────────────────────────────────
+
+[layers.base]
+description = "Chainguard Wolfi minimal base"
+from = "cgr.dev/chainguard/wolfi-base:latest"
+cache = true
+verify = true
+
+# ── Rust NIF Build Layers ──────────────────────────────────────
+
+[layers.rust-toolchain]
+description = "Rust compiler and Cargo for NIF compilation"
+extends = "base"
+packages = ["rust", "cargo", "build-base", "openssl-dev", "pkgconf"]
+cache = true
+
+[layers.nif-pq-crypto]
+description = "Post-quantum cryptography NIF (Dilithium5, Kyber-1024, SPHINCS+)"
+extends = "rust-toolchain"
+commands = [
+    "mkdir -p /nif/native/pq_crypto",
+    "cp -r native/pq_crypto /nif/native/pq_crypto",
+    "cd /nif/native/pq_crypto && cargo build --release",
+]
+artifacts = [
+    { src = "/nif/native/pq_crypto/target/release/libpq_crypto.so", dst = "/nif-out/pq_crypto.so" },
+]
+cache = true
+
+[layers.nif-quic-transport]
+description = "QUIC/HTTP3 transport NIF (Quinn + h3)"
+extends = "rust-toolchain"
+commands = [
+    "mkdir -p /nif/native/quic_transport",
+    "cp -r native/quic_transport /nif/native/quic_transport",
+    "cd /nif/native/quic_transport && cargo build --release",
+]
+artifacts = [
+    { src = "/nif/native/quic_transport/target/release/libquic_transport.so", dst = "/nif-out/quic_transport.so" },
+]
+cache = true
+
+[layers.nif-opsm-pq]
+description = "OPSM post-quantum NIF (Rustler-based Erlang bridge)"
+extends = "rust-toolchain"
+commands = [
+    "mkdir -p /nif/native/opsm_pq_nif",
+    "cp -r native/opsm_pq_nif /nif/native/opsm_pq_nif",
+    "cd /nif/native/opsm_pq_nif && cargo build --release",
+]
+artifacts = [
+    { src = "/nif/native/opsm_pq_nif/target/release/libopsm_pq_nif.so", dst = "/nif-out/opsm_pq_nif.so" },
+]
+cache = true
+
+# ── Zig Shim Layer ─────────────────────────────────────────────
+
+[layers.zig-shim]
+description = "Zig-based tool version dispatcher shim"
+extends = "base"
+packages = ["zig"]
+commands = [
+    "mkdir -p /shim-build",
+    "cp -r runtime/shim /shim-build/shim",
+    "cd /shim-build/shim && zig build -Doptimize=ReleaseSafe",
+]
+artifacts = [
+    { src = "/shim-build/shim/zig-out/bin/opsm-shim", dst = "/shim-out/opsm-shim" },
+]
+cache = true
+
+# ── Elixir Build Layer ─────────────────────────────────────────
+
+[layers.elixir-toolchain]
+description = "Elixir 1.19+ and Erlang/OTP 28 for OPSM core"
+extends = "base"
+packages = ["elixir", "erlang", "git", "build-base", "openssl-dev"]
+cache = true
+
+[layers.elixir-deps]
+description = "Fetch and compile Mix dependencies (prod only)"
+extends = "elixir-toolchain"
+commands = [
+    "mix local.hex --force",
+    "mix local.rebar --force",
+    "MIX_ENV=prod mix deps.get --only prod",
+    "MIX_ENV=prod mix deps.compile",
+]
+cache = true
+
+[layers.elixir-build]
+description = "Compile OPSM application and build OTP release"
+extends = "elixir-deps"
+commands = [
+    "cp -r lib config priv ./",
+    "mkdir -p priv/native",
+]
+copy-from = [
+    { layer = "nif-pq-crypto", src = "/nif-out/pq_crypto.so", dst = "priv/native/pq_crypto.so" },
+    { layer = "nif-quic-transport", src = "/nif-out/quic_transport.so", dst = "priv/native/quic_transport.so" },
+    { layer = "nif-opsm-pq", src = "/nif-out/opsm_pq_nif.so", dst = "priv/native/libopsm_pq_nif.so" },
+]
+env = { MIX_ENV = "prod" }
+commands-post = [
+    "mix compile",
+    "mix release",
+]
+
+# ── Nickel Runtime Layer ───────────────────────────────────────
+
+[layers.nickel-runtime]
+description = "Nickel plugin definitions (83 core tool adapters) and runtime scripts"
+extends = "base"
+packages = ["nickel"]
+commands = [
+    "mkdir -p /runtime",
+    "cp -r runtime/core /runtime/core",
+    "cp -r runtime/community /runtime/community",
+    "cp -r runtime/tools /runtime/tools",
+    "cp -r runtime/contract /runtime/contract",
+    "cp -r runtime/panel-harness /runtime/panel-harness",
+    "cp runtime/opsm-runtime /runtime/opsm-runtime",
+    "chmod +x /runtime/opsm-runtime",
+]
+cache = true
+
+# ── Production Runtime Layer ───────────────────────────────────
+
+[layers.runtime]
+description = "Minimal production image with OPSM release, NIFs, shim, and Nickel plugins"
+from = "cgr.dev/chainguard/wolfi-base:latest"
+packages = ["libstdc++", "openssl", "ncurses-libs", "ca-certificates", "curl", "nickel"]
+commands = [
+    "addgroup -g 1000 opsm",
+    "adduser -D -u 1000 -G opsm opsm",
+    "mkdir -p /app/data /app/cache /app/logs /app/runtime /app/shims",
+    "chown -R opsm:opsm /app",
+]
+copy-from = [
+    { layer = "elixir-build", src = "/build/_build/prod/rel/opsm/", dst = "/app/" },
+    { layer = "zig-shim", src = "/shim-out/opsm-shim", dst = "/app/shims/opsm-shim" },
+    { layer = "nickel-runtime", src = "/runtime/", dst = "/app/runtime/" },
+]
+entrypoint = ["/app/bin/opsm", "start"]
+user = "opsm"
+expose = [4050, 4051, 4466]
+healthcheck = { cmd = ["/app/bin/opsm", "eval", "Opsm.RegistryGateway.Store.health_check()"], interval = "30s", timeout = "3s", start-period = "5s", retries = 3 }
+
+# ── OCI Labels ─────────────────────────────────────────────────
+
+[labels]
+"org.opencontainers.image.title" = "OPSM"
+"org.opencontainers.image.description" = "Universal package manager with post-quantum crypto, QUIC/HTTP3, and 83 registry adapters"
+"org.opencontainers.image.version" = "2.0.0"
+"org.opencontainers.image.authors" = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+"org.opencontainers.image.licenses" = "PMPL-1.0-or-later"
+"org.opencontainers.image.source" = "https://github.com/hyperpolymath/odds-and-sods-package-manager"
+"org.opencontainers.image.vendor" = "hyperpolymath"
+"org.opencontainers.image.base.name" = "cgr.dev/chainguard/wolfi-base:latest"
+
+# ── Security ───────────────────────────────────────────────────
+
+[security]
+non-root = true
+read-only-root = true
+no-new-privileges = true
+cap-drop = ["ALL"]
+seccomp-profile = "default"
+
+[security.signing]
+algorithm = "ML-DSA-87"
+provider = "cerro-torre"
+
+[security.sbom]
+format = "spdx-json"
+output = "sbom.spdx.json"
+include-deps = true
+
+# ── Verification ───────────────────────────────────────────────
+
+[verify]
+vordr = true
+svalinn = true
+scan-on-build = true
+fail-on = ["critical", "high"]
+
+# ── Targets ────────────────────────────────────────────────────
+
+[targets.development]
+description = "Full development stack with all toolchains and debug logging"
+layers = ["base", "rust-toolchain", "nif-pq-crypto", "nif-quic-transport", "nif-opsm-pq", "zig-shim", "elixir-toolchain", "elixir-deps", "elixir-build", "nickel-runtime"]
+env = { MIX_ENV = "dev", LOG_LEVEL = "debug", OPSM_ENV = "development" }
+
+[targets.test]
+description = "Test target with all NIFs and runtime for integration testing"
+layers = ["base", "rust-toolchain", "nif-pq-crypto", "nif-quic-transport", "nif-opsm-pq", "zig-shim", "elixir-toolchain", "elixir-deps", "elixir-build", "nickel-runtime"]
+env = { MIX_ENV = "test", LOG_LEVEL = "debug", OPSM_ENV = "test" }
+
+[targets.production]
+description = "Minimal production image — OTP release, NIFs, shim, Nickel plugins"
+layers = ["runtime"]
+env = { LOG_LEVEL = "info", OPSM_ENV = "production", OPSM_API_PORT = "4466", RELEASE_NODE = "opsm@127.0.0.1" }
+
+[targets.runtime-only]
+description = "Standalone runtime extension (shim + Nickel plugins, no Elixir)"
+layers = ["base", "zig-shim", "nickel-runtime"]
+env = { LOG_LEVEL = "info" }
+
+# ── Satellite Services ─────────────────────────────────────────
+# These define layer stacks for the OPSM trust pipeline services
+# orchestrated by selur-compose.yml. Each uses Chainguard Wolfi
+# and inherits the same security posture.
+
+[satellites.claim-forge]
+description = "Attestation generation service"
+image = "ghcr.io/hyperpolymath/claim-forge:latest"
+ports = [8080]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", CLAIM_FORGE_PORT = "8080" }
+volumes = ["claim-forge-data:/data"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8080/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.checky-monkey]
+description = "Code verification and fuzzing service"
+image = "ghcr.io/hyperpolymath/checky-monkey:latest"
+ports = [8081]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", CHECKY_PORT = "8081", ENABLE_FUZZING = "true", ENABLE_PROPERTY_TESTS = "true" }
+volumes = ["checky-monkey-cache:/cache"]
+cap-add = ["SYS_PTRACE"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8081/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.palimpsest]
+description = "License analysis service (Gleam)"
+image = "ghcr.io/hyperpolymath/palimpsest-license:latest"
+ports = [8082]
+networks = ["opsm-trust"]
+env = { GLEAM_ENV = "production", PALIMPSEST_PORT = "8082" }
+volumes = ["palimpsest-db:/data"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8082/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.cicd-hyper-a]
+description = "Federated package registry"
+image = "ghcr.io/hyperpolymath/cicd-hyper-a:latest"
+ports = [8083]
+networks = ["opsm-trust", "opsm-public"]
+env = { ELIXIR_ENV = "production", CICD_PORT = "8083", FEDERATION_ENABLED = "true" }
+volumes = ["cicd-registry:/registry"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8083/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.oikos]
+description = "Sustainability analysis service"
+image = "ghcr.io/hyperpolymath/oikos:latest"
+ports = [8084]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", OIKOS_PORT = "8084" }
+volumes = ["oikos-cache:/cache"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8084/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.svalinn]
+description = "Container security scanner (Trivy + Grype)"
+image = "ghcr.io/hyperpolymath/svalinn:latest"
+ports = [8085]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", SVALINN_PORT = "8085", TRIVY_ENABLED = "true", GRYPE_ENABLED = "true" }
+volumes = ["svalinn-db:/db"]
+cap-add = ["DAC_READ_SEARCH"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8085/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.selur]
+description = "Image signing and verification (Cosign + Sigstore)"
+image = "ghcr.io/hyperpolymath/selur:latest"
+ports = [8086]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", SELUR_PORT = "8086", COSIGN_ENABLED = "true" }
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8086/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.vordr]
+description = "Runtime verification and policy enforcement"
+image = "ghcr.io/hyperpolymath/vordr:latest"
+ports = [8087]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", VORDR_PORT = "8087" }
+volumes = ["vordr-policies:/policies"]
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8087/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+[satellites.cerro-torre]
+description = "Runtime security monitoring (eBPF + Falco)"
+image = "ghcr.io/hyperpolymath/cerro-torre:latest"
+ports = [8088]
+networks = ["opsm-trust"]
+env = { RUST_LOG = "info", CERRO_PORT = "8088", FALCO_ENABLED = "true", EBPF_ENABLED = "true" }
+healthcheck = { cmd = ["curl", "-f", "http://localhost:8088/health"], interval = "30s", timeout = "10s", retries = 3 }
+
+# ── Networks ───────────────────────────────────────────────────
+
+[networks.opsm-trust]
+description = "Internal trust pipeline — isolated from external traffic"
+driver = "bridge"
+subnet = "172.20.0.0/16"
+
+[networks.opsm-public]
+description = "Public-facing network for API and registry access"
+driver = "bridge"
+subnet = "172.21.0.0/16"
+
+# ── Volumes ────────────────────────────────────────────────────
+
+[volumes]
+opsm-state = { driver = "local", description = "OPSM application state and cache" }
+claim-forge-data = { driver = "local", description = "Attestation store" }
+checky-monkey-cache = { driver = "local", description = "Verification cache" }
+palimpsest-db = { driver = "local", description = "License database" }
+cicd-registry = { driver = "local", description = "Package registry storage" }
+oikos-cache = { driver = "local", description = "Sustainability analysis cache" }
+svalinn-db = { driver = "local", description = "Vulnerability database cache" }
+vordr-policies = { driver = "local", description = "Runtime verification policies" }
