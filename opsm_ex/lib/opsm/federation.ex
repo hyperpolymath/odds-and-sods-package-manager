@@ -431,9 +431,9 @@ defmodule Opsm.Federation do
         # Extract simple keyword pairs: key: value
         Regex.scan(~r/(\w+):\s*(?::(\w+)|"([^"]*)"|(~\w\[.*?\]))/m, block)
         |> Enum.map(fn
-          [_, key, atom_val, "", ""] -> {String.to_atom(key), String.to_atom(atom_val)}
-          [_, key, "", str_val, ""] -> {String.to_atom(key), str_val}
-          [_, key, "", "", sigil] -> {String.to_atom(key), sigil}
+          [_, key, atom_val, "", ""] -> {String.to_existing_atom(key), String.to_existing_atom(atom_val)}
+          [_, key, "", str_val, ""] -> {String.to_existing_atom(key), str_val}
+          [_, key, "", "", sigil] -> {String.to_existing_atom(key), sigil}
           _ -> nil
         end)
         |> Enum.reject(&is_nil/1)
