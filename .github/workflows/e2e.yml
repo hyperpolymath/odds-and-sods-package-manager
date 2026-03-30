@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# End-to-end and integration tests for OPSM (Odds & Sods Package Manager).
+# Runs the Elixir ExUnit E2E suite — offline tests only (network tests
+# tagged :skip run locally when registries are available).
+
+name: E2E — OPSM Package Resolution
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'opsm_ex/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'opsm_ex/**'
+  workflow_dispatch:
+
+permissions: read-all
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-opsm:
+    name: E2E — Dependency Resolution + Lockfile + Trust
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Setup Erlang/Elixir
+        uses: erlef/setup-beam@5a67e1a1dd86cae5e5bef84e2da5060406a66c07  # v1
+        with:
+          otp-version: '27.0'
+          elixir-version: '1.17'
+
+      - name: Restore Mix cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684  # v4
+        with:
+          path: |
+            opsm_ex/deps
+            opsm_ex/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('opsm_ex/mix.lock') }}
+
+      - name: Install dependencies
+        run: cd opsm_ex && mix deps.get
+
+      - name: Compile
+        run: cd opsm_ex && mix compile --warnings-as-errors
+
+      - name: Run E2E tests (offline — network tests auto-skipped)
+        run: cd opsm_ex && mix test test/integration/e2e_test.exs --trace
+
+      - name: Run all tests (unit + integration)
+        run: cd opsm_ex && mix test --trace
