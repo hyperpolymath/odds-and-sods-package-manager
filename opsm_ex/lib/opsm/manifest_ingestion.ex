@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.ManifestIngestion do
   @moduledoc """
   Manifest ingestion pipeline: nickel-config-reporter validation, IMP normalization, and

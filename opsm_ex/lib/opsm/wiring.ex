@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Wiring do
   @moduledoc """
   Command orchestration - wires together service clients for publish, audit, status flows.
@@ -62,6 +62,8 @@ defmodule Opsm.Wiring do
     with {:ok, ingestion} <- ManifestIngestion.ingest(path),
          {:ok, claim_response} <- generate_attestation(config, ingestion.manifest_path, ingestion.digest),
          {:ok, _license_result} <- run_license_check(config, ingestion.manifest_path, ingestion.manifest),
+         :ok <- run_sustainability_check(config, ingestion.manifest),
+         :ok <- validate_publish_metadata(ingestion.manifest),
          {:ok, publish_response} <-
            publish_manifest(config, ingestion.manifest, ingestion.tarball_url, ingestion.digest, claim_response) do
       maybe_run_checky(config, ingestion.manifest_path)
@@ -179,6 +181,56 @@ defmodule Opsm.Wiring do
         IO.puts("  ⚠ #{Errors.severity_description(severity)}")
         IO.puts("    License analysis unavailable: #{reason}")
         {:ok, :skipped}
+    end
+  end
+
+  # Run oikos sustainability analysis during publish.
+  # This is advisory — a low score warns but does not block publication.
+  # A missing oikos service is a soft-fail (the publish continues).
+  defp run_sustainability_check(config, manifest) do
+    oikos_client = Oikos.new(config.oikos, config.http)
+    repo_url = manifest.repository
+
+    case Oikos.analyze_package(oikos_client, manifest.name, manifest.version,
+           repository_url: repo_url,
+           forth: :unknown
+         ) do
+      {:ok, score} when is_integer(score) and score >= 40 ->
+        IO.puts("  ✓ Sustainability score: #{score}/100")
+        :ok
+
+      {:ok, score} when is_integer(score) ->
+        IO.puts("  ⚠ Low sustainability score: #{score}/100 — consider improving before publish")
+        :ok
+
+      {:error, reason} ->
+        severity = Errors.classify_severity({:network_error, reason})
+        IO.puts("  ⚠ #{Errors.severity_description(severity)}")
+        IO.puts("    Sustainability analysis unavailable: #{inspect(reason)}")
+        :ok
+    end
+  end
+
+  # Validate that the manifest has required fields before attempting to publish.
+  # Catches common issues like missing name, missing version, or placeholder values.
+  defp validate_publish_metadata(manifest) do
+    errors = []
+
+    errors =
+      if is_nil(manifest.name) or manifest.name == "",
+        do: ["Package name is required" | errors],
+        else: errors
+
+    errors =
+      if is_nil(manifest.version) or manifest.version == "" or manifest.version == "0.0.0",
+        do: ["Package version is required (found: #{inspect(manifest.version)})" | errors],
+        else: errors
+
+    case errors do
+      [] -> :ok
+      _ ->
+        combined = Enum.join(errors, "; ")
+        {:error, "Publish metadata validation failed: #{combined}"}
     end
   end
 

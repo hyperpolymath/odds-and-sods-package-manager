@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Clients.Oikos do
   @moduledoc """
   Client for Oikos ecosystem sustainability analysis service.

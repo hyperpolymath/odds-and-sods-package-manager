@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Clients.CicdHyperA do
   @moduledoc """
   Client for CICD-Hyper-A registry and CI/CD pipeline hub.
