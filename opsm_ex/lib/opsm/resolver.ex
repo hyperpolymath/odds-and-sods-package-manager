@@ -98,7 +98,27 @@ defmodule Opsm.Resolver do
     # Start resolution
     case do_resolve(state) do
       {:ok, final_state} ->
-        {:ok, final_state.resolved}
+        resolution = final_state.resolved
+
+        # Persist resolution event to VeriSimDB
+        root_name = case root_dependencies do
+          [first | _] -> first.name
+          _ -> "unknown"
+        end
+        root_constraint = case root_dependencies do
+          [first | _] -> first.constraint
+          _ -> "*"
+        end
+        Opsm.VeriSimDB.record_resolution(%{
+          root_package: root_name,
+          root_constraint: root_constraint,
+          forth: forth,
+          resolved: Map.keys(resolution),
+          sustainability_preference: sustainability,
+          backtrack_count: nil
+        })
+
+        {:ok, resolution}
 
       error ->
         error

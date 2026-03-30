@@ -1,15 +1,32 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# VeriSimDB Feed — Cross-Repo Analytics Data Store
+# VeriSimDB Integration — Dedicated OPSM Instance
+# Port: 6077 | Instance: opsm | Base IRI: https://verisim.db/opsm
 
 [integration]
 name = "verisimdb"
-type = "data-feed"
+type = "data-store"
 repository = "https://github.com/hyperpolymath/nextgen-databases"
-data-store = "verisimdb-data"
+instance_name = "opsm"
+port = 6077
+base_iri = "https://verisim.db/opsm"
 
 [feed-config]
+emit-install-events = true
+emit-uninstall-events = true
+emit-resolution-events = true
+emit-trust-check-events = true
 emit-scan-results = true
 emit-build-metrics = true
 emit-dependency-graph = true
-format = "hexad"
-destination = "verisimdb-data/feeds/"
+format = "octad"
+destination = "verisimdb:6077"
+
+[client]
+module = "Opsm.VeriSimDB"
+genserver = true
+graceful_degradation = true
+reconnect_on_failure = true
+
+[octad-schema]
+event_types = ["install", "uninstall", "resolution", "trust_check"]
+modalities = ["document", "graph", "temporal", "provenance", "semantic"]

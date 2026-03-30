@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# VeriSimDB instance configuration for OPSM
+# Port: 6077 (dedicated OPSM instance)
+
+[instance]
+name = "opsm"
+description = "OPSM package manager — install/uninstall/resolve/trust event store"
+version = "0.1.0"
+base_iri = "https://verisim.db/opsm"
+
+[storage]
+backend = "persistent"
+octad_dir = ".verisimdb/octads"
+index_file = ".verisimdb/index.json"
+
+[storage.persistent]
+persistence_dir = "/var/lib/verisimdb-opsm"
+
+[server]
+host = "127.0.0.1"
+port = 6077
+grpc_port = 0
+enable_cors = false
+max_body_size = 10485760
+request_timeout_secs = 30
+max_connections = 256
+
+[modalities]
+vector_dimension = 64
+
+[ingest]
+sources = ["opsm-installer", "opsm-resolver", "opsm-trust-pipeline"]
+
+[ingest.opsm-installer]
+enabled = true
+event_types = ["install", "uninstall"]
+
+[ingest.opsm-resolver]
+enabled = true
+event_types = ["resolution"]
+
+[ingest.opsm-trust-pipeline]
+enabled = true
+event_types = ["trust_check"]
+
+[display]
+date_format = "%Y-%m-%d %H:%M"
+max_title_length = 80

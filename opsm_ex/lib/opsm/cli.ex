@@ -17,8 +17,8 @@ defmodule Opsm.CLI do
 
 
   def main(args) do
-    # Suppress noisy OTP/Bandit startup logs in CLI mode
-    Logger.configure(level: :warning)
+    # Suppress noisy OTP/Bandit/Req retry logs in CLI mode — only show errors
+    Logger.configure(level: :error)
 
     args
     |> parse_args()
@@ -922,10 +922,11 @@ defmodule Opsm.CLI do
 
   defp run({:rdepends, package, opts}) do
     alias Opsm.Lockfile
+    alias Opsm.Colour
 
     json? = Keyword.get(opts, :json, false)
 
-    IO.puts("Reverse dependencies for: #{package}")
+    IO.puts("Reverse dependencies for: #{Colour.cyan(package)}")
     IO.puts("")
 
     case Lockfile.read() do
@@ -934,7 +935,13 @@ defmodule Opsm.CLI do
         dependents =
           Lockfile.list_packages(lockfile)
           |> Enum.filter(fn pkg ->
-            Enum.member?(pkg.dependencies || [], package)
+            deps = pkg.dependencies || []
+            # Handle both string lists and map-keyed dependencies
+            cond do
+              is_list(deps) -> Enum.member?(deps, package)
+              is_map(deps) -> Map.has_key?(deps, package)
+              true -> false
+            end
           end)
 
         if json? do
@@ -948,9 +955,9 @@ defmodule Opsm.CLI do
           if dependents == [] do
             IO.puts("No packages depend on #{package}")
           else
-            IO.puts("Packages that depend on #{package}:")
+            IO.puts("Packages that depend on #{Colour.cyan(package)}:")
             Enum.each(dependents, fn pkg ->
-              IO.puts("  - #{pkg.name}@#{pkg.version}")
+              IO.puts("  - #{Colour.cyan("#{pkg.name}")}@#{pkg.version}")
             end)
           end
         end
@@ -1054,9 +1061,17 @@ defmodule Opsm.CLI do
         IO.puts("✓ History cleared")
         System.halt(0)
 
+      "redo" ->
+        case Maintenance.redo_last() do
+          {:ok, _, _} -> System.halt(0)
+          {:error, reason} ->
+            Errors.print_error({:error, reason})
+            System.halt(1)
+        end
+
       _ ->
         IO.puts("Unknown history action: #{action}")
-        IO.puts("Available: list, undo, info, clear")
+        IO.puts("Available: list, undo, redo, info, clear")
         System.halt(1)
     end
   end
@@ -1094,14 +1109,15 @@ defmodule Opsm.CLI do
 
   defp run({:check, opts}) do
     alias Opsm.Lockfile
+    alias Opsm.Package.{Installer, Downloader}
 
     json? = Keyword.get(opts, :json, false)
 
     IO.puts("Verifying package integrity...\n")
 
+    # 1. Verify lockfile integrity (SHA3-512 tamper detection)
     case Lockfile.read() do
       {:ok, lockfile} ->
-        # Verify lockfile integrity first
         case Lockfile.verify_integrity(lockfile) do
           :ok ->
             IO.puts("✓ Lockfile integrity: SHA3-512 hash verified")
@@ -1110,72 +1126,118 @@ defmodule Opsm.CLI do
           {:error, reason} ->
             IO.puts("✗ Lockfile integrity: #{reason}")
         end
-
-        IO.puts("")
-
-        entries = Lockfile.list_packages(lockfile)
-        install_dir = Path.expand("~/.local/share/opsm/packages")
-
-        results = Enum.map(entries, fn entry ->
-          pkg_dir = Path.join(install_dir, "#{entry.name}-#{entry.version}")
-          installed? = File.dir?(pkg_dir)
-
-          checksum_status = cond do
-            not installed? -> :missing
-            is_nil(entry.checksum) -> :no_checksum
-            true -> :verified  # In a full implementation, we'd recompute the checksum
-          end
-
-          %{
-            name: entry.name,
-            version: entry.version,
-            forth: entry.forth,
-            installed: installed?,
-            checksum_status: checksum_status
-          }
-        end)
-
-        if json? do
-          IO.puts(Jason.encode!(results, pretty: true))
-        else
-          missing = Enum.filter(results, fn r -> not r.installed end)
-          verified = Enum.filter(results, fn r -> r.installed and r.checksum_status == :verified end)
-          no_checksum = Enum.filter(results, fn r -> r.installed and r.checksum_status == :no_checksum end)
-
-          IO.puts("Package verification (#{length(entries)} total):\n")
-
-          if verified != [] do
-            IO.puts("  ✓ #{length(verified)} verified (checksum match)")
-          end
-
-          if no_checksum != [] do
-            IO.puts("  ⚠ #{length(no_checksum)} without checksums:")
-            for r <- no_checksum do
-              IO.puts("    - #{r.name}@#{r.version}")
-            end
-          end
-
-          if missing != [] do
-            IO.puts("  ✗ #{length(missing)} not installed (in lockfile but missing from disk):")
-            for r <- missing do
-              IO.puts("    - #{r.name}@#{r.version}")
-            end
-          end
-
-          if missing == [] and no_checksum == [] do
-            IO.puts("\n✓ All packages verified")
-          end
-        end
-        System.halt(0)
-
-      {:error, :not_found} ->
-        IO.puts("No lockfile found. Nothing to verify.")
-        System.halt(0)
-
-      {:error, reason} ->
-        IO.puts(:stderr, "Error: #{reason}")
-        System.halt(1)
+      {:error, _} ->
+        IO.puts("⚠ No lockfile found")
     end
+
+    IO.puts("")
+
+    # 2. Verify installed packages against their recorded checksums
+    installed = Installer.list_installed()
+
+    results = Enum.map(installed, fn pkg ->
+      name = pkg["name"]
+      version = pkg["version"]
+      forth = pkg["forth"]
+      path = pkg["path"]
+      recorded_checksum = pkg["checksum"]
+
+      dir_exists = File.dir?(path)
+
+      # Try to recompute checksum from cached tarball
+      checksum_status = cond do
+        not dir_exists ->
+          :missing
+
+        is_nil(recorded_checksum) or recorded_checksum == "" ->
+          :no_checksum
+
+        true ->
+          # Find cached tarball and recompute
+          cache_dir = Path.expand("~/.cache/opsm/packages")
+          cache_pattern = Path.join([cache_dir, forth, "#{name}-#{version}*"])
+
+          cached_files = Path.wildcard(cache_pattern)
+          case cached_files do
+            [cached_tarball | _] ->
+              recomputed = Downloader.compute_file_checksum(cached_tarball, :sha256)
+              # Check against SHA256 first, then SHA1 (npm uses SHA1)
+              if recomputed == recorded_checksum do
+                :verified
+              else
+                sha1 = Downloader.compute_file_checksum(cached_tarball, :sha1)
+                if sha1 == recorded_checksum do
+                  :verified
+                else
+                  :tampered
+                end
+              end
+
+            [] ->
+              # No cached tarball — can't verify, but files exist
+              :cache_missing
+          end
+      end
+
+      %{
+        name: name,
+        version: version,
+        forth: forth,
+        path: path,
+        installed: dir_exists,
+        checksum_status: checksum_status
+      }
+    end)
+
+    if json? do
+      IO.puts(Jason.encode!(results, pretty: true))
+    else
+      missing = Enum.filter(results, fn r -> not r.installed end)
+      verified = Enum.filter(results, fn r -> r.checksum_status == :verified end)
+      no_checksum = Enum.filter(results, fn r -> r.checksum_status == :no_checksum end)
+      tampered = Enum.filter(results, fn r -> r.checksum_status == :tampered end)
+      cache_missing = Enum.filter(results, fn r -> r.checksum_status == :cache_missing end)
+
+      IO.puts("Package verification (#{length(installed)} installed):\n")
+
+      if verified != [] do
+        IO.puts("  ✓ #{length(verified)} verified (checksum match)")
+      end
+
+      if cache_missing != [] do
+        IO.puts("  ⚠ #{length(cache_missing)} not verifiable (cached tarball cleaned):")
+        for r <- cache_missing do
+          IO.puts("    - #{r.name}@#{r.version}")
+        end
+      end
+
+      if no_checksum != [] do
+        IO.puts("  ⚠ #{length(no_checksum)} without checksums:")
+        for r <- no_checksum do
+          IO.puts("    - #{r.name}@#{r.version}")
+        end
+      end
+
+      if tampered != [] do
+        IO.puts("  ✗ #{length(tampered)} CHECKSUM MISMATCH:")
+        for r <- tampered do
+          IO.puts("    - #{r.name}@#{r.version} — REINSTALL RECOMMENDED")
+        end
+      end
+
+      if missing != [] do
+        IO.puts("  ✗ #{length(missing)} missing from disk:")
+        for r <- missing do
+          IO.puts("    - #{r.name}@#{r.version}")
+        end
+      end
+
+      if tampered == [] and missing == [] do
+        IO.puts("\n✓ All packages OK")
+      end
+    end
+
+    System.halt(if(Enum.any?(results, fn r -> r.checksum_status == :tampered end), do: 1, else: 0))
   end
 
   defp run({:ports, opts}) do
@@ -1590,13 +1652,13 @@ defmodule Opsm.CLI do
     end
   end
 
-  defp do_install_discover(package, version, _allow, _scope, _dry_run?, json?, _sustainability?) do
+  defp do_install_discover(package, version, allow, scope, dry_run?, json?, sustainability?) do
     alias Opsm.Registries.Registry
 
     IO.puts("Discovering: #{package}")
     IO.puts("")
 
-    # Actually check all registries
+    # Check all registries in parallel
     IO.puts("Checking registries...")
     existence = Registry.exists_all?(package)
 
@@ -1616,47 +1678,85 @@ defmodule Opsm.CLI do
 
     IO.puts("")
 
-    if found_in == [] do
-      IO.puts("Package '#{package}' not found in any registry")
-      IO.puts("")
+    cond do
+      found_in == [] ->
+        # Not found anywhere
+        IO.puts("Package '#{package}' not found in any registry")
+        IO.puts("")
 
-      # Check for alternatives
-      discovery = Federation.discover(package)
-      if map_size(discovery.alternatives) > 0 do
-        IO.puts("Related packages in other ecosystems:")
-        for {forth, pkgs} <- discovery.alternatives, pkgs != [] do
-          IO.puts("  @#{forth}: #{Enum.join(pkgs, ", ")}")
+        # Check for alternatives
+        discovery = Federation.discover(package)
+        if map_size(discovery.alternatives) > 0 do
+          IO.puts("Related packages in other ecosystems:")
+          for {forth, pkgs} <- discovery.alternatives, pkgs != [] do
+            IO.puts("  @#{forth}: #{Enum.join(pkgs, ", ")}")
+          end
         end
-      end
-    else
-      IO.puts("Package '#{package}' available from:")
-      for forth <- found_in do
-        toolchain_status = case Federation.check_toolchain(forth) do
-          {:ok, %{available: tools}} -> "✓ (#{Enum.join(tools, ", ")})"
-          {:ok, :no_toolchain_required} -> "✓"
-          {:error, _} -> "✗ toolchain not installed"
-        end
-        IO.puts("  @#{forth}  #{toolchain_status}")
-      end
+        System.halt(1)
 
-      # Fetch and show version info for each
-      IO.puts("")
-      IO.puts("Latest versions:")
-      for forth <- found_in do
-        case Registry.fetch(forth, package) do
-          {:ok, pkg} ->
-            IO.puts("  @#{forth}: #{pkg.version}")
-          {:error, _} ->
-            :ok
+      length(found_in) == 1 ->
+        # Found in exactly one registry — install directly
+        [forth] = found_in
+        IO.puts("Found in @#{forth}")
+        IO.puts("")
+        do_install_from_forth(to_string(forth), package, version, allow, scope, dry_run?, false, false, false, false, sustainability?)
+
+      true ->
+        # Found in multiple registries — show options and auto-select best
+        IO.puts("Package '#{package}' available from:")
+        registry_info = for forth <- found_in do
+          toolchain_ok = case Federation.check_toolchain(forth) do
+            {:ok, _} -> true
+            {:error, _} -> false
+          end
+          pkg_version = try do
+            case Registry.fetch(forth, package) do
+              {:ok, pkg} -> pkg.version
+              _ -> "unknown"
+            end
+          rescue
+            _ -> "unknown"
+          end
+          IO.puts("  @#{forth}  v#{pkg_version}  #{if toolchain_ok, do: "✓ toolchain ready", else: "✗ toolchain missing"}")
+          {forth, toolchain_ok, pkg_version}
         end
-      end
+
+        # Auto-select: prefer primary registries with toolchains, then by highest version
+        # Primary registries are the canonical homes — npm for JS, cargo for Rust, etc.
+        primary_forths = [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven]
+
+        selected = registry_info
+        |> Enum.filter(fn {_forth, toolchain_ok, _v} -> toolchain_ok end)
+        |> case do
+          [] -> registry_info
+          with_toolchain -> with_toolchain
+        end
+        |> Enum.sort_by(fn {forth, _ok, version} ->
+          primary_rank = case Enum.find_index(primary_forths, &(&1 == forth)) do
+            nil -> 100
+            idx -> idx
+          end
+          # Prefer primary registries, then highest version
+          {primary_rank, version}
+        end)
+        |> List.first()
+
+        case selected do
+          {forth, _ok, _v} ->
+            IO.puts("")
+            IO.puts("Auto-selected: @#{forth}")
+            IO.puts("")
+            do_install_from_forth(to_string(forth), package, version, allow, scope, dry_run?, false, false, false, false, sustainability?)
+
+          nil ->
+            IO.puts("")
+            IO.puts("Could not auto-select a registry. Specify one:")
+            for forth <- found_in do
+              IO.puts("  opsm install @#{forth} #{package}")
+            end
+            System.halt(1)
+        end
     end
-
-    IO.puts("")
-    IO.puts("To install, specify a registry:")
-    IO.puts("  opsm install @npm #{package} --version #{version}")
-    IO.puts("  opsm install @cargo #{package}")
-    System.halt(0)
   end
 
   defp print_smart_plan(plan) do

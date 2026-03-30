@@ -22,3 +22,10 @@ base_url = "http://127.0.0.1:7004"
 [oikos]
 base_url = "http://127.0.0.1:7005"
 # token = ""
+
+[verisimdb]
+base_url = "http://127.0.0.1:6077"
+enabled = true
+timeout_ms = 5000
+instance_name = "opsm"
+base_iri = "https://verisim.db/opsm"

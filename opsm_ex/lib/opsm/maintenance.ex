@@ -208,6 +208,66 @@ defmodule Opsm.Maintenance do
     end
   end
 
+  @doc """
+  Redo the last undone operation (reverse the most recent undo).
+  """
+  def redo_last do
+    alias Opsm.Package.Installer
+
+    case load_history() do
+      [] ->
+        {:error, "No history to redo"}
+
+      [last | _rest] ->
+        case last["operation"] do
+          "undo_install" ->
+            # The undo removed a package — redo means reinstall it
+            package = last["details"]["package"]
+            # Look back in history for the original install to get forth/version
+            original = find_history_entry_for(package, "install")
+            forth_str = (original && original["details"]["forth"]) || "generic"
+            version = (original && original["details"]["version"]) || "latest"
+            forth = Opsm.Validation.safe_to_forth(forth_str)
+
+            IO.puts("Redoing: install #{package}")
+            case Installer.install(forth, package, version: version) do
+              {:ok, _} ->
+                record_history("redo_install", %{"package" => package, "redone_id" => last["id"]})
+                IO.puts("✓ Reinstalled #{package}")
+                {:ok, :reinstalled, package}
+              {:error, reason} ->
+                IO.puts("✗ Failed to redo: #{inspect(reason)}")
+                {:error, reason}
+            end
+
+          "undo_remove" ->
+            # The undo reinstalled a package — redo means remove it again
+            package = last["details"]["package"]
+            IO.puts("Redoing: remove #{package}")
+            case Installer.remove(package) do
+              :ok ->
+                record_history("redo_remove", %{"package" => package, "redone_id" => last["id"]})
+                IO.puts("✓ Removed #{package}")
+                {:ok, :removed, package}
+              {:error, reason} ->
+                IO.puts("✗ Failed to redo: #{inspect(reason)}")
+                {:error, reason}
+            end
+
+          op ->
+            {:error, "Last operation '#{op}' is not an undo — nothing to redo"}
+        end
+    end
+  end
+
+  defp find_history_entry_for(package, operation) do
+    load_history()
+    |> Enum.find(fn entry ->
+      entry["operation"] == operation and
+        entry["details"]["package"] == package
+    end)
+  end
+
   defp load_history do
     case File.read(@history_path) do
       {:ok, content} ->

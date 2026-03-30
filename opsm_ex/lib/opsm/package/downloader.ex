@@ -120,39 +120,39 @@ defmodule Opsm.Package.Downloader do
 
   # Internal functions
 
-  defp do_download(url, dest_path, checksum, algo, opts \\ []) do
+  defp do_download(url, dest_path, checksum, algo, _opts \\ []) do
     # Ensure directories exist
     dest_path |> Path.dirname() |> File.mkdir_p!()
     File.mkdir_p!(@temp_dir)
 
     # Download to temp file first (D3: atomic download)
     temp_path = Path.join(@temp_dir, "download_#{:rand.uniform(1_000_000)}_#{System.system_time(:millisecond)}")
-
-    IO.puts("  Downloading: #{url}")
+    started_at = System.monotonic_time(:millisecond)
 
     # Warn if no checksum provided (F3)
     if is_nil(checksum) do
-      IO.puts("  ⚠ Warning: No checksum provided - cannot verify download integrity")
+      IO.puts("  \e[33m⚠ No checksum provided — cannot verify download integrity\e[0m")
     end
 
     result = case Req.get(url, into: File.stream!(temp_path), receive_timeout: 60_000) do
       {:ok, %{status: 200}} ->
+        elapsed_ms = System.monotonic_time(:millisecond) - started_at
+        size = File.stat!(temp_path).size
+        speed = if elapsed_ms > 0, do: size / (elapsed_ms / 1000), else: 0
+
         case verify_checksum(temp_path, checksum, algo) do
           :ok ->
             # Atomic move from temp to final destination
             case File.rename(temp_path, dest_path) do
               :ok ->
-                size = File.stat!(dest_path).size
-                IO.puts("  Downloaded: #{format_size(size)}")
+                IO.puts("  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})")
                 {:ok, dest_path}
 
               {:error, :exdev} ->
-                # Cross-device - copy and delete
                 case File.cp(temp_path, dest_path) do
                   :ok ->
                     File.rm(temp_path)
-                    size = File.stat!(dest_path).size
-                    IO.puts("  Downloaded: #{format_size(size)}")
+                    IO.puts("  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})")
                     {:ok, dest_path}
                   {:error, reason} ->
                     {:error, "Failed to copy downloaded file: #{reason}"}
@@ -167,11 +167,10 @@ defmodule Opsm.Package.Downloader do
         end
 
       {:ok, %{status: 302, headers: headers}} ->
-        # Follow redirect - clean up temp file first
         File.rm(temp_path)
         case List.keyfind(headers, "location", 0) do
           {"location", redirect_url} ->
-            do_download(redirect_url, dest_path, checksum, algo, opts)
+            do_download(redirect_url, dest_path, checksum, algo)
           _ ->
             {:error, "Redirect without location header"}
         end
@@ -191,6 +190,13 @@ defmodule Opsm.Package.Downloader do
         result
     end
   end
+
+  defp format_speed(bytes_per_sec) when bytes_per_sec < 1024, do: "#{round(bytes_per_sec)} B/s"
+  defp format_speed(bytes_per_sec) when bytes_per_sec < 1024 * 1024, do: "#{Float.round(bytes_per_sec / 1024, 1)} KB/s"
+  defp format_speed(bytes_per_sec), do: "#{Float.round(bytes_per_sec / (1024 * 1024), 2)} MB/s"
+
+  defp format_duration_ms(ms) when ms < 1000, do: "#{ms}ms"
+  defp format_duration_ms(ms), do: "#{Float.round(ms / 1000, 1)}s"
 
   defp verify_checksum(_path, nil, _algo), do: :ok
 

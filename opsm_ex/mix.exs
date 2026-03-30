@@ -34,6 +34,7 @@ defmodule Opsm.MixProject do
       {:optimus, "~> 0.5"},
       {:jason, "~> 1.4"},
       {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
+      {:verisim_client, git: "https://github.com/hyperpolymath/verisimdb.git", sparse: "connectors/clients/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"},

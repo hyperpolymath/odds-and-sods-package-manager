@@ -61,8 +61,9 @@ defmodule Opsm.Trust.Pipeline do
     end
 
     # Collect results safely (D2: use yield_many to handle task crashes/timeouts)
+    # 3s timeout — trust checks are advisory, install should not stall on unreachable services
     check_results =
-      Task.yield_many(tasks, 5_000)
+      Task.yield_many(tasks, 3_000)
       |> Enum.map(fn
         {_task, {:ok, {name, result}}} ->
           {name, result}
@@ -91,6 +92,19 @@ defmodule Opsm.Trust.Pipeline do
     if verbose do
       print_verification_results(results)
     end
+
+    # Persist trust check to VeriSimDB
+    Opsm.VeriSimDB.record_trust_check(%{
+      name: package.package,
+      version: package.version,
+      overall: overall,
+      warnings: warnings,
+      attestations: Map.get(package, :attestations, []),
+      slsa_level: get_in(check_results, [:slsa, :level]),
+      pq_signed: get_in(check_results, [:attestation, :pq_signed]),
+      license_ok: match?({:ok, _}, check_results[:license]),
+      sustainability_score: get_in(check_results, [:sustainability, :score])
+    })
 
     {:ok, results}
   end
@@ -179,40 +193,51 @@ defmodule Opsm.Trust.Pipeline do
   end
 
   defp check_slsa_provenance(package, _config) do
-    # Check if package has SLSA provenance attestation
-    slsa_attestation = Enum.find(package.attestations, fn
-      %{attestation_type: :in_toto} -> true
-      %{attestation_type: :sigstore} -> true
-      _ -> false
-    end)
+    try do
+      # Check if package has SLSA provenance attestation
+      slsa_attestation = Enum.find(package.attestations || [], fn
+        %{attestation_type: :in_toto} -> true
+        %{attestation_type: :sigstore} -> true
+        _ -> false
+      end)
 
-    cond do
-      is_nil(slsa_attestation) ->
-        # No SLSA provenance — generate a basic one from package metadata
-        {:ok, provenance} = Opsm.Slsa.Provenance.generate(package)
+      cond do
+        is_nil(slsa_attestation) ->
+          # No SLSA provenance — generate a basic one from package metadata
+          case Opsm.Slsa.Provenance.generate(package) do
+            {:ok, provenance} ->
+              if provenance.slsa_level >= 1 do
+                {:info, "SLSA Level #{provenance.slsa_level} (self-attested, unverified)"}
+              else
+                {:warning, "No SLSA provenance available (Level 0)"}
+              end
 
-        if provenance.slsa_level >= 1 do
-          {:info, "SLSA Level #{provenance.slsa_level} (self-attested, unverified)"}
-        else
-          {:warning, "No SLSA provenance available (Level 0)"}
-        end
+            {:error, _reason} ->
+              {:skipped, "SLSA provenance generation failed"}
+          end
 
-      true ->
-        # Has attestation — try to verify
-        {:info, "SLSA attestation found: #{slsa_attestation.uri}"}
+        true ->
+          # Has attestation — try to verify
+          {:info, "SLSA attestation found: #{slsa_attestation.uri}"}
+      end
+    rescue
+      _ -> {:skipped, "SLSA check failed"}
     end
   end
 
   defp check_sustainability(_package, config) do
-    # Try to get sustainability score from oikos
-    oikos_client = Oikos.new(config.oikos, config.http)
+    # Try to get sustainability score from oikos — graceful if service is down
+    try do
+      oikos_client = Oikos.new(config.oikos, config.http)
 
-    case Oikos.health(oikos_client) do
-      {:ok, _} ->
-        # Would fetch actual analysis
-        {:ok, "Oikos available (would score sustainability)"}
-      {:error, _} ->
-        {:skipped, "Oikos service not available"}
+      case Oikos.health(oikos_client) do
+        {:ok, _} ->
+          {:ok, "Oikos available (would score sustainability)"}
+        {:error, _} ->
+          {:skipped, "Oikos service not available"}
+      end
+    rescue
+      _ -> {:skipped, "Oikos service unreachable"}
     end
   end
 

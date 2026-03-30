@@ -15,6 +15,7 @@ defmodule Opsm.Application do
 
     children = [
       RegistryGateway.Store,
+      Opsm.VeriSimDB,
       {Bandit, plug: RegistryGateway.Router, scheme: :http, port: registry_port(), ip: {127, 0, 0, 1}},
       {Bandit, plug: Opsm.Api.MobileRouter, scheme: :http, port: mobile_api_port(), ip: {127, 0, 0, 1}}
     ]

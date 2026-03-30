@@ -1,0 +1,56 @@
+{
+  "groove_version": "1",
+  "service_id": "opsm",
+  "service_name": "OPSM — Odds and Sods Package Manager",
+  "version": "2.0.0",
+  "health_endpoint": "/health",
+  "capabilities": {
+    "package-management": {
+      "type": "custom",
+      "description": "Federated package install/remove/search across 101 registries",
+      "protocol": "http",
+      "endpoint": "/api/packages"
+    },
+    "trust-pipeline": {
+      "type": "integrity",
+      "description": "SLSA L3, PQ crypto, attestation verification",
+      "protocol": "http",
+      "endpoint": "/api/trust"
+    },
+    "panel-ui": {
+      "type": "panel-ui",
+      "description": "Runtime manager panel for PanLL workspaces",
+      "protocol": "http",
+      "endpoint": "/panels/opsm-runtime-manager"
+    },
+    "octad-storage": {
+      "type": "octad-storage",
+      "description": "Install/uninstall/resolve/trust events persisted to VeriSimDB:6077",
+      "protocol": "http",
+      "endpoint": "http://127.0.0.1:6077/api/v1"
+    }
+  },
+  "ports": {
+    "registry_gateway": 4050,
+    "mobile_api": 4051,
+    "verisimdb": 6077,
+    "claim_forge": 7001,
+    "checky_monkey": 7002,
+    "palimpsest_license": 7003,
+    "cicd_hyper_a": 7004,
+    "oikos": 7005
+  },
+  "ipc": {
+    "opsm_runtime": {
+      "commands": ["list", "install", "remove", "set", "doctor", "search", "info", "history"],
+      "backend": "cli",
+      "binary": "opsm"
+    }
+  },
+  "tui": {
+    "binary": "opsm-tui",
+    "framework": "ratatui-0.30",
+    "features": ["split-panes", "catppuccin-theme", "vim-keys", "search", "history-undo-redo", "trust-dashboard"],
+    "spark_contracts": true
+  }
+}

@@ -163,47 +163,55 @@ defmodule Opsm.Package.Installer do
 
   defp install_with_rollback([{version, package} | rest], resolution, scope, dry_run, installed) do
     IO.puts("")
-    IO.puts("Installing #{package.package}@#{version}...")
+    IO.puts("Installing #{Opsm.Colour.cyan("#{package.package}@#{version}")}...")
 
-    # Run trust pipeline (D1: rescue crashes instead of letting them propagate)
+    # Run trust pipeline — gracefully degrade if services are unreachable.
+    # Trust is advisory during install; only an explicit :failed blocks.
     IO.puts("  Running trust checks...")
-    result = try do
-      {:ok, trust_result} = Pipeline.verify(package)
+    {trust_result, enriched_package} = try do
+      case Pipeline.verify(package) do
+        {:ok, trust_result} ->
+          {trust_result, package}
 
-      # Generate PQ trust attestation (non-blocking — failures don't halt install)
-      pq_attestation = try do
-        PqTrust.trust_attestation(package.package, version, package.checksum)
-      rescue
-        _ -> nil
-      end
-
-      # Generate SLSA provenance (non-blocking)
-      slsa_provenance = try do
-        pkg_info = %{name: package.package, version: version, forth: package.forth,
-                     tarball_url: package.tarball_url}
-        case Slsa.generate_provenance(pkg_info) do
-          {:ok, statement} -> statement
-          _ -> nil
-        end
-      rescue
-        _ -> nil
-      end
-
-      # Attach attestations to package for lockfile
-      enriched = %{package |
-        attestations: List.wrap(pq_attestation) ++ List.wrap(Map.get(package, :attestations)),
-        slsa_provenance: slsa_provenance
-      }
-
-      case handle_trust_result(trust_result, enriched, scope, dry_run) do
-        {:ok, :dry_run} -> {:ok, :dry_run}
-        {:ok, _} -> {:ok, enriched}
-        {:error, reason} -> {:error, {package.package, reason}}
+        {:error, reason} ->
+          IO.puts("  ⚠ Trust pipeline returned error: #{reason} — continuing")
+          {%{overall: :warning, warnings: ["Trust pipeline error: #{reason}"], checks: %{}, recommendations: []}, package}
       end
     rescue
       e ->
-        IO.puts("  ✗ Trust pipeline crashed: #{Exception.message(e)}")
-        {:error, {package.package, "Trust verification crashed: #{Exception.message(e)}"}}
+        IO.puts("  ⚠ Trust pipeline unavailable: #{Exception.message(e)} — continuing")
+        {%{overall: :warning, warnings: ["Trust services unreachable"], checks: %{}, recommendations: []}, package}
+    end
+
+    # Generate PQ trust attestation (non-blocking — failures don't halt install)
+    pq_attestation = try do
+      PqTrust.trust_attestation(package.package, version, package.checksum)
+    rescue
+      _ -> nil
+    end
+
+    # Generate SLSA provenance (non-blocking)
+    slsa_provenance = try do
+      pkg_info = %{name: package.package, version: version, forth: package.forth,
+                   tarball_url: package.tarball_url}
+      case Slsa.generate_provenance(pkg_info) do
+        {:ok, statement} -> statement
+        _ -> nil
+      end
+    rescue
+      _ -> nil
+    end
+
+    # Attach attestations to package for lockfile
+    # Use Map.put for fields not in the ResolvedPackage struct
+    enriched = enriched_package
+    |> Map.put(:attestations, List.wrap(pq_attestation) ++ List.wrap(Map.get(enriched_package, :attestations)))
+    |> Map.put(:slsa_provenance, slsa_provenance)
+
+    result = case handle_trust_result(trust_result, enriched, scope, dry_run) do
+      {:ok, :dry_run} -> {:ok, :dry_run}
+      {:ok, _} -> {:ok, enriched}
+      {:error, reason} -> {:error, {package.package, reason}}
     end
 
     case result do
@@ -367,7 +375,7 @@ defmodule Opsm.Package.Installer do
                       _txn = Transaction.complete(txn)
 
                       IO.puts("")
-                      IO.puts("✓ Installed #{package.package}@#{package.version}")
+                      IO.puts(Opsm.Colour.ok("Installed #{Opsm.Colour.cyan("#{package.package}@#{package.version}")}"))
                       {:ok, package}
 
                     {:error, reason} ->
@@ -900,6 +908,23 @@ defmodule Opsm.Package.Installer do
     updated = [entry | installed]
 
     save_installed_db(updated)
+
+    # Persist to VeriSimDB
+    Opsm.VeriSimDB.record_install(%{
+      name: package.package,
+      version: package.version,
+      forth: package.forth,
+      scope: scope,
+      path: install_path,
+      checksum: package.checksum,
+      checksum_algo: package.checksum_algo,
+      tarball_url: package.tarball_url,
+      linked_bins: linked_bins,
+      dependencies: Map.keys(package.manifest.dependencies || %{}),
+      trust_result: Map.get(package, :trust_status),
+      slsa_level: Map.get(package, :slsa_level),
+      sustainability_score: Map.get(package, :sustainability_score)
+    })
   end
 
   defp do_remove(installed) do
@@ -932,7 +957,17 @@ defmodule Opsm.Package.Installer do
         db = load_installed_db()
         updated = Enum.reject(db, fn pkg -> pkg["name"] == installed["name"] end)
         save_installed_db(updated)
-        IO.puts("✓ Removed #{installed["name"]}")
+        IO.puts(Opsm.Colour.ok("Removed #{Opsm.Colour.cyan(installed["name"])}"))
+
+        # Persist removal to VeriSimDB
+        Opsm.VeriSimDB.record_uninstall(%{
+          name: installed["name"],
+          version: installed["version"],
+          forth: installed["forth"],
+          path: installed["path"],
+          cleanup_actions: cleanup_actions
+        })
+
         :ok
 
       {:error, reason, path} ->
