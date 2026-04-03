@@ -96,3 +96,7 @@ htmlcov/
 # ReScript/OCaml compiler artifacts
 *.cmti
 *.cmi
+
+# Zig build artifacts (global)
+.zig-cache/
+zig-out/
