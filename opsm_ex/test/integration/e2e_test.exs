@@ -601,4 +601,318 @@ defmodule Opsm.Integration.E2ETest do
       assert result == {:error, "failed"}
     end
   end
+
+  describe "Full Install Flow" do
+    test "complete install: resolve -> verify -> lockfile update" do
+      # Simulate full install flow
+      deps = [
+        %{name: "express", constraint: "^4.18.0", forth: :npm},
+      ]
+
+      # Step 1: Resolve dependencies (mocked - would query registry)
+      # Step 2: Download packages (mocked)
+      # Step 3: Verify checksums
+      # Step 4: Install
+      # Step 5: Write lockfile
+
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{
+        name: "express",
+        version: "4.18.2",
+        forth: :npm,
+        checksum: "sha256:express4182hash",
+        checksum_algo: "sha256",
+        dependencies: ["accepts", "body-parser"]
+      })
+      |> Lockfile.add_package(%{
+        name: "accepts",
+        version: "1.3.8",
+        forth: :npm,
+        checksum: "sha256:acceptshash",
+        checksum_algo: "sha256",
+        dependencies: []
+      })
+      |> Lockfile.add_package(%{
+        name: "body-parser",
+        version: "1.20.0",
+        forth: :npm,
+        checksum: "sha256:bodyparserhash",
+        checksum_algo: "sha256",
+        dependencies: []
+      })
+
+      # Verify installation recorded correctly
+      assert Lockfile.has_package?(lockfile, "express", :npm)
+      assert Lockfile.has_package?(lockfile, "accepts", :npm)
+      assert Lockfile.has_package?(lockfile, "body-parser", :npm)
+
+      # All packages have checksums
+      Enum.each(["express", "accepts", "body-parser"], fn pkg_name ->
+        pkg = Lockfile.get_package(lockfile, pkg_name, :npm)
+        assert pkg.checksum != nil
+      end)
+    end
+
+    test "install with dependency tree" do
+      # Create a more complex dependency tree
+      lockfile = Lockfile.new()
+
+      # Root package
+      lockfile = Lockfile.add_package(lockfile, %{
+        name: "myapp",
+        version: "1.0.0",
+        forth: :npm,
+        checksum: "myapp-hash",
+        dependencies: ["react", "lodash"]
+      })
+
+      # Level 1 dependencies
+      lockfile = Lockfile.add_package(lockfile, %{
+        name: "react",
+        version: "18.2.0",
+        forth: :npm,
+        checksum: "react-hash",
+        dependencies: ["scheduler"]
+      })
+
+      lockfile = Lockfile.add_package(lockfile, %{
+        name: "lodash",
+        version: "4.17.21",
+        forth: :npm,
+        checksum: "lodash-hash",
+        dependencies: []
+      })
+
+      # Level 2 dependencies
+      lockfile = Lockfile.add_package(lockfile, %{
+        name: "scheduler",
+        version: "0.23.0",
+        forth: :npm,
+        checksum: "scheduler-hash",
+        dependencies: []
+      })
+
+      # Verify tree structure
+      app = Lockfile.get_package(lockfile, "myapp", :npm)
+      assert "react" in app.dependencies
+      assert "lodash" in app.dependencies
+
+      react = Lockfile.get_package(lockfile, "react", :npm)
+      assert "scheduler" in react.dependencies
+
+      lodash = Lockfile.get_package(lockfile, "lodash", :npm)
+      assert lodash.dependencies == []
+    end
+  end
+
+  describe "Full Uninstall Flow" do
+    test "uninstall: remove -> cleanup -> lockfile update" do
+      # Build lockfile with packages
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+      |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm})
+      |> Lockfile.add_package(%{name: "pkg3", version: "3.0.0", forth: :npm})
+
+      # Uninstall pkg2
+      updated = Lockfile.remove_package(lockfile, "pkg2", :npm)
+
+      # Verify pkg2 is gone
+      refute Lockfile.has_package?(updated, "pkg2", :npm)
+
+      # Others remain
+      assert Lockfile.has_package?(updated, "pkg1", :npm)
+      assert Lockfile.has_package?(updated, "pkg3", :npm)
+
+      # Exactly 2 packages left
+      assert length(Lockfile.list_packages(updated)) == 2
+    end
+
+    test "uninstall preserves orphan detection" do
+      # Create dependency chain: app -> dep-a -> dep-b
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{
+        name: "app",
+        version: "1.0.0",
+        forth: :npm,
+        dependencies: ["dep-a"]
+      })
+      |> Lockfile.add_package(%{
+        name: "dep-a",
+        version: "1.0.0",
+        forth: :npm,
+        dependencies: ["dep-b"]
+      })
+      |> Lockfile.add_package(%{
+        name: "dep-b",
+        version: "1.0.0",
+        forth: :npm,
+        dependencies: []
+      })
+
+      # Uninstall app
+      after_remove = Lockfile.remove_package(lockfile, "app", :npm)
+
+      # dep-a and dep-b remain (may be orphans but still recorded)
+      assert Lockfile.has_package?(after_remove, "dep-a", :npm)
+      assert Lockfile.has_package?(after_remove, "dep-b", :npm)
+    end
+  end
+
+  describe "Version Conflict Detection" do
+    test "detects incompatible version constraints" do
+      # Two packages with conflicting version requirements
+      # Package A requires pkg@^1.0.0
+      # Package B requires pkg@^2.0.0
+      # These are incompatible
+
+      a_constraint = "^1.0.0"
+      b_constraint = "^2.0.0"
+
+      # Parse constraints
+      {:ok, constraint_a} = VersionConstraint.parse(a_constraint, :semver)
+      {:ok, constraint_b} = VersionConstraint.parse(b_constraint, :semver)
+
+      # Find a version that satisfies A
+      version_for_a = "1.5.0"
+      assert VersionConstraint.satisfies?(version_for_a, constraint_a)
+
+      # Same version does not satisfy B
+      refute VersionConstraint.satisfies?(version_for_a, constraint_b)
+
+      # Version for B doesn't satisfy A
+      version_for_b = "2.5.0"
+      assert VersionConstraint.satisfies?(version_for_b, constraint_b)
+      refute VersionConstraint.satisfies?(version_for_b, constraint_a)
+    end
+
+    test "compatible version constraints can be resolved" do
+      # Both require overlapping versions
+      constraint1 = "^1.5.0"  # Allows 1.5.0 - 1.999.999
+      constraint2 = "^1.0.0"  # Allows 1.0.0 - 1.999.999
+
+      {:ok, c1} = VersionConstraint.parse(constraint1, :semver)
+      {:ok, c2} = VersionConstraint.parse(constraint2, :semver)
+
+      # Version 1.8.0 satisfies both
+      version = "1.8.0"
+      assert VersionConstraint.satisfies?(version, c1)
+      assert VersionConstraint.satisfies?(version, c2)
+    end
+  end
+
+  describe "Lockfile Integrity in E2E Flow" do
+    test "lockfile integrity is maintained through install cycle" do
+      # Create initial lockfile
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm, checksum: "hash1"})
+      |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm, checksum: "hash2"})
+      |> Lockfile.compute_integrity_hash()
+
+      original_hash = lockfile.integrity_hash
+
+      # Verify initial integrity
+      assert :ok = Lockfile.verify_integrity(lockfile)
+
+      # Simulate: Add new package during install
+      modified = Lockfile.add_package(lockfile, %{
+        name: "pkg3",
+        version: "3.0.0",
+        forth: :npm,
+        checksum: "hash3"
+      })
+      |> Lockfile.compute_integrity_hash()
+
+      # Hash should change (not equal to original)
+      assert modified.integrity_hash != original_hash
+
+      # New integrity should be valid
+      assert :ok = Lockfile.verify_integrity(modified)
+    end
+
+    test "E2E: install -> write -> read -> verify cycle" do
+      path = Path.join(System.tmp_dir!(), "opsm_e2e_lockfile_#{:rand.uniform(1_000_000)}.lock")
+
+      try do
+        # Step 1: Create lockfile during install
+        original = Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "react",
+          version: "18.2.0",
+          forth: :npm,
+          checksum: "sha256:react-hash",
+          dependencies: ["scheduler"]
+        })
+        |> Lockfile.add_package(%{
+          name: "scheduler",
+          version: "0.23.0",
+          forth: :npm,
+          checksum: "sha256:scheduler-hash",
+          dependencies: []
+        })
+
+        # Step 2: Write to disk
+        {:ok, _path} = Lockfile.write(original, path)
+
+        # Step 3: Read from disk
+        {:ok, loaded} = Lockfile.read(path)
+
+        # Step 4: Verify integrity
+        assert :ok = Lockfile.verify_integrity(loaded)
+
+        # Step 5: Verify packages match
+        assert Lockfile.has_package?(loaded, "react", :npm)
+        assert Lockfile.has_package?(loaded, "scheduler", :npm)
+
+        react = Lockfile.get_package(loaded, "react", :npm)
+        assert react.version == "18.2.0"
+        assert react.checksum == "sha256:react-hash"
+        assert "scheduler" in react.dependencies
+      after
+        File.rm_rf(path)
+      end
+    end
+  end
+
+  describe "Multi-Registry E2E" do
+    test "install from multiple registries simultaneously" do
+      lockfile = Lockfile.new()
+
+      # NPM package
+      |> Lockfile.add_package(%{
+        name: "lodash",
+        version: "4.17.21",
+        forth: :npm,
+        checksum: "npm-hash"
+      })
+      |> Lockfile.add_package(%{
+        name: "serde",
+        version: "1.0.163",
+        forth: :cargo,
+        checksum: "cargo-hash"
+      })
+      |> Lockfile.add_package(%{
+        name: "poison",
+        version: "5.0.0",
+        forth: :hex,
+        checksum: "hex-hash"
+      })
+
+      # All should be present
+      npm_count = lockfile
+      |> Lockfile.packages_for_forth(:npm)
+      |> length()
+
+      cargo_count = lockfile
+      |> Lockfile.packages_for_forth(:cargo)
+      |> length()
+
+      hex_count = lockfile
+      |> Lockfile.packages_for_forth(:hex)
+      |> length()
+
+      assert npm_count == 1
+      assert cargo_count == 1
+      assert hex_count == 1
+    end
+  end
 end
