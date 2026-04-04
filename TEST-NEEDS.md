@@ -1,5 +1,7 @@
 # TEST-NEEDS.md — odds-and-sods-package-manager
 
+## CRG Grade: C — ACHIEVED 2026-04-04
+
 > Updated 2026-04-04 by CRG C blitz. Previous audit: 2026-03-29.
 
 ## Current State (Updated)
