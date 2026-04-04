@@ -5,15 +5,16 @@
 name = "opsm_ex"
 
 [[functions]]
-name = "process_batch"
-source = "src/batch.rs"
-energy-budget-mj = 50.0
-carbon-budget-mg = 10.0
+name = "resolve"
+source = "lib/opsm/resolver.ex"
+energy-budget-mj = 60.0
+carbon-budget-mg = 12.0
 
 [[functions]]
-name = "render_page"
-source = "src/web.rs"
-energy-budget-mj = 5.0
+name = "do_resolve"
+source = "lib/opsm/resolver.ex"
+energy-budget-mj = 45.0
+carbon-budget-mg = 9.0
 
 [carbon]
 provider = "static"
