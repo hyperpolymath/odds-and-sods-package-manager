@@ -5,8 +5,8 @@
   "version": "2.0.0",
   "health_endpoint": "/health",
   "capabilities": {
-    "package-management": {
-      "type": "custom",
+    "http": {
+      "type": "http",
       "description": "Federated package install/remove/search across 101 registries",
       "protocol": "http",
       "endpoint": "/api/packages"
