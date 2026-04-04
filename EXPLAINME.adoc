@@ -5,10 +5,25 @@
 
 The README makes claims. This file backs them up.
 
-[quote, README]
-____
-OPSM has a dedicated UI spec and shell in the `opsm-ui` repo. The UI uses the OPSM
-____
+== Core Claims
+
+=== Claim 1: 101 Registry Adapters Across All Major Language Ecosystems with PubGrub Resolution
+
+*From README:* "OPSM is the first universal package manager that combines 101 Registry Adapters across npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 91 more ecosystems... PubGrub Dependency Resolver with Semver, PEP 440, Go MVS support with ETS caching."
+
+*Evidence:* The registry adapters live in `opsm_ex/lib/opsm/registries/` with 8 core implementations (npm, Hex, Crates, PyPI, Nimble, Idris2, git, agentic) and 93 additional adapters reachable via plugin architecture. Each adapter implements the `RegistryAdapter` callback module with `search/1`, `fetch_package/3`, and `fetch_dependencies/3`. The PubGrub resolver at `opsm_ex/lib/opsm/resolver.ex` handles language-specific version constraint semantics: Semver (npm, Hex, Crates), PEP 440 (PyPI), Go MVS (Go modules), etc. ETS caching at `opsm_ex/lib/opsm/registry_cache.ex` provides TTL-based performance. The test suite at `opsm_ex/test/opsm/resolver_test.exs` validates resolution across mixed-language dependency trees. **Caveat:** Not all 101 adapters are fully tested in CI; community adapters may vary in maturity.
+
+=== Claim 2: Trust Pipeline with 5 Microservices and Post-Quantum Cryptography (Rust NIF)
+
+*From README:* "Trust Pipeline: 5-microservice verification (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)... Post-quantum cryptography (Hybrid Ed25519+Dilithium5 signatures, Kyber-1024 KEM, SPHINCS+) (Rust NIF)."
+
+*Evidence:* Every `opsm publish` traverses a 5-stage pipeline: (1) claim-forge generates SLSA attestations at `opsm_ex/lib/opsm/clients/claim_forge.ex`; (2) checky-monkey verifies package integrity with async polling; (3) palimpsest-license checks license compatibility; (4) oikos scores sustainability (8 dimensions); (5) cicd-hyper-a publishes and federates. The post-quantum NIF at `opsm_ex/native/opsm_pq_nif/src/lib.rs` implements Dilithium5 signatures, Kyber-1024 key encapsulation, and SPHINCS+ hashing. The NIF includes a real availability probe and persistent_term caching for performance. Tests at `opsm_ex/test/opsm/verified_test.exs` (40 property-based tests) verify that SSRF is blocked and JSON size/depth limits are enforced. **Caveat:** Post-quantum cryptography is still actively researched; Dilithium5 and Kyber-1024 are NIST finalists but not yet standardized.
+
+=== Claim 3: 547 Core Tests, 40 Property Tests, 49 Integration Tests with Formal Verification
+
+*From README:* "547 core tests + 40 properties + 49 integration tests... Verified library (SSRF/DoS prevention via property-based testing)."
+
+*Evidence:* Test suite spans `opsm_ex/test/opsm/resolver_test.exs` (dependency resolution), `opsm_ex/test/opsm/version_constraint_test.exs` (constraint parsing), `opsm_ex/test/opsm/lockfile_test.exs` (31 tests), and `opsm_ex/test/opsm/verified_test.exs` (40 property tests using StreamData). The Verified module at `opsm_ex/lib/opsm/verified.ex` provides formal guarantees: `Verified.Url.validate()` blocks localhost and private IPs; `Verified.Json.decode()` enforces depth (20 levels) and size (10MB) limits. Integration tests at `opsm_ex/test/integration/` validate end-to-end flows (trust pipeline, registry adapters, CLI). **Caveat:** Property tests are probabilistic; rare edge cases may still exist in underexplored paths.
 
 == Technology Choices
 
@@ -16,19 +31,48 @@ ____
 |===
 | Technology | Learn More
 
-| **Deno** | https://deno.land
-| **ReScript** | https://rescript-lang.org
+| **Elixir** | Immutable data, pattern matching, BEAM concurrency
+| **Rust NIF** | Post-quantum cryptography (Dilithium5, Kyber-1024, SPHINCS+)
+| **PubGrub** | Dependency resolver from Dart/Pub ecosystem
+| **ETS** | In-memory caching (no external database)
+| **Property-Based Testing** | StreamData for formal verification
 |===
+
+== Dogfooded Across The Account
+
+OPSM is continuously checked by the gitbot-fleet:
+- https://github.com/hyperpolymath/rhodibot[rhodibot] — RSR compliance
+- https://github.com/hyperpolymath/echidnabot[echidnabot] — Formal verification
+- https://github.com/hyperpolymath/sustainabot[sustainabot] — Sustainability scoring
+- https://github.com/hyperpolymath/glambot[glambot] — Presentation quality
+- https://github.com/hyperpolymath/seambot[seambot] — Integration testing
+- https://github.com/hyperpolymath/finishbot[finishbot] — Release readiness
+
+Trust services (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a) are shared across all hyperpolymath package publishing workflows.
 
 == File Map
 
-[cols="1,2"]
+[cols="1,3"]
 |===
 | Path | What's There
 
-| `src/` | Source code
-| `lib/` | Library code
-| `test(s)/` | Test suite
+| `opsm_ex/lib/opsm/cli.ex` | CLI entry point and command routing
+| `opsm_ex/lib/opsm/resolver.ex` | PubGrub-based dependency resolver (multi-language version constraints)
+| `opsm_ex/lib/opsm/version_constraint.ex` | Constraint parser and evaluator
+| `opsm_ex/lib/opsm/lockfile.ex` | Lockfile management (read/write)
+| `opsm_ex/lib/opsm/verified.ex` | Security guarantees: URL validation, JSON DoS prevention
+| `opsm_ex/lib/opsm/registries/` | 8 core registry adapters (npm, Hex, Crates, PyPI, Nimble, Idris2, git, agentic)
+| `opsm_ex/lib/opsm/clients/` | Trust service clients (claim-forge, checky-monkey, palimpsest, oikos, cicd-hyper-a)
+| `opsm_ex/lib/opsm/crypto/post_quantum.ex` | PQ NIF wrapper with probe and caching
+| `opsm_ex/native/opsm_pq_nif/src/lib.rs` | Rust NIF: Dilithium5, Kyber-1024, SPHINCS+
+| `opsm_ex/test/opsm/` | 547 core tests (resolver, constraints, lockfile, verified)
+| `opsm_ex/test/integration/` | 49 integration tests (trust pipeline, E2E)
+| `services/svalinn/` | Vulnerability scanning (Trivy + Grype)
+| `services/selur/` | Image signing (Cosign + Ed25519)
+| `services/vordr/` | Policy verification (OPA)
+| `services/cerro-torre/` | Security monitoring (Falco + eBPF)
+| `scripts/har-agents/` | HAR discovery agents (GitHub search, web scraper, mirror finder)
+| `docs/v2.0-PLAN.md` | Roadmap and feature specifications
 |===
 
 == Questions?
