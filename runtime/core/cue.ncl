@@ -18,28 +18,35 @@ let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
 
   version_source = 'GitHubReleases,
 
+  # CUE release assets use underscores and a 'v' prefix in the version portion:
+  # cue_v0.11.0_linux_amd64.tar.gz  (NOT cue-0.11.0-linux-amd64.tar.gz)
   install = {
     strategy = 'PrebuiltBinary,
     platforms = [
       {
         platform = 'LinuxAmd64,
-        archive_name_template = "cue-{{version}}-linux-amd64.{{ext}}",
+        archive_name_template = "cue_v{{version}}_linux_amd64.tar.gz",
         archive_format = 'TarGz,
       },
       {
         platform = 'LinuxArm64,
-        archive_name_template = "cue-{{version}}-linux-arm64.{{ext}}",
+        archive_name_template = "cue_v{{version}}_linux_arm64.tar.gz",
         archive_format = 'TarGz,
       },
       {
         platform = 'DarwinAmd64,
-        archive_name_template = "cue-{{version}}-darwin-amd64.{{ext}}",
+        archive_name_template = "cue_v{{version}}_darwin_amd64.tar.gz",
         archive_format = 'TarGz,
       },
       {
         platform = 'DarwinArm64,
-        archive_name_template = "cue-{{version}}-darwin-arm64.{{ext}}",
+        archive_name_template = "cue_v{{version}}_darwin_arm64.tar.gz",
         archive_format = 'TarGz,
+      },
+      {
+        platform = 'WindowsAmd64,
+        archive_name_template = "cue_v{{version}}_windows_amd64.zip",
+        archive_format = 'Zip,
       },
     ],
     strip_components = 0,

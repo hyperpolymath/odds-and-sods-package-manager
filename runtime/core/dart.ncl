@@ -5,7 +5,16 @@ let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
   description = "dart — Client-optimised language for fast apps",
   repository = "https://github.com/dart-lang/sdk",
   homepage = "https://dart.dev",
-  version_source = 'CustomApi,
+  version_source = 'CustomUrl,
+
+  # UrlHandler.Dart maps platform → {{dart_os}} (linux/macos/windows), {{dart_arch}} (x64/arm64/ia32)
+  # Note: Dart is BANNED as a development language (use Tauri/Dioxus instead).
+  # This plugin exists ONLY for Flutter toolchain migration scenarios.
+  url_handler = {
+    versions_url = "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION",
+    archive_url_template = "https://storage.googleapis.com/dart-archive/channels/stable/release/{{version}}/sdk/dartsdk-{{dart_os}}-{{dart_arch}}-release.zip",
+  },
+
   install = {
     strategy = 'PrebuiltBinary,
     platforms = [

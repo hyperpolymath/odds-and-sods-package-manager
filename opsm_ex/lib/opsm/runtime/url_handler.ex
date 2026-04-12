@@ -38,6 +38,8 @@ defmodule Opsm.Runtime.UrlHandler do
   | golang    | `linux`/`darwin`  | `amd64`/`arm64`     |
   | nodejs    | `linux`/`darwin`  | `x64`/`arm64`       |
   | dart      | `linux`/`macos`   | `x64`/`arm64`       |
+  | nim       | `linux`/`macos`   | `x64`/`arm64`       |
+  | kubectl   | `linux`/`darwin`  | `amd64`/`arm64`     |
   """
 
   alias Opsm.Verified.Http, as: VerifiedHttp
@@ -200,6 +202,29 @@ defmodule Opsm.Runtime.UrlHandler do
       :darwin_amd64  -> {:ok, %{"dart_os" => "macos",   "dart_arch" => "x64"}}
       :darwin_arm64  -> {:ok, %{"dart_os" => "macos",   "dart_arch" => "arm64"}}
       :windows_amd64 -> {:ok, %{"dart_os" => "windows", "dart_arch" => "x64"}}
+      _ -> {:error, :unsupported_platform}
+    end
+  end
+
+  defp platform_vars("nim", platform) do
+    # Nim archives: nim-2.0.2_linux_x64.tar.xz or nim-2.0.2_macos_arm64.tar.xz
+    case platform do
+      :linux_amd64  -> {:ok, %{"nim_os" => "linux",  "nim_arch" => "x64"}}
+      :linux_arm64  -> {:ok, %{"nim_os" => "linux",  "nim_arch" => "arm64"}}
+      :darwin_amd64 -> {:ok, %{"nim_os" => "macos",  "nim_arch" => "x64"}}
+      :darwin_arm64 -> {:ok, %{"nim_os" => "macos",  "nim_arch" => "arm64"}}
+      _ -> {:error, :unsupported_platform}
+    end
+  end
+
+  defp platform_vars("kubectl", platform) do
+    # kubectl binary at: dl.k8s.io/release/v{{version}}/bin/linux/amd64/kubectl
+    case platform do
+      :linux_amd64   -> {:ok, %{"kubectl_os" => "linux",   "kubectl_arch" => "amd64"}}
+      :linux_arm64   -> {:ok, %{"kubectl_os" => "linux",   "kubectl_arch" => "arm64"}}
+      :darwin_amd64  -> {:ok, %{"kubectl_os" => "darwin",  "kubectl_arch" => "amd64"}}
+      :darwin_arm64  -> {:ok, %{"kubectl_os" => "darwin",  "kubectl_arch" => "arm64"}}
+      :windows_amd64 -> {:ok, %{"kubectl_os" => "windows", "kubectl_arch" => "amd64"}}
       _ -> {:error, :unsupported_platform}
     end
   end

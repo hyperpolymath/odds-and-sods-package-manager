@@ -16,29 +16,39 @@ let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
   description = "zig — managed by OPSM runtime",
   repository = "https://github.com/ziglang/zig",
 
-  version_source = 'JsonIndex,
+  version_source = 'CustomUrl,
+  # Skip master/devbuilds; only semver releases
+  version_pattern = "^([0-9]+\\.[0-9]+\\.[0-9]+)$",
+
+  # Zig publishes a JSON index (not GitHub Releases).
+  # UrlHandler.Zig maps platform → {{zig_platform}} (e.g. linux-x86_64, macos-aarch64).
+  url_handler = {
+    versions_url = "https://ziglang.org/download/index.json",
+    version_key_pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+    archive_url_template = "https://ziglang.org/download/{{version}}/zig-{{zig_platform}}-{{version}}.tar.xz",
+  },
 
   install = {
     strategy = 'PrebuiltBinary,
     platforms = [
       {
         platform = 'LinuxAmd64,
-        archive_name_template = "zig-{{version}}-linux-amd64.{{ext}}",
+        archive_name_template = "zig-linux-x86_64-{{version}}.tar.xz",
         archive_format = 'TarXz,
       },
       {
         platform = 'LinuxArm64,
-        archive_name_template = "zig-{{version}}-linux-arm64.{{ext}}",
+        archive_name_template = "zig-linux-aarch64-{{version}}.tar.xz",
         archive_format = 'TarXz,
       },
       {
         platform = 'DarwinAmd64,
-        archive_name_template = "zig-{{version}}-darwin-amd64.{{ext}}",
+        archive_name_template = "zig-macos-x86_64-{{version}}.tar.xz",
         archive_format = 'TarXz,
       },
       {
         platform = 'DarwinArm64,
-        archive_name_template = "zig-{{version}}-darwin-arm64.{{ext}}",
+        archive_name_template = "zig-macos-aarch64-{{version}}.tar.xz",
         archive_format = 'TarXz,
       },
     ],
