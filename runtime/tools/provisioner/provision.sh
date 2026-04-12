@@ -9,12 +9,14 @@
 # and health check verification.
 #
 # Usage:
-#   ./provision.sh <plugin.ncl> <version>
-#   ./provision.sh --from-tool-versions <.tool-versions-path>
+#   ./provision.sh <plugin.ncl> <version>          # single tool
+#   ./provision.sh --from-opsm-toml [opsm.toml]    # from [runtime] section (preferred)
+#   ./provision.sh --from-tool-versions [.tool-versions]  # legacy asdf format
 #
-# This is the bridge between Nickel definitions and actual installation.
-# Production OPSM will use the Elixir core + Zig shim; this script is
-# the bootstrap provisioner for development and testing.
+# When `opsm` is in PATH, delegates to `opsm runtime install` (the Elixir/Zig
+# native layer).  The bash download functions are a bootstrap fallback for
+# environments where OPSM itself is not yet installed.
+# Set OPSM_FORCE_BASH_PROVISIONER=1 to bypass delegation (for testing).
 
 set -uo pipefail
 
@@ -83,6 +85,19 @@ ncl_array() {
     echo "$result"
   fi
 }
+
+# --- Delegate to opsm runtime install --from opsm.toml (preferred) ---
+if [[ "${1:-}" == "--from-opsm-toml" ]]; then
+  MANIFEST="${2:-opsm.toml}"
+  if command -v opsm >/dev/null 2>&1; then
+    info "Delegating to: opsm runtime install --from ${MANIFEST}"
+    exec opsm runtime install --from "$MANIFEST"
+  else
+    err "opsm not found — cannot use --from-opsm-toml without OPSM installed"
+    err "Bootstrap alternative: use --from-tool-versions with a .tool-versions file"
+    exit 1
+  fi
+fi
 
 # --- Parse .tool-versions ---
 if [[ "${1:-}" == "--from-tool-versions" ]]; then
@@ -385,8 +400,31 @@ download_wasmtime() {
 }
 
 # =================================================================
-# Dispatch: choose download strategy based on tool name
+# Dispatch: OPSM-native first, bash bootstrap fallback
 # =================================================================
+#
+# When `opsm` is in PATH, delegate to `opsm runtime install` — this
+# uses Runtime.Manager + UrlHandler + SourceBuilder (the Elixir core).
+# The bash download functions below are a bootstrap-only fallback for
+# environments where OPSM itself is not yet installed.
+
+if command -v opsm >/dev/null 2>&1 && [[ "${OPSM_FORCE_BASH_PROVISIONER:-}" != "1" ]]; then
+  info "Delegating to OPSM native runtime: opsm runtime install ${TOOL_NAME}@${VERSION}"
+  opsm runtime install "${TOOL_NAME}@${VERSION}"
+  OPSM_EXIT=$?
+  if [[ $OPSM_EXIT -ne 0 ]]; then
+    warn "opsm runtime install exited $OPSM_EXIT — falling back to bash provisioner"
+  else
+    # OPSM handled install + shims; skip the bash shim block below
+    OPSM_SKIP_BASH_SHIMS=1
+    ok "Installed via OPSM native runtime"
+    exit 0
+  fi
+fi
+
+# Bootstrap fallback — used when OPSM binary is not yet available,
+# or when OPSM_FORCE_BASH_PROVISIONER=1 is set for testing.
+info "Using bash bootstrap provisioner for: ${TOOL_NAME} ${VERSION}"
 
 case "$TOOL_NAME" in
   zig)       download_zig ;;
@@ -408,6 +446,7 @@ case "$TOOL_NAME" in
     else
       err "No download handler for: $TOOL_NAME (repo: $REPO_URL)"
       err "Add a custom handler in provisioner or set direct_url in the plugin"
+      err "Or install OPSM and let it handle this automatically."
       exit 1
     fi
     ;;
