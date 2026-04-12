@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # STATE.a2ml — Project state checkpoint
-# Updated 2026-04-04: CRG C blitz completed
+# Updated 2026-04-12: HFR + asdf replacement + runtime CLI complete
 
 [metadata]
 project = "odds-and-sods-package-manager"
 version = "2.0.0"
-last-updated = "2026-04-04"
-status = "CRG C certified"
+last-updated = "2026-04-12"
+status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 65
-phase = "CRG C certification (testing phase)"
+completion-percentage = 80
+phase = "first-class system (HFR + asdf replacement + runtime CLI)"
 
 [testing]
 status = "COMPLETE"
@@ -46,8 +46,29 @@ benchmarks = "✓ 27 baselines ready"
 build-status = "✓ Passes"
 all-tests-pass = "✓ 594/599 (5 pre-existing failures unrelated to blitz)"
 
+[first-class-system]
+added = "2026-04-12"
+components = [
+  "HyperpPolymathForge registry (ETS cache, GitHub org crawl, GITHUB_TOKEN support)",
+  "9 new language/database registry adapters (betlang, ephapax, phronesis, tangle, wokelang, lithoglyph, quandledb, nqc)",
+  "5 url-handler Nickel plugins (zig, julia, golang, nodejs, dart)",
+  "2 url-handler Nickel plugins (nim, kubectl — via core plugin fixes)",
+  "6 source-build Nickel plugins (erlang, elixir, haskell, rust, ocaml, ruby)",
+  "Opsm.Runtime.UrlHandler — platform var dispatch for 7 tool families",
+  "Opsm.Runtime.SourceBuilder — build-from-source + delegate-to-manager",
+  "Opsm.Runtime.Manager — list/install/update/remove/which/current",
+  "CLI: opsm runtime install|list|update|remove|which|current",
+  "CLI: opsm install --workspace, opsm publish --workspace --registry hf",
+  "18 opsm.toml manifests across nextgen-languages + nextgen-databases",
+  "HFR wired into Application startup (async Task.start)",
+]
+asdf-core-plugins-fixed = ["zig", "cue", "golang", "nodejs", "dart", "nim", "kubectl"]
+runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
+
 [next-actions]
-- Commit and push CRG C changes
-- Review ReScript/Rust component tests (deferred to component sprints)
-- Implement fuzz testing harness (P2)
-- Add error handling E2E scenarios (P1)
+- Wire provision.sh to delegate to `opsm runtime install` (P1)
+- Tests for Runtime.Manager, UrlHandler, SourceBuilder (P1)
+- Tests for HFR + new registry adapters (P2)
+- opsm audit --workspace support (P2)
+- Implement fuzz testing harness (P3)
+- Add error handling E2E scenarios (P2)

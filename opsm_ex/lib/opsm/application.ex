@@ -13,6 +13,13 @@ defmodule Opsm.Application do
     # Initialize transport protocol cache (ETS tables for QUIC/HTTP3 negotiation)
     Opsm.Transport.Quic.init()
 
+    # Warm the Hyperpolymath Forge Registry ETS cache on startup so the first
+    # `opsm install --registry hf` does not pay the GitHub API round-trip.
+    # This runs asynchronously — startup is not blocked on network availability.
+    Task.start(fn ->
+      Opsm.Registries.HyperpPolymathForge.ensure_cache()
+    end)
+
     children = [
       RegistryGateway.Store,
       Opsm.VeriSimDB,
