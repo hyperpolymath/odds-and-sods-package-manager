@@ -5,7 +5,7 @@ defmodule Opsm.Registries.Registry do
   Routes package requests to the appropriate registry client.
   Includes caching for improved performance.
 
-  Supports 103 registry adapters across:
+  Supports 117+ registry adapters across:
   - Major language ecosystems (npm, cargo, hex, pypi, gem, go, pub, hackage, nuget, maven)
   - Extended language ecosystems (packagist, cpan, cran, conda, cocoapods, opam, clojars, etc.)
   - System package managers (apt, rpm, alpine, homebrew, nix, flatpak, snap, guix, etc.)
@@ -45,6 +45,10 @@ defmodule Opsm.Registries.Registry do
   # Niche/custom ecosystems
   alias Opsm.Registries.{Nimble, Idris2, Git, Agentic, Oblibeny, MyLang,
     JuliaTheViper, ErrorLang, Eclexia, AffineScript, RattleScript}
+
+  # Hyperpolymath Forge Registry + new nextgen language/database adapters
+  alias Opsm.Registries.{HyperpPolymathForge, Betlang, Ephapax, Phronesis,
+    Tangle, Wokelang, Lithoglyph, Nqc, QuandleDB}
 
   alias Opsm.Cache
 
@@ -293,7 +297,42 @@ defmodule Opsm.Registries.Registry do
     afs: AffineScript,
     rattlescript: RattleScript,
     rattle: RattleScript,
-    rts: RattleScript
+    rts: RattleScript,
+
+    # =========================================================================
+    # Hyperpolymath Forge Registry (HFR)
+    # Auto-indexes every hyperpolymath/* repo that ships opsm.toml.
+    # This is the primary registry for ALL hyperpolymath-authored packages.
+    # =========================================================================
+    hf: HyperpPolymathForge,
+    hyperpolymath: HyperpPolymathForge,
+    hyperpolymath_forge: HyperpPolymathForge,
+    forge: HyperpPolymathForge,
+
+    # =========================================================================
+    # nextgen-languages registries (per-language adapters)
+    # =========================================================================
+    betlang: Betlang,
+    bet: Betlang,
+    ephapax: Ephapax,
+    epx: Ephapax,
+    phronesis: Phronesis,
+    phro: Phronesis,
+    tangle: Tangle,
+    krl: Tangle,
+    wokelang: Wokelang,
+    wok: Wokelang,
+
+    # =========================================================================
+    # nextgen-databases registries
+    # =========================================================================
+    lithoglyph: Lithoglyph,
+    litho: Lithoglyph,
+    glyphbase: Lithoglyph,
+    quandledb: QuandleDB,
+    quandle: QuandleDB,
+    nqc: Nqc,
+    query_calculus: Nqc
   }
 
   # All primary forth names (for search_all / exists_all? defaults)
@@ -318,8 +357,14 @@ defmodule Opsm.Registries.Registry do
     # CDN/meta
     :jsdelivr, :cdnjs, :webjars, :github_packages, :gitlab_packages,
     :wordpress, :wordpress_themes, :wapm, :bioconductor, :astrolabe, :vpm,
-    # Niche
-    :nimble, :idris2, :eclexia, :affinescript, :rattlescript
+    # Niche / custom ecosystems
+    :nimble, :idris2, :eclexia, :affinescript, :rattlescript,
+    # Hyperpolymath Forge Registry (primary for all HP packages)
+    :hf,
+    # nextgen-languages
+    :betlang, :ephapax, :phronesis, :tangle, :wokelang,
+    # nextgen-databases
+    :lithoglyph, :quandledb, :nqc
   ]
 
   @doc """

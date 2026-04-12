@@ -17,6 +17,10 @@ let VersionSource = [|
   'GitLabReleases,
   'JsonIndex,
   'CustomApi,
+  # CustomUrl: use the `url_handler` field to discover versions and resolve
+  # archive URLs.  Required when a tool's version index is not a GitHub/GitLab
+  # releases API (e.g. Zig JSON index, Node.js dist index, Julia S3).
+  'CustomUrl,
   'LanguageManager,
 |] in
 
@@ -216,6 +220,27 @@ let RuntimePlugin = {
     | LegacyFileSupport
     | optional
     | doc "Support for .nvmrc, .python-version, etc.",
+
+  # === Custom URL handler (required when version_source = 'CustomUrl or 'JsonIndex) ===
+  #
+  # Provides an escape hatch for tools whose version discovery and archive URLs
+  # cannot be expressed through the standard GitHub/GitLab Releases API.
+  #
+  # Fields:
+  #   versions_url           — URL to fetch for version listing
+  #   version_key_pattern    — regex to filter keys/values from the response
+  #   archive_url_template   — URL template; variables: {{version}}, plus
+  #                            tool-specific vars (e.g. {{zig_platform}},
+  #                            {{go_os}}, {{node_arch}}).  See UrlHandler
+  #                            in opsm_ex/lib/opsm/runtime/url_handler.ex.
+  url_handler
+    | {
+        versions_url          | String,
+        version_key_pattern   | String | optional,
+        archive_url_template  | String,
+      }
+    | optional
+    | doc "Custom URL handler for tools not on GitHub/GitLab Releases API",
 
   # === Attribution ===
   contributor
