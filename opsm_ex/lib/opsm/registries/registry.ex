@@ -5,7 +5,7 @@ defmodule Opsm.Registries.Registry do
   Routes package requests to the appropriate registry client.
   Includes caching for improved performance.
 
-  Supports 101 registry adapters across:
+  Supports 103 registry adapters across:
   - Major language ecosystems (npm, cargo, hex, pypi, gem, go, pub, hackage, nuget, maven)
   - Extended language ecosystems (packagist, cpan, cran, conda, cocoapods, opam, clojars, etc.)
   - System package managers (apt, rpm, alpine, homebrew, nix, flatpak, snap, guix, etc.)
@@ -44,7 +44,7 @@ defmodule Opsm.Registries.Registry do
 
   # Niche/custom ecosystems
   alias Opsm.Registries.{Nimble, Idris2, Git, Agentic, Oblibeny, MyLang,
-    JuliaTheViper, ErrorLang, Eclexia}
+    JuliaTheViper, ErrorLang, Eclexia, AffineScript, RattleScript}
 
   alias Opsm.Cache
 
@@ -287,7 +287,13 @@ defmodule Opsm.Registries.Registry do
     error_lang: ErrorLang,
     error: ErrorLang,
     eclexia: Eclexia,
-    ecl: Eclexia
+    ecl: Eclexia,
+    affinescript: AffineScript,
+    affine: AffineScript,
+    afs: AffineScript,
+    rattlescript: RattleScript,
+    rattle: RattleScript,
+    rts: RattleScript
   }
 
   # All primary forth names (for search_all / exists_all? defaults)
@@ -313,7 +319,7 @@ defmodule Opsm.Registries.Registry do
     :jsdelivr, :cdnjs, :webjars, :github_packages, :gitlab_packages,
     :wordpress, :wordpress_themes, :wapm, :bioconductor, :astrolabe, :vpm,
     # Niche
-    :nimble, :idris2, :eclexia
+    :nimble, :idris2, :eclexia, :affinescript, :rattlescript
   ]
 
   @doc """
