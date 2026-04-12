@@ -209,16 +209,19 @@ defmodule Opsm.Runtime.Manager do
   def remove(tool) do
     tool_dir = Path.join(@runtimes_dir, tool)
 
-    case File.rm_rf(tool_dir) do
-      {:ok, _} ->
-        # Remove from active map
-        active = load_active()
-        write_active(Map.delete(active, tool))
-        :ok
-      {:error, :enoent, _} ->
-        {:error, :not_installed}
-      {:error, reason, _} ->
-        {:error, reason}
+    # File.rm_rf returns {:ok, []} for non-existent paths, so we must
+    # check existence explicitly before removal.
+    if File.dir?(tool_dir) do
+      case File.rm_rf(tool_dir) do
+        {:ok, _} ->
+          active = load_active()
+          write_active(Map.delete(active, tool))
+          :ok
+        {:error, reason, _} ->
+          {:error, reason}
+      end
+    else
+      {:error, :not_installed}
     end
   end
 

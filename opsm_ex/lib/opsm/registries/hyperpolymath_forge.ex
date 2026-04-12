@@ -212,7 +212,9 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   # ---------------------------------------------------------------------------
 
   defp fetch_org_repos do
-    collect_pages("#{@github_api}/orgs/#{@github_org}/repos", [])
+    # `hyperpolymath` is a GitHub user account, not an org.
+    # `/orgs/<name>/repos` returns 404 for user accounts; `/users/<name>/repos` works.
+    collect_pages("#{@github_api}/users/#{@github_org}/repos", [])
   end
 
   defp collect_pages(url, acc) do

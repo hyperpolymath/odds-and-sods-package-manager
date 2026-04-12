@@ -32,15 +32,18 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
   end
 
   # ---------------------------------------------------------------------------
-  # search/2 — always returns a list (even on network failure)
+  # search/2 — hits the GitHub API (unauthenticated), so these tests require
+  # network access and an un-rate-limited IP. Tagged :external_api.
   # ---------------------------------------------------------------------------
 
   describe "search/2" do
+    @tag :external_api
     test "returns a list for any query" do
       result = HyperpPolymathForge.search("opsm", [])
       assert is_list(result)
     end
 
+    @tag :external_api
     test "returns a list for empty string query" do
       result = HyperpPolymathForge.search("", [])
       assert is_list(result)
@@ -48,15 +51,17 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
   end
 
   # ---------------------------------------------------------------------------
-  # versions/1
+  # versions/1 — hits GitHub API for tag list. Tagged :external_api.
   # ---------------------------------------------------------------------------
 
   describe "versions/1" do
+    @tag :external_api
     test "returns ok tuple with list for any package name" do
       assert {:ok, versions} = HyperpPolymathForge.versions("opsm")
       assert is_list(versions)
     end
 
+    @tag :external_api
     test "returns ok tuple with list for non-existent package" do
       assert {:ok, versions} = HyperpPolymathForge.versions("xyz-definitely-not-a-package-999")
       assert is_list(versions)
