@@ -6,6 +6,8 @@ set shell := ["bash", "-uc"]
 set dotenv-load := true
 set positional-arguments := true
 
+import? "contractile.just"
+
 project := "opsm"
 version := "1.2.0"
 
