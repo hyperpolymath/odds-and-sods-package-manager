@@ -1,0 +1,147 @@
+// SPDX-License-Identifier: PMPL-1.0
+// OPSM GUI — AffineScript TEA Interface
+// Underpinned by Cadre Router (Affine Stack Implementation)
+//
+// Purpose: Provide a formally verified, resource-safe interface for the
+// OPSM — Federated package manager + tool version management.
+
+// ── Types ─────────────────────────────────────────────────────────────────
+
+struct Package {
+  name: String,
+  version: String,
+  registry: String
+}
+
+enum InstallStatus {
+  NotStarted,
+  Installing,
+  Installed,
+  Failed(String)
+}
+
+enum Route {
+  Home,
+  Search(String),
+  PackageDetail(String, String),
+  Install(String, String, String),
+  Installed,
+  Settings,
+  NotFound
+}
+
+// ── Model ───────────────────────────────────────────────────────────────────
+
+struct Model {
+  route: Route,
+  search_query: String,
+  install_status: InstallStatus,
+  loading: Bool,
+  history_depth: Int
+}
+
+// ── Msg ──────────────────────────────────────────────────────────────────────
+
+enum Msg {
+  Navigate(Route),
+  UpdateSearchQuery(String),
+  PerformSearch(String),
+  SetInstallStatus(InstallStatus),
+  PopState
+}
+
+// ── TEA Logic ────────────────────────────────────────────────────────────────
+
+fn opsm_init() -> Model {
+  {
+    route: Route::Home,
+    search_query: "",
+    install_status: InstallStatus::NotStarted,
+    loading: false,
+    history_depth: 0
+  }
+}
+
+fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
+  match model {
+    { route: r, search_query: s, install_status: i, loading: l, history_depth: h } => {
+      match msg {
+        Navigate(new_route) => {
+          {
+            route: new_route,
+            search_query: s,
+            install_status: i,
+            loading: false,
+            history_depth: h + 1
+          }
+        }
+
+        UpdateSearchQuery(new_query) => {
+          {
+            route: r,
+            search_query: new_query,
+            install_status: i,
+            loading: l,
+            history_depth: h
+          }
+        }
+
+        PerformSearch(query) => {
+          {
+            route: Route::Search(query),
+            search_query: query,
+            install_status: i,
+            loading: true,
+            history_depth: h + 1
+          }
+        }
+
+        SetInstallStatus(status) => {
+          {
+            route: r,
+            search_query: s,
+            install_status: status,
+            loading: false,
+            history_depth: h
+          }
+        }
+
+        PopState => {
+          if h > 0 {
+            {
+              route: Route::Home,
+              search_query: s,
+              install_status: i,
+              loading: false,
+              history_depth: h - 1
+            }
+          } else {
+            {
+              route: r,
+              search_query: s,
+              install_status: i,
+              loading: l,
+              history_depth: 0
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+fn opsm_view(model: Model) -> String {
+  match model.route {
+    Home => "OPSM HOME: Federated Package Manager",
+    Search(q) => "SEARCH RESULTS: " + q,
+    PackageDetail(n, v) => "PACKAGE: " + n + " v" + v,
+    Install(reg, n, v) => "INSTALLING: " + n + " from " + reg,
+    Installed => "INSTALLED PACKAGES",
+    Settings => "OPSM SETTINGS",
+    NotFound => "404: Route Not Found"
+  }
+}
+
+fn opsm_subs(model: Model) -> String {
+  "None"
+}
