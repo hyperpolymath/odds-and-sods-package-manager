@@ -272,6 +272,43 @@ cmd_which() {
   fi
 }
 
+cmd_plugin() {
+  local subcmd="${1:-}"
+  case "$subcmd" in
+    list)
+      # In OPSM, 'plugins' are just .ncl files in core/
+      ls "$PLUGIN_DIR" | grep ".ncl$" | sed 's/.ncl$//'
+      ;;
+    *)
+      err "Usage: opsm plugin list"
+      return 1
+      ;;
+  esac
+}
+
+cmd_current() {
+  local tool="${1:?Usage: opsm-runtime current <tool>}"
+  local tv_ver
+  tv_ver=$(grep "^$tool " .tool-versions 2>/dev/null | awk '{print $2}' || true)
+  if [[ -n "$tv_ver" ]]; then
+    echo "$tool $tv_ver (local)"
+  else
+    tv_ver=$(grep "^$tool " "$OPSM_DIR/tool-versions" "$OPSM_DIR/.tool-versions" 2>/dev/null | head -1 | awk '{print $2}' || true)
+    if [[ -n "$tv_ver" ]]; then
+      echo "$tool $tv_ver (global)"
+    else
+      echo "$tool none (not set)"
+    fi
+  fi
+}
+
+cmd_latest() {
+  local tool="${1:?Usage: opsm-runtime latest <tool>}"
+  # Simple placeholder for now to keep desktop UI happy
+  # Real resolution logic will be in the Zig/Idris core
+  echo "latest"
+}
+
 cmd_doctor() {
   echo -e "${BOLD}OPSM Runtime Doctor${NC}"
   echo
@@ -351,8 +388,11 @@ case "${1:-help}" in
   install)   shift; cmd_install "$@" ;;
   remove|uninstall) shift; cmd_remove "$@" ;;
   list|ls)   cmd_list ;;
+  plugin)    shift; cmd_plugin "$@" ;;
+  current)   shift; cmd_current "$@" ;;
   set)       shift; "$CONFIGURATOR" set "$@" ;;
   which)     shift; cmd_which "$@" ;;
+  latest)    shift; cmd_latest "$@" ;;
   reshim)    shift; cmd_reshim "$@" ;;
   import)    shift; "$CONFIGURATOR" import "$@" ;;
   export)    shift; "$CONFIGURATOR" export "$@" ;;
