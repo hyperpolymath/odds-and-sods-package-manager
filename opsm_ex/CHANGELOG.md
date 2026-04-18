@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Phase 3 — Manifest Conversion Expansion:**
 - `Opsm.Manifest.Writer` — Bidirectional manifest conversion to 7 formats (package.json, Cargo.toml, mix.exs, pyproject.toml, pubspec.yaml, go.mod, opsm.toml)
 - `Opsm.Manifest.OpsmToml` — Native OPSM manifest format parser/writer with build/run config
-- Extended `ManifestFinder` candidates: opsm.toml, pubspec.yaml, go.mod, Gemfile, build.zig, justfile, requirements.txt, setup.py, Makefile
+- Extended `ManifestFinder` candidates: opsm.toml, pubspec.yaml, go.mod, Gemfile, build.zig, Justfile, requirements.txt, setup.py, Makefile
 - Extended `Federation.convert_manifest/1`: pubspec.yaml, go.mod, Gemfile, opsm.toml
 
 **Phase 4 — Cross-Ecosystem Dependency Mapping:**

@@ -36,7 +36,7 @@ docker-compose -f selur-compose.yml up -d
 # Build with OPSM CLI
 opsm container build ./opsm_ex --version latest
 
-# Or with justfile
+# Or with Justfile
 just container-build latest
 ```
 
@@ -46,7 +46,7 @@ just container-build latest
 # Full pipeline: build → scan → sign → push
 opsm container pipeline ./opsm_ex
 
-# Or with justfile
+# Or with Justfile
 just container-pipeline latest ghcr.io/hyperpolymath
 ```
 

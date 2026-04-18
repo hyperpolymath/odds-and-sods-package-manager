@@ -12,7 +12,7 @@
 #   - RSR-standard workflows (17 workflows from rsr-template-repo)
 #   - A2ML manifest
 #   - Machine-readable metadata (.machine_readable/6a2/)
-#   - justfile with OPSM runtime recipes
+#   - Justfile with OPSM runtime recipes
 #   - README.adoc with badges
 #   - EXPLAINME.adoc
 #   - SECURITY.md, CONTRIBUTING.md, LICENSE
@@ -203,10 +203,10 @@ trust-scored before they reach your machine.
 - .tool-versions compatibility (reads asdf format)
 ADOC
 
-# --- Generate justfile ---
+# --- Generate Justfile ---
 cat > "$OUTPUT_DIR/justfile" << 'JUST'
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# justfile for opsm-runtime plugin
+# Justfile for opsm-runtime plugin
 
 # Validate the Nickel plugin definition
 check:
