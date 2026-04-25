@@ -5,12 +5,12 @@
 [metadata]
 project = "odds-and-sods-package-manager"
 version = "2.0.0"
-last-updated = "2026-04-12"
+last-updated = "2026-04-25"
 status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 80
+completion-percentage = 85
 phase = "first-class system (HFR + asdf replacement + runtime CLI)"
 
 [testing]
@@ -65,10 +65,17 @@ components = [
 asdf-core-plugins-fixed = ["zig", "cue", "golang", "nodejs", "dart", "nim", "kubectl"]
 runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 
+[completed-2026-04-25]
+- Wire provision.sh to delegate to `opsm runtime install` ✅ (was already done)
+- Tests for Runtime.Manager, UrlHandler, SourceBuilder ✅ (P1 done)
+  - UrlHandler: 13 new tests for extract_versions (map/array/filter/sort); process_versions_body/3 exposed @doc false
+  - HFR: 20 ETS-seeded tests for search/2 (keyword/forth/limit), exists?/1, fetch_package/2 — no network
+  - test_helper.exs: added :external_api to default exclusions
+- opsm audit --workspace ✅ (P2 done — reads [workspace] members from opsm.toml, audits each)
+- 72 tests, 0 failures (5 excluded :external_api + :e2e)
+
 [next-actions]
-- Wire provision.sh to delegate to `opsm runtime install` (P1)
-- Tests for Runtime.Manager, UrlHandler, SourceBuilder (P1)
-- Tests for HFR + new registry adapters (P2)
-- opsm audit --workspace support (P2)
-- Implement fuzz testing harness (P3)
+- Tests for HFR + new registry adapters (P2) — integrate adapters into HFR search
 - Add error handling E2E scenarios (P2)
+- opsm audit --workspace: wire into CI / add tests for the CLI handler
+- Implement fuzz testing harness (P3)
