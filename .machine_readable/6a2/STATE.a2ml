@@ -10,20 +10,20 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 90
-phase = "trust pipeline CI + images wired"
+completion-percentage = 92
+phase = "all 9 service images live in GHCR; CI fully wired"
 
 [testing]
 status = "COMPLETE"
-timestamp = "2026-04-25T12:05:00Z"
-tests-total = 706
-tests-passed = 706
-tests-skipped = 7
+timestamp = "2026-04-25T12:30:00Z"
+tests-total = 725
+tests-passed = 725
+tests-skipped = 9
 tests-failed = 0
 tests-excluded = 107
 excluded-tags = [":e2e", ":external_api", ":requires_nif"]
-new-tests-added = 102
-new-categories = ["security_aspect", "property_based", "concurrency_aspect", "audit_wiring"]
+new-tests-added = 121
+new-categories = ["security_aspect", "property_based", "concurrency_aspect", "audit_wiring", "registry_dispatch"]
 benchmarks-defined = 27
 
 [runtime-extension]
@@ -91,17 +91,21 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - trust-pipeline-images.yml: CI workflow for all 9 service images (matrix, GHA cache) ✅
 - nif-build.yml: CI workflow that compiles opsm_pq_nif + runs :requires_nif tests ✅
 - test/opsm/wiring/audit_test.exs: 12 tests for Wiring.run_audit/2 + workspace TOML parsing ✅
-- Containerfile fixes: openssl-dev in builder (selur, svalinn); removed unavailable APK
-  packages (afl++/libfuzzer, falco/bpftrace, opa) from checky-monkey/cerro-torre/vordr ✅
-- 4/5 trust pipeline images built and pushed to GHCR:
+- test/opsm/registries/language_adapters_test.exs: +18 tests for Registry dispatch dispatch ✅
+- All 9 service images live in GHCR (CI run 24929720837 = 100% success):
     ghcr.io/hyperpolymath/claim-forge:latest ✅
+    ghcr.io/hyperpolymath/checky-monkey:latest ✅
     ghcr.io/hyperpolymath/palimpsest-license:latest ✅
-    ghcr.io/hyperpolymath/oikos:latest ✅
     ghcr.io/hyperpolymath/cicd-hyper-a:latest ✅
-    ghcr.io/hyperpolymath/checky-monkey:latest (pending fix re-run)
+    ghcr.io/hyperpolymath/oikos:latest ✅
+    ghcr.io/hyperpolymath/selur:latest ✅
+    ghcr.io/hyperpolymath/svalinn:latest ✅
+    ghcr.io/hyperpolymath/vordr:latest ✅
+    ghcr.io/hyperpolymath/cerro-torre:latest ✅
+- rustls-tls switch: selur, svalinn, vordr, cerro-torre — Dependabot vulns 33→13 ✅
+- Containerfile fixes: removed unavailable APK packages (afl++/libfuzzer, falco/bpftrace, opa) ✅
 
 [next-actions]
-- Tests for HFR + new registry adapters (P2) — integrate adapters into HFR search
 - Add error handling E2E scenarios (P2)
-- Verify all 9 container images build cleanly after Containerfile fixes (in progress via CI)
 - Implement fuzz testing harness (P3)
+- Wire opsm audit --workspace into CI pipeline
