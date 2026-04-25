@@ -10,8 +10,8 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 94
-phase = "P2 complete; all 9 service images live in GHCR; CI fully wired"
+completion-percentage = 96
+phase = "runtime integration tests + vuln sweep complete; developer tier near-done"
 
 [testing]
 status = "COMPLETE"
@@ -117,7 +117,22 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - ServiceConfig KeyError fixed in e2e_test.exs (host:port → base_url) ✅
 - Test suite: 814 tests (e2e+integration included), 2 pre-existing failures, 0 new failures ✅
 
+[completed-2026-04-25e]
+- rustls-tls switch: claim-forge dev-dep reqwest + opsm_mobile reqwest 0.11→0.12+rustls-tls ✅
+- Regenerated Cargo.lock for claim-forge + opsm_mobile: openssl removed from both ✅
+- Dependabot vulns: 13 → 1 (10 openssl HIGH/LOW gone; 2 rand LOW gone/stale; glib MODERATE remains) ✅
+- glib 0.18.5 BLOCKED: tauri 2.10.3 (latest) still pulls glib 0.18.5; unfixable at consumer level;
+  fix blocked on tauri upstream GTK-rs 0.20 migration
+- Runtime integration tests: 15 new tests in test/opsm/runtime/integration_test.exs ✅
+  - UrlHandler.versions/2 vs zig/golang/nodejs live APIs (3 × 3 = 9 :external_api tests)
+  - archive_url/4 URL structure + HEAD reachability (2 :external_api tests)
+  - Manager.install/2 full pipeline: install→which→current_version→remove (4 :live_download tests)
+  - Manager idempotency (1 :live_download test)
+  - install_from_manifest/1 with live zig (1 :live_download test)
+- e2e.yml: added runtime-api CI job (runs :external_api, excludes :live_download) ✅
+- :live_download tag: full installs ~44MB; workflow_dispatch only to avoid bandwidth waste ✅
+
 [next-actions]
-- Fix pre-existing VersionConstraint alias failure in Version Conflict Detection tests (P1)
+- glib BLOCKED: wait for tauri to upgrade gtk-rs → 0.20 (upstream issue)
 - Implement fuzz testing harness (P3)
 - CRG-C → CRG-B: add 6 external targets, developer-tier feature gating pipeline

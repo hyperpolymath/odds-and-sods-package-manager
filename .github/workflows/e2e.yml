@@ -2,8 +2,14 @@
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # End-to-end and integration tests for OPSM (Odds & Sods Package Manager).
-# Runs the Elixir ExUnit E2E suite — offline tests only (network tests
-# tagged :skip run locally when registries are available).
+#
+# Jobs:
+#   e2e-opsm         — offline E2E suite (runs on every push/PR)
+#   runtime-api      — runtime version API integration tests (external_api tag, no downloads)
+#
+# :live_download tests (full tool installs ~10-50MB) are workflow_dispatch only
+# to avoid burning bandwidth on every commit; run manually when validating
+# the install pipeline end-to-end.
 
 name: E2E — OPSM Package Resolution
 
@@ -60,3 +66,39 @@ jobs:
 
       - name: Run all tests (unit + integration, excluding e2e/external_api/requires_nif)
         run: cd opsm_ex && mix test --trace
+
+  runtime-api:
+    name: Runtime — live version API integration (external_api, no downloads)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Setup Erlang/Elixir
+        uses: erlef/setup-beam@5a67e1a1dd86cae5e5bef84e2da5060406a66c07  # v1
+        with:
+          otp-version: '27.0'
+          elixir-version: '1.17'
+
+      - name: Restore Mix cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684  # v4
+        with:
+          path: |
+            opsm_ex/deps
+            opsm_ex/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('opsm_ex/mix.lock') }}
+
+      - name: Install dependencies
+        run: cd opsm_ex && mix deps.get
+
+      - name: Compile
+        run: cd opsm_ex && mix compile --warnings-as-errors
+
+      - name: Run runtime API integration tests (versions fetch + URL validation, no downloads)
+        run: |
+          cd opsm_ex && mix test test/opsm/runtime/integration_test.exs \
+            --include external_api \
+            --exclude live_download \
+            --trace
