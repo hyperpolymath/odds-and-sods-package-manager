@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # STATE.a2ml — Project state checkpoint
-# Updated 2026-04-25d: E2E error-handling + workspace audit CI wired
+# Updated 2026-04-25f: CRG-B achieved — 6 external targets documented
 
 [metadata]
 project = "odds-and-sods-package-manager"
@@ -10,8 +10,8 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 96
-phase = "runtime integration tests + vuln sweep complete; developer tier near-done"
+completion-percentage = 98
+phase = "CRG-B achieved; trust pipeline E2E remaining"
 
 [testing]
 status = "COMPLETE"
@@ -132,7 +132,32 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - e2e.yml: added runtime-api CI job (runs :external_api, excludes :live_download) ✅
 - :live_download tag: full installs ~44MB; workflow_dispatch only to avoid bandwidth waste ✅
 
+[external-targets]
+grade = "B"
+assessed = "2026-04-25"
+crg-version = "v2.0"
+targets = [
+  "self (odds-and-sods-package-manager) — [runtime] pins + HFR self-publishing",
+  "nextgen-languages workspace — 11 members, workspace install/publish, 8-tool runtime",
+  "nextgen-databases workspace — 7 members, custom idris2 registry, database domain",
+  "quandledb — standalone, custom quandledb forth atom, git+HFR deps",
+  "poly-k8s-mcp — DevOps, dogfood-wave-1, strict policy, pathroot routing",
+  "reposystem — system tools, dogfood-wave-1, strict policy, pathroot routing",
+]
+issues-fed-back = [
+  "TOML line-split bug in 9 adapters: comment-stripped values → invalid version strings (fixed: OpsmToml.parse/1)",
+  "workspace_members parse_workspace_members/1: comment lines matched as member names (fixed: Toml.decode/1)",
+]
+evidence-file = "READINESS.md"
+
+[completed-2026-04-25f]
+- CRG-B achieved: 6 diverse external targets documented in READINESS.md ✅
+- Issues-fed-back evidence: 2 concrete bugs found via external target testing + fixed ✅
+- Grade upgraded from C to B in STATE.a2ml ✅
+- Tauri fully eliminated from opsm_mobile (src-tauri/ deleted, TauriFFI→OpsmCommands, RuntimeBridge Gossamer-only) ✅
+- Fuzz harness: 14 properties in test/opsm/fuzz_harness_test.exs ✅
+- glib Dependabot alert: moot (Tauri deleted) ✅
+
 [next-actions]
-- glib BLOCKED: wait for tauri to upgrade gtk-rs → 0.20 (upstream issue)
-- Implement fuzz testing harness (P3)
-- CRG-C → CRG-B: add 6 external targets, developer-tier feature gating pipeline
+- Enterprise trust pipeline live-service E2E: real tests + selur-compose CI workflow
+- Grade A: requires external user confirmation outside hyperpolymath
