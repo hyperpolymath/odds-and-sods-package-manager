@@ -161,6 +161,73 @@ defmodule Opsm.Maintenance do
   end
 
   @doc """
+  Undo a specific operation by hex ID or 1-based position in the history list.
+
+  - `undo_by_id("a3b4c5d6")` — find entry with that ID and reverse it.
+  - `undo_by_id(3)` — reverse the 3rd most-recent entry.
+
+  Returns `{:ok, action, package}` or `{:error, reason}`.
+  """
+  def undo_by_id(id_or_pos) when is_integer(id_or_pos) and id_or_pos <= 0 do
+    {:error, "No history entry at position #{id_or_pos}"}
+  end
+
+  def undo_by_id(id_or_pos) when is_integer(id_or_pos) do
+    history = load_history()
+    case Enum.at(history, id_or_pos - 1) do
+      nil -> {:error, "No history entry at position #{id_or_pos}"}
+      entry -> do_undo_entry(entry)
+    end
+  end
+
+  def undo_by_id(id) when is_binary(id) do
+    history = load_history()
+    case Enum.find(history, fn e -> e["id"] == id end) do
+      nil -> {:error, "No history entry with id #{id}"}
+      entry -> do_undo_entry(entry)
+    end
+  end
+
+  defp do_undo_entry(entry) do
+    alias Opsm.Package.Installer
+
+    case entry["operation"] do
+      "install" ->
+        package = entry["details"]["package"]
+        IO.puts("Undoing: install #{package}")
+        case Installer.remove(package) do
+          :ok ->
+            record_history("undo_install", %{"package" => package, "undone_id" => entry["id"]})
+            IO.puts("✓ Removed #{package}")
+            {:ok, :removed, package}
+          {:error, reason} ->
+            IO.puts("✗ Failed to undo install: #{reason}")
+            {:error, reason}
+        end
+
+      "remove" ->
+        package = entry["details"]["package"]
+        forth_str = entry["details"]["forth"] || "generic"
+        version = entry["details"]["version"]
+        forth = Opsm.Validation.safe_to_forth(forth_str)
+
+        IO.puts("Undoing: remove #{package}")
+        case Installer.install(forth, package, version: version || "latest") do
+          {:ok, _} ->
+            record_history("undo_remove", %{"package" => package, "undone_id" => entry["id"]})
+            IO.puts("✓ Reinstalled #{package}")
+            {:ok, :reinstalled, package}
+          {:error, reason} ->
+            IO.puts("✗ Failed to undo remove: #{inspect(reason)}")
+            {:error, reason}
+        end
+
+      op ->
+        {:error, "Cannot undo operation: #{op}"}
+    end
+  end
+
+  @doc """
   Undo the last operation (if possible).
   """
   def undo_last do

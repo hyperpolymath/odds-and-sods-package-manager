@@ -677,14 +677,26 @@ defmodule Opsm.CLI do
 
         updates = targets
           |> Enum.map(fn entry ->
-            case Registry.fetch(entry.forth, entry.name) do
-              {:ok, latest} ->
-                if latest.version != entry.version do
-                  {entry, latest.version}
-                else
-                  nil
-                end
-              _ -> nil
+            # Skip packages pinned to a specific version
+            if Maintenance.pinned?(entry.name) do
+              pin = Maintenance.get_pin(entry.name)
+              pinned_ver = pin && pin["version"]
+              if pinned_ver do
+                IO.puts("  Skipping #{entry.name} (pinned to #{pinned_ver})")
+              else
+                IO.puts("  Skipping #{entry.name} (pinned)")
+              end
+              nil
+            else
+              case Registry.fetch(entry.forth, entry.name) do
+                {:ok, latest} ->
+                  if latest.version != entry.version do
+                    {entry, latest.version}
+                  else
+                    nil
+                  end
+                _ -> nil
+              end
             end
           end)
           |> Enum.reject(&is_nil/1)
@@ -1170,18 +1182,37 @@ defmodule Opsm.CLI do
           else
             IO.puts("Recent operations:")
             IO.puts("")
-            for entry <- history do
-              IO.puts("  #{entry["id"]} | #{entry["timestamp"]} | #{entry["operation"]}")
+            history
+            |> Enum.with_index(1)
+            |> Enum.each(fn {entry, pos} ->
+              IO.puts("  #{pos} | #{entry["id"]} | #{entry["timestamp"]} | #{entry["operation"]}")
               if entry["details"]["package"] do
-                IO.puts("    Package: #{entry["details"]["package"]}")
+                IO.puts("      Package: #{entry["details"]["package"]}")
               end
-            end
+            end)
+            IO.puts("")
+            IO.puts("Use `opsm history undo <n>` or `opsm history undo <id>` to reverse an operation.")
           end
         end
         System.halt(0)
 
       "undo" ->
-        case Maintenance.undo_last() do
+        # Support: `history undo` (last), `history undo 3` (by position), `history undo <hex-id>`
+        target = Enum.at(args, 1)
+
+        result = cond do
+          is_nil(target) ->
+            Maintenance.undo_last()
+
+          match?({n, ""} when n > 0, Integer.parse(target)) ->
+            {n, _} = Integer.parse(target)
+            Maintenance.undo_by_id(n)
+
+          true ->
+            Maintenance.undo_by_id(target)
+        end
+
+        case result do
           {:ok, _, _} -> System.halt(0)
           {:error, reason} ->
             Errors.print_error({:error, reason})
