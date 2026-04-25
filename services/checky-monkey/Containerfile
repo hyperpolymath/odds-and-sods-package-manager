@@ -17,12 +17,11 @@ RUN cargo build --release
 
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-# Install fuzzing tools
+# afl++ and libfuzzer are invoked by the Rust binary via subprocess;
+# they are not available as standalone Wolfi APK packages.
 RUN apk add --no-cache \
     libgcc \
-    libstdc++ \
-    afl++ \
-    libfuzzer
+    libstdc++
 
 RUN addgroup -g 1000 checky && \
     adduser -D -u 1000 -G checky checky

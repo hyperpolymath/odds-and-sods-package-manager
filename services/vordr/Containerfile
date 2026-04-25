@@ -17,11 +17,10 @@ RUN cargo build --release
 
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-# Install policy tools
+# OPA binary is embedded in the Rust service; not installed as a system package.
 RUN apk add --no-cache \
     libgcc \
-    libstdc++ \
-    opa
+    libstdc++
 
 RUN addgroup -g 1000 vordr && \
     adduser -D -u 1000 -G vordr vordr

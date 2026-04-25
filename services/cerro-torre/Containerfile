@@ -17,13 +17,11 @@ RUN cargo build --release
 
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-# Install monitoring tools
+# eBPF monitoring tools (falco, bpftrace) are host-kernel facilities
+# provided via privileged container mode; not installed as APK packages.
 RUN apk add --no-cache \
     libgcc \
-    libstdc++ \
-    falco \
-    bpftrace \
-    linux-headers
+    libstdc++
 
 RUN addgroup -g 1000 cerro && \
     adduser -D -u 1000 -G cerro cerro
