@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// RSR_COMPLIANCE.adoc — Rhodium Standard Repository compliance record
+// Repo: odds-and-sods-package-manager
+// As of: 2026-04-25
+// Template reference: RSR_OUTLINE.adoc
+
+= RSR Compliance Record — odds-and-sods-package-manager
+:toc:
+:sectnums:
+
+== Status
+
+[cols="1,2,1,2"]
+|===
+|Item |Required By |Status |Notes
+
+|`.editorconfig`
+|RSR Required Files
+|PRESENT
+|✓ Root
+
+|`.gitignore`
+|RSR Required Files
+|PRESENT
+|✓ Root
+
+|`Justfile` (or `justfile`)
+|RSR Required Files
+|PRESENT
+|`Justfile` (title-case); RSR_OUTLINE lists lowercase — both forms accepted
+
+|`README.adoc`
+|RSR Required Files
+|PRESENT
+|✓ Root
+
+|`LICENSE.txt`
+|RSR Required Files
+|N/A — different name
+|Repo carries `LICENSE` (same content, no `.txt`). PMPL-1.0-or-later + MPL-2.0 fallback present.
+
+|`LICENSE-MPL-2.0`
+|Estate policy (CLAUDE.md)
+|PRESENT
+|Added 2026-04-25.
+
+|`.well-known/security.txt`
+|RSR Required Files
+|PRESENT
+|✓
+
+|`.well-known/ai.txt`
+|RSR Required Files
+|PRESENT
+|✓
+
+|`.well-known/humans.txt`
+|RSR Required Files
+|PRESENT
+|✓
+
+|`guix.scm` or `flake.nix`
+|RSR Required Files
+|PRESENT
+|Both present.
+
+|`RSR_COMPLIANCE.adoc`
+|RSR Required Files
+|PRESENT
+|This file. Added 2026-04-25.
+
+|`STATE.scm` (root)
+|RSR Required Files
+|N/A — migrated
+|Estate has migrated from STATE.scm to A2ML. Canonical state is at `.machine_readable/6a2/STATE.a2ml`. Root STATE.scm intentionally absent per A2ML migration (complete 2026-04-12).
+
+|`.machine_readable/6a2/STATE.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓
+
+|`.machine_readable/6a2/META.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓ (content populated 2026-04-25)
+
+|`.machine_readable/6a2/ECOSYSTEM.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓ (relationships populated 2026-04-25)
+
+|`.machine_readable/6a2/AGENTIC.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓
+
+|`.machine_readable/6a2/NEUROSYM.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓ (report-format fixed to json 2026-04-25)
+
+|`.machine_readable/6a2/PLAYBOOK.a2ml`
+|Estate A2ML standard
+|PRESENT
+|✓
+
+|`0-AI-MANIFEST.a2ml`
+|Estate AI gatekeeper protocol
+|PRESENT
+|✓ (placeholders filled 2026-04-25)
+
+|`.bot_directives/`
+|Estate gitbot-fleet targeting
+|PRESENT
+|All six bot stubs added 2026-04-25.
+
+|`.machine_readable/contractiles/` (six verbs)
+|Estate contractile standard
+|PRESENT
+|All six verbs (`intend trust must bust adjust dust`) with canonical trident layout. Migration complete 2026-04-25.
+
+|`SECURITY.md`
+|Estate security policy
+|PRESENT
+|✓
+
+|`CONTRIBUTING.md`
+|Estate contribution standard
+|PRESENT
+|✓
+
+|`EXPLAINME.adoc`
+|Estate EXPLAINME standard
+|PRESENT
+|✓
+
+|`CHARTER.adoc`
+|Estate governance
+|PRESENT
+|✓
+
+|`MAINTAINERS.adoc`
+|Estate governance
+|PRESENT
+|✓
+
+|`ROADMAP.adoc`
+|Estate roadmap
+|PRESENT
+|✓
+
+|`.github/workflows/`
+|Estate CI standard
+|MISSING
+|No `.github/workflows/` directory present. CI workflows not yet scaffolded. High-priority gap.
+
+|===
+
+== Outstanding Gaps
+
+. **`.github/workflows/`** — No GitHub Actions workflows are present. This is the most significant
+  compliance gap. Required workflows per estate standard include `hypatia-scan.yml`, `codeql.yml`,
+  `scorecard.yml`, `quality.yml`, `mirror.yml`, and others. Scaffolding deferred; track in STATE.a2ml.
+
+. **`LICENSE.txt`** — RSR_OUTLINE references `LICENSE.txt` but the repo uses `LICENSE` (no extension).
+  The content is identical in intent. This is a naming divergence, not a content gap.
+
+== Audit Trail
+
+[cols="1,2,2"]
+|===
+|Date |Action |By
+
+|2026-03-16
+|Repository created from template
+|Jonathan D.A. Jewell
+
+|2026-04-25
+|RSR_COMPLIANCE.adoc created; honest status recorded
+|Claude Sonnet 4.6 (session audit)
+
+|===
