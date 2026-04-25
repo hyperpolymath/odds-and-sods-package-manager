@@ -4,21 +4,13 @@
     "react-dom": "npm:react-dom@^18.3.0",
     "@rescript/react": "npm:@rescript/react@^0.12.0",
     "rescript-tea": "npm:rescript-tea@latest",
-    "rescript-tauri": "npm:rescript-tauri@latest",
     "cadre-router": "npm:cadre-router@latest",
-    "cadre-tea-router": "npm:cadre-tea-router@latest",
-    "@tauri-apps/api": "npm:@tauri-apps/api@^2.0.0",
-    "@tauri-apps/plugin-fs": "npm:@tauri-apps/plugin-fs@^2.0.0",
-    "@tauri-apps/plugin-dialog": "npm:@tauri-apps/plugin-dialog@^2.0.0"
+    "cadre-tea-router": "npm:cadre-tea-router@latest"
   },
   "tasks": {
     "build": "rescript build",
     "clean": "rescript clean",
     "dev": "rescript build -w",
-    "tauri": "cargo tauri dev",
-    "tauri:build": "cargo tauri build",
-    "tauri:android": "cargo tauri android init && cargo tauri android build",
-    "tauri:ios": "cargo tauri ios init && cargo tauri ios build",
     "gossamer:dev": "deno task dev & gossamer dev --config gossamer.conf.json",
     "gossamer:build": "deno task build && gossamer build --config gossamer.conf.json"
   },

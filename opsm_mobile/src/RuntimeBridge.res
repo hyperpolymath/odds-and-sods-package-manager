@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: PMPL-1.0-or-later
 // Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+//
+// RuntimeBridge — Gossamer IPC bridge for OPSM Mobile.
+//
+// Dispatches commands through Gossamer's panel IPC
+// (`window.__gossamer_invoke`) with a plain browser-HTTP fallback for
+// development mode when Gossamer is not wrapping the page.
+//
+// Tauri support has been removed (2026-04-25); Gossamer is the sole desktop
+// runtime.
 
-/// RuntimeBridge — Unified IPC bridge for OPSM Mobile.
-///
-/// Detects the available runtime (Gossamer, Tauri, or browser-only) and
-/// dispatches `invoke` calls to the appropriate backend. This allows all
-/// command modules to use a single import instead of binding directly
-/// to `@tauri-apps/api/core`.
-///
-/// Priority order:
-///   1. Gossamer (`window.__gossamer_invoke`)  — own stack, preferred
-///   2. Tauri    (`window.__TAURI_INTERNALS__`) — legacy, transition
-///   3. Browser  (direct HTTP fetch)            — development fallback
+open RescriptCore
 
 // ---------------------------------------------------------------------------
-// Raw external bindings
+// Gossamer IPC
 // ---------------------------------------------------------------------------
 
 %%raw(`
@@ -32,17 +31,32 @@ function gossamerInvoke(cmd, args) {
 `)
 @val external gossamerInvoke: (string, 'a) => promise<'b> = "gossamerInvoke"
 
-%%raw(`
-function isTauriRuntime() {
-  return typeof window !== 'undefined'
-    && window.__TAURI_INTERNALS__ != null
-    && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__;
-}
-`)
-@val external isTauriRuntime: unit => bool = "isTauriRuntime"
+// ---------------------------------------------------------------------------
+// Browser-HTTP fallback (development / test without Gossamer running)
+// ---------------------------------------------------------------------------
 
-@module("@tauri-apps/api/core")
-external tauriInvoke: (string, 'a) => promise<'b> = "invoke"
+let apiBase = (): string => {
+  %raw(`
+    (typeof process !== 'undefined' && process.env && process.env.OPSM_API_URL)
+      ? process.env.OPSM_API_URL
+      : "http://localhost:4051/api"
+  `)
+}
+
+let browserFetch = (cmd: string, args: 'a): promise<'b> => {
+  let body = JSON.stringifyAny(args)->Option.getOr("{}")
+  let url = apiBase() ++ "/cmd/" ++ cmd
+  Fetch.fetch(
+    url,
+    {
+      method: #POST,
+      headers: Fetch.Headers.fromObject({"Content-Type": "application/json"}),
+      body: body,
+    },
+  )
+  ->Promise.then(resp => resp->Fetch.Response.json)
+  ->Promise.then(json => Promise.resolve(json->Obj.magic))
+}
 
 // ---------------------------------------------------------------------------
 // Runtime detection
@@ -50,187 +64,103 @@ external tauriInvoke: (string, 'a) => promise<'b> = "invoke"
 
 type runtime =
   | Gossamer
-  | Tauri
   | BrowserOnly
 
-%%raw(`
-var _detectedRuntime = null;
-function detectRuntime() {
-  if (_detectedRuntime !== null) return _detectedRuntime;
-  if (typeof window !== 'undefined' && typeof window.__gossamer_invoke === 'function') {
-    _detectedRuntime = 'gossamer';
-  } else if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__ != null && !window.__TAURI_INTERNALS__.__BROWSER_SHIM__) {
-    _detectedRuntime = 'tauri';
-  } else {
-    _detectedRuntime = 'browser';
-  }
-  return _detectedRuntime;
-}
-`)
-@val external detectRuntimeRaw: unit => string = "detectRuntime"
+let detectRuntime = (): runtime =>
+  if isGossamerRuntime() { Gossamer } else { BrowserOnly }
 
-let detectRuntime = (): runtime => {
-  switch detectRuntimeRaw() {
-  | "gossamer" => Gossamer
-  | "tauri" => Tauri
-  | _ => BrowserOnly
+let hasDesktopRuntime = (): bool => isGossamerRuntime()
+
+let runtimeName = (): string =>
+  switch detectRuntime() {
+  | Gossamer => "Gossamer"
+  | BrowserOnly => "Browser"
   }
-}
 
 // ---------------------------------------------------------------------------
 // Unified invoke
 // ---------------------------------------------------------------------------
 
-/// Invoke a backend command through whatever runtime is available.
-let invoke = (cmd: string, args: 'a): promise<'b> => {
+/// Invoke a backend command. Gossamer IPC when available; browser HTTP fetch
+/// when running in a plain browser (development / CI preview).
+let invoke = (cmd: string, args: 'a): promise<'b> =>
   if isGossamerRuntime() {
     gossamerInvoke(cmd, args)
-  } else if isTauriRuntime() {
-    tauriInvoke(cmd, args)
   } else {
-    Promise.reject(
-      JsError.throwWithMessage(
-        `No desktop runtime — "${cmd}" requires Gossamer or Tauri`,
-      ),
-    )
+    browserFetch(cmd, args)
   }
-}
 
-/// Invoke a command with no arguments.
-let invokeSimple = (cmd: string): promise<'a> => {
+let invokeSimple = (cmd: string): promise<'a> =>
   invoke(cmd, Obj.magic(Dict.make()))
-}
-
-/// Check whether any desktop runtime is available.
-let hasDesktopRuntime = (): bool => {
-  isGossamerRuntime() || isTauriRuntime()
-}
-
-/// Get a human-readable name for the current runtime.
-let runtimeName = (): string => {
-  switch detectRuntime() {
-  | Gossamer => "Gossamer"
-  | Tauri => "Tauri"
-  | BrowserOnly => "Browser"
-  }
-}
 
 // ---------------------------------------------------------------------------
-// Dialog abstraction
-// ---------------------------------------------------------------------------
-
-module Dialog = {
-  @module("@tauri-apps/plugin-dialog")
-  external tauriOpenRaw: JSON.t => promise<Nullable.t<JSON.t>> = "open"
-
-  @module("@tauri-apps/plugin-dialog")
-  external tauriSaveRaw: JSON.t => promise<Nullable.t<JSON.t>> = "save"
-
-  let open = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
-    if isGossamerRuntime() {
-      gossamerInvoke("__gossamer_dialog_open", opts)
-    } else if isTauriRuntime() {
-      tauriOpenRaw(opts)
-    } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — file dialogs require Gossamer or Tauri",
-        ),
-      )
-    }
-  }
-
-  let save = (opts: JSON.t): promise<Nullable.t<JSON.t>> => {
-    if isGossamerRuntime() {
-      gossamerInvoke("__gossamer_dialog_save", opts)
-    } else if isTauriRuntime() {
-      tauriSaveRaw(opts)
-    } else {
-      Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — save dialogs require Gossamer or Tauri",
-        ),
-      )
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Filesystem abstraction
+// Filesystem (Gossamer-only)
 // ---------------------------------------------------------------------------
 
 module Fs = {
-  @module("@tauri-apps/plugin-fs")
-  external tauriReadTextFileRaw: string => promise<string> = "readTextFile"
-
-  @module("@tauri-apps/plugin-fs")
-  external tauriWriteTextFileRaw: (string, string) => promise<unit> = "writeTextFile"
-
-  let readTextFile = (path: string): promise<string> => {
+  let readTextFile = (path: string): promise<string> =>
     if isGossamerRuntime() {
       gossamerInvoke("__gossamer_fs_read_text", {"path": path})
-    } else if isTauriRuntime() {
-      tauriReadTextFileRaw(path)
     } else {
       Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — filesystem access requires Gossamer or Tauri",
-        ),
+        JsError.throwWithMessage("No desktop runtime — filesystem access requires Gossamer"),
       )
     }
-  }
 
-  let writeTextFile = (path: string, contents: string): promise<unit> => {
+  let writeTextFile = (path: string, contents: string): promise<unit> =>
     if isGossamerRuntime() {
       gossamerInvoke("__gossamer_fs_write_text", {"path": path, "contents": contents})
-    } else if isTauriRuntime() {
-      tauriWriteTextFileRaw(path, contents)
     } else {
       Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — filesystem access requires Gossamer or Tauri",
-        ),
+        JsError.throwWithMessage("No desktop runtime — filesystem access requires Gossamer"),
       )
     }
-  }
 }
 
 // ---------------------------------------------------------------------------
-// Event abstraction
+// Dialog (Gossamer-only)
+// ---------------------------------------------------------------------------
+
+module Dialog = {
+  let open = (opts: JSON.t): promise<Nullable.t<JSON.t>> =>
+    if isGossamerRuntime() {
+      gossamerInvoke("__gossamer_dialog_open", opts)
+    } else {
+      Promise.reject(
+        JsError.throwWithMessage("No desktop runtime — file dialogs require Gossamer"),
+      )
+    }
+
+  let save = (opts: JSON.t): promise<Nullable.t<JSON.t>> =>
+    if isGossamerRuntime() {
+      gossamerInvoke("__gossamer_dialog_save", opts)
+    } else {
+      Promise.reject(
+        JsError.throwWithMessage("No desktop runtime — save dialogs require Gossamer"),
+      )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Event (Gossamer-only)
 // ---------------------------------------------------------------------------
 
 module Event = {
-  @module("@tauri-apps/api/event")
-  external tauriListen: (string, 'payload => unit) => promise<unit> = "listen"
-
-  @module("@tauri-apps/api/event")
-  external tauriEmit: (string, 'payload) => promise<unit> = "emit"
-
-  let listen = (event: string, callback: 'payload => unit): promise<unit> => {
+  let listen = (event: string, callback: 'payload => unit): promise<unit> =>
     if isGossamerRuntime() {
       gossamerInvoke("__gossamer_event_listen", {"event": event, "callback": callback})
-    } else if isTauriRuntime() {
-      tauriListen(event, callback)
     } else {
       Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — event listening requires Gossamer or Tauri",
-        ),
+        JsError.throwWithMessage("No desktop runtime — event listening requires Gossamer"),
       )
     }
-  }
 
-  let emit = (event: string, payload: 'payload): promise<unit> => {
+  let emit = (event: string, payload: 'payload): promise<unit> =>
     if isGossamerRuntime() {
       gossamerInvoke("__gossamer_event_emit", {"event": event, "payload": payload})
-    } else if isTauriRuntime() {
-      tauriEmit(event, payload)
     } else {
       Promise.reject(
-        JsError.throwWithMessage(
-          "No desktop runtime — event emission requires Gossamer or Tauri",
-        ),
+        JsError.throwWithMessage("No desktop runtime — event emission requires Gossamer"),
       )
     }
-  }
 }
