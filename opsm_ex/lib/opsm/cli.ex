@@ -173,6 +173,9 @@ defmodule Opsm.CLI do
       ["runtime", "current" | _]     -> {:runtime_current, opts}
       ["runtime"]                    -> {:error, "runtime requires a subcommand (install|list|update|remove|which|current)"}
 
+      # TUI
+      ["tui" | _] -> {:tui, opts}
+
       # Unknown
       [cmd | _] -> {:error, "Unknown command: #{cmd}"}
     end
@@ -244,6 +247,7 @@ defmodule Opsm.CLI do
       status                   Show service status and configuration
       repolist                 List configured registries (forths)
       api                      Run local Opsm API server
+      tui                      Launch the ratatui terminal interface (requires opsm-tui on PATH)
 
     FEDERATION:
       ports                    List available system package managers
@@ -1667,6 +1671,37 @@ defmodule Opsm.CLI do
         IO.puts("")
         Errors.print_error({:error, reason})
         System.halt(1)
+    end
+  end
+
+  defp run({:tui, _opts}) do
+    case find_tui_binary() do
+      nil ->
+        IO.puts(:stderr, "opsm-tui not found.")
+        IO.puts(:stderr, "Build it: cd opsm-ui/tui && cargo build --release")
+        IO.puts(:stderr, "Then ensure opsm-tui is on PATH, or set OPSM_TUI_BIN=/path/to/opsm-tui")
+        System.halt(1)
+
+      binary ->
+        # :nouse_stdio leaves fd 0/1/2 (stdin/stdout/stderr) inherited from the
+        # parent process — the real TTY — which crossterm's raw-mode and ratatui
+        # rendering require. Erlang port protocol uses fd 3/4 for exit_status only.
+        port = Port.open({:spawn_executable, binary}, [:nouse_stdio, :exit_status, args: []])
+        ref = Port.monitor(port)
+
+        receive do
+          {^port, {:exit_status, code}} -> System.halt(code)
+          {:DOWN, ^ref, :port, ^port, _} -> System.halt(0)
+        end
+    end
+  end
+
+  defp find_tui_binary do
+    env_override = System.get_env("OPSM_TUI_BIN")
+    cond do
+      env_override != nil and File.exists?(env_override) -> env_override
+      path = System.find_executable("opsm-tui") -> path
+      true -> nil
     end
   end
 
