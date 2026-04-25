@@ -143,7 +143,12 @@ defmodule Opsm.CLI do
       ["publish"] -> {:error, "publish requires a path argument"}
 
       ["audit", package | _] -> {:audit, package, opts}
-      ["audit"] -> {:error, "audit requires a package argument"}
+      ["audit"] ->
+        if Keyword.get(opts, :workspace, false) do
+          {:audit_workspace, opts}
+        else
+          {:error, "audit requires a package argument or --workspace flag"}
+        end
 
       # Federation
       ["ports" | _] -> {:ports, opts}
@@ -233,6 +238,7 @@ defmodule Opsm.CLI do
     PUBLISHING (trust pipeline):
       publish <path>           Publish through claim-forge -> checky-monkey -> registry
       audit <package>          Run sustainability + license analysis
+      audit --workspace        Audit all workspace members in opsm.toml
 
     SYSTEM:
       status                   Show service status and configuration
@@ -486,6 +492,50 @@ defmodule Opsm.CLI do
     config = Config.load_config_or_example()
     {:ok, _} = Wiring.run_audit(config, package)
     System.halt(0)
+  end
+
+  defp run({:audit_workspace, _opts}) do
+    manifest = "opsm.toml"
+
+    case File.read(manifest) do
+      {:error, :enoent} ->
+        IO.puts("No opsm.toml found in current directory.")
+        System.halt(1)
+
+      {:ok, content} ->
+        members = parse_workspace_members(content)
+
+        if members == [] do
+          IO.puts("No [workspace] members found in #{manifest}.")
+          System.halt(1)
+        end
+
+        config = Config.load_config_or_example()
+
+        IO.puts("Auditing #{length(members)} workspace member(s)...")
+
+        results =
+          Enum.map(members, fn member ->
+            IO.puts("\n── #{member} ──")
+            case Wiring.run_audit(config, member) do
+              {:ok, _} -> {member, :ok}
+              {:error, reason} ->
+                IO.puts("  [ERROR] #{inspect(reason)}")
+                {member, {:error, reason}}
+            end
+          end)
+
+        failures = Enum.filter(results, fn {_, r} -> r != :ok end)
+
+        IO.puts("\nWorkspace audit complete: #{length(members) - length(failures)}/#{length(members)} passed.")
+
+        if failures != [] do
+          IO.puts("Failed: #{Enum.map_join(failures, ", ", fn {m, _} -> m end)}")
+          System.halt(1)
+        end
+
+        System.halt(0)
+    end
   end
 
   defp run({:install, forth, package, opts}) do

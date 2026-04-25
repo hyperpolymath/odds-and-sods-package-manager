@@ -164,24 +164,123 @@ defmodule Opsm.Runtime.UrlHandlerTest do
   # versions/2 — version extraction from JSON responses
   # ---------------------------------------------------------------------------
 
-  describe "versions/2 — JSON object (Zig-style)" do
-    test "extracts and filters version keys" do
-      # Simulate Zig JSON index response body (already decoded)
+  # ---------------------------------------------------------------------------
+  # process_versions_body/3 — version extraction without network calls
+  # ---------------------------------------------------------------------------
+
+  describe "process_versions_body/3 — JSON object (Zig-style keyed map)" do
+    test "extracts stable semver keys, filters out 'master'" do
       body = %{
         "0.13.0" => %{"x86_64-linux" => %{"tarball" => "..."}},
         "0.12.0" => %{"x86_64-linux" => %{"tarball" => "..."}},
+        "0.11.0" => %{"x86_64-linux" => %{"tarball" => "..."}},
         "master" => %{"x86_64-linux" => %{"tarball" => "..."}}
       }
-      handler = %{
-        "versions_url" => "unused",
-        "version_key_pattern" => "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-        "archive_url_template" => "unused"
+      pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+      result = UrlHandler.process_versions_body(body, pattern, "zig")
+
+      assert "0.13.0" in result
+      assert "0.12.0" in result
+      assert "0.11.0" in result
+      refute "master" in result
+    end
+
+    test "sorts newest-first by semver" do
+      body = %{
+        "0.11.0" => %{},
+        "0.13.0" => %{},
+        "0.12.0" => %{}
       }
 
-      # We can't call versions/2 directly (it hits the network), but we can
-      # test the extraction logic via the public contract indirectly.
-      # For now, assert the handler map is well-formed.
-      assert is_binary(handler["version_key_pattern"])
+      [first | _] = UrlHandler.process_versions_body(body, nil, "zig")
+      assert first == "0.13.0"
+    end
+
+    test "handles empty map" do
+      assert [] = UrlHandler.process_versions_body(%{}, nil, "zig")
+    end
+
+    test "nil pattern passes all keys through" do
+      body = %{"0.13.0" => %{}, "master" => %{}, "nightly" => %{}}
+      result = UrlHandler.process_versions_body(body, nil, "zig")
+      assert length(result) == 3
+    end
+  end
+
+  describe "process_versions_body/3 — JSON array (Node.js/Go-style)" do
+    test "extracts 'version' field from array of objects" do
+      body = [
+        %{"version" => "v20.0.0", "lts" => false},
+        %{"version" => "v18.0.0", "lts" => "Hydrogen"},
+        %{"version" => "v16.0.0", "lts" => "Gallium"}
+      ]
+      pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+      result = UrlHandler.process_versions_body(body, pattern, "nodejs")
+
+      assert "v20.0.0" in result
+      assert "v18.0.0" in result
+      assert "v16.0.0" in result
+    end
+
+    test "sorts v-prefixed versions newest-first" do
+      body = [
+        %{"version" => "v18.0.0"},
+        %{"version" => "v20.0.0"},
+        %{"version" => "v16.0.0"}
+      ]
+
+      [first | _] = UrlHandler.process_versions_body(body, nil, "nodejs")
+      assert first == "v20.0.0"
+    end
+
+    test "handles Go-style go-prefix in version strings" do
+      body = [
+        %{"version" => "go1.21.0"},
+        %{"version" => "go1.20.0"},
+        %{"version" => "go1.22.0"}
+      ]
+
+      [first | _] = UrlHandler.process_versions_body(body, nil, "golang")
+      assert first == "go1.22.0"
+    end
+
+    test "handles plain string array (no version field)" do
+      body = ["1.5.0", "1.4.0", "1.6.0"]
+
+      [first | _] = UrlHandler.process_versions_body(body, nil, "sometool")
+      assert first == "1.6.0"
+    end
+
+    test "skips elements with no version field and no string" do
+      body = [%{"name" => "no-version-field"}, %{"version" => "1.0.0"}]
+
+      result = UrlHandler.process_versions_body(body, nil, "sometool")
+      assert result == ["1.0.0"]
+    end
+
+    test "handles empty array" do
+      assert [] = UrlHandler.process_versions_body([], nil, "sometool")
+    end
+  end
+
+  describe "process_versions_body/3 — pattern filtering" do
+    test "pattern filters out pre-release tags" do
+      body = %{
+        "1.0.0" => %{},
+        "1.0.0-alpha" => %{},
+        "1.1.0-beta.1" => %{},
+        "2.0.0" => %{}
+      }
+      pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+      result = UrlHandler.process_versions_body(body, pattern, "anytool")
+
+      assert "1.0.0" in result
+      assert "2.0.0" in result
+      refute "1.0.0-alpha" in result
+      refute "1.1.0-beta.1" in result
     end
   end
 end

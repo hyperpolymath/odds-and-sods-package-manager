@@ -94,6 +94,10 @@ defmodule Opsm.Runtime.UrlHandler do
   # Version extraction — handles JSON objects (keyed by version) and arrays
   # ---------------------------------------------------------------------------
 
+  # Public for testing only — not part of the external API.
+  @doc false
+  def process_versions_body(body, pattern, tool_name), do: extract_versions(body, pattern, tool_name)
+
   defp extract_versions(body, pattern, tool_name) when is_map(body) do
     # JSON object: keys are version strings (e.g., Zig's index.json)
     body
