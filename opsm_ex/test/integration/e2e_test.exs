@@ -2,7 +2,7 @@
 defmodule Opsm.Integration.E2ETest do
   use ExUnit.Case, async: false
 
-  alias Opsm.{Lockfile, Resolver}
+  alias Opsm.{Lockfile, Resolver, VersionConstraint}
   alias Opsm.Registries.Registry
 
   @moduletag :integration
@@ -995,8 +995,6 @@ defmodule Opsm.Integration.E2ETest do
     end
 
     test "version constraint parse rejects obviously invalid input" do
-      alias Opsm.VersionConstraint
-
       for bad <- ["", "!@#$%", ">>>invalid<<<"] do
         result = VersionConstraint.parse(bad, :semver)
         assert match?({:error, _}, result), "expected error for #{inspect(bad)}, got #{inspect(result)}"
