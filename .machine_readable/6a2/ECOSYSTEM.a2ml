@@ -8,3 +8,55 @@ ecosystem = "hyperpolymath"
 
 [position]
 type = "component"
+
+[related-projects]
+
+[[related-projects.consumer]]
+name = "nextgen-languages"
+relationship = "consumer"
+description = "Consumes OPSM for workspace install and publish of language toolchain packages."
+
+[[related-projects.consumer]]
+name = "nextgen-databases"
+relationship = "consumer"
+description = "Consumes OPSM workspace operations and custom forth adapters for database toolchain packages."
+
+[[related-projects.co-located-service]]
+name = "claim-forge"
+relationship = "sibling-service"
+location = "services/claim-forge"
+description = "Trust-pipeline service; verifies claim provenance. Co-located in services/."
+
+[[related-projects.co-located-service]]
+name = "checky-monkey"
+relationship = "sibling-service"
+location = "services/checky-monkey"
+description = "Trust-pipeline service; dependency audit checker. Co-located in services/."
+
+[[related-projects.co-located-service]]
+name = "palimpsest-license"
+relationship = "sibling-service"
+location = "services/palimpsest"
+description = "Trust-pipeline service; licence compliance verification. Co-located in services/."
+
+[[related-projects.co-located-service]]
+name = "cicd-hyper-a"
+relationship = "sibling-service"
+location = "services/cicd-hyper-a"
+description = "Trust-pipeline service; CI/CD orchestration helper. Co-located in services/."
+
+[[related-projects.co-located-service]]
+name = "oikos"
+relationship = "sibling-service"
+location = "services/oikos"
+description = "Trust-pipeline service; sustainability scoring for packages. Co-located in services/."
+
+[[related-projects.runtime-dependency]]
+name = "gossamer"
+relationship = "runtime-dependency"
+description = "Primary runtime for opsm_mobile (ADR-002). RuntimeBridge targets Gossamer IPC first."
+
+[[related-projects.sibling-crate]]
+name = "opsm_pq_nif"
+relationship = "sibling-crate"
+description = "Post-quantum NIF (Rust). Canonical NIF implementation; consumed by opsm_ex for PQ crypto operations."

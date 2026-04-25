@@ -7,3 +7,61 @@ project = "odds-and-sods-package-manager"
 author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
 license = "PMPL-1.0-or-later"
 standard = "RSR 2026"
+
+[architecture-decisions]
+
+[[architecture-decisions.adr]]
+id = "ADR-001"
+date = "2026-04-25"
+status = "accepted"
+title = "Opsm.Manifest.OpsmToml.parse/1 replaces naive line-splitting TOML parsers in registry adapters"
+decision = """
+Replace the naive line-splitting TOML parsers that existed in 9 language
+registry adapters (betlang, ephapax, tangle, wokelang, julia_the_viper,
+eclexia, my_lang, error_lang, oblibeny) with the shared
+Opsm.Manifest.OpsmToml.parse/1 implementation. Also replace
+parse_workspace_members/1 in cli.ex with Toml.decode/1.
+"""
+rationale = """
+The line-splitting approach was brittle and inconsistent across adapters.
+A single canonical TOML parser eliminates class of parse bugs and ensures
+all adapters handle multi-line and quoted values correctly.
+"""
+git-commit = "c98abc6"
+
+[[architecture-decisions.adr]]
+id = "ADR-002"
+date = "2026-04-25"
+status = "accepted"
+title = "Tauri eliminated — Gossamer runtime replaces it in opsm_mobile"
+decision = """
+Remove Tauri as the mobile/desktop runtime dependency. opsm_mobile now
+uses Gossamer as its primary runtime. RuntimeBridge is Gossamer-first
+with a browser-HTTP dev fallback for local development without a Gossamer
+daemon.
+"""
+rationale = """
+Tauri introduced a heavyweight dependency chain and complicated the mobile
+build pipeline. Gossamer is a lighter, estate-native runtime that aligns
+with the Groove-first inter-service communication standard. The browser-HTTP
+fallback preserves developer ergonomics.
+"""
+git-commit = "336a25b"
+
+[[architecture-decisions.adr]]
+id = "ADR-003"
+date = "2026-04-25"
+status = "accepted"
+title = "rustls-tls over native-tls in all Rust services"
+decision = """
+Switch all reqwest TLS backend selections from native-tls (openssl-sys) to
+rustls-tls across all Rust services in the project (claim-forge, opsm_mobile,
+selur, svalinn, vordr, cerro-torre, and any future Rust crates).
+"""
+rationale = """
+openssl-sys requires a C toolchain and platform OpenSSL headers, creating
+cross-compilation friction and a large transitive dependency chain. rustls-tls
+is pure Rust, statically linked, and cross-compiles cleanly — essential for
+the Stapeln container build pipeline.
+"""
+git-commit = "904be78 d4d6763 03d5395"
