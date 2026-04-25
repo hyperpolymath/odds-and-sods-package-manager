@@ -3,7 +3,7 @@
 
 # TEST-NEEDS.md — odds-and-sods-package-manager (OPSM)
 
-## Current State (Updated 2026-04-25)
+## Current State (Updated 2026-04-25, v1.5 additions same session)
 
 **CRG Grade: B (Beta — Broad Trial)** — achieved 2026-04-25
 _(Previous: C, achieved 2026-04-04)_
@@ -19,21 +19,24 @@ _(Previous: C, achieved 2026-04-04)_
 | Audit wiring        | 12    | ✓ PASS  | Wiring.run_audit/2 + workspace TOML parsing                 |
 | Registry dispatch   | 18    | ✓ PASS  | Registry.search/3 + exists?/2 for all 8 language adapters   |
 | Live service E2E    | 23    | ✓ PASS  | Trust pipeline live HTTP contract (`:live_service` tag)     |
+| CVE/OSV scanning    | 30    | ✓ PASS  | Typosquat Levenshtein + homoglyph, OSV client, Scanner      |
+| Storage backends    | 18    | ✓ PASS  | Local/S3/IPFS backends + Manager round-trips                |
 | Benchmarks          | 27    | ✓ READY | Baselines defined; formal Benchee run pending               |
 
-**Source modules:** ~238 own source files (Elixir + Rust + Idris2).
+**Source modules:** ~250 own source files (Elixir + Rust + Idris2).
 
-**Test Summary (2026-04-25):**
-- Total: 1 doctest + 67 properties + ~746 tests = **814 tests** (e2e + integration included)
-- Passes: 812
-- Pre-existing failures: 0 _(VersionConstraint alias issue fixed in `06b9e9f`)_
-- Skipped (`:skip`): 19
+**Test Summary (2026-04-25, including v1.5):**
+- Total: 1 doctest + 67 properties + ~794 tests = **862 tests** (e2e + integration included)
+- Passes: 860
+- Pre-existing failures: 0
+- Skipped (`:skip`): 20 (+1 OSV network test requires live API)
 - Excluded from default run: 31
   - `:external_api` — live registry/API calls (included in `runtime-api` CI job)
   - `:requires_nif` — NIF compilation required (included in `nif-build` CI job)
   - `:live_download` — full install ~44MB (workflow_dispatch only)
   - `:live_service` — trust pipeline services must be running (included in `trust-pipeline-e2e` CI job)
 - New tests added in 2026-04-25 session: **134**
+- New tests added in v1.5 (same session): **48** (30 security + 18 storage)
 
 ---
 
@@ -123,6 +126,42 @@ _(Previous: C, achieved 2026-04-04)_
 
 ---
 
+## ✓ COMPLETED — v1.5 CLI + Infrastructure (+48 tests, same session)
+
+### TUI Skeleton ✓ (`opsm_ex/lib/opsm/cli.ex`, `opsm-ui/tui/`)
+- [x] `opsm tui` dispatch clause in cli.ex
+- [x] `run({:tui, _opts})` launches `opsm-tui` via `Port.open` with `:nouse_stdio`
+  (preserves fd 0/1/2 for crossterm raw-mode)
+- [x] Graceful error when `opsm-tui` binary not found (build instructions printed)
+- [x] `OPSM_TUI_BIN` env var override for dev/testing
+- [x] `opsm-tui` Cargo build verified clean (ratatui 0.30, crossterm 0.28)
+
+### CVE/OSV Scanning + Typosquat Detection ✓ (`lib/opsm/security/`)
+- [x] `Opsm.Security.Osv` — api.osv.dev/v1/query client; forth→OSV ecosystem mapping;
+  severity extraction from database_specific/CVSS_V3/V2/ecosystem_specific; fixed_in extraction
+- [x] `Opsm.Security.Typosquat` — two-row Levenshtein DP (O(m·n)); homoglyph normalisation
+  (l↔1, o↔0, rn↔m, strip -_.); popular-package allowlists for npm/cargo/pypi/hex/gem/go
+- [x] `Opsm.Security.Scanner` — Report struct (clean?/critical_count/high_count/has_critical_or_high?);
+  scan/3 + scan_resolved/3; print_report/1
+- [x] `opsm scan <package>` CLI command; exits 1 on critical/high findings
+- [x] Passive warn-only scan in Installer.install_with_rollback (never blocks)
+- [x] 30 tests, 0 failures (1 skipped: network-dependent OSV test)
+
+### S3/IPFS Tarball Storage ✓ (`lib/opsm/storage/`)
+- [x] `Opsm.Storage.Backend` behaviour (put/get/exists?/url)
+- [x] `Opsm.Storage.Local` — wraps `~/.cache/opsm/packages`; always active
+- [x] `Opsm.Storage.S3` — inline AWS SigV4 (PUT/GET/HEAD); no ExAws dependency;
+  supports AWS/MinIO/Garage/Tigris/R2 via OPSM_S3_ENDPOINT override
+- [x] `Opsm.Storage.Ipfs` — Kubo HTTP RPC (/api/v0/add, /api/v0/cat, /api/v0/pin/ls);
+  local CID index (~/.cache/opsm/ipfs-index.json)
+- [x] `Opsm.Storage.Manager` — read-order Local→S3→IPFS; write-through on fresh download;
+  store failures logged as warnings, never propagated
+- [x] Downloader.download/2 integrated: checks Manager.fetch before registry; calls Manager.store after
+- [x] Backwards compatible: no env vars = local-only (existing behaviour)
+- [x] 18 tests, 0 failures
+
+---
+
 ## Remaining Work
 
 ### P1 — Formal Proofs (HIGH priority — see PROOF-NEEDS.md)
@@ -163,7 +202,8 @@ libFuzzer/AFL++ harness. For production-grade fuzzing:
 - [ ] Profile resolver with large dependency graphs (1000+ packages)
 - [ ] Cache version constraint parse results (hot path)
 - [ ] Parallel registry fetches: `Task.async_stream` for multi-registry resolution
-- [ ] Tarball download caching (S3/IPFS; `/tmp` is not production-safe)
+- [x] Tarball download caching (S3/IPFS) — **DONE** (`a9d353a`): Local/S3/IPFS
+  backends with inline SigV4 signing; Manager write-through; backwards-compatible
 - [ ] Benchmark against cargo/pip on equivalent graphs
 
 ### P3 — Mobile Device Testing
