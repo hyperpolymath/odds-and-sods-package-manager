@@ -55,7 +55,7 @@ This repo contains:
 ```
 odds-and-sods-package-manager/
 ├── 0-AI-MANIFEST.a2ml         # THIS FILE (start here)
-├── README.md                   # Project overview
+├── README.adoc                 # Project overview
 ├── [your source files]         # Main code
 ├── .machine_readable/          # SCM files (6 files)
 │   ├── .machine_readable/6a2/STATE.a2ml
@@ -110,7 +110,7 @@ After reading this file, demonstrate understanding by stating:
 ## META
 
 - **Format Version:** 1.0.0
-- **Created:** [DATE]
-- **Maintained By:** [YOUR-NAME/ORG]
+- **Created:** 2026-03-16
+- **Maintained By:** Jonathan D.A. Jewell (hyperpolymath)
 - **License:** PMPL-1.0-or-later
 - **Protocol:** https://github.com/hyperpolymath/0-ai-gatekeeper-protocol
