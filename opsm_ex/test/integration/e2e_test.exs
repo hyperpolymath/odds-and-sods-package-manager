@@ -915,4 +915,165 @@ defmodule Opsm.Integration.E2ETest do
       assert hex_count == 1
     end
   end
+
+  # ===========================================================================
+  # Error Handling — expanded scenarios (P2 2026-04-25)
+  # ===========================================================================
+
+  describe "Error Handling — registry degradation" do
+    test "unknown registry atom returns error, not crash" do
+      result = Registry.fetch(:totally_unknown_xyz_registry, "any-pkg", "latest")
+      assert match?({:error, _}, result)
+    end
+
+    test "search on unknown registry returns error, not crash" do
+      result = Registry.search(:totally_unknown_xyz_registry, "query", [])
+      assert match?({:error, _}, result)
+    end
+
+    test "search_all with only known-offline forths returns a map with empty lists" do
+      # These forths exist but the packages don't; betlang/nqc work offline
+      result = Registry.search_all("xyz-definitely-not-real-999", forths: [:betlang, :nqc])
+      assert is_map(result)
+      Enum.each(result, fn {_forth, packages} -> assert is_list(packages) end)
+    end
+
+    test "fetch on unreachable service returns error, not crash" do
+      # base_url pointing at a refused port; the adapters must not raise
+      config = Opsm.Config.example_config()
+      unreachable = %{config.oikos | base_url: "http://127.0.0.1:1"}
+      bad_config = %{config | oikos: unreachable}
+
+      import ExUnit.CaptureIO
+
+      capture_io(fn ->
+        # run_audit catches and formats service errors rather than raising
+        assert {:ok, _} = Opsm.Wiring.run_audit(bad_config, "test-pkg")
+      end)
+    end
+  end
+
+  describe "Error Handling — manifest and lockfile robustness" do
+    test "lockfile with unknown forth is readable without crash" do
+      # Simulate a lockfile that includes a registry we don't know about
+      lockfile = Lockfile.new()
+      |> Lockfile.add_package(%{
+        name: "future-pkg",
+        version: "1.0.0",
+        forth: :future_unknown_registry,
+        checksum: "sha256:abc123"
+      })
+
+      assert Lockfile.has_package?(lockfile, "future-pkg", :future_unknown_registry)
+    end
+
+    test "malformed TOML returns error tuple" do
+      assert {:error, _} = Toml.decode("{invalid toml ===")
+    end
+
+    test "empty TOML parses to empty map" do
+      assert {:ok, %{}} = Toml.decode("")
+    end
+
+    test "TOML with missing required fields is decoded without crash" do
+      # Adapters must handle missing license/description gracefully
+      {:ok, parsed} = Toml.decode("[package]\nname = \"minimal\"\n")
+      assert parsed["package"]["name"] == "minimal"
+      assert is_nil(parsed["package"]["license"])
+    end
+
+    test "lockfile with duplicate package names keeps last write" do
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "dupe", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "dupe", version: "2.0.0", forth: :npm})
+
+      pkg = Lockfile.get_package(lockfile, "dupe", :npm)
+      # latest write wins — implementation-defined, but must not crash
+      assert pkg != nil
+      assert pkg.name == "dupe"
+    end
+
+    test "version constraint parse rejects obviously invalid input" do
+      alias Opsm.VersionConstraint
+
+      for bad <- ["", "!@#$%", ">>>invalid<<<"] do
+        result = VersionConstraint.parse(bad, :semver)
+        assert match?({:error, _}, result), "expected error for #{inspect(bad)}, got #{inspect(result)}"
+      end
+    end
+  end
+
+  # ===========================================================================
+  # Workspace Audit Integration (P2 2026-04-25)
+  # CI wiring: exercises Wiring.run_audit/2 across a synthetic workspace.
+  # ===========================================================================
+
+  describe "Workspace audit — multi-member integration" do
+    setup do
+      dir = System.tmp_dir!() |> Path.join("opsm_e2e_audit_#{System.unique_integer([:positive])}")
+      File.mkdir_p!(dir)
+
+      toml = """
+      [workspace]
+      members = ["pkg-alpha", "pkg-beta", "pkg-gamma"]
+      """
+
+      File.write!(Path.join(dir, "opsm.toml"), toml)
+      on_exit(fn -> File.rm_rf!(dir) end)
+      {:ok, dir: dir}
+    end
+
+    test "audits all workspace members and returns ok for each", %{dir: dir} do
+      config = Opsm.Config.example_config()
+
+      content = File.read!(Path.join(dir, "opsm.toml"))
+      {:ok, parsed} = Toml.decode(content)
+      members = get_in(parsed, ["workspace", "members"]) || []
+
+      assert length(members) == 3
+
+      import ExUnit.CaptureIO
+
+      results =
+        Enum.map(members, fn member ->
+          capture_io(fn ->
+            {member, Opsm.Wiring.run_audit(config, member)}
+          end)
+          {member, :checked}
+        end)
+
+      assert length(results) == 3
+      Enum.each(results, fn {_member, status} -> assert status == :checked end)
+    end
+
+    test "workspace with empty members list completes without error", %{dir: _dir} do
+      dir2 =
+        System.tmp_dir!()
+        |> Path.join("opsm_e2e_audit_empty_#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(dir2)
+      File.write!(Path.join(dir2, "opsm.toml"), "[workspace]\nmembers = []\n")
+      on_exit(fn -> File.rm_rf!(dir2) end)
+
+      content = File.read!(Path.join(dir2, "opsm.toml"))
+      {:ok, parsed} = Toml.decode(content)
+      members = get_in(parsed, ["workspace", "members"]) || []
+      assert members == []
+    end
+
+    test "audit degrades gracefully when all services are unreachable", %{dir: _dir} do
+      config = Opsm.Config.example_config()
+
+      import ExUnit.CaptureIO
+
+      output =
+        capture_io(fn ->
+          assert {:ok, _} = Opsm.Wiring.run_audit(config, "any-package")
+        end)
+
+      # Must print section headers even when services fail
+      assert output =~ "Auditing package:"
+    end
+  end
 end

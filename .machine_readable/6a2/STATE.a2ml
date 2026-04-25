@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # STATE.a2ml — Project state checkpoint
-# Updated 2026-04-12: HFR + asdf replacement + runtime CLI complete
+# Updated 2026-04-25d: E2E error-handling + workspace audit CI wired
 
 [metadata]
 project = "odds-and-sods-package-manager"
@@ -10,20 +10,23 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 92
-phase = "all 9 service images live in GHCR; CI fully wired"
+completion-percentage = 94
+phase = "P2 complete; all 9 service images live in GHCR; CI fully wired"
 
 [testing]
 status = "COMPLETE"
-timestamp = "2026-04-25T12:30:00Z"
-tests-total = 725
-tests-passed = 725
-tests-skipped = 9
-tests-failed = 0
-tests-excluded = 107
-excluded-tags = [":e2e", ":external_api", ":requires_nif"]
-new-tests-added = 121
-new-categories = ["security_aspect", "property_based", "concurrency_aspect", "audit_wiring", "registry_dispatch"]
+timestamp = "2026-04-25T12:38:00Z"
+tests-total = 814
+tests-passed = 812
+tests-skipped = 19
+tests-failed = 2
+tests-excluded = 31
+excluded-tags = [":skip"]
+note-excluded = "e2e+integration now INCLUDED in CI; :skip marks network/live-service tests"
+pre-existing-failures = 2
+pre-existing-failure-notes = "Version Conflict Detection — VersionConstraint module alias issue; pre-dates this session"
+new-tests-added = 134
+new-categories = ["security_aspect", "property_based", "concurrency_aspect", "audit_wiring", "registry_dispatch", "error_handling_e2e", "workspace_audit_e2e"]
 benchmarks-defined = 27
 
 [runtime-extension]
@@ -105,7 +108,16 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - rustls-tls switch: selur, svalinn, vordr, cerro-torre — Dependabot vulns 33→13 ✅
 - Containerfile fixes: removed unavailable APK packages (afl++/libfuzzer, falco/bpftrace, opa) ✅
 
+[completed-2026-04-25d]
+- Fixed e2e.yml: add --include e2e --include integration (was silently skipping all E2E tests) ✅
+- Fixed e2e.yml: checkout action v4→v6.0.2 (canonical estate SHA) ✅
+- Added error handling E2E scenarios (13 tests: registry degradation + manifest robustness) ✅
+- Added workspace audit E2E scenarios (3 tests: multi-member, empty, graceful degradation) ✅
+- Workspace audit wired into CI via updated e2e.yml ✅
+- ServiceConfig KeyError fixed in e2e_test.exs (host:port → base_url) ✅
+- Test suite: 814 tests (e2e+integration included), 2 pre-existing failures, 0 new failures ✅
+
 [next-actions]
-- Add error handling E2E scenarios (P2)
+- Fix pre-existing VersionConstraint alias failure in Version Conflict Detection tests (P1)
 - Implement fuzz testing harness (P3)
-- Wire opsm audit --workspace into CI pipeline
+- CRG-C → CRG-B: add 6 external targets, developer-tier feature gating pipeline
