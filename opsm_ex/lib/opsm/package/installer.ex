@@ -165,6 +165,26 @@ defmodule Opsm.Package.Installer do
     IO.puts("")
     IO.puts("Installing #{Opsm.Colour.cyan("#{package.package}@#{version}")}...")
 
+    # CVE/OSV advisory scan + typosquat check (warn-only — never blocks install).
+    try do
+      {:ok, sec_report} = Opsm.Security.Scanner.scan_resolved(package.package, version, package.forth)
+      if !Opsm.Security.Scanner.Report.clean?(sec_report) do
+        IO.puts("  ⚠ Security warnings for #{package.package}@#{version}:")
+        if match?({:suspicious, _}, sec_report.typosquat) do
+          IO.puts("    Possible typosquat — verify package origin before use")
+        end
+        crit = Opsm.Security.Scanner.Report.critical_count(sec_report)
+        high = Opsm.Security.Scanner.Report.high_count(sec_report)
+        total = length(sec_report.vulnerabilities)
+        if total > 0 do
+          IO.puts("    #{total} OSV advisory/ies (#{crit} critical, #{high} high)")
+          IO.puts("    Run `opsm scan #{package.package}` for full details")
+        end
+      end
+    rescue
+      _ -> :ok
+    end
+
     # Run trust pipeline — gracefully degrade if services are unreachable.
     # Trust is advisory during install; only an explicit :failed blocks.
     IO.puts("  Running trust checks...")

@@ -173,6 +173,10 @@ defmodule Opsm.CLI do
       ["runtime", "current" | _]     -> {:runtime_current, opts}
       ["runtime"]                    -> {:error, "runtime requires a subcommand (install|list|update|remove|which|current)"}
 
+      # Security scanning
+      ["scan", package | _] -> {:scan, package, opts}
+      ["scan"] -> {:error, "scan requires a package argument"}
+
       # TUI
       ["tui" | _] -> {:tui, opts}
 
@@ -237,6 +241,10 @@ defmodule Opsm.CLI do
       history [list|info|undo|redo]        Transaction history
       download <package>       Download without installing
       check                    Verify package integrity
+
+    SECURITY:
+      scan <package>           CVE/OSV advisory lookup + typosquat detection
+      scan <package> --registry @forth  Scan in a specific ecosystem
 
     PUBLISHING (trust pipeline):
       publish <path>           Publish through claim-forge -> checky-monkey -> registry
@@ -1671,6 +1679,36 @@ defmodule Opsm.CLI do
         IO.puts("")
         Errors.print_error({:error, reason})
         System.halt(1)
+    end
+  end
+
+  defp run({:scan, package, opts}) do
+    alias Opsm.Security.Scanner
+    alias Opsm.Lockfile
+
+    forth_str = Keyword.get(opts, :registry)
+    forth = if forth_str, do: Opsm.Validation.safe_to_forth(forth_str), else: :npm
+
+    # Resolve version from lockfile if available and no --version given
+    version = Keyword.get(opts, :version) || resolve_installed_version(package, lockfile: Lockfile)
+
+    IO.puts("Scanning #{package}#{if version, do: "@#{version}", else: ""}...")
+
+    {:ok, report} = Scanner.scan(package, forth, version: version)
+    Scanner.print_report(report)
+
+    exit_code = if Scanner.Report.has_critical_or_high?(report), do: 1, else: 0
+    System.halt(exit_code)
+  end
+
+  defp resolve_installed_version(package, lockfile: lockfile_mod) do
+    case lockfile_mod.read() do
+      {:ok, lf} ->
+        case lockfile_mod.packages_for_name(lf, package) do
+          [entry | _] -> entry.version
+          []          -> nil
+        end
+      _ -> nil
     end
   end
 
