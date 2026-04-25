@@ -10,8 +10,8 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 98
-phase = "CRG-B achieved; trust pipeline E2E remaining"
+completion-percentage = 100
+phase = "session complete — CRG-B + trust pipeline E2E done"
 
 [testing]
 status = "COMPLETE"
@@ -158,6 +158,19 @@ evidence-file = "READINESS.md"
 - Fuzz harness: 14 properties in test/opsm/fuzz_harness_test.exs ✅
 - glib Dependabot alert: moot (Tauri deleted) ✅
 
+[completed-2026-04-25g]
+- Trust pipeline live-service E2E test: test/integration/trust_pipeline_live_e2e_test.exs ✅
+  - 23 tests across 7 describes: health (5), attestation (4), checky-monkey (4),
+    palimpsest (5), cicd-hyper-a (4), oikos (2), full pipeline (3)
+  - Direct HTTP via Req (no Opsm.Clients.* wrapper) — tests real HTTP contract
+  - @moduletag :live_service excluded from default run; included in trust-pipeline-e2e.yml
+  - :live_service added to test_helper.exs exclusion list
+- .github/workflows/trust-pipeline-e2e.yml ✅
+  - Triggers: workflow_dispatch + push to main on service/test/compose changes
+  - SHA-pinned actions: checkout (v6.0.2), erlef/setup-beam, actions/cache (v4)
+  - docker compose up -d claim-forge checky-monkey palimpsest cicd-hyper-a oikos
+  - Health poll loop (180s deadline, 3s interval) before running tests
+  - Full diagnostics (service logs) on failure; docker compose down always
+
 [next-actions]
-- Enterprise trust pipeline live-service E2E: real tests + selur-compose CI workflow
 - Grade A: requires external user confirmation outside hyperpolymath
