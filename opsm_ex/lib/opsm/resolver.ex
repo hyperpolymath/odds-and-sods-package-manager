@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Resolver do
   @moduledoc """
   Dependency resolution engine using a PubGrub-inspired algorithm.

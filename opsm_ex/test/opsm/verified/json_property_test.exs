@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Verified.JsonPropertyTest do
   use ExUnit.Case
   use ExUnitProperties

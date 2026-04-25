@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.SmartInstall do
   @moduledoc """
   Smart install parsing and execution logic shared by CLI and API.

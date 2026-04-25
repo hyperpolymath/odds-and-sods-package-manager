@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Imp do
   @moduledoc """
   Internal Manifest Protocol helpers for OPSM.

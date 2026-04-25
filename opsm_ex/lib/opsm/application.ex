@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Application do
   @moduledoc """
   OTP application entrypoint. Starts the registry gateway HTTP server.

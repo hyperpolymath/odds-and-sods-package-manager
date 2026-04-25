@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Clients.Palimpsest do
   @moduledoc """
   Client for Palimpsest license analysis service.

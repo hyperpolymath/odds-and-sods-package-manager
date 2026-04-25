@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.SafeExec do
   @moduledoc """
   Safe wrapper around System.cmd with allowlist and argument validation.

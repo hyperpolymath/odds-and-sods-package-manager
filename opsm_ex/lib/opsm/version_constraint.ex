@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.VersionConstraint do
   @moduledoc """
   Parse and evaluate version constraints across different ecosystems.

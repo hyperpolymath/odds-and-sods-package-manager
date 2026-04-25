@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Registries.PubDev do
   @moduledoc """
   pub.dev Registry API client (Dart/Flutter packages).

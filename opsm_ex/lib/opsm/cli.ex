@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.CLI do
   @moduledoc """
   CLI entry point for OPSM - Odds-and-sods Package Manager.
@@ -2144,25 +2144,11 @@ defmodule Opsm.CLI do
   end
 
   # Parse the [workspace] members list from an opsm.toml content string.
-  # Returns ["member1", "member2", ...] from the `members = [...]` array.
   defp parse_workspace_members(content) do
-    content
-    |> String.split("\n")
-    |> Enum.reduce({false, []}, fn line, {in_ws, acc} ->
-      stripped = String.trim(line)
-      cond do
-        stripped == "[workspace]" -> {true, acc}
-        String.starts_with?(stripped, "[") and stripped != "[workspace]" and in_ws -> {false, acc}
-        in_ws and String.starts_with?(stripped, "members") ->
-          # members = ["a", "b", "c"] — extract the values
-          values =
-            Regex.scan(~r/"([^"]+)"/, stripped)
-            |> Enum.map(fn [_, m] -> m end)
-          {true, acc ++ values}
-        true -> {in_ws, acc}
-      end
-    end)
-    |> elem(1)
+    case Toml.decode(content) do
+      {:ok, %{"workspace" => %{"members" => members}}} when is_list(members) -> members
+      _ -> []
+    end
   end
 
   # Parse "tool@version" or just "tool" (defaulting to "latest")

@@ -16,6 +16,7 @@ defmodule Opsm.Registries.Eclexia do
   """
 
   alias Opsm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opsm.Manifest.OpsmToml
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.eclexia.org/api/v1"
@@ -181,91 +182,45 @@ defmodule Opsm.Registries.Eclexia do
   end
 
   defp parse_toml_manifest(toml_text, repo_url, version) do
-    lines = String.split(toml_text, "\n")
+    # Use canonical OpsmToml parser; fall back to minimal struct on parse failure.
+    manifest =
+      case OpsmToml.parse(toml_text) do
+        {:ok, m} ->
+          %{m | source_forth: :eclexia}
 
-    # Extract [package] section from TOML
-    in_package = Enum.reduce(lines, {false, %{}}, fn line, {inside, acc} ->
-      cond do
-        String.starts_with?(String.trim(line), "[package]") ->
-          {true, acc}
-
-        String.starts_with?(String.trim(line), "[") ->
-          {false, acc}
-
-        inside ->
-          case String.split(String.trim(line), " = ", parts: 2) do
-            [key, value] ->
-              clean_value = value |> String.trim("\"") |> String.trim()
-              {true, Map.put(acc, String.trim(key), clean_value)}
-            _ ->
-              {inside, acc}
-          end
-
-        true ->
-          {inside, acc}
+        {:error, _} ->
+          %ManifestFormat{
+            name: repo_url |> String.split("/") |> List.last() |> String.trim(),
+            version: version,
+            description: nil,
+            license: nil,
+            homepage: repo_url,
+            repository: repo_url,
+            authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
+            keywords: ["economics-as-code", "resource-tracking", "shadow-prices"],
+            dependencies: %{},
+            dev_dependencies: %{},
+            source_forth: :eclexia,
+            raw_manifest: %{}
+          }
       end
-    end)
-    |> elem(1)
 
-    pkg_name = in_package["name"] || extract_name(repo_url)
+    pkg_name = manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim())
 
     pkg = %ResolvedPackage{
       package: pkg_name,
-      version: in_package["version"] || version,
+      version: manifest.version || version,
       forth: :eclexia,
       registry_url: repo_url,
       tarball_url: "#{repo_url}/archive/#{version}.tar.gz",
       checksum: nil,
       checksum_algo: nil,
-      manifest: %ManifestFormat{
-        name: pkg_name,
-        version: in_package["version"] || version,
-        description: in_package["description"],
-        license: in_package["license"],
-        homepage: in_package["homepage"] || repo_url,
-        repository: repo_url,
-        authors: parse_authors(in_package["authors"]),
-        keywords: parse_keywords(in_package["keywords"]),
-        dependencies: %{},
-        dev_dependencies: %{},
-        source_forth: :eclexia,
-        raw_manifest: in_package
-      },
+      manifest: manifest,
       attestations: [],
       resolved_deps: []
     }
 
     {:ok, pkg}
-  end
-
-  defp extract_name(url) do
-    url
-    |> String.split("/")
-    |> List.last()
-    |> String.trim()
-  end
-
-  defp parse_authors(nil), do: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
-  defp parse_authors(str) when is_binary(str) do
-    # TOML array in string form: ["Author One", "Author Two"]
-    str
-    |> String.trim("[")
-    |> String.trim("]")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-    |> Enum.map(&String.trim(&1, "\""))
-    |> Enum.reject(&(&1 == ""))
-  end
-
-  defp parse_keywords(nil), do: ["economics-as-code", "resource-tracking", "shadow-prices"]
-  defp parse_keywords(str) when is_binary(str) do
-    str
-    |> String.trim("[")
-    |> String.trim("]")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-    |> Enum.map(&String.trim(&1, "\""))
-    |> Enum.reject(&(&1 == ""))
   end
 
   # ===========================================================================

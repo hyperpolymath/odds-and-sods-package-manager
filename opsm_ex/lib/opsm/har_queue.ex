@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.HarQueue do
   @moduledoc """
   Manages task queue for HAR (hybrid-automation-router) integration.

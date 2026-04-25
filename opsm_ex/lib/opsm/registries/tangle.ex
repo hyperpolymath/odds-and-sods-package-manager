@@ -19,6 +19,7 @@ defmodule Opsm.Registries.Tangle do
   """
 
   alias Opsm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opsm.Manifest.OpsmToml
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.krl.dev/api/v1"
@@ -201,25 +202,38 @@ defmodule Opsm.Registries.Tangle do
   end
 
   defp parse_tangle_toml(toml_text, pkg_info, version) do
-    fields = extract_toml_section(toml_text, "package")
-    pkg_name = fields["name"] || pkg_info.name
+    # Use canonical OpsmToml parser; fall back to pkg_info fields on parse failure.
+    manifest =
+      case OpsmToml.parse(toml_text) do
+        {:ok, m} ->
+          %{m | source_forth: :tangle}
+
+        {:error, _} ->
+          %ManifestFormat{
+            name: pkg_info.name,
+            version: version,
+            description: pkg_info[:description],
+            license: "PMPL-1.0-or-later",
+            homepage: pkg_info.url,
+            repository: pkg_info.url,
+            authors: default_authors(),
+            keywords: default_keywords(),
+            dependencies: %{},
+            dev_dependencies: %{},
+            source_forth: :tangle,
+            raw_manifest: %{}
+          }
+      end
+
+    pkg_name = manifest.name || pkg_info.name
+    resolved_version = manifest.version || version
 
     pkg = %ResolvedPackage{
-      package: pkg_name, version: fields["version"] || version, forth: :tangle,
+      package: pkg_name, version: resolved_version, forth: :tangle,
       registry_url: pkg_info.url,
       tarball_url: "#{pkg_info.url}/archive/#{version}.tar.gz",
       checksum: nil, checksum_algo: :sha256,
-      manifest: %ManifestFormat{
-        name: pkg_name, version: fields["version"] || version,
-        description: fields["description"] || pkg_info[:description],
-        license: fields["license"] || "PMPL-1.0-or-later",
-        homepage: fields["homepage"] || pkg_info.url,
-        repository: fields["repository"] || pkg_info.url,
-        authors: parse_toml_array(fields["authors"]) || default_authors(),
-        keywords: parse_toml_array(fields["keywords"]) || default_keywords(),
-        dependencies: %{}, dev_dependencies: %{},
-        source_forth: :tangle, raw_manifest: fields
-      },
+      manifest: manifest,
       attestations: [], resolved_deps: []
     }
     {:ok, pkg}
@@ -269,33 +283,6 @@ defmodule Opsm.Registries.Tangle do
       nil -> :not_found
       pkg -> {:ok, pkg}
     end
-  end
-
-  defp extract_toml_section(toml_text, section_name) do
-    {_inside, fields} =
-      String.split(toml_text, "\n")
-      |> Enum.reduce({false, %{}}, fn line, {inside, acc} ->
-        t = String.trim(line)
-        cond do
-          t == "[#{section_name}]" -> {true, acc}
-          String.starts_with?(t, "[") -> {false, acc}
-          inside ->
-            case String.split(t, " = ", parts: 2) do
-              [k, v] -> {true, Map.put(acc, String.trim(k), String.trim(v, "\""))}
-              _ -> {inside, acc}
-            end
-          true -> {inside, acc}
-        end
-      end)
-    fields
-  end
-
-  defp parse_toml_array(nil), do: nil
-  defp parse_toml_array(str) when is_binary(str) do
-    str |> String.trim("[") |> String.trim("]")
-    |> String.split(",")
-    |> Enum.map(&(&1 |> String.trim() |> String.trim("\"")))
-    |> Enum.reject(&(&1 == ""))
   end
 
   defp default_authors, do: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]

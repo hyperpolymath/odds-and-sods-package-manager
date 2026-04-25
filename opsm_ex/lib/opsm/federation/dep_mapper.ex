@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Federation.DepMapper do
   @moduledoc """
   Maps package names across ecosystems where equivalents exist.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Manifest.Writer do
   @moduledoc """
   Bidirectional manifest conversion — write OPSM's internal ManifestFormat

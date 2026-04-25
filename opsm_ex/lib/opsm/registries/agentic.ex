@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Registries.Agentic do
   @moduledoc """
   Agentic registry adapter that delegates to HAR for package discovery.

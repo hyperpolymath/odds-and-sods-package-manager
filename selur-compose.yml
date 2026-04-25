@@ -1,6 +1,14 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
-# Selur-Compose orchestration for OPSM trust pipeline
-# Secure container orchestration with image verification and runtime protection
+# Selur-Compose orchestration for OPSM services
+#
+# Profiles:
+#   (default / no profile) — trust pipeline only: opsm + claim-forge + checky-monkey
+#                             + palimpsest + cicd-hyper-a + oikos
+#   container-security      — adds svalinn + selur + vordr + cerro-torre
+#
+# Usage:
+#   docker compose -f selur-compose.yml up                              # trust pipeline
+#   docker compose -f selur-compose.yml --profile container-security up # full stack
 
 version: "3.0"
 
@@ -232,8 +240,9 @@ services:
       - "com.opsm.service=oikos"
       - "com.opsm.tier=analysis"
 
-  # Svalinn: Container security scanner
+  # Svalinn: Container security scanner (opt-in: --profile container-security)
   svalinn:
+    profiles: [container-security]
     image: ghcr.io/hyperpolymath/svalinn:latest
     <<: *wolfi-base
     container_name: svalinn
@@ -264,8 +273,9 @@ services:
       - "com.opsm.tier=security"
       - "com.opsm.function=scanner"
 
-  # Selur: Image signing and verification
+  # Selur: Image signing and verification (opt-in: --profile container-security)
   selur:
+    profiles: [container-security]
     image: ghcr.io/hyperpolymath/selur:latest
     <<: [*security-defaults, *wolfi-base]
     container_name: selur
@@ -291,8 +301,9 @@ services:
       - "com.opsm.tier=security"
       - "com.opsm.function=signing"
 
-  # Vordr: Runtime verification
+  # Vordr: Runtime verification (opt-in: --profile container-security)
   vordr:
+    profiles: [container-security]
     image: ghcr.io/hyperpolymath/vordr:latest
     <<: [*security-defaults, *wolfi-base]
     container_name: vordr
@@ -319,8 +330,9 @@ services:
       - "com.opsm.tier=security"
       - "com.opsm.function=verification"
 
-  # Cerro-Torre: Runtime security monitoring
+  # Cerro-Torre: Runtime security monitoring (opt-in: --profile container-security)
   cerro-torre:
+    profiles: [container-security]
     image: ghcr.io/hyperpolymath/cerro-torre:latest
     <<: *wolfi-base
     container_name: cerro-torre

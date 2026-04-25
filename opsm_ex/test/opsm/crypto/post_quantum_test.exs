@@ -56,7 +56,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
   # NIF-dependent tests — only run if NIF is loaded
   # Run with: mix test --include integration
   describe "dilithium5 (requires NIF)" do
-    @tag :integration
+    @tag :requires_nif
     test "keypair generation" do
       assert {:ok, keys} = PostQuantum.dilithium5_keypair()
       assert byte_size(keys.public_key) == 2592
@@ -64,7 +64,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
       assert keys.algorithm == :dilithium5
     end
 
-    @tag :integration
+    @tag :requires_nif
     test "sign and verify" do
       {:ok, keys} = PostQuantum.dilithium5_keypair()
       message = "test message for dilithium5"
@@ -73,14 +73,14 @@ defmodule Opsm.Crypto.PostQuantumTest do
       assert :ok = PostQuantum.dilithium5_verify(message, sig, keys.public_key)
     end
 
-    @tag :integration
+    @tag :requires_nif
     test "verification fails with wrong message" do
       {:ok, keys} = PostQuantum.dilithium5_keypair()
       {:ok, sig} = PostQuantum.dilithium5_sign("original", keys.secret_key)
       assert {:error, _} = PostQuantum.dilithium5_verify("tampered", sig, keys.public_key)
     end
 
-    @tag :integration
+    @tag :requires_nif
     test "verification fails with wrong key" do
       {:ok, keys1} = PostQuantum.dilithium5_keypair()
       {:ok, keys2} = PostQuantum.dilithium5_keypair()
@@ -90,7 +90,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
   end
 
   describe "sphincs_plus (requires NIF)" do
-    @tag :integration
+    @tag :requires_nif
     test "keypair generation" do
       assert {:ok, keys} = PostQuantum.sphincs_plus_keypair()
       assert byte_size(keys.public_key) == 64
@@ -98,7 +98,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
       assert keys.algorithm == :sphincs_plus
     end
 
-    @tag :integration
+    @tag :requires_nif
     test "sign and verify" do
       {:ok, keys} = PostQuantum.sphincs_plus_keypair()
       message = "test message for sphincs+"
@@ -109,7 +109,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
   end
 
   describe "kyber1024 (requires NIF)" do
-    @tag :integration
+    @tag :requires_nif
     test "keypair generation" do
       assert {:ok, keys} = PostQuantum.kyber1024_keypair()
       assert byte_size(keys.public_key) == 1568
@@ -117,7 +117,7 @@ defmodule Opsm.Crypto.PostQuantumTest do
       assert keys.algorithm == :kyber1024
     end
 
-    @tag :integration
+    @tag :requires_nif
     test "encapsulate and decapsulate" do
       {:ok, keys} = PostQuantum.kyber1024_keypair()
 

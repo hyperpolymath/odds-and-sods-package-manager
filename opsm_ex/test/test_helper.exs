@@ -1,1 +1,1 @@
-ExUnit.start(exclude: [:e2e, :external_api])
+ExUnit.start(exclude: [:e2e, :external_api, :requires_nif])

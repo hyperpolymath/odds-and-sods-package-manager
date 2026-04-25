@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Api.PackageController do
   @moduledoc """
   Controller logic for mobile API endpoints.

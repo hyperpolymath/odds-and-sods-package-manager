@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Integration.PipelineTest do
   @moduledoc """
   Integration tests for the OPSM pipeline.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Git.Pipeline do
   @moduledoc """
   Orchestrates the full git clone -> detect -> build -> install pipeline.

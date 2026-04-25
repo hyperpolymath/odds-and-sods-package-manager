@@ -12,6 +12,7 @@ defmodule Opsm.Registries.Oblibeny do
   """
 
   alias Opsm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opsm.Manifest.OpsmToml
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://registry.oblibeny.org/api/v1"
@@ -174,54 +175,43 @@ defmodule Opsm.Registries.Oblibeny do
   end
 
   defp parse_toml_manifest(toml_text, repo_url, version) do
-    # Simple TOML parser (basic implementation)
-    # In production, use :toml library
-    lines = String.split(toml_text, "\n")
+    # Use canonical OpsmToml parser; fall back to minimal struct on parse failure.
+    manifest =
+      case OpsmToml.parse(toml_text) do
+        {:ok, m} ->
+          %{m | source_forth: :oblibeny}
 
-    manifest = Enum.reduce(lines, %{}, fn line, acc ->
-      case String.split(String.trim(line), " = ", parts: 2) do
-        [key, value] ->
-          clean_value = value |> String.trim("\"") |> String.trim()
-          Map.put(acc, String.trim(key), clean_value)
-        _ ->
-          acc
+        {:error, _} ->
+          %ManifestFormat{
+            name: repo_url |> String.split("/") |> List.last() |> String.trim(),
+            version: version,
+            description: nil,
+            license: nil,
+            homepage: repo_url,
+            repository: repo_url,
+            authors: [],
+            keywords: [],
+            dependencies: %{},
+            dev_dependencies: %{},
+            source_forth: :oblibeny,
+            raw_manifest: %{}
+          }
       end
-    end)
 
     pkg = %ResolvedPackage{
-      package: manifest["name"] || extract_name(repo_url),
-      version: version,
+      package: manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim()),
+      version: manifest.version || version,
       forth: :oblibeny,
       registry_url: repo_url,
       tarball_url: "#{repo_url}/archive/#{version}.tar.gz",
-      checksum: nil,  # Git mode doesn't provide checksums
+      checksum: nil,
       checksum_algo: nil,
-      manifest: %ManifestFormat{
-        name: manifest["name"],
-        version: version,
-        description: manifest["description"],
-        license: manifest["license"],
-        homepage: repo_url,
-        repository: repo_url,
-        authors: [manifest["author"] || "Unknown"],
-        keywords: [],
-        dependencies: %{},
-        dev_dependencies: %{},
-        source_forth: :oblibeny,
-        raw_manifest: manifest
-      },
+      manifest: manifest,
       attestations: [],
       resolved_deps: []
     }
 
     {:ok, pkg}
-  end
-
-  defp extract_name(url) do
-    url
-    |> String.split("/")
-    |> List.last()
-    |> String.trim()
   end
 
   # Parsers (for future registry mode)

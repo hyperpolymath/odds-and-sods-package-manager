@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Federation.SystemQuery do
   @moduledoc """
   Query system package managers for installed packages and versions.

@@ -102,8 +102,8 @@ defmodule Opsm.Trust.Pipeline do
       overall: overall,
       warnings: warnings,
       attestations: Map.get(package, :attestations, []),
-      slsa_level: get_in(check_results, [:slsa, :level]),
-      pq_signed: get_in(check_results, [:attestation, :pq_signed]),
+      slsa_level: extract_slsa_level(check_results[:slsa]),
+      pq_signed: extract_pq_signed(check_results[:attestation]),
       license_ok: match?({:ok, _}, check_results[:license]),
       sustainability_score: extract_sustainability_score(check_results)
     })
@@ -205,7 +205,6 @@ defmodule Opsm.Trust.Pipeline do
 
       cond do
         is_nil(slsa_attestation) ->
-          # No SLSA provenance — generate a basic one from package metadata
           case Opsm.Slsa.Provenance.generate(package) do
             {:ok, provenance} ->
               if provenance.slsa_level >= 1 do
@@ -219,7 +218,6 @@ defmodule Opsm.Trust.Pipeline do
           end
 
         true ->
-          # Has attestation — try to verify
           {:info, "SLSA attestation found: #{slsa_attestation.uri}"}
       end
     rescue
@@ -275,6 +273,20 @@ defmodule Opsm.Trust.Pipeline do
   defp sustainability_level(score) when score >= 40, do: :moderate
   defp sustainability_level(score) when score >= 20, do: :poor
   defp sustainability_level(_score), do: :critical
+
+  # Extract PQ-signed flag from an attestation result.
+  # check_attestations currently returns tagged string tuples; PQ-signing is aspirational.
+  defp extract_pq_signed({:ok, %{pq_signed: pq}}), do: pq
+  defp extract_pq_signed(_), do: false
+
+  # Extract numeric SLSA level from the {:info, "SLSA Level N ..."} tuple.
+  defp extract_slsa_level({:info, msg}) when is_binary(msg) do
+    case Regex.run(~r/SLSA Level (\d+)/, msg) do
+      [_, n] -> String.to_integer(n)
+      _ -> 0
+    end
+  end
+  defp extract_slsa_level(_), do: 0
 
   # Extract the numeric sustainability score from the check results map.
   # Returns nil when the oikos check was skipped or crashed.

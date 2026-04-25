@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: PMPL-1.0-or-later
 defmodule Opsm.Git.Clone do
   @moduledoc """
   Safe git clone operations with SSRF prevention and ref pinning.

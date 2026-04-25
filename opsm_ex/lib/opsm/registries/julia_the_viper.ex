@@ -12,6 +12,7 @@ defmodule Opsm.Registries.JuliaTheViper do
   """
 
   alias Opsm.Types.{ManifestFormat, ResolvedPackage}
+  alias Opsm.Manifest.OpsmToml
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.julia-the-viper.dev/api/v1"
@@ -173,67 +174,43 @@ defmodule Opsm.Registries.JuliaTheViper do
   end
 
   defp parse_toml_manifest(toml_text, repo_url, version) do
-    # Simple TOML parser (basic implementation)
-    lines = String.split(toml_text, "\n")
+    # Use canonical OpsmToml parser; fall back to minimal struct on parse failure.
+    manifest =
+      case OpsmToml.parse(toml_text) do
+        {:ok, m} ->
+          %{m | source_forth: :julia_the_viper}
 
-    # Extract [package] section
-    in_package = Enum.reduce(lines, {false, %{}}, fn line, {inside, acc} ->
-      cond do
-        String.starts_with?(String.trim(line), "[package]") ->
-          {true, acc}
-
-        String.starts_with?(String.trim(line), "[") ->
-          {false, acc}
-
-        inside ->
-          case String.split(String.trim(line), " = ", parts: 2) do
-            [key, value] ->
-              clean_value = value |> String.trim("\"") |> String.trim()
-              {true, Map.put(acc, String.trim(key), clean_value)}
-            _ ->
-              {inside, acc}
-          end
-
-        true ->
-          {inside, acc}
+        {:error, _} ->
+          %ManifestFormat{
+            name: repo_url |> String.split("/") |> List.last() |> String.trim(),
+            version: version,
+            description: nil,
+            license: nil,
+            homepage: repo_url,
+            repository: repo_url,
+            authors: [],
+            keywords: [],
+            dependencies: %{},
+            dev_dependencies: %{},
+            source_forth: :julia_the_viper,
+            raw_manifest: %{}
+          }
       end
-    end)
-    |> elem(1)
 
     pkg = %ResolvedPackage{
-      package: in_package["name"] || extract_name(repo_url),
-      version: version,
+      package: manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim()),
+      version: manifest.version || version,
       forth: :julia_the_viper,
       registry_url: repo_url,
       tarball_url: "#{repo_url}/archive/#{version}.tar.gz",
       checksum: nil,
       checksum_algo: nil,
-      manifest: %ManifestFormat{
-        name: in_package["name"],
-        version: version,
-        description: in_package["description"],
-        license: in_package["license"],
-        homepage: repo_url,
-        repository: repo_url,
-        authors: [in_package["authors"] || "Unknown"],
-        keywords: [],
-        dependencies: %{},
-        dev_dependencies: %{},
-        source_forth: :julia_the_viper,
-        raw_manifest: in_package
-      },
+      manifest: manifest,
       attestations: [],
       resolved_deps: []
     }
 
     {:ok, pkg}
-  end
-
-  defp extract_name(url) do
-    url
-    |> String.split("/")
-    |> List.last()
-    |> String.trim()
   end
 
   # Parsers (for future registry mode)
