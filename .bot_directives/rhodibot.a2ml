@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# rhodibot.a2ml — Directives for rhodibot in odds-and-sods-package-manager
+
+[identity]
+bot = "rhodibot"
+role = "git-operations"
+
+[constraints]
+# Never force-push to main or any protected branch
+# Never push to non-origin remotes (GitHub is source of truth)
+# SHA-pin all actions/checkout references before committing workflow changes
+# Do not amend published commits — create new commits instead
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  ".github/workflows/",
+  "Justfile",
+  "contractile.just",
+  ".gitignore",
+  ".gitattributes",
+]

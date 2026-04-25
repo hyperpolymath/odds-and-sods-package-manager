@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# glambot.a2ml — Directives for glambot in odds-and-sods-package-manager
+
+[identity]
+bot = "glambot"
+role = "documentation"
+
+[constraints]
+# All docs use .adoc format (AsciiDoc) — not .md except where required by platform
+# SPDX-License-Identifier header required on every doc file
+# Do not remove or truncate EXPLAINME.adoc
+# Do not add emojis unless user explicitly requests them
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  "README.adoc",
+  "EXPLAINME.adoc",
+  "CHARTER.adoc",
+  "ROADMAP.adoc",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "docs/",
+  "man/",
+]

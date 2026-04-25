@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# sustainabot.a2ml — Directives for sustainabot in odds-and-sods-package-manager
+
+[identity]
+bot = "sustainabot"
+role = "dependency-updates"
+
+[constraints]
+# All dependency updates must be SHA-pinned (GitHub Actions) or version-pinned (Cargo, mix, deno)
+# No upgrade of Cargo.lock / mix.lock without passing CI
+# Do not introduce npm, bun, pnpm, or yarn dependencies — Deno only for JS
+# Security advisories are high-priority; ping maintainer before auto-merging
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "opsm_ex/mix.exs",
+  "opsm_ex/mix.lock",
+  "deno.json",
+  "deno.lock",
+  ".github/workflows/",
+  "guix.scm",
+  "flake.nix",
+]

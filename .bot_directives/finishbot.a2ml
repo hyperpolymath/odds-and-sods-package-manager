@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# finishbot.a2ml — Directives for finishbot in odds-and-sods-package-manager
+
+[identity]
+bot = "finishbot"
+role = "task-completion"
+
+[constraints]
+# No stubs left unfinished — wire everything before closing a task
+# Update STATE.a2ml when tasks complete; flip activeForm to CLOSING DOWN on session end
+# Emit SAFE TO CLOSE at end of session summary
+# Do not close tasks that lack behavioural test coverage (build success ≠ completion)
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  ".machine_readable/6a2/STATE.a2ml",
+  "ROADMAP.adoc",
+  "READINESS.md",
+  "TESTING.md",
+  "TEST-NEEDS.md",
+  "PROOF-NEEDS.md",
+]

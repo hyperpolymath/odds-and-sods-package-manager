@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# echidnabot.a2ml — Directives for echidnabot in odds-and-sods-package-manager
+
+[identity]
+bot = "echidnabot"
+role = "code-quality"
+
+[constraints]
+# Run panic-attack assail before any commit
+# Never introduce believe_me, assert_total, Admitted, sorry, unsafeCoerce, Obj.magic
+# Never weaken or delete existing tests
+# Proof opportunities must be drafted as priority items, not deferred
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  "src/",
+  "lib/",
+  "opsm_ex/lib/",
+  "tests/",
+  "opsm_ex/test/",
+  "PROOF-NEEDS.md",
+  "TEST-NEEDS.md",
+]

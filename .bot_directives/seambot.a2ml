@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# seambot.a2ml — Directives for seambot in odds-and-sods-package-manager
+
+[identity]
+bot = "seambot"
+role = "integration"
+
+[constraints]
+# Verify integration seams end-to-end whenever two components complete together
+# Do not merge PRs that break the opsm_ex ↔ Rust CLI integration boundary
+# Registry adapter seams: each adapter must pass its own integration test before merge
+# Gossamer runtime bridge must remain compatible with browser-HTTP dev fallback
+
+[targets]
+# Files and directories this bot watches
+watch = [
+  "opsm_ex/lib/opsm/adapters/",
+  "src/",
+  "services/",
+  "opsm_mobile/",
+  "opsm-registry-hub/",
+  "opsm_ex/test/integration/",
+]
