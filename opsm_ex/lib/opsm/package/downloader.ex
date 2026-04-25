@@ -16,8 +16,14 @@ defmodule Opsm.Package.Downloader do
   @doc """
   Download a package to the cache directory.
   Returns path to downloaded file.
+
+  On a cache miss, checks remote backends (S3, IPFS) before falling through
+  to the registry. After a fresh registry download, pushes the tarball to all
+  configured remote backends for future shared-cache hits.
   """
   def download(package, opts \\ []) do
+    alias Opsm.Storage.Manager, as: StorageManager
+
     url = package.tarball_url
     checksum = package.checksum
     algo = package.checksum_algo || :sha256
@@ -26,19 +32,48 @@ defmodule Opsm.Package.Downloader do
       {:error, "No tarball URL available for #{package.package}"}
     else
       cache_path = cache_path_for(package)
+      storage_key = storage_key_for(package)
+      force? = Keyword.get(opts, :force, false)
 
-      # Check if already cached
-      if File.exists?(cache_path) and not Keyword.get(opts, :force, false) do
+      # Local hit: verify and return.
+      if File.exists?(cache_path) and not force? do
         case verify_checksum(cache_path, checksum, algo) do
-          :ok -> {:ok, cache_path}
-          {:error, _} ->
-            # Checksum mismatch, re-download
-            do_download(url, cache_path, checksum, algo)
+          :ok          -> {:ok, cache_path}
+          {:error, _}  -> fresh_download(url, cache_path, storage_key, checksum, algo, StorageManager)
         end
       else
-        do_download(url, cache_path, checksum, algo)
+        # Try remote backends before hitting the registry.
+        case StorageManager.fetch(storage_key, cache_path) do
+          {:ok, cached_path} ->
+            IO.puts("  ← restored from remote cache")
+            {:ok, cached_path}
+
+          {:error, :not_found} ->
+            fresh_download(url, cache_path, storage_key, checksum, algo, StorageManager)
+        end
       end
     end
+  end
+
+  # Download from registry, then push to remote backends.
+  defp fresh_download(url, cache_path, storage_key, checksum, algo, storage_manager) do
+    case do_download(url, cache_path, checksum, algo) do
+      {:ok, path} = ok ->
+        storage_manager.store(storage_key, path)
+        ok
+
+      error ->
+        error
+    end
+  end
+
+  # Derive a content-addressed storage key that mirrors the local cache layout.
+  defp storage_key_for(package) do
+    forth = package.forth
+    name = package.package |> String.replace("/", "--") |> String.replace(":", "--") |> String.replace("@", "_at_")
+    version = package.version
+    ext = extension_for(forth)
+    "#{forth}/#{name}-#{version}#{ext}"
   end
 
   @doc """
