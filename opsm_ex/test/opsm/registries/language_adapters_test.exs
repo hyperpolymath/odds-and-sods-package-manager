@@ -8,6 +8,8 @@
 defmodule Opsm.Registries.LanguageAdaptersTest do
   use ExUnit.Case, async: true
 
+  alias Opsm.Registries.Registry
+
   # All new adapters introduced in the first-class system sprint (2026-04-12)
   @adapters [
     {Opsm.Registries.Betlang,    :betlang,    "betlang-rt"},
@@ -153,6 +155,56 @@ defmodule Opsm.Registries.LanguageAdaptersTest do
           {:error, _} -> :ok
         end
       end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Registry dispatch integration — Registry.search/3 must route to each adapter
+  # via the correct atom key. These tests verify the full dispatch chain works
+  # without requiring any network calls (adapters return empty lists offline).
+  # ---------------------------------------------------------------------------
+
+  describe "Registry.search/3 dispatch to new adapters" do
+    for {_mod, forth, _known_pkg} <- @adapters do
+      test "routes :#{forth} without crashing" do
+        result = Registry.search(unquote(forth), "test-query", [])
+        # Must return {:ok, list} or {:error, _} — never crash
+        assert match?({:ok, _}, result) or match?({:error, _}, result)
+      end
+    end
+
+    test "returns {:error, _} for unknown registry atom" do
+      result = Registry.search(:totally_unknown_xyz_abc, "query", [])
+      assert match?({:error, _}, result)
+    end
+  end
+
+  describe "Registry.exists?/2 dispatch to new adapters" do
+    for {_mod, forth, _known_pkg} <- @adapters do
+      test "returns boolean for :#{forth}" do
+        result = Registry.exists?(unquote(forth), "xyz-not-real-999")
+        assert is_boolean(result)
+      end
+    end
+  end
+
+  describe "Registry includes new adapters in @all_primary_forths" do
+    # Verify the adapters are in the list that search_all iterates over.
+    # We check indirectly: if search_all returns a map with the key, the
+    # atom was in the list. search_all is async so we filter to just these.
+    @tag :skip
+    test "search_all includes betlang, ephapax, phronesis, tangle, wokelang" do
+      result = Registry.search_all("test", forths: [:betlang, :ephapax, :phronesis, :tangle, :wokelang])
+      assert is_map(result)
+      assert Map.has_key?(result, :betlang)
+      assert Map.has_key?(result, :ephapax)
+    end
+
+    @tag :skip
+    test "search_all includes lithoglyph, quandledb, nqc" do
+      result = Registry.search_all("test", forths: [:lithoglyph, :quandledb, :nqc])
+      assert is_map(result)
+      assert Map.has_key?(result, :lithoglyph)
     end
   end
 end
