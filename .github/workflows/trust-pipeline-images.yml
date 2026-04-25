@@ -32,51 +32,46 @@ jobs:
         include:
           # Trust pipeline (default compose stack)
           - service: claim-forge
-            port: 8080
           - service: checky-monkey
-            port: 8081
           - service: palimpsest-license
-            port: 8082
           - service: cicd-hyper-a
-            port: 8083
           - service: oikos
-            port: 8084
           # Container security (--profile container-security)
           - service: svalinn
-            port: 8085
           - service: selur
-            port: 8086
           - service: vordr
-            port: 8087
           - service: cerro-torre
-            port: 8088
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
       - name: Log in to GHCR
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ghcr.io/hyperpolymath/${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
 
       - name: Build and push ${{ matrix.service }}
-        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
         with:
           context: services/${{ matrix.service }}
           file: services/${{ matrix.service }}/Containerfile
           push: true
-          tags: |
-            ghcr.io/hyperpolymath/${{ matrix.service }}:latest
-            ghcr.io/hyperpolymath/${{ matrix.service }}:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
