@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Compile the opsm_pq_nif Rust NIF and run :requires_nif tests.
+# Separate from the main Elixir test job so NIF compilation doesn't
+# block the standard unit test suite.
+
+name: NIF Build + PQ Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "opsm_ex/native/opsm_pq_nif/**"
+      - "opsm_ex/lib/opsm/crypto/**"
+      - "opsm_ex/test/opsm/crypto/**"
+      - ".github/workflows/nif-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nif-build:
+    name: Compile opsm_pq_nif + run PQ tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2
+        with:
+          workspaces: opsm_ex/native/opsm_pq_nif -> target
+
+      - name: Setup Erlang/Elixir
+        uses: erlef/setup-beam@5a67e1a1dd86cae5e5bef84e2da5060406a66c07 # v1
+        with:
+          otp-version: "27.0"
+          elixir-version: "1.17"
+
+      - name: Restore Mix cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            opsm_ex/deps
+            opsm_ex/_build
+          key: ${{ runner.os }}-mix-nif-${{ hashFiles('opsm_ex/mix.lock') }}
+
+      - name: Install Elixir dependencies
+        run: cd opsm_ex && mix deps.get
+
+      - name: Build NIF (cargo build --release)
+        run: |
+          cd opsm_ex/native/opsm_pq_nif
+          cargo build --release
+          # Copy .so into the priv directory where Rustler expects it
+          mkdir -p ../../priv/native
+          cp target/release/libopsm_pq_nif.so ../../priv/native/libopsm_pq_nif.so 2>/dev/null || \
+          cp target/release/libopsm_pq_nif.dylib ../../priv/native/libopsm_pq_nif.so 2>/dev/null || true
+
+      - name: Compile Elixir with NIF
+        run: cd opsm_ex && mix compile
+
+      - name: Run PQ NIF tests
+        run: cd opsm_ex && mix test --include requires_nif --only requires_nif --trace
