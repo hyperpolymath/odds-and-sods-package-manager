@@ -6,9 +6,6 @@ FROM cgr.dev/chainguard/rust:latest AS builder
 
 WORKDIR /build
 
-# openssl-sys crate requires dev headers at compile time
-RUN apk add --no-cache openssl-dev pkgconf
-
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
@@ -20,7 +17,6 @@ RUN cargo build --release
 
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-# Install signing tools
 RUN apk add --no-cache \
     libgcc \
     libstdc++ \
