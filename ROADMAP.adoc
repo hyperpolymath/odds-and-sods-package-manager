@@ -294,28 +294,27 @@ Each major version below lists explicit remedies for these concerns.
 
 === Critical Path
 
-==== 1. Complete Mobile Wrapper (1 week)
+==== 1. Mobile Wrapper — Gossamer-native IPC ✅ (ADR-002, 2026-04-25)
 
 **Priority:** CRITICAL - Makes OPSM usable on mobile devices
 
-**Tasks:**
-* [ ] Implement Rust Tauri commands (5 commands)
-  - `search_packages`, `get_package_info`, `install_package`, `list_installed`, `audit_lockfile`
-  - HTTP client (reqwest) to Phoenix backend
-* [ ] Create Phoenix API endpoints (5 endpoints)
-  - `POST /api/packages/install`
-  - `GET /api/packages/search`
-  - `GET /api/packages/:name/:version`
-  - `POST /api/lockfile/audit`
-  - `GET /api/packages/installed`
-* [ ] Desktop testing (Linux, macOS, Windows)
+**Status:** ✅ Complete — Tauri eliminated. Gossamer runtime replaces it (ADR-002).
+
+**Delivered:**
+* ✅ Tauri eliminated — `src-tauri/` removed, TauriFFI → OpsmCommands
+* ✅ RuntimeBridge: Gossamer-first IPC with browser-HTTP dev fallback
+* ✅ Five commands wired via Gossamer: `search_packages`, `get_package_info`,
+  `install_package`, `list_installed`, `audit_lockfile`
+* ✅ rustls-tls adopted across all Rust services (ADR-003) — openssl-sys eliminated
+
+**Outstanding (deferred):**
 * [ ] iOS simulator testing
 * [ ] Android emulator testing
 * [ ] App Store submission preparation
 
-**Deliverable:** Fully working iOS/Android app with 100% Elixir backend code reuse
+**Deliverable:** opsm_mobile operational via Gossamer IPC; browser-HTTP fallback for dev
 
-**Architecture:** Tauri 2.0 + ReScript TEA UI + Phoenix Elixir backend
+**Architecture:** Gossamer runtime + ReScript UI + Phoenix Elixir backend (Tauri eliminated per ADR-002)
 
 ==== 2. Real-World Package Testing (2 weeks)
 
@@ -1040,29 +1039,35 @@ Transform OPSM from "8-language package manager" to "universal, intelligent pack
 
 == Next Steps
 
-=== This Week
+_Updated 2026-04-25. Repository is at v2.0.0; grade CRG-B. Prior "This Week"
+entries (Tauri commands, Phoenix endpoints) are superseded by Gossamer migration (ADR-002)._
 
-* [ ] Complete Rust Tauri commands (mobile wrapper)
-* [ ] Create Phoenix API endpoints
-* [ ] Test mobile app on desktop
+=== Immediate (Q2 2026 — active)
 
-=== This Month
+* [ ] **CLI lifecycle commands** — `remove`, `update`, `upgrade`, `show`, `autoremove`;
+  `history` / `history undo <n>` — nala/aptitude parity items not yet implemented
+  (workspace install/publish are done; individual package lifecycle is not)
+* [ ] **Mobile: simulator/device testing** — iOS simulator, Android emulator, App Store prep
+  (Gossamer IPC done; device testing deferred)
+* [ ] **v1.5.0 proven library NIF bindings** — Idris2 → C → Elixir NIF;
+  replaces `Opsm.Verified` approximations with compiler-verified guarantees
+* [ ] **SLSA attestation compliance** — Level 3 target; sign with Sigstore; verify at install
+* [ ] **Supply chain provenance tracking** — capture build env, deps, commit SHA per package
+* [ ] **Enhanced security scanning** — CVE/NVD + OSV API; typosquat detection
 
-* [ ] Release mobile app (iOS/Android)
-* [ ] Real-world package testing
-* [ ] Performance benchmarking
+=== This Quarter (Q2 2026)
 
-=== This Quarter (Q1 2026)
+* [ ] Release v1.5.0 with proven NIFs + SLSA + interactive TUI
+* [ ] Formal proofs: dependency resolution termination + package installation integrity (Idris2)
+* [ ] PQ crypto NIF proofs (Coq/EasyCrypt)
+* [ ] Benchee baselines: run `bench/opsm_bench.exs`, establish CI regression gate
+* [ ] Grade A: acquire external user confirmation outside hyperpolymath
 
-* [ ] Complete v1.1.0 release
-* [ ] Begin v1.5.0 proven library work
-* [ ] Plan 100+ language adapter strategy
+=== Next Quarter (Q3 2026)
 
-=== Next Quarter (Q2 2026)
-
-* [ ] Release v1.5.0 with enhanced security
-* [ ] Begin v2.0.0 ML and distributed work
-* [ ] Community building and marketing
+* [ ] v2.0.0 expanded: 100+ language adapters, distributed resolver, IPFS storage
+* [ ] ML-based package discovery (semantic search, recommendation, malware detection)
+* [ ] Enterprise features: private registries, compliance reports, approval workflows
 
 ---
 
@@ -1072,17 +1077,16 @@ Transform OPSM from "8-language package manager" to "universal, intelligent pack
 * link:docs/v2.0-PLAN.md[v2.0 Planning Document] - Detailed roadmap
 * link:docs/CLI-FEATURE-COMPARISON.md[CLI Feature Comparison] - vs nala/aptitude
 * link:RELEASE-v1.0.0.md[v1.0.0 Release Notes] - Current release details
-* link:STATE.scm[STATE.scm] - Project state checkpoint
-* link:META.scm[META.scm] - Architecture decisions
-* link:ECOSYSTEM.scm[ECOSYSTEM.scm] - Ecosystem positioning
+* link:.machine_readable/6a2/STATE.a2ml[STATE.a2ml] - Project state checkpoint
+* link:.machine_readable/6a2/META.a2ml[META.a2ml] - Architecture decisions (includes ADR-001/002/003)
+* link:.machine_readable/6a2/ECOSYSTEM.a2ml[ECOSYSTEM.a2ml] - Ecosystem positioning
+* link:READINESS.md[READINESS.md] - CRG grade evidence
 
 ---
 
-**Current Status:** v1.0.0 Released | **Next Milestone:** v1.1.0 Production Hardening (March 2026)
+**Current Status:** v2.0.0 Active | **CRG Grade:** B (Beta — Broad Trial) | **Next Milestone:** v1.5.0 Enhanced Trust (Q2 2026)
 
-**Total Path to v2.0:** 6 months of focused work | **Total Investment:** $650K
-
-*For the latest updates, see link:STATE.scm[STATE.scm] and link:docs/v2.0-PLAN.md[v2.0 Planning Document].*
+*For the latest updates, see link:.machine_readable/6a2/STATE.a2ml[STATE.a2ml] and link:READINESS.md[READINESS.md].*
 
 ---
 

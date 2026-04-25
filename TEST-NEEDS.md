@@ -1,30 +1,43 @@
-# TEST-NEEDS.md — odds-and-sods-package-manager
+# SPDX-License-Identifier: PMPL-1.0-or-later
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 
-## CRG Grade: C — ACHIEVED 2026-04-04
+# TEST-NEEDS.md — odds-and-sods-package-manager (OPSM)
 
-> Updated 2026-04-04 by CRG C blitz. Previous audit: 2026-03-29.
+## Current State (Updated 2026-04-25)
 
-## Current State (Updated)
+**CRG Grade: B (Beta — Broad Trial)** — achieved 2026-04-25
+_(Previous: C, achieved 2026-04-04)_
 
-| Category     | Count | Status | Notes |
-|-------------|-------|--------|-------|
-| Unit tests   | ~25   | ✓ PASS | opsm_test, crypto, git, network, federation, har, and more |
-| Integration  | 5     | ✓ PASS | pipeline, trust_pipeline, e2e, git_pipeline, manifest_roundtrip |
-| E2E          | 1+   | ✓ PASS | integration/e2e_test.exs expanded with 6 new scenario tests |
-| Property     | 14    | ✓ PASS | NEW: lockfile_property_test.exs with 14 property tests (Determinism, Constraints, Manifest, Tree Consistency, Checksums, Integrity) |
-| Security     | 18    | ✓ PASS | NEW: security_test.exs with tampering, confusion, poisoning, MITM, path traversal, crypto, supply chain tests |
-| Concurrency  | 12    | ✓ PASS | NEW: concurrency_test.exs with parallel operations, downloads, serialization, conflicts, sync checking |
-| Benchmarks   | 27    | ✓ READY | NEW: opsm_bench.exs with 27 benchmarks for constraints, lockfile ops (10/50/100/500 scale), integrity, trust, packages |
+| Category            | Count | Status  | Notes                                                       |
+|---------------------|-------|---------|-------------------------------------------------------------|
+| Unit tests          | ~570  | ✓ PASS  | Core, crypto, git, network, federation, HAR, runtime, wiring |
+| Integration         | 8+    | ✓ PASS  | Pipeline, trust pipeline, E2E, git pipeline, manifest roundtrip |
+| E2E                 | 55+   | ✓ PASS  | Full install flows, error handling, workspace audit, multi-registry |
+| Property-based      | 67    | ✓ PASS  | Lockfile, version constraints, manifest roundtrip, fuzz harness |
+| Security aspect     | 18    | ✓ PASS  | Tampering, confusion, poisoning, MITM, path traversal, crypto |
+| Concurrency aspect  | 12    | ✓ PASS  | Parallel ops, downloads, serialization, conflict, sync      |
+| Audit wiring        | 12    | ✓ PASS  | Wiring.run_audit/2 + workspace TOML parsing                 |
+| Registry dispatch   | 18    | ✓ PASS  | Registry.search/3 + exists?/2 for all 8 language adapters   |
+| Live service E2E    | 23    | ✓ PASS  | Trust pipeline live HTTP contract (`:live_service` tag)     |
+| Benchmarks          | 27    | ✓ READY | Baselines defined; formal Benchee run pending               |
 
-**Source modules:** ~238 own source files (Elixir + ReScript + Rust).
+**Source modules:** ~238 own source files (Elixir + Rust + Idris2).
 
-**Test Summary:**
-- Total: 1 doctest + 54 properties + 544 tests = **599 tests**
-- Passes: 594 (99.2%)
-- Failures: 5 (pre-existing, unrelated to CRG C blitz)
-- Skipped: 7
+**Test Summary (2026-04-25):**
+- Total: 1 doctest + 67 properties + ~746 tests = **814 tests** (e2e + integration included)
+- Passes: 812
+- Pre-existing failures: 0 _(VersionConstraint alias issue fixed in `06b9e9f`)_
+- Skipped (`:skip`): 19
+- Excluded from default run: 31
+  - `:external_api` — live registry/API calls (included in `runtime-api` CI job)
+  - `:requires_nif` — NIF compilation required (included in `nif-build` CI job)
+  - `:live_download` — full install ~44MB (workflow_dispatch only)
+  - `:live_service` — trust pipeline services must be running (included in `trust-pipeline-e2e` CI job)
+- New tests added in 2026-04-25 session: **134**
 
-## ✓ COMPLETED (CRG C Blitz)
+---
+
+## ✓ COMPLETED — CRG C Blitz (2026-04-04)
 
 ### Security Aspect Tests ✓
 - [x] Package tampering detection: checksum mismatch rejected
@@ -45,7 +58,7 @@
 - [x] Integrity hash properties: stable computation, algorithm validation
 
 ### E2E Expansion ✓
-- [x] Full install: resolve → verify → lockfile update (8 new tests)
+- [x] Full install: resolve → verify → lockfile update
 - [x] Full uninstall: remove → cleanup → verify
 - [x] Version conflict detection: incompatible constraints, compatible resolution
 - [x] Lockfile integrity: maintained through install cycle, write-read-verify
@@ -67,56 +80,119 @@
 - [x] Trust pipeline mockup
 - [x] Large-scale package operations
 
-### Cleanup ✓
-- [x] Removed `tests/fuzz/placeholder.txt` (scorecard placeholder, not real fuzz)
+---
 
-## Remaining Work (For Future Sprints)
+## ✓ COMPLETED — 2026-04-25 Session (+134 tests)
 
-### Fuzz Testing
-- [ ] Actual fuzz harness (see rsr-template-repo/tests/fuzz/README.adoc)
-- [ ] Fuzzing lockfile JSON, version constraints, package manifests
-- [ ] Priority: P2 (nice-to-have, not critical for CRG C)
+### Audit Wiring Tests ✓ (`test/opsm/wiring/audit_test.exs`)
+- [x] Wiring.run_audit/2: 12 tests covering single-package and workspace TOML parsing
 
-### ReScript & Rust Testing
-- [ ] ReScript component tests (opsm_mobile, opsm-ui)
-- [ ] Rust crate tests (native NIFs)
-- [ ] Note: CRG C blitz focused on Elixir (core package manager logic)
-- [ ] Priority: P1 for full coverage, deferred to component-specific sprints
+### Registry Dispatch Tests ✓ (`test/opsm/registries/language_adapters_test.exs`)
+- [x] Registry.search/3 dispatch to all 8 language adapters (betlang, ephapax, phronesis,
+  tangle, wokelang, lithoglyph, quandledb, nqc) — returns empty list offline, no crash
+- [x] Registry.exists?/2 dispatch to all 8 adapters
+- [x] Unknown registry atom returns `{:error, _}` not a crash (18 tests total)
 
-### Error Handling E2E
-- [ ] Network failures during download (graceful degradation)
-- [ ] Corrupted package detection
-- [ ] Version conflict deadlock resolution
-- [ ] Registry unavailability fallback
-- [ ] Priority: P1 (supply chain resilience)
+### Error Handling E2E ✓ (`test/integration/e2e_test.exs`)
+- [x] Registry degradation: fallback behaviour when primary registry returns 404/500
+- [x] Manifest robustness: malformed opsm.toml fields do not crash resolver
+- [x] 13 new tests across registry degradation + manifest robustness describes
 
-### Performance Baselines
-- [ ] Run `bench/opsm_bench.exs` with Benchee for official baselines
-- [ ] Establish target latencies for key operations
-- [ ] Automated regression detection in CI
-- [ ] Priority: P2 (nice-to-have for optimization)
+### Workspace Audit E2E ✓ (`test/integration/e2e_test.exs`)
+- [x] Multi-member workspace audit: reads `[workspace]` members, audits each
+- [x] Empty workspace: graceful handling (no crash)
+- [x] Degraded workspace: one member unreachable; others succeed (3 tests)
+
+### Trust Pipeline Live-Service E2E ✓ (`test/integration/trust_pipeline_live_e2e_test.exs`)
+- [x] Health checks: all 5 services (claim-forge, checky-monkey, palimpsest, cicd-hyper-a, oikos)
+- [x] Attestation generation + verification via claim-forge
+- [x] Package verification via checky-monkey (async polling)
+- [x] Licence analysis via palimpsest-license
+- [x] CI/CD gate via cicd-hyper-a
+- [x] Sustainability scoring via oikos
+- [x] Full pipeline: coordinated call across all 5 services
+- [x] 23 tests total; `@moduletag :live_service`; included in `trust-pipeline-e2e.yml`
+
+### Property-Based Fuzz Harness ✓ (`test/opsm/fuzz_harness_test.exs`)
+- [x] 14 properties covering 6 OPSM boundary surfaces: lockfile JSON, version constraint
+  strings, package manifest fields, registry adapter dispatch, crypto hashing, URL validation
+
+### VersionConstraint Alias Fix ✓
+- [x] VersionConstraint module aliased in e2e_test.exs — Version Conflict Detection tests
+  (lines 762, 788) now pass: 0 failures (`06b9e9f`)
+
+---
+
+## Remaining Work
+
+### P1 — Formal Proofs (HIGH priority — see PROOF-NEEDS.md)
+
+These are HIGH priority; OPSM is a high-value attack target. The Idris2 ABI
+layer (`src/abi/`) is already scaffolded — extend from there.
+
+- [ ] **Package installation integrity** (Idris2) — install operations don't corrupt existing packages
+- [ ] **Dependency resolution termination** (Idris2) — PubGrub terminates and produces consistent solution
+- [ ] **Verified HTTP security policy** (Idris2) — `Opsm.Verified` HTTP formally sound (not just tested)
+- [ ] **Safe exec sandboxing invariants** (Idris2) — package scripts cannot escape sandbox
+- [ ] **Validation completeness** (Idris2) — no bypass path through input validation
+- [ ] **PQ crypto NIF correctness** (Coq/EasyCrypt) — `opsm_pq_nif` signing operations are correct
+
+### P1 — Component Tests (deferred from CRG-C blitz)
+
+- [ ] **ReScript component tests** — `opsm_mobile` UI, `opsm-ui` components (Deno test harness)
+- [ ] **Rust crate tests** — `opsm_pq_nif` NIF; other Rust crates in `services/`
+  (currently only integration-tested via Elixir; no `cargo test` suite)
+
+### P1 — Benchee Baselines
+
+- [ ] Run `bench/opsm_bench.exs` with Benchee; record official baseline numbers
+- [ ] Establish CI regression gate (fail if operation degrades >20% vs baseline)
+- [ ] Target latencies: <5s resolver for 100 packages, <30s for 1000
+
+### P2 — Fuzz Harness Expansion
+
+The `fuzz_harness_test.exs` property harness covers 6 surfaces but is not a true
+libFuzzer/AFL++ harness. For production-grade fuzzing:
+- [ ] Structured fuzz corpus: lockfile JSON edge cases (deeply nested, giant arrays, NUL bytes)
+- [ ] Version constraint fuzz: Unicode, overlapping ranges, malformed semver
+- [ ] Package manifest fuzz: missing required fields, type coercions
+- [ ] libFuzzer integration via `cargo fuzz` (Rust boundary functions) or `afl.cr`
+
+### P2 — Performance Optimization
+
+- [ ] Profile resolver with large dependency graphs (1000+ packages)
+- [ ] Cache version constraint parse results (hot path)
+- [ ] Parallel registry fetches: `Task.async_stream` for multi-registry resolution
+- [ ] Tarball download caching (S3/IPFS; `/tmp` is not production-safe)
+- [ ] Benchmark against cargo/pip on equivalent graphs
+
+### P3 — Mobile Device Testing
+
+- [ ] iOS simulator testing
+- [ ] Android emulator testing (Gossamer IPC; Tauri eliminated per ADR-002)
+- [ ] App Store submission preparation
+
+---
 
 ## Test Coverage Summary
 
-**By Category:**
-- Security: 18 tests (NEW) ✓
-- Property-based: 14 tests (NEW) ✓
-- Concurrency: 12 tests (NEW) ✓
-- Integration: 5 tests ✓
-- E2E: 8+ tests (expanded) ✓
+**By Category (current):**
+| Category | Count | CI tag |
+|----------|-------|--------|
+| Unit/integration | ~570 | default |
+| E2E + integration | 55+ | `--include e2e --include integration` |
+| Property-based | 67 | default |
+| Security aspect | 18 | default |
+| Concurrency aspect | 12 | default |
+| Audit wiring | 12 | default |
+| Registry dispatch | 18 | default |
+| Live service E2E | 23 | `:live_service` → trust-pipeline-e2e.yml |
+| External API | 15 | `:external_api` → runtime-api job |
+| Live download | 6 | `:live_download` → workflow_dispatch |
+| Requires NIF | varies | `:requires_nif` → nif-build.yml |
+| Benchmarks | 27 | Benchee (not yet run officially) |
 
-**By Aspect:**
-- Elixir unit/integration: 544 tests ✓
-- Doctests: 1 ✓
-- Property-based: 54 properties ✓
-- Benchmarks: 27 baselines ready ✓
-
-**CRG C Certification Ready:** YES
-- Unit tests: ✓
-- Smoke/integration tests: ✓
-- E2E tests: ✓
-- Property-based tests: ✓
-- Aspect tests (security, concurrency): ✓
-- Build passes: ✓
-- Benchmarks baselined: ✓
-- All new tests pass: 54 properties + 18 security + 12 concurrency + 6 E2E = 90 new tests
+**CRG Grade Evidence:**
+- Grade C: achieved 2026-04-04 (544 tests, all aspects)
+- Grade B: achieved 2026-04-25 (814 tests, 6 external targets, 2 issues fed back)
+- Grade A: requires external user confirmation outside hyperpolymath — **not yet achieved**
