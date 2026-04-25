@@ -10,20 +10,20 @@ status = "first-class system active"
 
 [project-context]
 name = "odds-and-sods-package-manager"
-completion-percentage = 88
-phase = "architectural reconciliation complete"
+completion-percentage = 90
+phase = "trust pipeline CI + images wired"
 
 [testing]
 status = "COMPLETE"
-timestamp = "2026-04-25T11:21:00Z"
-tests-total = 694
-tests-passed = 694
+timestamp = "2026-04-25T12:05:00Z"
+tests-total = 706
+tests-passed = 706
 tests-skipped = 7
 tests-failed = 0
 tests-excluded = 107
 excluded-tags = [":e2e", ":external_api", ":requires_nif"]
-new-tests-added = 90
-new-categories = ["security_aspect", "property_based", "concurrency_aspect"]
+new-tests-added = 102
+new-categories = ["security_aspect", "property_based", "concurrency_aspect", "audit_wiring"]
 benchmarks-defined = 27
 
 [runtime-extension]
@@ -87,9 +87,21 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - Fixed 57 source files: PMPL-1.0 → PMPL-1.0-or-later SPDX headers ✅
 - Test suite: 694 tests, 0 failures (107 excluded: e2e/external_api/requires_nif) ✅
 
+[completed-2026-04-25c]
+- trust-pipeline-images.yml: CI workflow for all 9 service images (matrix, GHA cache) ✅
+- nif-build.yml: CI workflow that compiles opsm_pq_nif + runs :requires_nif tests ✅
+- test/opsm/wiring/audit_test.exs: 12 tests for Wiring.run_audit/2 + workspace TOML parsing ✅
+- Containerfile fixes: openssl-dev in builder (selur, svalinn); removed unavailable APK
+  packages (afl++/libfuzzer, falco/bpftrace, opa) from checky-monkey/cerro-torre/vordr ✅
+- 4/5 trust pipeline images built and pushed to GHCR:
+    ghcr.io/hyperpolymath/claim-forge:latest ✅
+    ghcr.io/hyperpolymath/palimpsest-license:latest ✅
+    ghcr.io/hyperpolymath/oikos:latest ✅
+    ghcr.io/hyperpolymath/cicd-hyper-a:latest ✅
+    ghcr.io/hyperpolymath/checky-monkey:latest (pending fix re-run)
+
 [next-actions]
 - Tests for HFR + new registry adapters (P2) — integrate adapters into HFR search
 - Add error handling E2E scenarios (P2)
-- opsm audit --workspace: wire into CI / add tests for the CLI handler
-- Compile opsm_pq_nif NIF binary in CI (cargo build --release) (P2)
+- Verify all 9 container images build cleanly after Containerfile fixes (in progress via CI)
 - Implement fuzz testing harness (P3)
