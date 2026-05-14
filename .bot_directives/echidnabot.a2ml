@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # echidnabot.a2ml — Directives for echidnabot in odds-and-sods-package-manager
 
+project = "odds-and-sods-package-manager"
+
 [identity]
 bot = "echidnabot"
 role = "code-quality"

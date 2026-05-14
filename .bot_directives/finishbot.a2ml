@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # finishbot.a2ml — Directives for finishbot in odds-and-sods-package-manager
 
+project = "odds-and-sods-package-manager"
+
 [identity]
 bot = "finishbot"
 role = "task-completion"

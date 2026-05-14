@@ -31,6 +31,8 @@
 ;
 ; ── End Definitions ──────────────────────────────────────────────
 
+project = "odds-and-sods-package-manager"
+
 (must-contractile
   (version "1.0.0")
   (repo "odds-and-sods-package-manager")

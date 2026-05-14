@@ -29,6 +29,8 @@
 ;
 ; ── End Definitions ──────────────────────────────────────────────
 
+project = "odds-and-sods-package-manager"
+
 (intent-contractile
   (version "1.0.0")
   (repo "odds-and-sods-package-manager")

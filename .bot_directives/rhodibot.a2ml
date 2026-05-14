@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # rhodibot.a2ml — Directives for rhodibot in odds-and-sods-package-manager
 
+project = "odds-and-sods-package-manager"
+
 [identity]
 bot = "rhodibot"
 role = "git-operations"

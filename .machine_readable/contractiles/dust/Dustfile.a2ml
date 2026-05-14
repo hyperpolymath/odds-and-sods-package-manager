@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Dustfile — Cleanup and Hygiene Contract
 
+project = "odds-and-sods-package-manager"
+
 [dustfile]
 version = "1.0.0"
 format = "a2ml"
