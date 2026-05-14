@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PMPL-1.0-or-later
 # Trustfile — Integrity and Provenance Contract
 
+project = "odds-and-sods-package-manager"
+
 [trustfile]
 version = "1.0.0"
 format = "a2ml"

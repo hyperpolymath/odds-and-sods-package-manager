@@ -7,6 +7,8 @@
 #
 # Reference: ADR-002 in standards/agentic-a2ml/docs/
 
+project = "odds-and-sods-package-manager"
+
 [metadata]
 version = "1.0.0"
 last-updated = "2026-03-24"

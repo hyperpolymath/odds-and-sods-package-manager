@@ -41,6 +41,8 @@
 ;
 ; ── End Definitions ──────────────────────────────────────────────
 
+project = "odds-and-sods-package-manager"
+
 (adjust-contractile
   (version "1.0.0")
   (full-name "Accessibility & Digital Justice for Universal Software & Technology")

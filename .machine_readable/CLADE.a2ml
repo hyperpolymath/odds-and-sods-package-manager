@@ -2,6 +2,8 @@
 # Clade declaration — part of the gv-clade-index registry
 # See: https://github.com/hyperpolymath/gv-clade-index
 
+project = "odds-and-sods-package-manager"
+
 [identity]
 uuid = "8d0e4d70-0d5d-58c4-a0eb-ff46b91b7de2"
 primary-forge = "github"

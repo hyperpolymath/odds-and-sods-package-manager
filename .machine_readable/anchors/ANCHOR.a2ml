@@ -1,6 +1,8 @@
 # ⚓ ANCHOR: odds-and-sods-package-manager
 # This is the canonical authority for the odds-and-sods-package-manager repository.
 
+project = "odds-and-sods-package-manager"
+
 id: "org.hyperpolymath.odds-and-sods-package-manager"
 version: "1.0.0"
 clade: "unknown"
