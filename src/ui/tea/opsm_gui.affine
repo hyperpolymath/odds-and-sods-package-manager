@@ -53,7 +53,7 @@ enum Msg {
 // ── TEA Logic ────────────────────────────────────────────────────────────────
 
 fn opsm_init() -> Model {
-  {
+  #{
     route: Route::Home,
     search_query: "",
     install_status: InstallStatus::NotStarted,
@@ -67,7 +67,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
     { route: r, search_query: s, install_status: i, loading: l, history_depth: h } => {
       match msg {
         Navigate(new_route) => {
-          {
+          #{
             route: new_route,
             search_query: s,
             install_status: i,
@@ -77,7 +77,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
         }
 
         UpdateSearchQuery(new_query) => {
-          {
+          #{
             route: r,
             search_query: new_query,
             install_status: i,
@@ -87,7 +87,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
         }
 
         PerformSearch(query) => {
-          {
+          #{
             route: Route::Search(query),
             search_query: query,
             install_status: i,
@@ -97,7 +97,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
         }
 
         SetInstallStatus(status) => {
-          {
+          #{
             route: r,
             search_query: s,
             install_status: status,
@@ -108,7 +108,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
 
         PopState => {
           if h > 0 {
-            {
+            #{
               route: Route::Home,
               search_query: s,
               install_status: i,
@@ -116,7 +116,7 @@ fn opsm_update(@linear msg: Msg, @linear model: Model) -> Model {
               history_depth: h - 1
             }
           } else {
-            {
+            #{
               route: r,
               search_query: s,
               install_status: i,
