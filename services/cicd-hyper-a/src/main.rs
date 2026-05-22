@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 //! CICD-Hyper-A: CI/CD pipeline and package publishing service
 //!
 //! Handles package publishing, manifest validation, federation sync

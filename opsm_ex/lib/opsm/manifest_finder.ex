@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.ManifestFinder do
   @moduledoc """
   Locate manifests for ingestion. Shares the manifest candidate list with the

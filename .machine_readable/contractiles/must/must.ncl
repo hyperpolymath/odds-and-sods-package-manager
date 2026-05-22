@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Must — hard-constraint enforcement runner
 #
 # Pairs with: Mustfile.a2ml (same directory)

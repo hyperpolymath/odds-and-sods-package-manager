@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Checky-Monkey: Code verification service (fuzzing, property tests, formal verification)
 # Rust service with Chainguard Wolfi base
 
@@ -47,4 +47,4 @@ LABEL org.opencontainers.image.title="Checky-Monkey" \
       org.opencontainers.image.description="Code verification and fuzzing service" \
       org.opencontainers.image.version="1.0.0" \
       org.opencontainers.image.authors="Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" \
-      org.opencontainers.image.licenses="PMPL-1.0-or-later"
+      org.opencontainers.image.licenses="MPL-2.0"

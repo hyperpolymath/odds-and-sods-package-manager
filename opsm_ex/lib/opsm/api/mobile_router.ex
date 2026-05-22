@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Api.MobileRouter do
   @moduledoc """
   REST API endpoints for OPSM mobile application.

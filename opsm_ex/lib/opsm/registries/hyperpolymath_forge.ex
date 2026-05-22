@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.HyperpPolymathForge do
   @moduledoc """
@@ -251,7 +251,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
           default_branch: default_branch,
           version: parsed["version"] || "0.0.0",
           description: parsed["description"] || repo["description"] || "",
-          license: parsed["license"] || "PMPL-1.0-or-later",
+          license: parsed["license"] || "MPL-2.0",
           authors: parsed["authors"] || default_authors(),
           keywords: parsed["keywords"] || [],
           forth: safe_to_atom(parsed["forth"]),
@@ -364,7 +364,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
         name: entry[:pkg_name],
         version: entry[:version] || version,
         description: entry[:description],
-        license: entry[:license] || "PMPL-1.0-or-later",
+        license: entry[:license] || "MPL-2.0",
         homepage: entry[:repo_url],
         repository: entry[:repo_url],
         authors: entry[:authors] || default_authors(),

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Registries.DenoX do
   @moduledoc """
   Deno Third Party Modules (deno.land/x) Registry API client.

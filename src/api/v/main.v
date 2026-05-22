@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
-// OPSM API Service (V-lang Implementation)
+// SPDX-License-Identifier: MPL-2.0
+// OPSM API Service (zig Implementation)
 // Triple API: GraphQL / gRPC / REST
 
 module main
@@ -16,7 +16,7 @@ fn main() {
 	}
 
 	println('╔══════════════════════════════════════════════════════╗')
-	println('║          OPSM API SERVICE - V-LANG                   ║')
+	println('║          OPSM API SERVICE - zig                   ║')
 	println('║      GraphQL • gRPC • REST • High-Assurance          ║')
 	println('╚══════════════════════════════════════════════════════╝')
 	println('Starting server on port ${port}...')

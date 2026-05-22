@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Intend — purpose and scope runner
 #
 # Pairs with: Intentfile.a2ml (same directory)

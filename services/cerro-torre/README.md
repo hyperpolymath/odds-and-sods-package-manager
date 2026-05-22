@@ -350,7 +350,7 @@ curl http://localhost:8088/metrics | jq -r '
 
 ## License
 
-PMPL-1.0-or-later
+MPL-2.0
 
 ## Author
 

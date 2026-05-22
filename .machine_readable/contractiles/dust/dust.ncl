@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Dust — cleanup and hygiene runner
 #
 # Pairs with: Dustfile.a2ml (same directory)

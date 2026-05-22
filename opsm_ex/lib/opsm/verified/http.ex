@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Verified.Http do
   @moduledoc """
   Safe HTTP client that validates URLs before making requests.

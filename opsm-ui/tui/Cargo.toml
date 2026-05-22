@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell
 
 [package]
@@ -6,7 +6,7 @@ name = "opsm-tui"
 version = "0.1.0"
 description = "Terminal user interface for OPSM — better than aptitude"
 authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 repository = "https://github.com/hyperpolymath/odds-and-sods-package-manager"
 edition = "2021"
 rust-version = "1.75"

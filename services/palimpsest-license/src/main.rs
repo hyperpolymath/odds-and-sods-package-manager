@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 //! Palimpsest: License analysis and compatibility service
 //!
 //! Analyzes artifacts for license declarations, checks compatibility
@@ -277,11 +277,11 @@ fn build_license_db() -> HashMap<String, LicenseInfo> {
         ("LGPL-3.0-only", "GNU LGPL v3.0", true, true, CopyleftType::Weak),
         ("GPL-2.0-only", "GNU GPL v2.0", true, true, CopyleftType::Strong),
         ("GPL-3.0-only", "GNU GPL v3.0", true, true, CopyleftType::Strong),
-        ("PMPL-1.0-or-later-only", "GNU AGPL v3.0", true, true, CopyleftType::Network),
+        ("MPL-2.0-only", "GNU AGPL v3.0", true, true, CopyleftType::Network),
         ("Unlicense", "The Unlicense", true, true, CopyleftType::None),
         ("0BSD", "Zero-Clause BSD", true, true, CopyleftType::None),
         ("CC0-1.0", "CC0 1.0 Universal", false, false, CopyleftType::None),
-        ("PMPL-1.0-or-later", "Palimpsest License", false, false, CopyleftType::Weak),
+        ("MPL-2.0", "Palimpsest License", false, false, CopyleftType::Weak),
     ];
 
     for (spdx, name, osi, fsf, copyleft) in entries {
@@ -326,7 +326,7 @@ fn build_compatibility_matrix() -> CompatibilityMatrix {
                 note: "MPL-2.0 allows relicensing under GPL-3.0".into(),
             },
             CompatibilityRule {
-                from: "PMPL-1.0-or-later-only".into(),
+                from: "MPL-2.0-only".into(),
                 to: "GPL-3.0-only".into(),
                 compatible: false,
                 note: "AGPL network clause not present in GPL-3.0".into(),

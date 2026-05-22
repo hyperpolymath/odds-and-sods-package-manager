@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # cleanup.ex — Extended cleanup for desktop integration, services, and config.
 #
 # Handles platform-specific artifacts that the basic do_remove/1 doesn't touch:

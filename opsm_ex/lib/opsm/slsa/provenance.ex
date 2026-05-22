@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Slsa.Provenance do
   @moduledoc """
   SLSA v1.0 provenance generation and verification.

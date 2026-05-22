@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Registry API Changelog and Monitoring
 
 Tracks API version targets, upcoming deprecations, and monitoring priorities

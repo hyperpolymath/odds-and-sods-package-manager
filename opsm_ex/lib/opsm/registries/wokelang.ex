@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.Wokelang do
   @moduledoc """
@@ -205,7 +205,7 @@ defmodule Opsm.Registries.Wokelang do
             name: pkg_info.name,
             version: version,
             description: pkg_info[:description],
-            license: "PMPL-1.0-or-later",
+            license: "MPL-2.0",
             homepage: pkg_info.url,
             repository: pkg_info.url,
             authors: default_authors(),
@@ -239,7 +239,7 @@ defmodule Opsm.Registries.Wokelang do
       checksum: nil, checksum_algo: :sha256,
       manifest: %ManifestFormat{
         name: pkg_info.name, version: version, description: pkg_info.description,
-        license: "PMPL-1.0-or-later", homepage: pkg_info.url, repository: pkg_info.url,
+        license: "MPL-2.0", homepage: pkg_info.url, repository: pkg_info.url,
         authors: default_authors(), keywords: default_keywords(),
         dependencies: %{}, dev_dependencies: %{},
         source_forth: :wokelang, raw_manifest: %{"registry" => "wokelang-curated"}

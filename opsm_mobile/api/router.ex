@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Api.Router do
   @moduledoc """
   HTTP API router for mobile wrapper (Tauri 2.0).

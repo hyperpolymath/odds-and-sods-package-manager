@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # stapeln.toml — Layer-based container build for OPSM
 #
 # stapeln builds containers as composable layers (German: "to stack").
@@ -15,7 +15,7 @@ name = "opsm"
 version = "2.0.0"
 description = "Universal package manager with post-quantum crypto, QUIC/HTTP3, Nickel runtime, and 83 registry adapters"
 author = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
-license = "PMPL-1.0-or-later"
+license = "MPL-2.0"
 registry = "ghcr.io/hyperpolymath"
 
 [build]
@@ -178,7 +178,7 @@ healthcheck = { cmd = ["/app/bin/opsm", "eval", "Opsm.RegistryGateway.Store.heal
 "org.opencontainers.image.description" = "Universal package manager with post-quantum crypto, QUIC/HTTP3, and 83 registry adapters"
 "org.opencontainers.image.version" = "2.0.0"
 "org.opencontainers.image.authors" = "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
-"org.opencontainers.image.licenses" = "PMPL-1.0-or-later"
+"org.opencontainers.image.licenses" = "MPL-2.0"
 "org.opencontainers.image.source" = "https://github.com/hyperpolymath/odds-and-sods-package-manager"
 "org.opencontainers.image.vendor" = "hyperpolymath"
 "org.opencontainers.image.base.name" = "cgr.dev/chainguard/wolfi-base:latest"

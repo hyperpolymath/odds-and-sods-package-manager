@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 #
 # OPSM Runtime Plugin Contract
@@ -256,7 +256,7 @@ let RuntimePlugin = {
   # === Metadata ===
   license
     | String
-    | default = "PMPL-1.0-or-later"
+    | default = "MPL-2.0"
     | doc "License for this plugin definition (not the tool itself)",
 
   schema_version

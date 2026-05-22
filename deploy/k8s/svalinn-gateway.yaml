@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Svalinn edge gateway — HTTPS/QUIC ingress with policy enforcement
 apiVersion: apps/v1
 kind: Deployment

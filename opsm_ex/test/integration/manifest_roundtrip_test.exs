@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Integration.ManifestRoundtripTest do
   use ExUnit.Case, async: true
 
@@ -12,7 +12,7 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
     name: "roundtrip-test",
     version: "3.1.4",
     description: "Testing manifest roundtrip conversion",
-    license: "PMPL-1.0-or-later",
+    license: "MPL-2.0",
     homepage: "https://example.com/roundtrip",
     repository: "https://github.com/hyperpolymath/roundtrip-test",
     authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],

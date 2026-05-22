@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.Nqc do
   @moduledoc """
@@ -191,7 +191,7 @@ defmodule Opsm.Registries.Nqc do
       manifest: %ManifestFormat{
         name: pkg_name, version: fields["version"] || version,
         description: fields["description"] || pkg_info[:description],
-        license: fields["license"] || "PMPL-1.0-or-later",
+        license: fields["license"] || "MPL-2.0",
         homepage: fields["homepage"] || pkg_info.url,
         repository: fields["repository"] || pkg_info.url,
         authors: parse_toml_array(fields["authors"]) || default_authors(),
@@ -211,7 +211,7 @@ defmodule Opsm.Registries.Nqc do
       checksum: nil, checksum_algo: :sha256,
       manifest: %ManifestFormat{
         name: pkg_info.name, version: version, description: pkg_info.description,
-        license: "PMPL-1.0-or-later", homepage: pkg_info.url, repository: pkg_info.url,
+        license: "MPL-2.0", homepage: pkg_info.url, repository: pkg_info.url,
         authors: default_authors(), keywords: default_keywords(),
         dependencies: %{}, dev_dependencies: %{},
         source_forth: :nqc, raw_manifest: %{"registry" => "nqc-curated"}

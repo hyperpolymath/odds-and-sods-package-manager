@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 #
 # mint-runtime-plugin.sh — OPSM Runtime Plugin Minter
@@ -155,7 +155,7 @@ if [ -n "$CONTRIBUTOR_NAME" ]; then
 fi
 
 cat > "$OUTPUT_FILE" << NICKEL
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 #
 # OPSM Runtime Plugin: ${NAME}
 # Created with OPSM Runtime Plugin Minter

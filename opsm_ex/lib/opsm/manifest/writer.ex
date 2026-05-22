@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Manifest.Writer do
   @moduledoc """
   Bidirectional manifest conversion — write OPSM's internal ManifestFormat
@@ -139,7 +139,7 @@ defmodule Opsm.Manifest.Writer do
       |> Enum.join(",\n")
 
     """
-    # SPDX-License-Identifier: #{m.license || "PMPL-1.0-or-later"}
+    # SPDX-License-Identifier: #{m.license || "MPL-2.0"}
     defmodule #{module_name}.MixProject do
       use Mix.Project
 
@@ -169,7 +169,7 @@ defmodule Opsm.Manifest.Writer do
 
       defp package do
         [
-          licenses: ["#{m.license || "PMPL-1.0-or-later"}"],
+          licenses: ["#{m.license || "MPL-2.0"}"],
           links: %{}
         ]
       end

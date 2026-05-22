@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.MixProject do
   use Mix.Project
 
@@ -73,7 +73,7 @@ defmodule Opsm.MixProject do
     [
       name: "opsm",
       files: ~w(lib mix.exs README.md LICENSE CHANGELOG.md),
-      licenses: ["PMPL-1.0-or-later"],
+      licenses: ["MPL-2.0"],
       links: %{
         "GitHub" => "https://github.com/hyperpolymath/odds-and-sods-package-manager",
         "Docs" => "https://github.com/hyperpolymath/odds-and-sods-package-manager#readme",

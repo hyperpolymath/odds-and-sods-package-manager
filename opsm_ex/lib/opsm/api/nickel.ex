@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Api.Nickel do
   @moduledoc """
   Nickel decoding support for API payloads.

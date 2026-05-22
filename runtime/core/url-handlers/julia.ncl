@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # Julia runtime plugin — custom URL handler for julialang.org S3 downloads.
@@ -62,6 +62,6 @@
   },
 
   asdf_origin = "https://github.com/asdf-community/asdf-julia",
-  license = "PMPL-1.0-or-later",
+  license = "MPL-2.0",
   schema_version = "1.0.0",
 }

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Cerro-Torre: Runtime security monitoring and threat detection
 # eBPF-based monitoring with Falco integration
 
@@ -46,4 +46,4 @@ LABEL org.opencontainers.image.title="Cerro-Torre" \
       org.opencontainers.image.description="Runtime security monitoring" \
       org.opencontainers.image.version="1.0.0" \
       org.opencontainers.image.authors="Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" \
-      org.opencontainers.image.licenses="PMPL-1.0-or-later"
+      org.opencontainers.image.licenses="MPL-2.0"

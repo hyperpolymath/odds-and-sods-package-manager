@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # STATE.a2ml — Project state checkpoint
 # Updated 2026-04-25f: CRG-B achieved — 6 external targets documented
 
@@ -87,7 +87,7 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - Replaced line-splitting parse_workspace_members/1 in cli.ex with Toml.decode/1 ✅
 - Fixed trust/pipeline.ex crash: get_in on {:info, tuple} for slsa_level/pq_signed ✅
 - Retagged NIF tests :requires_nif; excluded from default run ✅
-- Fixed 57 source files: PMPL-1.0 → PMPL-1.0-or-later SPDX headers ✅
+- Fixed 57 source files: PMPL-1.0 → MPL-2.0 SPDX headers ✅
 - Test suite: 694 tests, 0 failures (107 excluded: e2e/external_api/requires_nif) ✅
 
 [completed-2026-04-25c]

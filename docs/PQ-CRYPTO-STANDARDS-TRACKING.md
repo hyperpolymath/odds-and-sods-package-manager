@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # PQ Crypto Standards Tracking
 
 Tracks post-quantum cryptographic algorithm standardization status and OPSM's

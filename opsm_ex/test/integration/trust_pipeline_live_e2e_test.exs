@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # Enterprise trust pipeline — live-service E2E tests.
@@ -213,7 +213,7 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
     end
 
     test "POST /compatibility single license is always compatible" do
-      {:ok, resp} = rpost(@palimpsest <> "/compatibility", %{licenses: ["PMPL-1.0-or-later"]})
+      {:ok, resp} = rpost(@palimpsest <> "/compatibility", %{licenses: ["MPL-2.0"]})
       assert resp.status == 200
       assert resp.body["compatible"] == true
     end
@@ -244,7 +244,7 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
         manifest: %{
           name: "test-package",
           version: "1.0.0",
-          license: "PMPL-1.0-or-later",
+          license: "MPL-2.0",
           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
           repository: "https://github.com/hyperpolymath/test"
         },
@@ -262,7 +262,7 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
         name: name,
         version: "0.1.0",
         forth: "hf",
-        manifest: %{name: name, version: "0.1.0", license: "PMPL-1.0-or-later"},
+        manifest: %{name: name, version: "0.1.0", license: "MPL-2.0"},
         attestations: [],
         target_registries: ["hf"]
       })
@@ -350,7 +350,7 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
 
       # Stage 3 — palimpsest: confirm license is clean
       {:ok, lic_resp} = rpost(@palimpsest <> "/compatibility", %{
-        licenses: ["PMPL-1.0-or-later"]
+        licenses: ["MPL-2.0"]
       })
       assert lic_resp.status == 200
       assert lic_resp.body["compatible"] == true
@@ -367,7 +367,7 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
         name:    pkg_name,
         version: "1.0.0",
         forth:   "hf",
-        manifest: %{name: pkg_name, version: "1.0.0", license: "PMPL-1.0-or-later"},
+        manifest: %{name: pkg_name, version: "1.0.0", license: "MPL-2.0"},
         attestations:    [attest["attestation_uri"]],
         target_registries: ["hf"]
       })

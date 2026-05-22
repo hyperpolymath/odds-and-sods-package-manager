@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # sustainabot.a2ml — Directives for sustainabot in odds-and-sods-package-manager
 
 project = "odds-and-sods-package-manager"

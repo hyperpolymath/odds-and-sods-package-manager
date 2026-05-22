@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.HyperpPolymathForgeTest do
   use ExUnit.Case, async: false
@@ -144,7 +144,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
           default_branch: "main",
           version: "2.0.0",
           description: "Universal package manager",
-          license: "PMPL-1.0-or-later",
+          license: "MPL-2.0",
           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
           keywords: ["package", "manager"],
           forth: :hyperpolymath,
@@ -158,7 +158,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
           default_branch: "main",
           version: "0.1.0",
           description: "Vite plugin for AffineScript",
-          license: "PMPL-1.0-or-later",
+          license: "MPL-2.0",
           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
           keywords: ["vite", "affinescript", "bundler"],
           forth: :affinescript,
@@ -172,7 +172,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
           default_branch: "main",
           version: "0.3.0",
           description: "Linear type system for Elixir",
-          license: "PMPL-1.0-or-later",
+          license: "MPL-2.0",
           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
           keywords: ["types", "linear", "ephapax"],
           forth: :ephapax,
@@ -263,7 +263,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       :ets.insert(:hfr_cache, {"seed-pkg", %{
         type: :package, pkg_name: "seed-pkg", repo_name: "seed-repo",
         default_branch: "main", version: "1.0.0", description: "seeded",
-        license: "PMPL-1.0-or-later", authors: [], keywords: [],
+        license: "MPL-2.0", authors: [], keywords: [],
         forth: :hyperpolymath, repo_url: "https://github.com/hyperpolymath/seed-repo",
         raw_toml: %{}
       }, expiry})
@@ -295,7 +295,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       :ets.insert(:hfr_cache, {"my-seeded-pkg", %{
         type: :package, pkg_name: "my-seeded-pkg", repo_name: "my-seeded-repo",
         default_branch: "main", version: "1.2.3", description: "a test package",
-        license: "PMPL-1.0-or-later",
+        license: "MPL-2.0",
         authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
         keywords: ["test"], forth: :hyperpolymath,
         repo_url: "https://github.com/hyperpolymath/my-seeded-repo",
@@ -328,7 +328,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       assert pkg.manifest.name == "my-seeded-pkg"
       assert pkg.manifest.version == "1.2.3"
       assert pkg.manifest.description == "a test package"
-      assert pkg.manifest.license == "PMPL-1.0-or-later"
+      assert pkg.manifest.license == "MPL-2.0"
     end
   end
 end

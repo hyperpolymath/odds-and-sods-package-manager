@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Storage.Local do
   @moduledoc """
   Local-disk storage backend — `~/.cache/opsm/packages/<key>`.

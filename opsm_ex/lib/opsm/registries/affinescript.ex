@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.AffineScript do
   @moduledoc """
@@ -352,7 +352,7 @@ defmodule Opsm.Registries.AffineScript do
         name: pkg_info.name,
         version: version,
         description: pkg_info.description,
-        license: "PMPL-1.0-or-later",
+        license: "MPL-2.0",
         homepage: pkg_info.url,
         repository: pkg_info.url,
         authors: default_authors(),

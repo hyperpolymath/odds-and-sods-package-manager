@@ -320,7 +320,7 @@ opa eval -d policy.rego -i input.json 'data.container.deny'
 
 ## License
 
-PMPL-1.0-or-later
+MPL-2.0
 
 ## Author
 

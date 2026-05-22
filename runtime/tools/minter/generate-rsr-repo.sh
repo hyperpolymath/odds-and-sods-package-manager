@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 #
 # generate-rsr-repo.sh — RSR Repository Generator for Runtime Plugins
@@ -88,7 +88,7 @@ cp "$PLUGIN_FILE" "$OUTPUT_DIR/runtime/${TOOL_NAME}.ncl"
 
 # --- Generate README.adoc ---
 cat > "$OUTPUT_DIR/README.adoc" << ADOC
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 = opsm-runtime-${TOOL_NAME}
 :revdate: $(date +%Y-%m-%d)
 :toc: macro
@@ -159,12 +159,12 @@ To improve this plugin:
 
 == License
 
-PMPL-1.0-or-later (Palimpsest License)
+MPL-2.0 (Palimpsest License)
 ADOC
 
 # --- Generate EXPLAINME.adoc ---
 cat > "$OUTPUT_DIR/EXPLAINME.adoc" << ADOC
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 = EXPLAINME: opsm-runtime-${TOOL_NAME}
 :revdate: $(date +%Y-%m-%d)
 
@@ -205,7 +205,7 @@ ADOC
 
 # --- Generate Justfile ---
 cat > "$OUTPUT_DIR/justfile" << 'JUST'
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Justfile for opsm-runtime plugin
 
 # Validate the Nickel plugin definition
@@ -251,7 +251,7 @@ The plugin definition is at \`runtime/${TOOL_NAME}.ncl\`.
 
 1. The Nickel file must satisfy the RuntimePlugin contract
 2. SCM files in \`.machine_readable/6a2/\` ONLY (never root)
-3. License: PMPL-1.0-or-later
+3. License: MPL-2.0
 
 ## SESSION STARTUP
 

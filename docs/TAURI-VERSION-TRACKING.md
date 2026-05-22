@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Tauri 2.x Version Tracking
 
 Tracks Tauri 2.x versions used in OPSM Mobile (`opsm_mobile/src-tauri/`).

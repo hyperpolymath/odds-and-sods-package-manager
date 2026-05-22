@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Manifest.WriterTest do
   use ExUnit.Case, async: true
 
@@ -9,7 +9,7 @@ defmodule Opsm.Manifest.WriterTest do
     name: "my-tool",
     version: "1.2.3",
     description: "A useful tool",
-    license: "PMPL-1.0-or-later",
+    license: "MPL-2.0",
     homepage: "https://example.com",
     repository: "https://github.com/hyperpolymath/my-tool",
     authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
@@ -26,7 +26,7 @@ defmodule Opsm.Manifest.WriterTest do
       assert parsed["name"] == "my-tool"
       assert parsed["version"] == "1.2.3"
       assert parsed["description"] == "A useful tool"
-      assert parsed["license"] == "PMPL-1.0-or-later"
+      assert parsed["license"] == "MPL-2.0"
       assert is_map(parsed["dependencies"])
       assert is_map(parsed["devDependencies"])
     end
@@ -120,7 +120,7 @@ defmodule Opsm.Manifest.WriterTest do
       assert result =~ "[package]"
       assert result =~ ~s(name = "my-tool")
       assert result =~ ~s(version = "1.2.3")
-      assert result =~ ~s(license = "PMPL-1.0-or-later")
+      assert result =~ ~s(license = "MPL-2.0")
       assert result =~ "[dependencies]"
     end
 

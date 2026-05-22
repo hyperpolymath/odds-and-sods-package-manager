@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Pinned runtime versions for OPSM
 # Managed via asdf (https://asdf-vm.com)
 elixir 1.19.5-otp-28

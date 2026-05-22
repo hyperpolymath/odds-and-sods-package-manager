@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 //! Checky-Monkey: Code verification service
 //!
 //! Provides fuzzing, property testing, type checking, formal verification,

@@ -489,7 +489,7 @@ To add a new service to the container ecosystem:
 
 ## License
 
-PMPL-1.0-or-later (Palimpsest License)
+MPL-2.0 (Palimpsest License)
 
 ## References
 

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.CLI do
   @moduledoc """
   CLI entry point for OPSM - Odds-and-sods Package Manager.

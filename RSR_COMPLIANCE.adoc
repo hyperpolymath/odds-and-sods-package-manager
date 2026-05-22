@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // RSR_COMPLIANCE.adoc — Rhodium Standard Repository compliance record
 // Repo: odds-and-sods-package-manager
 // As of: 2026-04-25
@@ -37,7 +37,7 @@
 |`LICENSE.txt`
 |RSR Required Files
 |N/A — different name
-|Repo carries `LICENSE` (same content, no `.txt`). PMPL-1.0-or-later + MPL-2.0 fallback present.
+|Repo carries `LICENSE` (same content, no `.txt`). MPL-2.0 + MPL-2.0 fallback present.
 
 |`LICENSE-MPL-2.0`
 |Estate policy (CLAUDE.md)

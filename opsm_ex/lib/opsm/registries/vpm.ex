@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Registries.Vpm do
   @moduledoc """
   VPM (V Package Manager) registry adapter for the V programming language.

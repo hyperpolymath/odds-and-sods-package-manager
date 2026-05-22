@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Manifest.OpsmToml do
   @moduledoc """
   Native OPSM manifest format (opsm.toml) parser and writer.
@@ -8,7 +8,7 @@ defmodule Opsm.Manifest.OpsmToml do
   [package]
   name = "my-tool"
   version = "1.0.0"
-  license = "PMPL-1.0-or-later"
+  license = "MPL-2.0"
   description = "A useful tool"
   authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
   keywords = ["tool", "utility"]

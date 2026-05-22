@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
-// OPSM API Implementation (V-lang)
+// SPDX-License-Identifier: MPL-2.0
+// OPSM API Implementation (zig)
 
 module main
 

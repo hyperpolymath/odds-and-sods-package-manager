@@ -147,7 +147,7 @@ propagated through a cross-ecosystem build graph to Eⱼ.
 ### §8 Conclusion
 - The ecosystem-of-ecosystems problem is structural, not incidental
 - OPSM demonstrates it is solvable at acceptable overhead
-- Open source (PMPL-1.0-or-later / MPL-2.0 fallback); HAR governance model documented
+- Open source (MPL-2.0 / MPL-2.0 fallback); HAR governance model documented
 
 ---
 

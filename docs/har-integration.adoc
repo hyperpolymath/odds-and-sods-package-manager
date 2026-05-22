@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 = HAR Integration for Agentic Package Fetching
 :revdate: 2026-01-23
 :toc: left

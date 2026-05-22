@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Registries.Portage do
   @moduledoc """
   Gentoo Portage registry adapter.
@@ -13,7 +13,7 @@ defmodule Opsm.Registries.Portage do
 
   @doc """
   Fetch package metadata from the Gentoo Packages API.
-  Name can be category/package (e.g., "dev-lang/python") or just the package name.
+  Name can be category/package (e.g., "dezig/python") or just the package name.
   """
   def fetch_package(name, version \\ "latest") do
     {category, pkg_name} = split_atom(name)

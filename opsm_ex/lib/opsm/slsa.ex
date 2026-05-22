@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Slsa do
   @moduledoc """
   SLSA (Supply-chain Levels for Software Artifacts) Level 3 compliance.

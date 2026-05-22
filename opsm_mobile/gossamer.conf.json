@@ -80,7 +80,7 @@
     ],
     "resources": [],
     "copyright": "Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)",
-    "license": "PMPL-1.0-or-later",
+    "license": "MPL-2.0",
     "shortDescription": "Cross-platform package manager mobile client",
     "longDescription": "OPSM mobile client for searching, installing, and auditing packages across registries",
     "linux": {

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Manifest.OpsmTomlTest do
   use ExUnit.Case, async: true
 
@@ -9,7 +9,7 @@ defmodule Opsm.Manifest.OpsmTomlTest do
   [package]
   name = "my-tool"
   version = "1.0.0"
-  license = "PMPL-1.0-or-later"
+  license = "MPL-2.0"
   description = "A useful tool"
   authors = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
   keywords = ["tool", "utility"]
@@ -34,7 +34,7 @@ defmodule Opsm.Manifest.OpsmTomlTest do
       assert {:ok, manifest} = OpsmToml.parse(@sample_toml)
       assert manifest.name == "my-tool"
       assert manifest.version == "1.0.0"
-      assert manifest.license == "PMPL-1.0-or-later"
+      assert manifest.license == "MPL-2.0"
       assert manifest.description == "A useful tool"
       assert "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>" in manifest.authors
       assert "tool" in manifest.keywords
@@ -101,7 +101,7 @@ defmodule Opsm.Manifest.OpsmTomlTest do
         name: "roundtrip-test",
         version: "2.0.0",
         description: "Testing roundtrip",
-        license: "PMPL-1.0-or-later",
+        license: "MPL-2.0",
         authors: ["Test Author"],
         keywords: ["test"],
         dependencies: %{"dep_a" => "1.0.0"},

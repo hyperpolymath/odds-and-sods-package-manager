@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Transport.QuicNif do
   @moduledoc """
   NIF bindings for QUIC/HTTP3 transport via the `quinn` Rust crate.

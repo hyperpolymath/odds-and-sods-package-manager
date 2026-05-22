@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 #
 # convert-asdf-plugins.sh
@@ -111,7 +111,7 @@ detect_function() {
 
   # Language runtimes/compilers
   case "$name" in
-    *erlang*|*elixir*|*gleam*|*python*|*ruby*|*nodejs*|*deno*|*perl*|*racket*|*julia*|*clojure*|*crystal*|*dart*|*nim*|*haskell*|*ocaml*|*scala*|*rust*|*golang*|*zig*|*lean*|*idris2*|*v-lang*|*dmd*)
+    *erlang*|*elixir*|*gleam*|*python*|*ruby*|*nodejs*|*deno*|*perl*|*racket*|*julia*|*clojure*|*crystal*|*dart*|*nim*|*haskell*|*ocaml*|*scala*|*rust*|*golang*|*zig*|*lean*|*idris2*|*zig*|*dmd*)
       functions="'Compiler, 'Runtime" ;;
     *cosign*|*age*|*cfssl*|*trivy*|*grype*|*syft*)
       functions="'Security" ;;
@@ -212,7 +212,7 @@ for plugin_dir in "$PLUGINS_DIR"/asdf-*/; do
 
   # Generate Nickel definition
   cat > "$output_file" << NICKEL
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 #
 # OPSM Runtime Plugin: ${tool_name}

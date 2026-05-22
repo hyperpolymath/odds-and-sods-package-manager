@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Clients.ClaimForge do
   @moduledoc """
   Client for Claim-Forge attestation generation service.

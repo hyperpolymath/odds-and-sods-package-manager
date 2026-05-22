@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 # Trust — integrity and provenance runner
 #
 # Pairs with: Trustfile.a2ml (same directory)

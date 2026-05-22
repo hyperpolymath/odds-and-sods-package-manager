@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: PMPL-1.0-or-later
+# SPDX-License-Identifier: MPL-2.0
 defmodule Opsm.Network.Ipv6 do
   @moduledoc """
   IPv6-only enforcement for OPSM registry connections.

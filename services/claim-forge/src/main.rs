@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 //! Claim-Forge: Cryptographic attestation generation service
 //!
 //! Generates SLSA provenance attestations and signs artifacts with Ed25519.
