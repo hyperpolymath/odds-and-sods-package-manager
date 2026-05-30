@@ -45,7 +45,7 @@ jobs:
       # Elixir / BEAM setup
       # -----------------------------------------------------------------------
       - name: Install Elixir and OTP
-        uses: erlef/setup-beam@5a67e1a1dd86cae5e5bef84e2da5060406a66c07  # v1
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
         with:
           otp-version: '26.2'
           elixir-version: '1.16.0'
