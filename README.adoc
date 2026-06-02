@@ -8,7 +8,7 @@ image:https://img.shields.io/badge/Status-v2.0.0-success?style=flat[v2.0.0]
 image:https://img.shields.io/badge/Registries-101-blue?style=flat[101 Registries]
 image:https://img.shields.io/badge/Elixir-Inside-4e2a8e?style=flat&logo=elixir[Elixir Inside]
 image:https://img.shields.io/badge/Rust-NIF-orange?style=flat&logo=rust[Rust NIF]
-image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://www.mozilla.org/MPL/2.0/"]
 image:https://img.shields.io/badge/Tests-547%20%2B%2040%20props-success?style=flat[Tests Passing]
 
 **A federated, universal package manager with 101 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and formal verification.**
