@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = OPSM (Odds and Sods Package Manager)
+image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=openssourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/odds-and-sods-package-manager"]
+
 :revdate: 2026-03-08
 :version: 2.0.0
 :toc: macro
@@ -8,7 +12,7 @@ image:https://img.shields.io/badge/Status-v2.0.0-success?style=flat[v2.0.0]
 image:https://img.shields.io/badge/Registries-101-blue?style=flat[101 Registries]
 image:https://img.shields.io/badge/Elixir-Inside-4e2a8e?style=flat&logo=elixir[Elixir Inside]
 image:https://img.shields.io/badge/Rust-NIF-orange?style=flat&logo=rust[Rust NIF]
-image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
 image:https://img.shields.io/badge/Tests-547%20%2B%2040%20props-success?style=flat[Tests Passing]
 
 **A federated, universal package manager with 101 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and formal verification.**
@@ -789,14 +793,9 @@ OPSM is part of the hyperpolymath ecosystem:
 
 == License
 
-This project uses the **Polymath Public Meta-License (PMPL-1.0)** from https://github.com/hyperpolymath/palimpsest-license[palimpsest-license].
+This project is licensed under the Mozilla Public License, v. 2.0. See the `LICENSE` file for details.
 
-**Key Points:**
-- Open source with copyleft provisions
-- Requires attribution and sharing improvements
-- Commercial use permitted with compliance
-
-See link:LICENSE[LICENSE] file for full text.
+SPDX-License-Identifier: MPL-2.0
 
 == Citation
 
