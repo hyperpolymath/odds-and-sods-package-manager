@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # OPSM Mobile - Native iOS/Android Wrapper
 
 Native mobile app for OPSM (Odds and Sods Package Manager) using Tauri 2.0 with ReScript TEA architecture.

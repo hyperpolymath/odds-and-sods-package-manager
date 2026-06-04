@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # OPSM Container Integration
 
 **Comprehensive container security with Chainguard Wolfi, vulnerability scanning, image signing, and runtime protection.**

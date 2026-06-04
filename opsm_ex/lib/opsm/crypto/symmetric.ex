@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Crypto.Symmetric do
   @moduledoc """
   ChaCha20-Poly1305 symmetric encryption with 256-bit keys.

@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # Cerro-Torre - Security Monitoring Service
 
 **Cerro-Torre** is OPSM's runtime security monitoring and threat detection service, providing real-time visibility into container behavior using eBPF and Falco.

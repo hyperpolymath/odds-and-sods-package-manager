@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # Vordr - Runtime Verification Service
 
 **Vordr** is OPSM's runtime verification and policy enforcement service, validating container configurations against security best practices using OPA policies and built-in rules.

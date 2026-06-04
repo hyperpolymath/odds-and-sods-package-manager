@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Storage.Ipfs do
   @moduledoc """
   IPFS (Kubo) storage backend for content-addressed tarball caching.

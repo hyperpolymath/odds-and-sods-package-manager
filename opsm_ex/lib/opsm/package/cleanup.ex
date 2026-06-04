@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # cleanup.ex — Extended cleanup for desktop integration, services, and config.
 #
 # Handles platform-specific artifacts that the basic do_remove/1 doesn't touch:
@@ -10,7 +11,6 @@
 #
 # Part of the UX Manifesto "Uninstall (4 tiers)" requirement.
 #
-# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath)
 
 defmodule Opsm.Package.Cleanup do
   @moduledoc """

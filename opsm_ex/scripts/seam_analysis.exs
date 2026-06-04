@@ -1,5 +1,5 @@
-# SPDX-License-Identifier: PMPL-1.0
-
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.SeamAnalysis do
   @moduledoc """
   Run seam analysis: ingest multiple manifests, verify HAR staging + registry gateway, and surface timings.

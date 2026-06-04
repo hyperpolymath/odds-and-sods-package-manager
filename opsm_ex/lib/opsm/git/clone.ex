@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Git.Clone do
   @moduledoc """
   Safe git clone operations with SSRF prevention and ref pinning.

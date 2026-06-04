@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # OPSM v1.0.0 Testing Guide
 
 This guide provides manual testing procedures to validate OPSM functionality before release.

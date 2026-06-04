@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 //! Claim-Forge: Cryptographic attestation generation service
 //!
 //! Generates SLSA provenance attestations and signs artifacts with Ed25519.

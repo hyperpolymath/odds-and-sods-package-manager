@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 //! CICD-Hyper-A: CI/CD pipeline and package publishing service
 //!
 //! Handles package publishing, manifest validation, federation sync
