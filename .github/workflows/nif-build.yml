@@ -1,3 +1,4 @@
+# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # SPDX-License-Identifier: MPL-2.0
 # Compile the opsm_pq_nif Rust NIF and run :requires_nif tests.
 # Separate from the main Elixir test job so NIF compilation doesn't
