@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # HAR Agents - Human-Assisted Repository Discovery
 
 HAR (Human-Assisted Repository) agents discover packages from obscure, legacy, or unmaintained sources.

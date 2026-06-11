@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.Melpa do
   @moduledoc """
   MELPA (Milkypostman's Emacs Lisp Package Archive) registry adapter.

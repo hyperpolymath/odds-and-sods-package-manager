@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Tests for Opsm.Wiring.run_audit/2 — validates graceful degradation
 # when oikos and palimpsest services are unreachable.
 defmodule Opsm.Wiring.AuditTest do

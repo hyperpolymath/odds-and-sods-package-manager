@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # Svalinn - Container Vulnerability Scanner
 
 **Svalinn** is OPSM's vulnerability scanning service, integrating industry-standard scanners (Trivy, Grype) into a unified REST API.

@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 # Coding AI handoff brief
 
 Treat `00-MASTER-BRIEF.md` as the primary source of truth.

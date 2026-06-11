@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = OPSM Roadmap
 :revdate: 2026-02-05
 :version: 2.0
@@ -128,6 +129,10 @@ Each major version below lists explicit remedies for these concerns.
 === Architecture Established
 
 **Implementation:** Elixir/BEAM (fault-tolerant, concurrent, distributed)
+
+**Key Policies:**
+* **SNIFs Only:** Raw NIFs are forbidden. All native extensions MUST use the **SNIF** (Safe Native Implemented Function) pattern via WebAssembly sandboxing. See link:../snifs[snifs repository].
+* **Unified TUI:** The official OPSM interactive dashboard is currently being prototyped in link:../reposystem/total-upgrade[total-upgrade] and will be integrated as the primary dashboard in v1.5.0.
 
 **Key Modules:**
 * `Opsm.Resolver` - PubGrub dependency resolver

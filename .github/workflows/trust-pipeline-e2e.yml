@@ -11,7 +11,6 @@
 # sources change. Not on every push — service startup adds ~90s overhead.
 
 name: Trust Pipeline — Live-Service E2E
-
 on:
   workflow_dispatch:
   push:
@@ -23,63 +22,54 @@ on:
       - 'opsm_ex/test/integration/trust_pipeline_live_e2e_test.exs'
       - 'selur-compose.yml'
       - '.github/workflows/trust-pipeline-e2e.yml'
-
 permissions: read-all
-
 concurrency:
   group: trust-pipeline-e2e-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   trust-pipeline-e2e:
     name: Trust Pipeline Live E2E
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: false
-
       # -----------------------------------------------------------------------
       # Elixir / BEAM setup
       # -----------------------------------------------------------------------
       - name: Install Elixir and OTP
-        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93  # v1.24.0
+        uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
         with:
           otp-version: '26.2'
           elixir-version: '1.16.0'
-
       - name: Cache Mix dependencies
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v4
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: |
             opsm_ex/deps
             opsm_ex/_build
           key: mix-${{ runner.os }}-${{ hashFiles('opsm_ex/mix.lock') }}
           restore-keys: mix-${{ runner.os }}-
-
       - name: Install Mix dependencies
         working-directory: opsm_ex
         run: mix deps.get
-
       - name: Compile
         working-directory: opsm_ex
         run: mix compile --warnings-as-errors
-
-      # -----------------------------------------------------------------------
-      # Start trust pipeline services via selur-compose.yml
-      # -----------------------------------------------------------------------
-
       # GHCR images are public — no registry login required for pulls.
       - name: Pull trust pipeline images
+        # -----------------------------------------------------------------------
+        # Start trust pipeline services via selur-compose.yml
+        # -----------------------------------------------------------------------
+
         run: |
           docker pull ghcr.io/hyperpolymath/claim-forge:latest
           docker pull ghcr.io/hyperpolymath/checky-monkey:latest
           docker pull ghcr.io/hyperpolymath/palimpsest-license:latest
           docker pull ghcr.io/hyperpolymath/cicd-hyper-a:latest
           docker pull ghcr.io/hyperpolymath/oikos:latest
-
       - name: Start trust pipeline (claim-forge, checky-monkey, palimpsest, cicd-hyper-a, oikos)
         run: |
           # Start only the 5 trust-tier services (not the optional container-security profile)
@@ -89,7 +79,6 @@ jobs:
             palimpsest \
             cicd-hyper-a \
             oikos
-
       - name: Wait for all services to be healthy
         # Polls each /health endpoint; aborts if any service fails to start within 3 minutes
         run: |
@@ -116,7 +105,6 @@ jobs:
             done
             echo " OK"
           done
-
       # -----------------------------------------------------------------------
       # Run live-service E2E tests
       # -----------------------------------------------------------------------
@@ -135,7 +123,6 @@ jobs:
             --include integration \
             --trace \
             --timeout 30000
-
       # -----------------------------------------------------------------------
       # Diagnostics on failure
       # -----------------------------------------------------------------------
@@ -146,7 +133,6 @@ jobs:
             echo "=== $svc logs ==="
             docker compose -f selur-compose.yml logs "$svc" --tail=50 || true
           done
-
       - name: Stop services
         if: always()
         run: docker compose -f selur-compose.yml down --remove-orphans --volumes

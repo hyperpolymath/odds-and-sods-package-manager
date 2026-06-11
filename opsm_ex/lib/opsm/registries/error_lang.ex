@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Registries.ErrorLang do
   @moduledoc """
   error-lang package registry API client.

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // Template: QUICKSTART-USER.adoc — 5-minute path to working software
 // Replace odds-and-sods-package-manager, Odds And Sods Package Manager — See README.adoc for details., just run, Odds And Sods Package Manager started successfully. with actuals
 = odds-and-sods-package-manager — Quick Start for Users
