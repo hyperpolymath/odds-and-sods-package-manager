@@ -3,10 +3,8 @@ name: Gitbot Fleet
 on:
   push:
   pull_request:
-
 permissions:
   contents: read
-
 jobs:
   fleet-scan:
     runs-on: ubuntu-latest
@@ -15,13 +13,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
       - name: Clone gitbot-fleet + hypatia
         run: |
           mkdir -p _bot
           git clone https://github.com/hyperpolymath/gitbot-fleet.git _bot/gitbot-fleet
           git clone https://github.com/hyperpolymath/hypatia.git _bot/hypatia
-
       - name: Run gitbot-fleet scan
         env:
           GITBOT_FLEET_DIR: ${{ github.workspace }}/_bot/gitbot-fleet

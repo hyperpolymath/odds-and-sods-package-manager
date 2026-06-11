@@ -130,6 +130,10 @@ Each major version below lists explicit remedies for these concerns.
 
 **Implementation:** Elixir/BEAM (fault-tolerant, concurrent, distributed)
 
+**Key Policies:**
+* **SNIFs Only:** Raw NIFs are forbidden. All native extensions MUST use the **SNIF** (Safe Native Implemented Function) pattern via WebAssembly sandboxing. See link:../snifs[snifs repository].
+* **Unified TUI:** The official OPSM interactive dashboard is currently being prototyped in link:../reposystem/total-upgrade[total-upgrade] and will be integrated as the primary dashboard in v1.5.0.
+
 **Key Modules:**
 * `Opsm.Resolver` - PubGrub dependency resolver
 * `Opsm.VersionConstraint` - Version constraint parser
