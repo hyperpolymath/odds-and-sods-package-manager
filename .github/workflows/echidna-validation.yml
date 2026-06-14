@@ -3,20 +3,21 @@
 name: ECHIDNA Validation
 on:
   push:
+    branches: [main]   # only post-merge; feature-branch PRs are gated by the pull_request run below
     paths:
       - 'services/*/src/**'
       - 'cli/**'
       - 'opsm_ex/native/**'
       - '.github/workflows/echidna-validation.yml'
+  # No pull_request paths-filter: ECHIDNA Safety Audit is a REQUIRED status check,
+  # so it must report on every PR (a path-filtered required check deadlocks PRs that
+  # don't touch its paths). The "Detect relevant changes" step gates the heavy work.
   pull_request:
-    paths:
-      - 'services/**'
-      - 'cli/**'
-      - 'opsm_ex/native/**'
   schedule:
     - cron: '0 6 * * 1' # Weekly on Monday at 06:00 UTC
 permissions:
   contents: read
+  pull-requests: read   # change-detector reads the PR's file list (gh api pulls/.../files)
 jobs:
   echidna-audit:
     name: ECHIDNA Safety Audit
@@ -25,13 +26,35 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      # Required-check shim: only audited Rust sources need the real audit. The
+      # workflow file itself is NOT in the pattern so CI-only edits pass through.
+      - name: Detect relevant changes
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PATTERN='^(services/|cli/|opsm_ex/native/)'
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            FILES=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate --jq '.[].filename')
+            if printf '%s\n' "$FILES" | grep -qE "$PATTERN"; then
+              echo "relevant=true" >> "$GITHUB_OUTPUT"; echo "Audited sources changed — running full audit."
+            else
+              echo "relevant=false" >> "$GITHUB_OUTPUT"; echo "No audited-source changes — pass-through (required-check shim)."
+            fi
+          else
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install Rust toolchain
+        if: steps.detect.outputs.relevant == 'true'
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           components: clippy
       - name: Cache Rust dependencies
+        if: steps.detect.outputs.relevant == 'true'
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2
       - name: Unsafe audit
+        if: steps.detect.outputs.relevant == 'true'
         run: |
           echo "=== Unsafe Code Audit ==="
           UNSAFE_COUNT=0
@@ -48,6 +71,7 @@ jobs:
           echo "Total unsafe without SAFETY comment: $UNSAFE_COUNT"
           echo "unsafe_count=$UNSAFE_COUNT" >> $GITHUB_OUTPUT
       - name: Dangerous pattern scan
+        if: steps.detect.outputs.relevant == 'true'
         run: |
           echo "=== Dangerous Pattern Scan ==="
           ISSUES=0
@@ -64,6 +88,7 @@ jobs:
             echo "WARNING: Dangerous patterns detected — review required"
           fi
       - name: Clippy strict analysis
+        if: steps.detect.outputs.relevant == 'true'
         run: |
           for dir in services/*/; do
             if [ -f "$dir/Cargo.toml" ]; then
@@ -74,6 +99,7 @@ jobs:
             fi
           done
       - name: Summary
+        if: steps.detect.outputs.relevant == 'true'
         run: |
           echo "## ECHIDNA Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
