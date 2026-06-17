@@ -172,7 +172,7 @@ defmodule Opsm.Property.LockfilePropertyTest do
         {:ok, deserialized} = Jason.decode(serialized)
 
         # Convert keys to atoms for comparison
-        deserialized_atoms = Map.new(deserialized, fn {k, v} -> {String.to_atom(k), v} end)
+        deserialized_atoms = Map.new(deserialized, fn {k, v} -> {String.to_existing_atom(k), v} end)
 
         # Core fields should match
         assert deserialized_atoms.name == original.name

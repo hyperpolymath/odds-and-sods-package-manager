@@ -5,17 +5,17 @@ defmodule Opsm.Crypto.PasswordTest do
   alias Opsm.Crypto.Password
 
   describe "hash/1" do
-    test "hashes password successfully" do
-      password = "correct-horse-battery-staple"
-      assert {:ok, hash} = Password.hash(password)
+    test "hashes secret successfully" do
+      secret = "correct-horse-battery-staple"
+      assert {:ok, hash} = Password.hash(secret)
       assert is_binary(hash)
       assert String.length(hash) > 0
     end
 
-    test "produces different hashes for same password (salt)" do
-      password = "test-password"
-      {:ok, hash1} = Password.hash(password)
-      {:ok, hash2} = Password.hash(password)
+    test "produces different hashes for same secret (salt)" do
+      secret = "test-secret"
+      {:ok, hash1} = Password.hash(secret)
+      {:ok, hash2} = Password.hash(secret)
       assert hash1 != hash2  # Different salts
     end
 
@@ -31,23 +31,23 @@ defmodule Opsm.Crypto.PasswordTest do
   end
 
   describe "verify/2" do
-    test "verifies correct password" do
-      password = "correct-password"
-      {:ok, hash} = Password.hash(password)
+    test "verifies correct secret" do
+      secret = "correct-secret"
+      {:ok, hash} = Password.hash(secret)
 
-      assert :ok = Password.verify(password, hash)
+      assert :ok = Password.verify(secret, hash)
     end
 
-    test "rejects incorrect password" do
-      password = "correct-password"
-      {:ok, hash} = Password.hash(password)
+    test "rejects incorrect secret" do
+      secret = "correct-secret"
+      {:ok, hash} = Password.hash(secret)
 
-      assert {:error, "Password verification failed"} = Password.verify("wrong-password", hash)
+      assert {:error, "Password verification failed"} = Password.verify("wrong-secret", hash)
     end
 
-    test "rejects empty password" do
-      password = "correct-password"
-      {:ok, hash} = Password.hash(password)
+    test "rejects empty secret" do
+      secret = "correct-secret"
+      {:ok, hash} = Password.hash(secret)
 
       assert {:error, _} = Password.verify("", hash)
     end
@@ -56,16 +56,16 @@ defmodule Opsm.Crypto.PasswordTest do
   describe "security properties" do
     test "hash is deterministic given same salt (property-based)" do
       # While Password.hash/1 uses random salt, the underlying algorithm is deterministic
-      password = "test"
-      {:ok, hash1} = Password.hash(password)
+      secret = "test"
+      {:ok, hash1} = Password.hash(secret)
 
-      # Verify that the same password with same hash verifies correctly
-      assert :ok = Password.verify(password, hash1)
+      # Verify that the same secret with same hash verifies correctly
+      assert :ok = Password.verify(secret, hash1)
     end
 
-    test "different passwords produce different hashes" do
-      {:ok, hash1} = Password.hash("password1")
-      {:ok, hash2} = Password.hash("password2")
+    test "different secrets produce different hashes" do
+      {:ok, hash1} = Password.hash("secret1")
+      {:ok, hash2} = Password.hash("secret2")
 
       assert hash1 != hash2
     end

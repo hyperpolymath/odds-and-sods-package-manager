@@ -468,10 +468,12 @@ defmodule Opsm.Registries.HyperpPolymathForge do
 
   defp safe_to_atom(nil), do: nil
   defp safe_to_atom(str) when is_binary(str) do
+    # Fallback to a string if the atom doesn't exist to prevent atom exhaustion.
+    # The caller must be prepared to handle strings.
     try do
       String.to_existing_atom(str)
     rescue
-      ArgumentError -> String.to_atom(str)
+      ArgumentError -> str
     end
   end
   defp safe_to_atom(atom) when is_atom(atom), do: atom

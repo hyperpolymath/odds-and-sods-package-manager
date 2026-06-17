@@ -167,9 +167,14 @@ async fn sign_image(
         ));
     }
 
-    // Read public key
+    // Read public key (limit to 1MB)
     let pub_key_path = key_path.with_extension("pub");
-    let public_key = fs::read_to_string(&pub_key_path)
+    let mut file = fs::File::open(&pub_key_path)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to open public key: {}", e)))?;
+    let mut public_key = String::new();
+    use tokio::io::AsyncReadExt;
+    file.take(1024 * 1024).read_to_string(&mut public_key)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to read public key: {}", e)))?;
 
@@ -306,8 +311,12 @@ async fn generate_keypair(
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to rename public key: {}", e)))?;
     }
 
-    // Read public key
-    let public_key = fs::read_to_string(&public_key_path)
+    // Read public key (limit to 1MB)
+    let mut file = fs::File::open(&public_key_path)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to open public key: {}", e)))?;
+    let mut public_key = String::new();
+    file.take(1024 * 1024).read_to_string(&mut public_key)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to read public key: {}", e)))?;
 

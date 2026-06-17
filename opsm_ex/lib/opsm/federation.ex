@@ -401,7 +401,7 @@ defmodule Opsm.Federation do
   defp convert_mix_manifest(path) do
     case File.read(path) do
       {:ok, content} ->
-        # Parse mix.exs using Elixir AST — safer than Code.eval_string
+        # Parse mix.exs using Elixir AST — safer than C0de.eval_string
         project_fields = extract_mix_project_ast(content)
 
         name = project_fields[:app] || extract_mix_field(content, "app") || "unknown"

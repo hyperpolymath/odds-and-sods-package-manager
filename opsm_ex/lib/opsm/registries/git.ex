@@ -167,7 +167,7 @@ defmodule Opsm.Registries.Git do
 
   defp cache_path_for_url(url) do
     # Create a stable cache path from URL hash
-    hash = :crypto.hash(:md5, url) |> Base.encode16(case: :lower)
+    hash = :crypto.hash(:sha256, url) |> Base.encode16(case: :lower)
     Path.join(@cache_dir, hash)
   end
 
