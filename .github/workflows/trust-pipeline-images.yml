@@ -1,12 +1,24 @@
 # // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # SPDX-License-Identifier: MPL-2.0
-# Build and push all OPSM trust pipeline + container security service images to GHCR.
+# Build and push OPSM-native service images to GHCR.
 #
-# Trust pipeline services (always active, default compose):
-#   claim-forge, checky-monkey, palimpsest-license, cicd-hyper-a, oikos
+# Only services that have NO upstream repository of their own are built here.
+# Projects with their own repo publish their own images, so that each GHCR
+# package -> repository link points at the real source rather than at OPSM.
+# (That link is driven by the org.opencontainers.image.source OCI label, which
+# docker/metadata-action injects automatically from the repo running the build —
+# which is why building a foreign service here silently mis-attributed it to
+# odds-and-sods-package-manager.)
 #
-# Container security services (opt-in via --profile container-security):
-#   svalinn, selur, vordr, cerro-torre
+# Built elsewhere (do NOT add back here):
+#   selur, vordr            -> hyperpolymath/stapeln
+#   checky-monkey           -> hyperpolymath/checky-monkey
+#   palimpsest-license      -> hyperpolymath/palimpsest-license
+#   svalinn                 -> hyperpolymath/svalinn
+#   cicd-hyper-a            -> retired name (project is hyperpolymath/hypatia); not published
+#
+# OPSM-native services built here (no separate upstream repo):
+#   claim-forge, oikos, cerro-torre
 
 name: Trust Pipeline Images
 on:
@@ -28,16 +40,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Trust pipeline (default compose stack)
+          # OPSM-native services only (no upstream repo of their own).
+          # Services with their own repo (selur, vordr -> stapeln, checky-monkey,
+          # palimpsest-license, svalinn) publish their own images so each GHCR
+          # package links to the correct source repository. cicd-hyper-a is a
+          # retired name (now hyperpolymath/hypatia) and is no longer published.
           - service: claim-forge
-          - service: checky-monkey
-          - service: palimpsest-license
-          - service: cicd-hyper-a
           - service: oikos
-          # Container security (--profile container-security)
-          - service: svalinn
-          - service: selur
-          - service: vordr
           - service: cerro-torre
     steps:
       - name: Checkout
