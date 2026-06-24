@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: CC-BY-SA-4.0
 // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = Adding Language Adapters to OPSM
 :revdate: 2026-01-23
@@ -129,7 +129,7 @@ Create a new file in `opsm_ex/lib/opsm/registries/`:
 [source,elixir]
 ----
 # opsm_ex/lib/opsm/registries/nimble.ex
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: CC-BY-SA-4.0
 defmodule Opsm.Registries.Nimble do
   @moduledoc """
   Nimble Package Directory adapter for Nim packages.
@@ -190,7 +190,7 @@ Create tests in `opsm_ex/test/opsm/registries/`:
 [source,elixir]
 ----
 # opsm_ex/test/opsm/registries/nimble_test.exs
-# SPDX-License-Identifier: MPL-2.0
+# SPDX-License-Identifier: CC-BY-SA-4.0
 defmodule Opsm.Registries.NimbleTest do
   use ExUnit.Case, async: true
 
