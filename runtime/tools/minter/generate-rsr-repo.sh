@@ -94,7 +94,7 @@ cat > "$OUTPUT_DIR/README.adoc" << ADOC
 :toc: macro
 
 image:https://img.shields.io/badge/OPSM-Runtime_Plugin-blue?style=flat[OPSM Runtime]
-image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0]
+image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: PMPL-1.0]
 image:https://img.shields.io/badge/Contract-v1.0.0-success?style=flat[Contract v1.0.0]
 
 **OPSM Runtime Plugin for ${TOOL_NAME}.**

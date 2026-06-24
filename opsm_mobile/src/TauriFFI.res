@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0
+// SPDX-License-Identifier: MPL-2.0
 // Tauri FFI layer for OPSM Mobile - ReScript bindings for OPSM backend commands
 
 open RescriptCore

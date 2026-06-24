@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: MPL-2.0
 # HAR Agent: Mirror Finder
 # Searches for package mirrors in Software Heritage, archive.org, and distro snapshots
 
