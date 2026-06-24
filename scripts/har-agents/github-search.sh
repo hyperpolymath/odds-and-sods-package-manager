@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: MPL-2.0
 # HAR Agent: GitHub Search
 # Watches "$HYPATIA_TMPDIR/opsm-har-ingest"/ for discovery tasks and searches GitHub API
 

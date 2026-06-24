@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: MPL-2.0
 # HAR Agent: Web Scraper
 # Searches for package repositories using web search and scraping
 
