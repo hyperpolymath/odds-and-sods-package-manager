@@ -36,6 +36,11 @@ jobs:
     name: Build ${{ matrix.service }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+      id-token: write       # mint the OIDC token the attestation is signed with
+      attestations: write   # write the build-provenance attestation (the "claim")
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +73,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha
       - name: Build and push ${{ matrix.service }}
+        id: push
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v6
         with:
           context: services/${{ matrix.service }}
@@ -77,3 +83,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+      - name: Attest container provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-name: ghcr.io/hyperpolymath/${{ matrix.service }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
