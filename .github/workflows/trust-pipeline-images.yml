@@ -10,15 +10,17 @@
 # which is why building a foreign service here silently mis-attributed it to
 # odds-and-sods-package-manager.)
 #
-# Built elsewhere (do NOT add back here):
+# Built / published elsewhere (do NOT add back here):
 #   selur, vordr            -> hyperpolymath/stapeln
 #   checky-monkey           -> hyperpolymath/checky-monkey
 #   palimpsest-license      -> hyperpolymath/palimpsest-license
 #   svalinn                 -> hyperpolymath/svalinn
-#   cicd-hyper-a            -> retired name (project is hyperpolymath/hypatia); not published
+#   oikos                   -> hyperpolymath/oikosbot
+#   cicd-hyper-a            -> retired; no longer exists, GHCR package to be deleted
+#   claim-forge             -> owner's private system; must not be published publicly here
 #
-# OPSM-native services built here (no separate upstream repo):
-#   claim-forge, oikos, cerro-torre
+# OPSM-native service(s) built here:
+#   cerro-torre   (pending confirmation it has no upstream/private home of its own)
 
 name: Trust Pipeline Images
 on:
@@ -45,13 +47,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # OPSM-native services only (no upstream repo of their own).
-          # Services with their own repo (selur, vordr -> stapeln, checky-monkey,
-          # palimpsest-license, svalinn) publish their own images so each GHCR
-          # package links to the correct source repository. cicd-hyper-a is a
-          # retired name (now hyperpolymath/hypatia) and is no longer published.
-          - service: claim-forge
-          - service: oikos
+          # OPSM-native services only. Anything with its own repo or that belongs
+          # to a private system is published by its owner, so each GHCR package
+          # links to the correct source: selur/vordr -> stapeln, checky-monkey,
+          # palimpsest-license, svalinn, oikos -> oikosbot. cicd-hyper-a is
+          # retired; claim-forge belongs to a private system. cerro-torre is the
+          # only one still built here, pending confirmation it has no other home.
           - service: cerro-torre
     steps:
       - name: Checkout
