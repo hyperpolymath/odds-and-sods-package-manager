@@ -34,10 +34,8 @@ type serviceConfig = {
 
 type opsmConfig = {
   http: httpConfig,
-  claimForge: serviceConfig,
   checkyMonkey: serviceConfig,
   palimpsestLicense: serviceConfig,
-  cicdHyperA: serviceConfig,
   oikos: serviceConfig,
 }
 
@@ -117,7 +115,8 @@ type oikosHealthResponse = {
 }
 
 // =============================================================================
-// CICD-HYPER-A - Registry and CI/CD Pipeline Hub
+// Registry / Package Metadata
+// (cicd-hyper-a service removed; publish/federation types deleted)
 // =============================================================================
 
 type packageMetadata = {
@@ -132,40 +131,12 @@ type packageMetadata = {
   devDependencies: option<Dict.t<string>>,
 }
 
-type attestationType = ClaimForge | Sigstore | InToto
+type attestationType = Sigstore | InToto
 
 type attestationRef = {
   attestationType: attestationType,
   uri: string,
   digest: string,
-}
-
-type cicdPublishRequest = {
-  manifest: packageMetadata,
-  tarballUrl: option<string>,
-  attestations: array<attestationRef>,
-}
-
-type syncState = {
-  synced: bool,
-  lastSync: option<string>,
-  error: option<string>,
-}
-
-type federationStatus = {
-  github: syncState,
-  gitlab: syncState,
-  codeberg: syncState,
-  radicle: syncState,
-  ipfs: option<syncState>,
-}
-
-type cicdPublishResponse = {
-  packageId: string,
-  version: string,
-  publishedAt: string,
-  registryUrl: string,
-  federationStatus: federationStatus,
 }
 
 type ruleSeverity = RuleError | RuleWarning | RuleInfo
@@ -198,47 +169,6 @@ type packageQueryResponse = {
   scores: option<sustainabilityScores>,
   dependents: int,
   downloads: int,
-}
-
-// =============================================================================
-// CLAIM-FORGE - Attestation Generation
-// =============================================================================
-
-type claimType =
-  | BuildProvenance
-  | SourceAttestation
-  | VulnerabilityScan
-  | LicenseCompliance
-  | CodeReview
-
-type claimForgeRequest = {
-  artifactPath: string,
-  artifactDigest: string,
-  claimType: claimType,
-  metadata: option<Dict.t<JSON.t>>,
-}
-
-type claimForgeResponse = {
-  attestationId: string,
-  claimType: claimType,
-  createdAt: string,
-  expiresAt: option<string>,
-  attestationUri: string,
-  signature: string,
-  publicKeyId: string,
-}
-
-type claimVerifyRequest = {
-  attestationUri: string,
-  artifactDigest: string,
-}
-
-type claimVerifyResponse = {
-  valid: bool,
-  claimType: claimType,
-  issuer: string,
-  issuedAt: string,
-  errors: option<array<string>>,
 }
 
 // =============================================================================

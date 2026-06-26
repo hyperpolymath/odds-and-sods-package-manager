@@ -381,12 +381,10 @@ JSON parsing uses `Opsm.Verified.Json` with limits:
 
 ### Trust Pipeline
 
-Package installations go through 5-microservice verification:
-1. **claim-forge** - Generate attestation
-2. **checky-monkey** - Verify signatures
-3. **palimpsest-license** - Check licenses
-4. **oikos** - Score sustainability
-5. **cicd-hyper-a** - Publish with provenance
+Package installations go through multi-microservice verification:
+1. **palimpsest-license** - Check licenses
+2. **oikos** - Score sustainability
+3. **checky-monkey** - Verify signatures
 
 ## Future Enhancements (v1.1+)
 

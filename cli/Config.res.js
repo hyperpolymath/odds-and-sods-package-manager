@@ -43,10 +43,8 @@ function defaultServiceConfig(port) {
 function exampleConfig() {
   return {
     http: defaultHttpConfig,
-    claimForge: defaultServiceConfig(7001),
     checkyMonkey: defaultServiceConfig(7002),
     palimpsestLicense: defaultServiceConfig(7003),
-    cicdHyperA: defaultServiceConfig(7004),
     oikos: defaultServiceConfig(7005)
   };
 }
@@ -149,13 +147,6 @@ async function loadConfigFrom(path) {
     let data = await Deno.readTextFile(path);
     let raw = Toml.parse(data);
     let http = parseHttpConfig(raw);
-    let c = parseServiceConfig(raw, "claim_forge", 7001);
-    let claimForge;
-    if (c.TAG === "Ok") {
-      claimForge = c._0;
-    } else {
-      throw Stdlib_JsError.throwWithMessage(c._0);
-    }
     let c$1 = parseServiceConfig(raw, "checky_monkey", 7002);
     let checkyMonkey;
     if (c$1.TAG === "Ok") {
@@ -170,13 +161,6 @@ async function loadConfigFrom(path) {
     } else {
       throw Stdlib_JsError.throwWithMessage(c$2._0);
     }
-    let c$3 = parseServiceConfig(raw, "cicd_hyper_a", 7004);
-    let cicdHyperA;
-    if (c$3.TAG === "Ok") {
-      cicdHyperA = c$3._0;
-    } else {
-      throw Stdlib_JsError.throwWithMessage(c$3._0);
-    }
     let c$4 = parseServiceConfig(raw, "oikos", 7005);
     let oikos;
     if (c$4.TAG === "Ok") {
@@ -188,10 +172,8 @@ async function loadConfigFrom(path) {
       TAG: "Ok",
       _0: {
         http: http,
-        claimForge: claimForge,
         checkyMonkey: checkyMonkey,
         palimpsestLicense: palimpsestLicense,
-        cicdHyperA: cicdHyperA,
         oikos: oikos
       }
     };

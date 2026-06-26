@@ -18,7 +18,6 @@ OPSM provides end-to-end container security through integration with specialized
 │ 2. Scan     → Svalinn (Trivy + Grype)              │
 │ 3. Sign     → Selur (Cosign + Sigstore)            │
 │ 4. Verify   → Vordr (OPA policies)                 │
-│ 5. Monitor  → Cerro-Torre (eBPF + Falco)           │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -61,15 +60,12 @@ just container-pipeline latest ghcr.io/hyperpolymath
 | Service | Port | Purpose | Technology |
 |---------|------|---------|------------|
 | **opsm** | 4466 | Main API/CLI | Elixir |
-| **claim-forge** | 8080 | Attestation generation | Rust |
 | **checky-monkey** | 8081 | Code verification | Rust + AFL++ |
 | **palimpsest** | 8082 | License analysis | Gleam |
-| **cicd-hyper-a** | 8083 | Package registry | Elixir |
 | **oikos** | 8084 | Sustainability analysis | Rust |
 | **svalinn** | 8085 | Vulnerability scanning | Trivy + Grype |
 | **selur** | 8086 | Image signing | Cosign + Sigstore |
 | **vordr** | 8087 | Runtime verification | OPA |
-| **cerro-torre** | 8088 | Security monitoring | eBPF + Falco |
 
 ### Security Features
 
@@ -94,8 +90,6 @@ just container-pipeline latest ghcr.io/hyperpolymath
 
 **Runtime Protection:**
 - OPA policy enforcement (Vordr)
-- eBPF syscall monitoring (Cerro-Torre)
-- Falco runtime security rules
 - Network segmentation (trust/public networks)
 
 ## CLI Usage
@@ -108,7 +102,7 @@ opsm container build <path> [--version <tag>]
 
 # Examples
 opsm container build ./opsm_ex --version v1.0.1
-opsm container build ./services/claim-forge
+opsm container build ./services/checky-monkey
 ```
 
 ### Security Scanning
@@ -228,7 +222,6 @@ export CONTAINER_REGISTRY=ghcr.io/hyperpolymath
 export SVALINN_URL=http://localhost:8085
 export SELUR_URL=http://localhost:8086
 export VORDR_URL=http://localhost:8087
-export CERRO_URL=http://localhost:8088
 
 # Signing keys
 export SIGNING_KEY=/keys/signing.key
@@ -450,16 +443,6 @@ docker run ghcr.io/hyperpolymath/my-package:latest
 
 ## Monitoring and Observability
 
-### View Runtime Events (Cerro-Torre)
-
-```bash
-# Stream security events
-just compose-logs cerro-torre -f
-
-# Check for policy violations
-curl http://localhost:8088/events?severity=high
-```
-
 ### Audit Logs
 
 ```bash
@@ -467,7 +450,7 @@ curl http://localhost:8088/events?severity=high
 cat /var/log/opsm/audit.log
 
 # Filter by service
-grep "claim-forge" /var/log/opsm/audit.log
+grep "checky-monkey" /var/log/opsm/audit.log
 ```
 
 ### Health Checks

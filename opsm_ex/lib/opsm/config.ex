@@ -19,10 +19,8 @@ defmodule Opsm.Config do
   }
 
   @default_ports %{
-    claim_forge: 7001,
     checky_monkey: 7002,
     palimpsest_license: 7003,
-    cicd_hyper_a: 7004,
     oikos: 7005
   }
 
@@ -53,10 +51,8 @@ defmodule Opsm.Config do
   def example_config do
     %OpsmConfig{
       http: @default_http_config,
-      claim_forge: default_service_config(7001),
       checky_monkey: default_service_config(7002),
       palimpsest_license: default_service_config(7003),
-      cicd_hyper_a: default_service_config(7004),
       oikos: default_service_config(7005)
     }
   end
@@ -176,17 +172,13 @@ defmodule Opsm.Config do
   defp parse_config(raw) do
     http = parse_http_config(raw["http"])
 
-    with {:ok, claim_forge} <- parse_service_config(raw["claim_forge"], :claim_forge),
-         {:ok, checky_monkey} <- parse_service_config(raw["checky_monkey"], :checky_monkey),
+    with {:ok, checky_monkey} <- parse_service_config(raw["checky_monkey"], :checky_monkey),
          {:ok, palimpsest_license} <- parse_service_config(raw["palimpsest_license"], :palimpsest_license),
-         {:ok, cicd_hyper_a} <- parse_service_config(raw["cicd_hyper_a"], :cicd_hyper_a),
          {:ok, oikos} <- parse_service_config(raw["oikos"], :oikos) do
       {:ok, %OpsmConfig{
         http: http,
-        claim_forge: claim_forge,
         checky_monkey: checky_monkey,
         palimpsest_license: palimpsest_license,
-        cicd_hyper_a: cicd_hyper_a,
         oikos: oikos
       }}
     end

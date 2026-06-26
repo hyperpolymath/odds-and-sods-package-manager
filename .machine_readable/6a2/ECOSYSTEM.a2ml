@@ -22,12 +22,6 @@ relationship = "consumer"
 description = "Consumes OPSM workspace operations and custom forth adapters for database toolchain packages."
 
 [[related-projects.co-located-service]]
-name = "claim-forge"
-relationship = "sibling-service"
-location = "services/claim-forge"
-description = "Trust-pipeline service; verifies claim provenance. Co-located in services/."
-
-[[related-projects.co-located-service]]
 name = "checky-monkey"
 relationship = "sibling-service"
 location = "services/checky-monkey"
@@ -38,12 +32,6 @@ name = "palimpsest-license"
 relationship = "sibling-service"
 location = "services/palimpsest"
 description = "Trust-pipeline service; licence compliance verification. Co-located in services/."
-
-[[related-projects.co-located-service]]
-name = "cicd-hyper-a"
-relationship = "sibling-service"
-location = "services/cicd-hyper-a"
-description = "Trust-pipeline service; CI/CD orchestration helper. Co-located in services/."
 
 [[related-projects.co-located-service]]
 name = "oikos"

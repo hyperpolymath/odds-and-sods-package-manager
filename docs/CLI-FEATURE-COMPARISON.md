@@ -256,14 +256,12 @@ opsm install my-app  # Resolves across all registries
 ```bash
 opsm publish ./my-package
 # Automatically:
-# 1. claim-forge: Generate attestation
-# 2. checky-monkey: Verify signatures
-# 3. palimpsest: Check licenses
-# 4. oikos: Score sustainability (8 dimensions)
-# 5. cicd-hyper-a: Publish with provenance
+# 1. palimpsest: Check licenses
+# 2. oikos: Score sustainability (8 dimensions)
+# 3. checky-monkey: Verify signatures
 ```
 
-**Unique to OPSM:** 5-microservice verification before publish.
+**Unique to OPSM:** multi-microservice verification before publish.
 
 ### 3. Formal Verification (v1.5) ✅✅
 ```elixir

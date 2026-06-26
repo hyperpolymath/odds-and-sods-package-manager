@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
-# Enterprise trust pipeline — live-service E2E tests.
+# Trust pipeline — live-service E2E tests.
 #
-# Pulls all 5 trust-tier service images from GHCR (public, no auth required),
+# Pulls the trust-tier service images from GHCR (public, no auth required),
 # starts them via selur-compose.yml, waits for health checks, then runs the
 # :live_service E2E suite against the real HTTP endpoints.
 #
@@ -65,28 +65,22 @@ jobs:
         # -----------------------------------------------------------------------
 
         run: |
-          docker pull ghcr.io/hyperpolymath/claim-forge:latest
           docker pull ghcr.io/hyperpolymath/checky-monkey:latest
           docker pull ghcr.io/hyperpolymath/palimpsest-license:latest
-          docker pull ghcr.io/hyperpolymath/cicd-hyper-a:latest
           docker pull ghcr.io/hyperpolymath/oikos:latest
-      - name: Start trust pipeline (claim-forge, checky-monkey, palimpsest, cicd-hyper-a, oikos)
+      - name: Start trust pipeline (checky-monkey, palimpsest, oikos)
         run: |
-          # Start only the 5 trust-tier services (not the optional container-security profile)
+          # Start only the trust-tier services (not the optional container-security profile)
           docker compose -f selur-compose.yml up -d \
-            claim-forge \
             checky-monkey \
             palimpsest \
-            cicd-hyper-a \
             oikos
       - name: Wait for all services to be healthy
         # Polls each /health endpoint; aborts if any service fails to start within 3 minutes
         run: |
           services=(
-            "http://localhost:8080/health:claim-forge"
             "http://localhost:8081/health:checky-monkey"
             "http://localhost:8082/health:palimpsest"
-            "http://localhost:8083/health:cicd-hyper-a"
             "http://localhost:8084/health:oikos"
           )
           deadline=$(( $(date +%s) + 180 ))
@@ -111,10 +105,8 @@ jobs:
       - name: Run trust pipeline E2E tests
         working-directory: opsm_ex
         env:
-          CLAIM_FORGE_URL: "http://localhost:8080"
           CHECKY_MONKEY_URL: "http://localhost:8081"
           PALIMPSEST_URL: "http://localhost:8082"
-          CICD_HYPER_A_URL: "http://localhost:8083"
           OIKOS_URL: "http://localhost:8084"
           MIX_ENV: test
         run: |
@@ -129,7 +121,7 @@ jobs:
       - name: Dump service logs on failure
         if: failure()
         run: |
-          for svc in claim-forge checky-monkey palimpsest cicd-hyper-a oikos; do
+          for svc in checky-monkey palimpsest oikos; do
             echo "=== $svc logs ==="
             docker compose -f selur-compose.yml logs "$svc" --tail=50 || true
           done

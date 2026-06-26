@@ -269,10 +269,8 @@ defmodule Opsm.Api.PackageController do
     # Load OPSM configuration for trust pipeline services
     # For v1.0, use default configuration
     config = %OpsmConfig{
-      claim_forge: %{base_url: "http://localhost:7001"},
       checky_monkey: %{base_url: "http://localhost:7002"},
       palimpsest_license: %{base_url: "http://localhost:7003"},
-      cicd_hyper_a: %{base_url: "http://localhost:7004"},
       oikos: %{base_url: "http://localhost:7005"},
       http: %{timeout: 30_000}
     }

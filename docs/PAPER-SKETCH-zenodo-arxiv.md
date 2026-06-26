@@ -84,14 +84,12 @@ propagated through a cross-ecosystem build graph to Eⱼ.
 - Property-based testing: ∀ inputs, PubGrub terminates and produces a minimal solution
   (QuickCheck / StreamData proofs)
 
-4.3 **Trust Pipeline** (5 microservices)
-- `claim-forge` (Rust): SLSA Level 3 provenance generation, ed25519+Dilithium5 signing
+4.3 **Trust Pipeline** (3 microservices)
 - `checky-monkey` (Rust): tarball integrity, SBOM extraction, CycloneDX validation
 - `palimpsest-license` (Rust/Elixir): SPDX expression compatibility matrix, 
   PMPL/MPL/AGPL/MIT/Apache interactions verified
 - `oikos` (Elixir): sustainability scoring — 8 dimensions (maintenance, bus factor,
   funding, responsiveness, test coverage, security posture, docs quality, governance)
-- `cicd-hyper-a` (Rust): publication + federation, SLSA attestation anchoring
 
 4.4 **Post-Quantum Hardening**
 - Motivation: harvest-now-decrypt-later against package signatures
@@ -139,7 +137,7 @@ propagated through a cross-ecosystem build graph to Eⱼ.
 
 6.4 **Security**
 - Supply chain simulation: inject a known-malicious package; OPSM detects via
-  claim-forge provenance mismatch in N% of cases
+  checky-monkey integrity mismatch in N% of cases
 
 ### §7 Limitations and Future Work
 - Resolver completeness for circular cross-ecosystem deps (currently rejected)
@@ -162,7 +160,7 @@ propagated through a cross-ecosystem build graph to Eⱼ.
 | PubGrub correctly resolves cross-ecosystem deps where greedy fails | Failing test case + OPSM resolution | Needs construction |
 | Trust pipeline catches N% of SLSA-violating packages | Simulation or real-world corpus | Needs benchmark |
 | HAR reduces time-to-first-package for minority languages to < 1 day | Case studies (Pony? Lobster?) | Needs documentation |
-| Post-quantum signing overhead < 2ms at p99 | Benchmark in claim-forge | Claimed; needs formal measurement |
+| Post-quantum signing overhead < 2ms at p99 | Benchmark in the PQ signing NIF | Claimed; needs formal measurement |
 | License compatibility matrix is sound for SPDX core | Formal proof or exhaustive case analysis | Needs proof or scope statement |
 
 ---

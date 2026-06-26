@@ -7,10 +7,8 @@
 #
 # Services:
 #   opsm          - Core Elixir application (registry gateway + mobile API)
-#   claim-forge   - Attestation generation (port 7001)
 #   checky-monkey - Code verification (port 7002)
 #   palimpsest    - License analysis (port 7003)
-#   cicd-hyper-a  - Registry and CI/CD hub (port 7004)
 #   oikos         - Ecosystem sustainability (port 7005)
 #   svalinn       - Edge gateway with policy enforcement (port 8443)
 
@@ -32,10 +30,8 @@ services:
       - "4051:4051"   # Mobile API
     environment:
       - MIX_ENV=prod
-      - OPSM_CLAIM_FORGE_URL=http://claim-forge:7001
       - OPSM_CHECKY_MONKEY_URL=http://checky-monkey:7002
       - OPSM_PALIMPSEST_URL=http://palimpsest:7003
-      - OPSM_CICD_HYPER_A_URL=http://cicd-hyper-a:7004
       - OPSM_OIKOS_URL=http://oikos:7005
     volumes:
       - opsm-data:/app/data
@@ -46,8 +42,6 @@ services:
       timeout: 3s
       retries: 3
     depends_on:
-      claim-forge:
-        condition: service_healthy
       checky-monkey:
         condition: service_healthy
     networks:
@@ -57,32 +51,6 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-
-  # ==========================================================================
-  # Microservice: Claim Forge (attestation generation)
-  # ==========================================================================
-  claim-forge:
-    build:
-      context: ../services/claim-forge
-      containerfile: Containerfile
-    image: opsm-claim-forge:latest
-    container_name: opsm-claim-forge
-    restart: unless-stopped
-    expose:
-      - "7001"
-    environment:
-      - RUST_LOG=info
-      - BIND_ADDR=0.0.0.0:7001
-    healthcheck:
-      test: ["CMD", "/app/claim-forge", "health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-    networks:
-      - opsm-internal
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
 
   # ==========================================================================
   # Microservice: Checky Monkey (code verification)
@@ -127,32 +95,6 @@ services:
       - BIND_ADDR=0.0.0.0:7003
     healthcheck:
       test: ["CMD", "/app/palimpsest-license", "health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-    networks:
-      - opsm-internal
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-
-  # ==========================================================================
-  # Microservice: CICD-Hyper-A (registry and CI/CD hub)
-  # ==========================================================================
-  cicd-hyper-a:
-    build:
-      context: ../services/cicd-hyper-a
-      containerfile: Containerfile
-    image: opsm-cicd-hyper-a:latest
-    container_name: opsm-cicd-hyper-a
-    restart: unless-stopped
-    expose:
-      - "7004"
-    environment:
-      - RUST_LOG=info
-      - BIND_ADDR=0.0.0.0:7004
-    healthcheck:
-      test: ["CMD", "/app/cicd-hyper-a", "health"]
       interval: 30s
       timeout: 3s
       retries: 3

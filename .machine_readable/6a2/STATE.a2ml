@@ -95,17 +95,14 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - nif-build.yml: CI workflow that compiles opsm_pq_nif + runs :requires_nif tests ✅
 - test/opsm/wiring/audit_test.exs: 12 tests for Wiring.run_audit/2 + workspace TOML parsing ✅
 - test/opsm/registries/language_adapters_test.exs: +18 tests for Registry dispatch dispatch ✅
-- All 9 service images live in GHCR (CI run 24929720837 = 100% success):
-    ghcr.io/hyperpolymath/claim-forge:latest ✅
+- All 6 service images live in GHCR (CI run 24929720837 = 100% success):
     ghcr.io/hyperpolymath/checky-monkey:latest ✅
     ghcr.io/hyperpolymath/palimpsest-license:latest ✅
-    ghcr.io/hyperpolymath/cicd-hyper-a:latest ✅
     ghcr.io/hyperpolymath/oikos:latest ✅
     ghcr.io/hyperpolymath/selur:latest ✅
     ghcr.io/hyperpolymath/svalinn:latest ✅
     ghcr.io/hyperpolymath/vordr:latest ✅
-    ghcr.io/hyperpolymath/cerro-torre:latest ✅
-- rustls-tls switch: selur, svalinn, vordr, cerro-torre — Dependabot vulns 33→13 ✅
+- rustls-tls switch: selur, svalinn, vordr — Dependabot vulns 33→13 ✅
 - Containerfile fixes: removed unavailable APK packages (afl++/libfuzzer, falco/bpftrace, opa) ✅
 
 [completed-2026-04-25d]
@@ -118,8 +115,8 @@ runtime-layout = "~/.opsm/runtimes/<tool>/<version>/ + .active pin file"
 - Test suite: 814 tests (e2e+integration included), 2 pre-existing failures, 0 new failures ✅
 
 [completed-2026-04-25e]
-- rustls-tls switch: claim-forge dev-dep reqwest + opsm_mobile reqwest 0.11→0.12+rustls-tls ✅
-- Regenerated Cargo.lock for claim-forge + opsm_mobile: openssl removed from both ✅
+- rustls-tls switch: opsm_mobile reqwest 0.11→0.12+rustls-tls ✅
+- Regenerated Cargo.lock for opsm_mobile: openssl removed ✅
 - Dependabot vulns: 13 → 1 (10 openssl HIGH/LOW gone; 2 rand LOW gone/stale; glib MODERATE remains) ✅
 - glib 0.18.5 BLOCKED: tauri 2.10.3 (latest) still pulls glib 0.18.5; unfixable at consumer level;
   fix blocked on tauri upstream GTK-rs 0.20 migration
@@ -160,15 +157,15 @@ evidence-file = "READINESS.md"
 
 [completed-2026-04-25g]
 - Trust pipeline live-service E2E test: test/integration/trust_pipeline_live_e2e_test.exs ✅
-  - 23 tests across 7 describes: health (5), attestation (4), checky-monkey (4),
-    palimpsest (5), cicd-hyper-a (4), oikos (2), full pipeline (3)
+  - 19 tests across 5 describes: health (5), checky-monkey (4),
+    palimpsest (5), oikos (2), full pipeline (3)
   - Direct HTTP via Req (no Opsm.Clients.* wrapper) — tests real HTTP contract
   - @moduletag :live_service excluded from default run; included in trust-pipeline-e2e.yml
   - :live_service added to test_helper.exs exclusion list
 - .github/workflows/trust-pipeline-e2e.yml ✅
   - Triggers: workflow_dispatch + push to main on service/test/compose changes
   - SHA-pinned actions: checkout (v6.0.2), erlef/setup-beam, actions/cache (v4)
-  - docker compose up -d claim-forge checky-monkey palimpsest cicd-hyper-a oikos
+  - docker compose up -d checky-monkey palimpsest oikos
   - Health poll loop (180s deadline, 3s interval) before running tests
   - Full diagnostics (service logs) on failure; docker compose down always
 

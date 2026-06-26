@@ -12,7 +12,7 @@ OPSM exists to deliver a federated, multi-language package manager with formal v
 The stewardship council safeguards:
 
 - Verification integrity (proven/Idris2)
-- Trust pipeline correctness (checky-monkey, claim-forge, palimpsest-license)
+- Trust pipeline correctness (checky-monkey, palimpsest-license)
 - Federation neutrality (git-private-farm + Radicle + IPFS)
 - Long-term sustainability (oikos-driven dependency health)
 

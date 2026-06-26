@@ -12,7 +12,7 @@ defmodule Opsm.ConfigTest do
 
       assert %OpsmConfig{} = config
       assert %HttpConfig{} = config.http
-      assert %ServiceConfig{} = config.claim_forge
+      assert %ServiceConfig{} = config.checky_monkey
     end
 
     test "has default HTTP settings" do
@@ -26,8 +26,8 @@ defmodule Opsm.ConfigTest do
     test "has default service URLs" do
       config = Config.load_config_or_example()
 
-      assert config.claim_forge.base_url =~ "127.0.0.1"
       assert config.checky_monkey.base_url =~ "127.0.0.1"
+      assert config.palimpsest_license.base_url =~ "127.0.0.1"
       assert config.oikos.base_url =~ "127.0.0.1"
     end
   end
@@ -45,10 +45,8 @@ defmodule Opsm.ConfigTest do
     test "uses default ports" do
       config = Config.example_config()
 
-      assert config.claim_forge.base_url =~ "7001"
       assert config.checky_monkey.base_url =~ "7002"
       assert config.palimpsest_license.base_url =~ "7003"
-      assert config.cicd_hyper_a.base_url =~ "7004"
       assert config.oikos.base_url =~ "7005"
     end
   end
@@ -91,7 +89,7 @@ defmodule Opsm.ConfigTest do
       retries = 3
       backoff_ms = 500
 
-      [claim_forge]
+      [checky_monkey]
       base_url = "http://localhost:8001"
       token = "test-token"
       """)
@@ -110,8 +108,8 @@ defmodule Opsm.ConfigTest do
       assert {:ok, config} = result
       assert config.http.timeout_ms == 5000
       assert config.http.retries == 3
-      assert config.claim_forge.base_url == "http://localhost:8001"
-      assert config.claim_forge.token == "test-token"
+      assert config.checky_monkey.base_url == "http://localhost:8001"
+      assert config.checky_monkey.token == "test-token"
     end
 
     test "returns user-friendly error for missing file", %{tmp_dir: tmp_dir} do
@@ -173,7 +171,7 @@ defmodule Opsm.ConfigTest do
       assert {:ok, config} = result
       # Should use defaults
       assert config.http.timeout_ms == 3000
-      assert config.claim_forge.base_url =~ "7001"
+      assert config.checky_monkey.base_url =~ "7002"
     end
   end
 end

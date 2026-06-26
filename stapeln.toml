@@ -8,7 +8,7 @@
 #   - opsm_ex/       Elixir OTP application (core API + CLI)
 #   - native/        Rust NIFs (pq_crypto, quic_transport, opsm_pq_nif)
 #   - runtime/       Nickel plugin configs (83 core plugins) + Zig shim dispatcher
-#   - services/      Satellite services (selur, vordr, svalinn, claim-forge, etc.)
+#   - services/      Satellite services (selur, vordr, svalinn, etc.)
 
 [metadata]
 name = "opsm"
@@ -194,7 +194,7 @@ seccomp-profile = "default"
 
 [security.signing]
 algorithm = "ML-DSA-87"
-provider = "cerro-torre"
+provider = "selur"
 
 [security.sbom]
 format = "spdx-json"
@@ -236,15 +236,6 @@ env = { LOG_LEVEL = "info" }
 # orchestrated by selur-compose.yml. Each uses Chainguard Wolfi
 # and inherits the same security posture.
 
-[satellites.claim-forge]
-description = "Attestation generation service"
-image = "ghcr.io/hyperpolymath/claim-forge:latest"
-ports = [8080]
-networks = ["opsm-trust"]
-env = { RUST_LOG = "info", CLAIM_FORGE_PORT = "8080" }
-volumes = ["claim-forge-data:/data"]
-healthcheck = { cmd = ["curl", "-f", "http://localhost:8080/health"], interval = "30s", timeout = "10s", retries = 3 }
-
 [satellites.checky-monkey]
 description = "Code verification and fuzzing service"
 image = "ghcr.io/hyperpolymath/checky-monkey:latest"
@@ -263,15 +254,6 @@ networks = ["opsm-trust"]
 env = { GLEAM_ENV = "production", PALIMPSEST_PORT = "8082" }
 volumes = ["palimpsest-db:/data"]
 healthcheck = { cmd = ["curl", "-f", "http://localhost:8082/health"], interval = "30s", timeout = "10s", retries = 3 }
-
-[satellites.cicd-hyper-a]
-description = "Federated package registry"
-image = "ghcr.io/hyperpolymath/cicd-hyper-a:latest"
-ports = [8083]
-networks = ["opsm-trust", "opsm-public"]
-env = { ELIXIR_ENV = "production", CICD_PORT = "8083", FEDERATION_ENABLED = "true" }
-volumes = ["cicd-registry:/registry"]
-healthcheck = { cmd = ["curl", "-f", "http://localhost:8083/health"], interval = "30s", timeout = "10s", retries = 3 }
 
 [satellites.oikos]
 description = "Sustainability analysis service"
@@ -309,14 +291,6 @@ env = { RUST_LOG = "info", VORDR_PORT = "8087" }
 volumes = ["vordr-policies:/policies"]
 healthcheck = { cmd = ["curl", "-f", "http://localhost:8087/health"], interval = "30s", timeout = "10s", retries = 3 }
 
-[satellites.cerro-torre]
-description = "Runtime security monitoring (eBPF + Falco)"
-image = "ghcr.io/hyperpolymath/cerro-torre:latest"
-ports = [8088]
-networks = ["opsm-trust"]
-env = { RUST_LOG = "info", CERRO_PORT = "8088", FALCO_ENABLED = "true", EBPF_ENABLED = "true" }
-healthcheck = { cmd = ["curl", "-f", "http://localhost:8088/health"], interval = "30s", timeout = "10s", retries = 3 }
-
 # ── Networks ───────────────────────────────────────────────────
 
 [networks.opsm-trust]
@@ -333,10 +307,8 @@ subnet = "172.21.0.0/16"
 
 [volumes]
 opsm-state = { driver = "local", description = "OPSM application state and cache" }
-claim-forge-data = { driver = "local", description = "Attestation store" }
 checky-monkey-cache = { driver = "local", description = "Verification cache" }
 palimpsest-db = { driver = "local", description = "License database" }
-cicd-registry = { driver = "local", description = "Package registry storage" }
 oikos-cache = { driver = "local", description = "Sustainability analysis cache" }
 svalinn-db = { driver = "local", description = "Vulnerability database cache" }
 vordr-policies = { driver = "local", description = "Runtime verification policies" }

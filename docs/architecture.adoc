@@ -59,8 +59,8 @@ communication:
 
 - Verification: proven (Idris2)
 - Manifests: nickel-config-reporter + hybrid-automation-router + protocol-squisher + scaffoldia
-- Trust pipeline: checky-monkey + claim-forge + palimpsest-license + oikos
-- Registry: cicd-hyper-a + http-capability-gateway
+- Trust pipeline: checky-monkey + palimpsest-license + oikos
+- Registry: http-capability-gateway
 - Federation: git-private-farm + Radicle + IPFS
 - Bots: rhodibot, seambot, echidnabot, robot-repo-automaton
 

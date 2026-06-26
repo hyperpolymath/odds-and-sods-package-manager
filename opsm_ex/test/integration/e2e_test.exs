@@ -468,10 +468,8 @@ defmodule Opsm.Integration.E2ETest do
     test "full publish workflow with trust services", %{test_dir: test_dir} do
       # This tests the complete publish flow:
       # 1. Manifest ingestion
-      # 2. ClaimForge attestation
-      # 3. Palimpsest license check
-      # 4. CheckyMonkey verification
-      # 5. CicdHyperA publication
+      # 2. Palimpsest license check
+      # 3. CheckyMonkey verification
 
       # Create test package
       package_dir = Path.join(test_dir, "test-package")
@@ -502,9 +500,7 @@ defmodule Opsm.Integration.E2ETest do
 
       # Create minimal config for testing
       config = %OpsmConfig{
-        cicd_hyper_a: %ServiceConfig{base_url: "http://localhost:7005", token: "test"},
         http: %HttpConfig{timeout_ms: 5000, retries: 1, backoff_ms: 100},
-        claim_forge: %ServiceConfig{base_url: "http://localhost:7001", token: "test"},
         checky_monkey: %ServiceConfig{base_url: "http://localhost:7002", token: "test"},
         palimpsest_license: %ServiceConfig{base_url: "http://localhost:7003", token: "test"},
         oikos: %ServiceConfig{base_url: "http://localhost:7004", token: "test"}

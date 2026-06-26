@@ -3,9 +3,9 @@
 # Selur-Compose orchestration for OPSM services
 #
 # Profiles:
-#   (default / no profile) — trust pipeline only: opsm + claim-forge + checky-monkey
-#                             + palimpsest + cicd-hyper-a + oikos
-#   container-security      — adds svalinn + selur + vordr + cerro-torre
+#   (default / no profile) — trust pipeline only: opsm + checky-monkey
+#                             + palimpsest + oikos
+#   container-security      — adds svalinn + selur + vordr
 #
 # Usage:
 #   docker compose -f selur-compose.yml up                              # trust pipeline
@@ -53,13 +53,9 @@ networks:
         - subnet: 172.21.0.0/16
 
 volumes:
-  claim-forge-data:
-    driver: local
   checky-monkey-cache:
     driver: local
   palimpsest-db:
-    driver: local
-  cicd-registry:
     driver: local
   oikos-cache:
     driver: local
@@ -83,10 +79,8 @@ services:
     environment:
       - OPSM_ENV=production
       - OPSM_API_PORT=4466
-      - CLAIM_FORGE_URL=http://claim-forge:8080
       - CHECKY_MONKEY_URL=http://checky-monkey:8081
       - PALIMPSEST_URL=http://palimpsest:8082
-      - CICD_HYPER_A_URL=http://cicd-hyper-a:8083
       - OIKOS_URL=http://oikos:8084
     volumes:
       - opsm-state:/app/data
@@ -96,41 +90,12 @@ services:
       test: ["CMD", "/app/bin/opsm", "eval", "System.cmd(\"echo\", [\"healthy\"])"]
     restart: unless-stopped
     depends_on:
-      - claim-forge
       - checky-monkey
       - palimpsest
-      - cicd-hyper-a
       - oikos
     labels:
       - "com.opsm.service=api"
       - "com.opsm.tier=frontend"
-
-  # Claim-Forge: Attestation generation
-  claim-forge:
-    image: ghcr.io/hyperpolymath/claim-forge:latest
-    <<: [*security-defaults, *wolfi-base]
-    container_name: claim-forge
-    hostname: claim-forge
-    networks:
-      - opsm-trust
-    ports:
-      - "8080:8080"
-    environment:
-      - RUST_LOG=info
-      - CLAIM_FORGE_PORT=8080
-      - SIGNING_KEY_PATH=/secrets/signing.key
-    volumes:
-      - claim-forge-data:/data
-      - ./secrets:/secrets:ro
-      - /tmp
-    healthcheck:
-      <<: *health-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-    restart: unless-stopped
-    labels:
-      - "com.opsm.service=claim-forge"
-      - "com.opsm.tier=trust"
-      - "com.opsm.security=high"
 
   # Checky-Monkey: Code verification
   checky-monkey:
@@ -188,33 +153,6 @@ services:
     labels:
       - "com.opsm.service=palimpsest"
       - "com.opsm.tier=analysis"
-
-  # CICD-Hyper-A: Package registry
-  cicd-hyper-a:
-    image: ghcr.io/hyperpolymath/cicd-hyper-a:latest
-    <<: [*security-defaults, *wolfi-base]
-    container_name: cicd-hyper-a
-    hostname: cicd-hyper-a
-    networks:
-      - opsm-trust
-      - opsm-public
-    ports:
-      - "8083:8083"
-    environment:
-      - ELIXIR_ENV=production
-      - CICD_PORT=8083
-      - REGISTRY_STORAGE=/registry
-      - FEDERATION_ENABLED=true
-    volumes:
-      - cicd-registry:/registry
-      - /tmp
-    healthcheck:
-      <<: *health-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
-    restart: unless-stopped
-    labels:
-      - "com.opsm.service=cicd-hyper-a"
-      - "com.opsm.tier=registry"
 
   # Oikos: Sustainability analysis
   oikos:
@@ -330,40 +268,6 @@ services:
       - "com.opsm.service=vordr"
       - "com.opsm.tier=security"
       - "com.opsm.function=verification"
-
-  # Cerro-Torre: Runtime security monitoring (opt-in: --profile container-security)
-  cerro-torre:
-    profiles: [container-security]
-    image: ghcr.io/hyperpolymath/cerro-torre:latest
-    <<: *wolfi-base
-    container_name: cerro-torre
-    hostname: cerro-torre
-    networks:
-      - opsm-trust
-    ports:
-      - "8088:8088"
-    environment:
-      - RUST_LOG=info
-      - CERRO_PORT=8088
-      - FALCO_ENABLED=true
-      - EBPF_ENABLED=true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - ./cerro-rules:/rules:ro
-      - /tmp
-    # Needs host access for eBPF monitoring
-    privileged: true
-    pid: host
-    healthcheck:
-      <<: *health-defaults
-      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
-    restart: unless-stopped
-    labels:
-      - "com.opsm.service=cerro-torre"
-      - "com.opsm.tier=security"
-      - "com.opsm.function=monitoring"
 
 # Selur-specific extensions for security
 x-selur-config:

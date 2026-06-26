@@ -23,9 +23,9 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
                                    │                   │
                                    ▼                   ▼
                         ┌───────────────────────┐  ┌────────────────────────────────┐
-                        │ REGISTRY ADAPTERS(101)│  │ TRUST PIPELINE (5 SVCS)        │
-                        │ - npm, Hex, Crates    │  │ - claim-forge (Attest)         │
-                        │ - PyPI, RubyGems, Go  │  │ - checky-monkey (Verify)       │
+                        │ REGISTRY ADAPTERS(101)│  │ TRUST PIPELINE (3 SVCS)        │
+                        │ - npm, Hex, Crates    │  │ - checky-monkey (Verify)       │
+                        │ - PyPI, RubyGems, Go  │  │ - palimpsest-license (License) │
                         │ - Agentic (HAR)       │  │ - oikos (Sustainability)       │
                         └──────────┬────────────┘  └──────────┬─────────────────────┘
                                    │                          │
@@ -35,7 +35,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
                         │           SECURITY & PROOFS             │
                         │  ┌───────────┐  ┌───────────────────┐  │
                         │  │ Rust NIF  │  │  Container Sec    │  │
-                        │  │ (PQ Crypto)│ │  (4 Microservices)│  │
+                        │  │ (PQ Crypto)│ │  (3 Microservices)│  │
                         │  └─────┬─────┘  └────────┬──────────┘  │
                         └────────│─────────────────│──────────────┘
                                  │                 │
@@ -64,8 +64,8 @@ CORE MANAGER (v2.0.0)
   Agentic Discovery (HAR)           ██████████ 100%    3 agents verified
 
 TRUST & SECURITY
-  Trust Pipeline (5 Svcs)           ██████████ 100%    Integrity/License/Eco checks
-  Container Sec (4 Svcs)            ██████████ 100%    Scan/Sign/Verify/Monitor stable
+  Trust Pipeline (3 Svcs)           ██████████ 100%    Integrity/License/Eco checks
+  Container Sec (3 Svcs)            ██████████ 100%    Scan/Sign/Verify stable
   PQ Crypto (Rust NIF)              ██████████ 100%    Dilithium5/Kyber hybrid active
   Verified.Library                  ██████████ 100%    SSRF/DoS prevention proven
 

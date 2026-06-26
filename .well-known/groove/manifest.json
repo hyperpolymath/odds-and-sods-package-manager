@@ -34,10 +34,8 @@
     "registry_gateway": 4050,
     "mobile_api": 4051,
     "verisimdb": 6077,
-    "claim_forge": 7001,
     "checky_monkey": 7002,
     "palimpsest_license": 7003,
-    "cicd_hyper_a": 7004,
     "oikos": 7005
   },
   "ipc": {

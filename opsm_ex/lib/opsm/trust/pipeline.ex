@@ -5,7 +5,6 @@ defmodule Opsm.Trust.Pipeline do
   Trust pipeline for package verification.
 
   Integrates with:
-  - claim-forge: attestation generation/verification
   - checky-monkey: code verification (fuzz, property tests, etc.)
   - oikos: sustainability scoring
   - palimpsest: license analysis
@@ -14,7 +13,7 @@ defmodule Opsm.Trust.Pipeline do
   require Logger
 
   alias Opsm.Config
-  alias Opsm.Clients.{ClaimForge, CheckyMonkey, Oikos, Palimpsest}
+  alias Opsm.Clients.{CheckyMonkey, Oikos, Palimpsest}
   alias Opsm.Types.ResolvedPackage
 
   @doc """
@@ -121,20 +120,8 @@ defmodule Opsm.Trust.Pipeline do
     IO.puts("Running trust pipeline for publish...")
     IO.puts("")
 
-    # Step 1: Generate SPDX attestation
-    IO.puts("Step 1: Generating attestation...")
-    attestation_result = case ClaimForge.cli_generate_spdx(path) do
-      {:ok, spdx} ->
-        IO.puts("  ✓ SPDX attestation generated")
-        {:ok, spdx}
-      {:error, reason} ->
-        IO.puts("  ✗ Failed: #{reason}")
-        {:error, reason}
-    end
-
-    # Step 2: Check licenses
-    IO.puts("")
-    IO.puts("Step 2: Checking licenses...")
+    # Step 1: Check licenses
+    IO.puts("Step 1: Checking licenses...")
     license_result = case Palimpsest.cli_check_licenses(path) do
       {:ok, licenses} ->
         IO.puts("  ✓ License check passed")
@@ -144,9 +131,9 @@ defmodule Opsm.Trust.Pipeline do
         {:warning, reason}
     end
 
-    # Step 3: Code verification (if services available)
+    # Step 2: Code verification (if services available)
     IO.puts("")
-    IO.puts("Step 3: Code verification...")
+    IO.puts("Step 2: Code verification...")
     checky_client = CheckyMonkey.new(config.checky_monkey, config.http)
     verification_result = case CheckyMonkey.health(checky_client) do
       {:ok, _} ->
@@ -158,10 +145,9 @@ defmodule Opsm.Trust.Pipeline do
     end
 
     %{
-      attestation: attestation_result,
       license: license_result,
       verification: verification_result,
-      ready_to_publish: match?({:ok, _}, attestation_result)
+      ready_to_publish: match?({:ok, _}, license_result)
     }
   end
 

@@ -111,13 +111,11 @@ _(Previous: C, achieved 2026-04-04)_
 - [x] Degraded workspace: one member unreachable; others succeed (3 tests)
 
 ### Trust Pipeline Live-Service E2E ✓ (`test/integration/trust_pipeline_live_e2e_test.exs`)
-- [x] Health checks: all 5 services (claim-forge, checky-monkey, palimpsest, cicd-hyper-a, oikos)
-- [x] Attestation generation + verification via claim-forge
+- [x] Health checks: all 3 services (checky-monkey, palimpsest, oikos)
 - [x] Package verification via checky-monkey (async polling)
 - [x] Licence analysis via palimpsest-license
-- [x] CI/CD gate via cicd-hyper-a
 - [x] Sustainability scoring via oikos
-- [x] Full pipeline: coordinated call across all 5 services
+- [x] Full pipeline: coordinated call across all 3 services
 - [x] 23 tests total; `@moduletag :live_service`; included in `trust-pipeline-e2e.yml`
 
 ### Property-Based Fuzz Harness ✓ (`test/opsm/fuzz_harness_test.exs`)
