@@ -7,15 +7,11 @@ defmodule Opsm.Wiring do
 
   require Logger
 
-  alias Opsm.Clients.{CicdHyperA, CheckyMonkey, ClaimForge, Oikos, Palimpsest}
+  alias Opsm.Clients.{CheckyMonkey, Oikos, Palimpsest}
   alias Opsm.{Errors, ManifestIngestion}
   alias Opsm.Types.{
     OpsmConfig,
-    ClaimForgeRequest,
     CheckyMonkeyRequest,
-    CicdPublishRequest,
-    PackageMetadata,
-    AttestationRef,
     PalimpsestRequest,
     OikosAnalysisRequest
   }
@@ -28,9 +24,7 @@ defmodule Opsm.Wiring do
     clients = [
       {"oikos", Oikos.new(config.oikos, config.http), &Oikos.health/1},
       {"checky-monkey", CheckyMonkey.new(config.checky_monkey, config.http), &CheckyMonkey.health/1},
-      {"claim-forge", ClaimForge.new(config.claim_forge, config.http), &ClaimForge.health/1},
-      {"palimpsest-license", Palimpsest.new(config.palimpsest_license, config.http), &Palimpsest.health/1},
-      {"cicd-hyper-a", CicdHyperA.new(config.cicd_hyper_a, config.http), &CicdHyperA.health/1}
+      {"palimpsest-license", Palimpsest.new(config.palimpsest_license, config.http), &Palimpsest.health/1}
     ]
 
     IO.puts("OPSM Service Status")
@@ -43,10 +37,8 @@ defmodule Opsm.Wiring do
     IO.puts("")
     IO.puts("Configuration")
     IO.puts("-------------")
-    IO.puts("claim-forge: #{config.claim_forge.base_url}")
     IO.puts("checky-monkey: #{config.checky_monkey.base_url}")
     IO.puts("palimpsest-license: #{config.palimpsest_license.base_url}")
-    IO.puts("cicd-hyper-a: #{config.cicd_hyper_a.base_url}")
     IO.puts("oikos: #{config.oikos.base_url}")
 
     :ok
@@ -61,16 +53,13 @@ defmodule Opsm.Wiring do
     IO.puts("")
 
     with {:ok, ingestion} <- ManifestIngestion.ingest(path),
-         {:ok, claim_response} <- generate_attestation(config, ingestion.manifest_path, ingestion.digest),
          {:ok, _license_result} <- run_license_check(config, ingestion.manifest_path, ingestion.manifest),
          :ok <- run_sustainability_check(config, ingestion.manifest),
-         :ok <- validate_publish_metadata(ingestion.manifest),
-         {:ok, publish_response} <-
-           publish_manifest(config, ingestion.manifest, ingestion.tarball_url, ingestion.digest, claim_response) do
+         :ok <- validate_publish_metadata(ingestion.manifest) do
       maybe_run_checky(config, ingestion.manifest_path)
       IO.puts("")
-      print_publish_summary(ingestion.manifest, publish_response)
-      {:ok, publish_response}
+      print_publish_summary(ingestion.manifest)
+      {:ok, ingestion.manifest}
     else
       {:error, reason} ->
         IO.puts("  ✗ Publish pipeline failed: #{reason}")
@@ -129,19 +118,6 @@ defmodule Opsm.Wiring do
   # =============================================================================
   # Helpers
   # =============================================================================
-
-  defp generate_attestation(config, manifest_path, digest) do
-    client = ClaimForge.new(config.claim_forge, config.http)
-
-    request = %ClaimForgeRequest{
-      artifact_path: manifest_path,
-      artifact_digest: digest,
-      claim_type: :build_provenance,
-      metadata: %{"source" => "opsm", "artifact" => Path.basename(manifest_path)}
-    }
-
-    ClaimForge.generate_attestation(client, request)
-  end
 
   defp run_license_check(config, manifest_path, manifest) do
     client = Palimpsest.new(config.palimpsest_license, config.http)
@@ -233,38 +209,6 @@ defmodule Opsm.Wiring do
         combined = Enum.join(errors, "; ")
         {:error, "Publish metadata validation failed: #{combined}"}
     end
-  end
-
-  defp publish_manifest(config, manifest, tarball_url, digest, claim_response) do
-    client = CicdHyperA.new(config.cicd_hyper_a, config.http)
-
-    request = %CicdPublishRequest{
-      manifest: package_metadata_from_manifest(manifest),
-      tarball_url: tarball_url,
-      attestations: [
-        %AttestationRef{
-          attestation_type: :claim_forge,
-          uri: claim_response.attestation_uri,
-          digest: digest
-        }
-      ]
-    }
-
-    CicdHyperA.publish(client, request)
-  end
-
-  defp package_metadata_from_manifest(manifest) do
-    %PackageMetadata{
-      name: manifest.name,
-      version: manifest.version || "0.0.0",
-      description: manifest.description,
-      license: manifest.license || "UNKNOWN",
-      repository: manifest.repository,
-      authors: manifest.authors || [],
-      keywords: manifest.keywords || [],
-      dependencies: manifest.dependencies || %{},
-      dev_dependencies: manifest.dev_dependencies || %{}
-    }
   end
 
   defp maybe_run_checky(config, manifest_path) do
@@ -382,35 +326,10 @@ defmodule Opsm.Wiring do
     if File.dir?(expanded), do: expanded, else: Path.dirname(expanded)
   end
 
-  defp print_publish_summary(manifest, publish_response) do
+  defp print_publish_summary(manifest) do
     IO.puts("Publish summary")
     IO.puts("---------------")
     IO.puts("  package: #{manifest.name}@#{manifest.version}")
-    IO.puts("  registryUrl: #{publish_response.registry_url}")
-    IO.puts("  publishedAt: #{publish_response.published_at}")
-
-    if publish_response.federation_status do
-      IO.puts("  federation:")
-
-      Enum.each(
-        [
-          {"github", publish_response.federation_status.github},
-          {"gitlab", publish_response.federation_status.gitlab},
-          {"codeberg", publish_response.federation_status.codeberg},
-          {"radicle", publish_response.federation_status.radicle},
-          {"ipfs", publish_response.federation_status.ipfs}
-        ],
-        fn
-          {_name, nil} ->
-            :ok
-
-          {name, state} ->
-            status = if state.synced, do: "synced", else: "pending"
-            info = if state.error, do: " (#{state.error})", else: ""
-            IO.puts("    #{name}: #{status}#{info}")
-        end
-      )
-    end
   end
 
   defp print_oikos_summary(resp) do

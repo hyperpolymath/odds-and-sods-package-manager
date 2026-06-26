@@ -52,14 +52,10 @@ spec:
           env:
             - name: MIX_ENV
               value: prod
-            - name: OPSM_CLAIM_FORGE_URL
-              value: http://claim-forge:7001
             - name: OPSM_CHECKY_MONKEY_URL
               value: http://checky-monkey:7002
             - name: OPSM_PALIMPSEST_URL
               value: http://palimpsest:7003
-            - name: OPSM_CICD_HYPER_A_URL
-              value: http://cicd-hyper-a:7004
             - name: OPSM_OIKOS_URL
               value: http://oikos:7005
           resources:

@@ -37,7 +37,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 - `[runtime]` section: elixir 1.16.0, erlang 26.2.0, just, deno 2.6.10, zig 0.14.0 — all managed by OPSM runtime extension (replaces `.tool-versions`)
 - `[package]` section: OPSM itself as a first-class HFR package (`forth = "elixir"`, `self_hosted = true`)
 - `[opsm]` trust config: `trust_level = "hyperpolymath"`, `registry = "hf"`
-- Trust pipeline service endpoints: claim-forge/checky-monkey/palimpsest-license/cicd-hyper-a/oikos all configured in same file
+- Trust pipeline service endpoints: checky-monkey/palimpsest-license/oikos all configured in same file
 
 **Test coverage:** `opsm runtime install --from-manifest` (live_download tag), self-managed HFR metadata via `hfr_test.exs`
 
@@ -100,7 +100,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 - `role = "dogfood-wave-1"` — first wave of external dogfooding
 - `[telemetry] enabled = false` — telemetry opt-out tested
 
-**Distinguishing factor:** exercises OPSM strict policy mode + pathroot routing, which most other targets do not. The strict policy surfaces any permissiveness bugs in the trust pipeline integration; `allow_untrusted = false` forces all packages through the full claim-forge/checky-monkey chain.
+**Distinguishing factor:** exercises OPSM strict policy mode + pathroot routing, which most other targets do not. The strict policy surfaces any permissiveness bugs in the trust pipeline integration; `allow_untrusted = false` forces all packages through the full palimpsest-license/checky-monkey chain.
 
 ---
 

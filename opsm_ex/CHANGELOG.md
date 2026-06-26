@@ -9,6 +9,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- Retired the `claim-forge` (attestation generation) and `cicd-hyper-a` (publication + federation) services from the trust pipeline, which now comprises three microservices: checky-monkey, palimpsest-license, and oikos. The `ClaimForge` and `CicdHyperA` client modules were deleted, the `:claim_forge` `attestation_type` member was dropped, and the associated config fields and default ports (7001, 7004) were removed.
+
 ## [1.3.1] - 2026-02-13
 
 ### Added
@@ -105,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Core Features:**
 - 8 registry adapters (npm, Hex, Crates, PyPI, Nimble, Idris2, Git, Agentic)
 - PubGrub dependency resolver with version constraint parsing
-- Trust pipeline (5 microservices: claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
+- Trust pipeline (3 microservices: checky-monkey, palimpsest-license, oikos)
 - HAR integration (3 agents: github-search, web-scraper, mirror-finder)
 - Verified library (SSRF prevention, JSON DoS prevention, Result monad)
 - Federation events (security advisories, package updates)

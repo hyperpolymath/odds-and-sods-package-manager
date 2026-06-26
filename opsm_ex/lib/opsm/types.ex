@@ -33,13 +33,11 @@ defmodule Opsm.Types do
   defmodule OpsmConfig do
     @type t :: %__MODULE__{
             http: HttpConfig.t(),
-            claim_forge: ServiceConfig.t(),
             checky_monkey: ServiceConfig.t(),
             palimpsest_license: ServiceConfig.t(),
-            cicd_hyper_a: ServiceConfig.t(),
             oikos: ServiceConfig.t()
           }
-    defstruct [:http, :claim_forge, :checky_monkey, :palimpsest_license, :cicd_hyper_a, :oikos]
+    defstruct [:http, :checky_monkey, :palimpsest_license, :oikos]
   end
 
   # =============================================================================
@@ -111,30 +109,10 @@ defmodule Opsm.Types do
   end
 
   # =============================================================================
-  # CICD-HYPER-A - Registry and CI/CD Pipeline Hub
+  # Attestation & Package Metadata
   # =============================================================================
 
-  defmodule SyncState do
-    @type t :: %__MODULE__{
-            synced: boolean(),
-            last_sync: String.t() | nil,
-            error: String.t() | nil
-          }
-    defstruct synced: false, last_sync: nil, error: nil
-  end
-
-  defmodule FederationStatus do
-    @type t :: %__MODULE__{
-            github: SyncState.t(),
-            gitlab: SyncState.t(),
-            codeberg: SyncState.t(),
-            radicle: SyncState.t(),
-            ipfs: SyncState.t() | nil
-          }
-    defstruct [:github, :gitlab, :codeberg, :radicle, :ipfs]
-  end
-
-  @type attestation_type :: :claim_forge | :sigstore | :in_toto
+  @type attestation_type :: :sigstore | :in_toto
 
   defmodule AttestationRef do
     @type t :: %__MODULE__{
@@ -159,57 +137,6 @@ defmodule Opsm.Types do
           }
     defstruct [:name, :version, :description, :license, :repository,
                authors: [], keywords: [], dependencies: %{}, dev_dependencies: nil]
-  end
-
-  defmodule CicdPublishRequest do
-    @type t :: %__MODULE__{
-            manifest: PackageMetadata.t(),
-            tarball_url: String.t() | nil,
-            attestations: [AttestationRef.t()]
-          }
-    defstruct [:manifest, :tarball_url, attestations: []]
-  end
-
-  defmodule CicdPublishResponse do
-    @type t :: %__MODULE__{
-            package_id: String.t(),
-            version: String.t(),
-            published_at: String.t(),
-            registry_url: String.t(),
-            federation_status: FederationStatus.t()
-          }
-    defstruct [:package_id, :version, :published_at, :registry_url, :federation_status]
-  end
-
-  # =============================================================================
-  # CLAIM-FORGE - Attestation Generation
-  # =============================================================================
-
-  @type claim_type :: :build_provenance | :source_attestation | :vulnerability_scan
-                     | :license_compliance | :code_review
-
-  defmodule ClaimForgeRequest do
-    @type t :: %__MODULE__{
-            artifact_path: String.t(),
-            artifact_digest: String.t(),
-            claim_type: Opsm.Types.claim_type(),
-            metadata: map() | nil
-          }
-    defstruct [:artifact_path, :artifact_digest, :claim_type, :metadata]
-  end
-
-  defmodule ClaimForgeResponse do
-    @type t :: %__MODULE__{
-            attestation_id: String.t(),
-            claim_type: Opsm.Types.claim_type(),
-            created_at: String.t(),
-            expires_at: String.t() | nil,
-            attestation_uri: String.t(),
-            signature: String.t(),
-            public_key_id: String.t()
-          }
-    defstruct [:attestation_id, :claim_type, :created_at, :expires_at,
-               :attestation_uri, :signature, :public_key_id]
   end
 
   # =============================================================================

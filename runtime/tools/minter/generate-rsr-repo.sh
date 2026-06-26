@@ -199,7 +199,7 @@ trust-scored before they reach your machine.
 == Evidence
 
 - Contract validation: \`nickel typecheck runtime/${TOOL_NAME}.ncl\`
-- Integration with OPSM trust pipeline (claim-forge, checky-monkey)
+- Integration with OPSM trust pipeline (checky-monkey, palimpsest-license, oikos)
 - .tool-versions compatibility (reads asdf format)
 ADOC
 

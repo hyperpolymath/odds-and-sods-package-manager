@@ -12,8 +12,8 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 ✅ **VERDICT: Ready for v1.0.0 Release**
 
 - **Total Tests:** 250 (232 tests + 40 properties + 1 doctest - 17 skipped)
-- **Passing:** 244 (97.6%)
-- **Failing:** 6 (2.4%)
+- **Passing:** 245 (98.0%)
+- **Failing:** 5 (2.0%)
 - **All Core Functionality:** Passing
 - **All Security Tests:** Passing (40 property tests)
 
@@ -38,7 +38,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 | **IMP Normalization** | 3 | ✅ ALL PASSING |
 | **Rollback System** | 8 | ✅ ALL PASSING |
 
-**Total Passing:** 244 tests
+**Total Passing:** 245 tests
 
 ### Skipped Test Categories
 
@@ -52,21 +52,11 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 ## Test Failures Analysis
 
-### Category 1: Test Code Function Name Mismatches (4 failures)
+### Category 1: Test Code Function Name Mismatches (3 failures)
 
 **Impact:** ❌ Test-only issues - **NOT production bugs**
 
-#### 1.1 ClaimForge API Function Name
-```
-Test: test/integration/trust_pipeline_test.exs:72, 96, 318
-Error: function Opsm.Clients.ClaimForge.generate/2 is undefined
-Expected: ClaimForge.generate/2
-Actual: ClaimForge.generate_attestation/2
-```
-
-**Resolution:** Update test calls to use `generate_attestation/2`
-
-#### 1.2 CheckyMonkey Status Function Name
+#### 1.1 CheckyMonkey Status Function Name
 ```
 Test: test/integration/trust_pipeline_test.exs:134, 152
 Error: function Opsm.Clients.CheckyMonkey.status/2 is undefined
@@ -76,7 +66,7 @@ Actual: CheckyMonkey.get_verification_status/2
 
 **Resolution:** Update test calls to use `get_verification_status/2`
 
-#### 1.3 Registry Fetch Function Name
+#### 1.2 Registry Fetch Function Name
 ```
 Test: test/integration/e2e_test.exs:357, 370, 383
 Error: function Opsm.Registries.Registry.fetch_package/3 is undefined
@@ -86,7 +76,7 @@ Actual: Registry.fetch/3
 
 **Resolution:** Update test calls to use `Registry.fetch/3`
 
-#### 1.4 Palimpsest Config Key Name
+#### 1.3 Palimpsest Config Key Name
 ```
 Test: test/integration/trust_pipeline_test.exs:189
 Error: key :palimpsest_license not found
@@ -285,9 +275,6 @@ Code: if lodash, do: assert(lodash.forth == :npm)
 1. **Update test function calls** (15 min)
    ```elixir
    # In test/integration/trust_pipeline_test.exs
-   - ClaimForge.generate(client, request)
-   + ClaimForge.generate_attestation(client, request)
-
    - CheckyMonkey.status(client, request_id)
    + CheckyMonkey.get_verification_status(client, request_id)
 
@@ -340,15 +327,15 @@ Code: if lodash, do: assert(lodash.forth == :npm)
 - All core functionality (dependency resolution, installation, caching)
 - All security features (URL validation, JSON safety, SSRF prevention)
 - 40 property-based security tests proving safety guarantees
-- 244 tests passing (97.6%)
+- 245 tests passing (98.0%)
 
 ### ⚠️ Minor Issues
-- 4 test function name mismatches (test code only, not production)
+- 3 test function name mismatches (test code only, not production)
 - 1 version constraint edge case (rare, easily fixed)
 - 1 cross-registry type issue (edge case, minimal impact)
 
 ### 📋 Recommendation
-**Proceed with release**, optionally fixing Priority 1 items first (30 minutes). The 6 test failures are minor and do not affect core functionality or security.
+**Proceed with release**, optionally fixing Priority 1 items first (30 minutes). The 5 test failures are minor and do not affect core functionality or security.
 
 **Risk Level:** LOW
 - Core features stable

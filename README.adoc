@@ -27,8 +27,8 @@ OPSM is the **first universal package manager** that combines:
 2. **Post-Quantum Cryptography** - Hybrid Ed25519+Dilithium5 signatures, Kyber-1024 KEM, SPHINCS+ (Rust NIF)
 3. **SLSA Level 3 Compliance** - Provenance generation, signature verification, policy enforcement
 4. **PubGrub Dependency Resolver** - Semver, PEP 440, Go MVS support with ETS caching
-5. **Trust Pipeline** - 5-microservice verification (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
-6. **Container Security** - 4 Rust services (svalinn, selur, vordr, cerro-torre)
+5. **Trust Pipeline** - multi-microservice verification (checky-monkey, palimpsest-license, oikos)
+6. **Container Security** - 3 Rust services (svalinn, selur, vordr)
 7. **Sustainability Scoring** - Oikos-based real package-level analysis integrated into resolver
 8. **Formal Verification** - Proven library (SSRF/DoS prevention via property-based testing)
 9. **Federation-First** - Event propagation, distributed architecture, cross-registry search
@@ -73,17 +73,13 @@ OPSM v1.1.0 introduces a comprehensive container security pipeline with 4 dedica
 | **vordr**
 | Runtime policy verification (OPA + built-in)
 | 8087
-
-| **cerro-torre**
-| Security monitoring (Falco + eBPF)
-| 8088
 |===
 
 **Testing Results:**
 - ✅ Secure container (alpine:3.19): PASSED all checks, 2 vulnerabilities (0 critical)
 - ✅ Insecure container (nginx): BLOCKED with 9 violations (1 CRITICAL, 4 HIGH, 2 MEDIUM, 2 LOW)
 
-**See:** link:services/svalinn/README.md[Svalinn], link:services/selur/README.md[Selur], link:services/vordr/README.md[Vordr], link:services/cerro-torre/README.md[Cerro-Torre]
+**See:** link:services/svalinn/README.md[Svalinn], link:services/selur/README.md[Selur], link:services/vordr/README.md[Vordr]
 
 == Current Status (v2.0.0)
 
@@ -98,10 +94,10 @@ OPSM v1.1.0 introduces a comprehensive container security pipeline with 4 dedica
 - ✅ **PQ NIF compiled** with real availability probe and `persistent_term` caching
 - ✅ **SLSA Level 3**: provenance generation, signature verification, policy enforcement
 - ✅ **Cryptographic primitives**: Argon2id, ChaCha20-Poly1305, BLAKE2b, SHA3-512
-- ✅ **Container security pipeline**: 4 Rust microservices (svalinn, selur, vordr, cerro-torre)
+- ✅ **Container security pipeline**: 3 Rust microservices (svalinn, selur, vordr)
 
 **Ecosystem:**
-- ✅ **Trust pipeline**: 5 microservices (claim-forge, checky-monkey, palimpsest-license, oikos, cicd-hyper-a)
+- ✅ **Trust pipeline**: 3 microservices (checky-monkey, palimpsest-license, oikos)
 - ✅ **Oikos sustainability scoring** integrated into resolver with `--sustainability` flag
 - ✅ **Federation**: 9 language forths + 9 system connection ports
 - ✅ **Agentic cross-registry search**: parallel search across all registries
@@ -235,11 +231,9 @@ opsm install express --registry npm
 opsm publish ./my-package
 
 # Trust pipeline stages:
-# 1. claim-forge: Generate attestation
-# 2. checky-monkey: Verify package integrity
-# 3. palimpsest-license: Check license compatibility
-# 4. oikos: Score sustainability (8 dimensions)
-# 5. cicd-hyper-a: Publish to registry + federation
+# 1. palimpsest-license: Check license compatibility
+# 2. oikos: Score sustainability (8 dimensions)
+# 3. checky-monkey: Verify package integrity
 
 # View published package
 opsm show my-package --registry <registry>
@@ -308,21 +302,13 @@ end
 2. **Git-based** - Idris2 (curated list), generic Git (any repository)
 3. **Agentic** - HAR queue system with 3 discovery agents
 
-=== Trust Pipeline (5 Microservices)
+=== Trust Pipeline (3 Microservices)
 
-Every `opsm publish` goes through 5 verification stages:
+Every `opsm publish` goes through these verification stages:
 
 [cols="1,2,2"]
 |===
 | Service | Purpose | Verification
-
-| **claim-forge**
-| Attestation generation
-| Creates SLSA-style attestations with package metadata
-
-| **checky-monkey**
-| Package verification
-| Async integrity checks (60s timeout, 5s polling)
 
 | **palimpsest-license**
 | License analysis
@@ -332,9 +318,9 @@ Every `opsm publish` goes through 5 verification stages:
 | Sustainability scoring
 | 8-dimensional scoring (security, maintenance, docs, tests, etc.)
 
-| **cicd-hyper-a**
-| Publication + federation
-| Publishes to registry, propagates events to mirrors
+| **checky-monkey**
+| Package verification
+| Async integrity checks (60s timeout, 5s polling)
 |===
 
 **Error Severity:**
@@ -421,20 +407,12 @@ verbosity = "info"
 [registries]
 default = "npm"
 
-[claim_forge]
-base_url = "http://127.0.0.1:7000"
-timeout_ms = 30000
-
 [checky_monkey]
-base_url = "http://127.0.0.1:7001"
+base_url = "http://127.0.0.1:7002"
 timeout_ms = 60000
 
 [palimpsest]
-base_url = "http://127.0.0.1:7002"
-timeout_ms = 30000
-
-[cicd_hyper_a]
-base_url = "http://127.0.0.1:7004"
+base_url = "http://127.0.0.1:7003"
 timeout_ms = 30000
 
 [oikos]
@@ -477,11 +455,9 @@ odds-and-sods-package-manager/
 │   │       ├── crypto/
 │   │       │   └── post_quantum.ex  # PQ NIF wrapper (probe + cache)
 │   │       ├── clients/             # Trust service clients
-│   │       │   ├── claim_forge.ex
 │   │       │   ├── checky_monkey.ex
 │   │       │   ├── palimpsest.ex
-│   │       │   ├── oikos.ex
-│   │       │   └── cicd_hyper_a.ex
+│   │       │   └── oikos.ex
 │   │       └── package/
 │   │           ├── installer.ex     # Install pipeline (sustainability wiring)
 │   │           └── publisher.ex
@@ -511,13 +487,8 @@ odds-and-sods-package-manager/
 │   │   ├── Cargo.toml
 │   │   ├── Containerfile
 │   │   └── README.md
-│   ├── vordr/                       # Policy verification (OPA + built-in)
-│   │   ├── src/main.rs             # Policy engine (550 lines)
-│   │   ├── Cargo.toml
-│   │   ├── Containerfile
-│   │   └── README.md
-│   └── cerro-torre/                 # Security monitoring (Falco + eBPF)
-│       ├── src/main.rs             # Event monitoring (500 lines)
+│   └── vordr/                       # Policy verification (OPA + built-in)
+│       ├── src/main.rs             # Policy engine (550 lines)
 │       ├── Cargo.toml
 │       ├── Containerfile
 │       └── README.md
@@ -608,11 +579,9 @@ OPSM requires 5 trust services to be running for publish operations:
 selur-compose -f deploy/selur-compose.yml up -d
 
 # Or deploy systemd services (see RELEASE-v1.0.0.md)
-sudo systemctl start claim-forge
 sudo systemctl start checky-monkey
 sudo systemctl start palimpsest-license
 sudo systemctl start oikos
-sudo systemctl start cicd-hyper-a
 ----
 
 === Deploying HAR Agents
@@ -765,17 +734,14 @@ See link:CONTRIBUTING.md[CONTRIBUTING.md] for contribution guidelines.
 OPSM is part of the hyperpolymath ecosystem:
 
 **Trust Pipeline Microservices:**
-- https://github.com/hyperpolymath/claim-forge[claim-forge] - Attestation generation
 - https://github.com/hyperpolymath/checky-monkey[checky-monkey] - Package verification
 - https://github.com/hyperpolymath/palimpsest-license[palimpsest-license] - License analysis
 - https://github.com/hyperpolymath/oikos[oikos] - Sustainability scoring (8 dimensions)
-- https://github.com/hyperpolymath/cicd-hyper-a[cicd-hyper-a] - Publication + federation
 
 **Container Security Services (v1.1.0):**
 - link:services/svalinn/[svalinn] - Vulnerability scanning (Trivy + Grype, port 8085)
 - link:services/selur/[selur] - Image signing (Cosign + Ed25519, port 8086)
 - link:services/vordr/[vordr] - Policy verification (OPA + built-in engine, port 8087)
-- link:services/cerro-torre/[cerro-torre] - Security monitoring (Falco + eBPF, port 8088)
 
 **Mobile App Dependencies:**
 - https://github.com/hyperpolymath/cadre-router[cadre-router] - Type-safe URL routing

@@ -229,11 +229,9 @@ defmodule Opsm.Integration.PipelineTest do
       config = Config.example_config()
 
       assert config.http.timeout_ms > 0
-      assert is_binary(config.claim_forge.base_url)
       assert is_binary(config.checky_monkey.base_url)
       assert is_binary(config.oikos.base_url)
       assert is_binary(config.palimpsest_license.base_url)
-      assert is_binary(config.cicd_hyper_a.base_url)
     end
 
     test "load_config_or_example returns usable config" do

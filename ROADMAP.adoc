@@ -95,12 +95,10 @@ Each major version below lists explicit remedies for these concerns.
 * ✅ Cross-registry resolution
 * ✅ Lockfile system with integrity checks
 
-**Trust Pipeline (5 Microservices):**
-* ✅ claim-forge: Attestation generation
+**Trust Pipeline (3 Microservices):**
 * ✅ checky-monkey: Package verification (async polling)
 * ✅ palimpsest-license: License analysis
 * ✅ oikos: 8-dimensional sustainability scoring
-* ✅ cicd-hyper-a: Publication + federation
 
 **HAR Integration (3 Agents):**
 * ✅ github-search.sh: GitHub API search
@@ -252,7 +250,7 @@ Each major version below lists explicit remedies for these concerns.
 
 **Status:** ✅ Released February 5, 2026
 
-**Achievement:** Container security pipeline with 4 Rust microservices for vulnerability scanning, image signing, policy verification, and runtime monitoring.
+**Achievement:** Container security pipeline with 3 Rust microservices for vulnerability scanning, image signing, and policy verification.
 
 **Focus:** Container security, real-world testing, performance optimization, mobile completion
 
@@ -278,13 +276,6 @@ Each major version below lists explicit remedies for these concerns.
 * ✅ Runtime configuration validation
 * ✅ Security violation reporting with severity
 * ✅ Tested with secure/insecure containers
-
-**cerro-torre - Security Monitoring Service (Port 8088):**
-* ✅ Falco integration (with simulated mode)
-* ✅ Event buffer (10,000 events)
-* ✅ Severity classification (EMERGENCY to DEBUG)
-* ✅ Real-time metrics and event queries
-* ✅ Event simulation for testing
 
 **Integration & Testing:**
 * ✅ End-to-end pipeline testing

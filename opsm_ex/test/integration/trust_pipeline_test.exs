@@ -3,18 +3,13 @@
 defmodule Opsm.Integration.TrustPipelineTest do
   use ExUnit.Case, async: false
 
-  alias Opsm.Clients.{ClaimForge, CheckyMonkey, Palimpsest, Oikos, CicdHyperA}
+  alias Opsm.Clients.{CheckyMonkey, Palimpsest, Oikos}
   alias Opsm.Types.{
     ServiceConfig,
     HttpConfig,
-    ClaimForgeRequest,
     CheckyMonkeyRequest,
     PalimpsestRequest,
-    OikosAnalysisRequest,
-    CicdPublishRequest,
-    PackageMetadata,
-    AttestationRef,
-    ManifestFormat
+    OikosAnalysisRequest
   }
 
   @moduletag :integration
@@ -32,10 +27,6 @@ defmodule Opsm.Integration.TrustPipelineTest do
     # For mocked tests, we could use Bypass library
 
     configs = %{
-      claim_forge: %ServiceConfig{
-        base_url: "http://localhost:7001",
-        token: "test-token"
-      },
       checky_monkey: %ServiceConfig{
         base_url: "http://localhost:7002",
         token: "test-token"
@@ -48,61 +39,10 @@ defmodule Opsm.Integration.TrustPipelineTest do
         base_url: "http://localhost:7004",
         token: "test-token"
       },
-      cicd_hyper_a: %ServiceConfig{
-        base_url: "http://localhost:7005",
-        token: "test-token"
-      },
       http: http_config
     }
 
     {:ok, configs: configs}
-  end
-
-  describe "ClaimForge attestation generation" do
-    @tag :skip  # Skip by default, run when services available
-    test "generates attestation for valid artifact", %{configs: configs} do
-      client = ClaimForge.new(configs.claim_forge, configs.http)
-
-      request = %ClaimForgeRequest{
-        artifact_path: "/tmp/test-package.tar.gz",
-        artifact_digest: "sha256:abc123",
-        claim_type: :build_provenance,
-        metadata: %{"test" => true}
-      }
-
-      case ClaimForge.generate_attestation(client, request) do
-        {:ok, response} ->
-          assert response.attestation_id != nil
-          assert response.claim_type == :build_provenance
-          assert response.attestation_uri != nil
-          assert response.signature != nil
-
-        {:error, reason} ->
-          flunk("ClaimForge request failed: #{inspect(reason)}")
-      end
-    end
-
-    test "handles service unavailable gracefully", %{configs: configs} do
-      # Point to non-existent service
-      bad_config = %{configs.claim_forge | base_url: "http://localhost:9999"}
-      client = ClaimForge.new(bad_config, configs.http)
-
-      request = %ClaimForgeRequest{
-        artifact_path: "/tmp/test-package.tar.gz",
-        artifact_digest: "sha256:abc123",
-        claim_type: :build_provenance,
-        metadata: nil
-      }
-
-      case ClaimForge.generate_attestation(client, request) do
-        {:error, reason} ->
-          # Should get connection refused or timeout
-          assert reason =~ ~r/failed|refused|timeout/i
-
-        {:ok, _} ->
-          flunk("Expected error for unavailable service")
-      end
-    end
   end
 
   describe "CheckyMonkey verification" do
@@ -248,158 +188,6 @@ defmodule Opsm.Integration.TrustPipelineTest do
           # Service might handle gracefully
           :ok
       end
-    end
-  end
-
-  describe "CicdHyperA publish and federation" do
-    @tag :skip
-    test "publishes package with attestations", %{configs: configs} do
-      client = CicdHyperA.new(configs.cicd_hyper_a, configs.http)
-
-      manifest = %ManifestFormat{
-        name: "test-package",
-        version: "1.0.0",
-        description: "Test package",
-        license: "MIT",
-        repository: "https://github.com/test/repo",
-        source_forth: :npm,
-        dependencies: %{},
-        dev_dependencies: %{}
-      }
-
-      package_metadata = %PackageMetadata{
-        name: manifest.name,
-        version: manifest.version,
-        description: manifest.description,
-        license: manifest.license,
-        repository: manifest.repository,
-        authors: [],
-        keywords: [],
-        dependencies: %{},
-        dev_dependencies: nil
-      }
-
-      request = %CicdPublishRequest{
-        manifest: package_metadata,
-        tarball_url: "https://registry.npmjs.org/test-package/-/test-package-1.0.0.tgz",
-        attestations: [
-          %AttestationRef{
-            attestation_type: :claim_forge,
-            uri: "https://attestations.example.com/abc123",
-            digest: "sha256:def456"
-          }
-        ]
-      }
-
-      case CicdHyperA.publish(client, request) do
-        {:ok, response} ->
-          assert response.package_id != nil
-          assert response.version == "1.0.0"
-          assert response.registry_url != nil
-
-        {:error, reason} ->
-          flunk("CicdHyperA publish failed: #{inspect(reason)}")
-      end
-    end
-  end
-
-  describe "Full trust pipeline flow" do
-    @tag :skip
-    test "complete publish workflow", %{configs: configs} do
-      # 1. Generate attestation with ClaimForge
-      cf_client = ClaimForge.new(configs.claim_forge, configs.http)
-
-      cf_request = %ClaimForgeRequest{
-        artifact_path: "/tmp/test-package.tar.gz",
-        artifact_digest: "sha256:test123",
-        claim_type: :build_provenance,
-        metadata: %{"version" => "1.0.0"}
-      }
-
-      {:ok, attestation} = ClaimForge.generate(cf_client, cf_request)
-      assert attestation.attestation_id != nil
-
-      # 2. Analyze license with Palimpsest
-      pal_client = Palimpsest.new(configs.palimpsest_license, configs.http)
-
-      pal_request = %PalimpsestRequest{
-        artifact_path: "/tmp/test-package",
-        include_transitive: false,
-        target_license: "MIT"
-      }
-
-      {:ok, license_result} = Palimpsest.analyze(pal_client, pal_request)
-      assert license_result.compatibility.compatible == true
-
-      # 3. Analyze sustainability with Oikos
-      oikos_client = Oikos.new(configs.oikos, configs.http)
-
-      oikos_request = %OikosAnalysisRequest{
-        repository_url: "https://github.com/test/repo",
-        branch: nil,
-        commit_sha: nil
-      }
-
-      {:ok, sustainability} = Oikos.analyze_repository(oikos_client, oikos_request)
-      assert sustainability.overall_score >= 0
-
-      # 4. Submit verification to CheckyMonkey
-      cm_client = CheckyMonkey.new(configs.checky_monkey, configs.http)
-
-      cm_request = %CheckyMonkeyRequest{
-        repository_url: "https://github.com/test/repo",
-        commit_sha: "abc123",
-        verification_types: [:type_checking],
-        timeout: 30_000
-      }
-
-      {:ok, verification} = CheckyMonkey.submit(cm_client, cm_request)
-      assert verification.request_id != nil
-
-      # 5. Publish to registry with CicdHyperA
-      cicd_client = CicdHyperA.new(configs.cicd_hyper_a, configs.http)
-
-      manifest = %ManifestFormat{
-        name: "test-package",
-        version: "1.0.0",
-        description: "Test package",
-        license: "MIT",
-        repository: "https://github.com/test/repo",
-        source_forth: :npm,
-        dependencies: %{},
-        dev_dependencies: %{}
-      }
-
-      package_metadata = %PackageMetadata{
-        name: manifest.name,
-        version: manifest.version,
-        description: manifest.description,
-        license: manifest.license,
-        repository: manifest.repository,
-        authors: [],
-        keywords: [],
-        dependencies: %{},
-        dev_dependencies: nil
-      }
-
-      publish_request = %CicdPublishRequest{
-        manifest: package_metadata,
-        tarball_url: "https://example.com/test-package-1.0.0.tgz",
-        attestations: [
-          %AttestationRef{
-            attestation_type: :claim_forge,
-            uri: attestation.attestation_uri,
-            digest: "sha256:test123"
-          }
-        ]
-      }
-
-      {:ok, publish_result} = CicdHyperA.publish(cicd_client, publish_request)
-      assert publish_result.package_id != nil
-      assert publish_result.registry_url != nil
-
-      # Success: all pipeline stages completed
-      :ok
     end
   end
 

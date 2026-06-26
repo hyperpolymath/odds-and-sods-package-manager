@@ -63,10 +63,8 @@ let defaultServiceConfig = (port: int): serviceConfig => {
 
 let exampleConfig = (): opsmConfig => {
   http: defaultHttpConfig,
-  claimForge: defaultServiceConfig(7001),
   checkyMonkey: defaultServiceConfig(7002),
   palimpsestLicense: defaultServiceConfig(7003),
-  cicdHyperA: defaultServiceConfig(7004),
   oikos: defaultServiceConfig(7005),
 }
 
@@ -181,23 +179,12 @@ let loadConfigFrom = async (path: string): result<opsmConfig> => {
 
     let http = parseHttpConfig(raw)
 
-    let claimForge = switch parseServiceConfig(raw, "claim_forge", 7001) {
-    | Ok(c) => c
-    | Error(e) => // Can't return early in ReScript, so we'll use a default and check later
-      throw(JsError.throwWithMessage(e))
-    }
-
     let checkyMonkey = switch parseServiceConfig(raw, "checky_monkey", 7002) {
     | Ok(c) => c
     | Error(e) => throw(JsError.throwWithMessage(e))
     }
 
     let palimpsestLicense = switch parseServiceConfig(raw, "palimpsest_license", 7003) {
-    | Ok(c) => c
-    | Error(e) => throw(JsError.throwWithMessage(e))
-    }
-
-    let cicdHyperA = switch parseServiceConfig(raw, "cicd_hyper_a", 7004) {
     | Ok(c) => c
     | Error(e) => throw(JsError.throwWithMessage(e))
     }
@@ -209,10 +196,8 @@ let loadConfigFrom = async (path: string): result<opsmConfig> => {
 
     Ok({
       http,
-      claimForge,
       checkyMonkey,
       palimpsestLicense,
-      cicdHyperA,
       oikos,
     })
   } catch {

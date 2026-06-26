@@ -9,7 +9,7 @@ This document describes the API contracts for the trust pipeline services that O
 
 == Overview
 
-OPSM orchestrates five backend services to provide a complete package management experience with multi-dimensional trust scoring:
+OPSM orchestrates a set of backend services to provide a complete package management experience with multi-dimensional trust scoring:
 
 [cols="1,2,1,1"]
 |===
@@ -19,16 +19,6 @@ OPSM orchestrates five backend services to provide a complete package management
 | Ecosystem sustainability analysis
 | Active
 | REST API
-
-| *cicd-hyper-a*
-| Registry and CI/CD pipeline hub
-| Active
-| REST API
-
-| *claim-forge*
-| Attestation generation
-| CLI-only
-| CLI / Service wrapper
 
 | *palimpsest-license*
 | License analysis
@@ -110,136 +100,6 @@ Oikos provides 8-dimension sustainability scoring (0-100):
     }
   ]
 }
-----
-
-== CICD-Hyper-A - Registry and Pipeline Hub
-
-=== Endpoints
-
-[cols="1,2,3"]
-|===
-| Method | Path | Description
-
-| POST | `/packages/publish` | Publish a package
-| GET | `/packages/{name}` | Get package info
-| GET | `/packages/{name}/{version}` | Get specific version
-| POST | `/validate` | Validate manifest against rulesets
-| GET | `/rulesets` | List available rulesets
-| GET | `/rulesets/{id}` | Get specific ruleset
-|===
-
-=== Publish Request
-
-Publishing requires:
-1. Valid package manifest
-2. Attestations from claim-forge
-3. Passing ruleset validation
-
-[source,json]
-----
-{
-  "manifest": {
-    "name": "@scope/package",
-    "version": "1.0.0",
-    "description": "Package description",
-    "license": "PMPL-1.0",
-    "repository": "https://github.com/org/repo",
-    "authors": ["Author Name"],
-    "keywords": ["opsm", "package"],
-    "dependencies": {
-      "@other/dep": "^2.0.0"
-    }
-  },
-  "tarballUrl": "https://registry.opsm.dev/tarballs/...",
-  "attestations": [
-    {
-      "type": "claim-forge",
-      "uri": "https://attestations.opsm.dev/...",
-      "digest": "sha256:..."
-    }
-  ]
-}
-----
-
-=== Federation Status
-
-After publishing, packages are federated to:
-
-* GitHub (releases)
-* GitLab (packages)
-* Codeberg (releases)
-* Radicle (P2P)
-* IPFS (content-addressed)
-
-[source,json]
-----
-{
-  "packageName": "@scope/package",
-  "version": "1.0.0",
-  "syncedAt": "2026-01-18T12:00:00Z",
-  "targets": {
-    "github": { "synced": true, "url": "https://github.com/..." },
-    "gitlab": { "synced": true, "url": "https://gitlab.com/..." },
-    "codeberg": { "synced": true, "url": "https://codeberg.org/..." },
-    "radicle": { "synced": true },
-    "ipfs": { "synced": false, "error": "Gateway timeout" }
-  }
-}
-----
-
-== Claim-Forge - Attestation Generation
-
-=== Overview
-
-Claim-forge generates cryptographic attestations for artifacts. The upstream implementation is an Ada CLI tool. OPSM supports two integration modes:
-
-1. *Service mode*: HTTP API via claim-forge-service wrapper
-2. *CLI mode*: Direct invocation of claim-forge binary
-
-=== Claim Types
-
-* `build-provenance` - SLSA build attestation
-* `source-attestation` - Source code verification
-* `vulnerability-scan` - Security scan results
-* `license-compliance` - License analysis attestation
-* `code-review` - Code review attestation
-
-=== Service API
-
-[cols="1,2,3"]
-|===
-| Method | Path | Description
-
-| POST | `/attest` | Generate attestation
-| POST | `/verify` | Verify attestation
-| GET | `/attestations/{id}` | Get attestation by ID
-| GET | `/claim-types` | List supported claim types
-|===
-
-=== Attestation Request
-
-[source,json]
-----
-{
-  "artifactPath": "/path/to/artifact.tar.gz",
-  "artifactDigest": "sha256:...",
-  "claimType": "build-provenance",
-  "metadata": {
-    "builder": "deno",
-    "version": "1.40.0"
-  }
-}
-----
-
-=== CLI Usage
-
-[source,bash]
-----
-# Generate attestation
-claim-forge attest --type build-provenance --artifact ./package.tar.gz --output ./attestation.json
-
-# Verify attestation
-claim-forge verify --attestation ./attestation.json --artifact ./package.tar.gz
 ----
 
 == Checky-Monkey - Code Verification
@@ -324,7 +184,7 @@ NOTE: The REST API is currently in developsment. This documents the planned cont
 
 === Overview
 
-Palimpsest-license performs SPDX license detection and compatibility analysis. Like claim-forge, it's primarily a CLI/spec project with optional service wrapper.
+Palimpsest-license performs SPDX license detection and compatibility analysis. It is primarily a CLI/spec project with optional service wrapper.
 
 === Service API
 
@@ -442,8 +302,8 @@ Tokens are configured per-service in `opsm.toml`:
 
 [source,toml]
 ----
-[claim_forge]
-base_url = "http://127.0.0.1:7001"
+[oikos]
+base_url = "http://127.0.0.1:7005"
 token = "your-token-here"
 ----
 
@@ -454,8 +314,6 @@ TypeScript clients are available in `cli/clients/`:
 [source,typescript]
 ----
 import { OikosClient } from "./clients/oikos.ts";
-import { CicdHyperAClient } from "./clients/cicd_hyper_a.ts";
-import { ClaimForgeClient, ClaimForgeCli } from "./clients/claim_forge.ts";
 import { CheckyMonkeyClient } from "./clients/checky_monkey.ts";
 import { PalimpsestClient, PalimpsestCli } from "./clients/palimpsest_license.ts";
 
@@ -464,6 +322,6 @@ const oikos = new OikosClient(config.baseUrl, config.token, httpOpts);
 const result = await oikos.analyzeRepository({ repositoryUrl: "..." });
 
 // CLI fallback for services without HTTP wrapper
-const claimCli = new ClaimForgeCli("/usr/local/bin/claim-forge");
-const attestation = await claimCli.attest("./artifact.tar.gz", "build-provenance");
+const palimpsestCli = new PalimpsestCli("/usr/local/bin/palimpsest-license");
+const analysis = await palimpsestCli.analyze("./project");
 ----

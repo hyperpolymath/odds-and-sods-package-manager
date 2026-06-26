@@ -55,8 +55,8 @@ status = "accepted"
 title = "rustls-tls over native-tls in all Rust services"
 decision = """
 Switch all reqwest TLS backend selections from native-tls (openssl-sys) to
-rustls-tls across all Rust services in the project (claim-forge, opsm_mobile,
-selur, svalinn, vordr, cerro-torre, and any future Rust crates).
+rustls-tls across all Rust services in the project (opsm_mobile,
+selur, svalinn, vordr, and any future Rust crates).
 """
 rationale = """
 openssl-sys requires a C toolchain and platform OpenSSL headers, creating

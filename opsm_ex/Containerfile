@@ -5,7 +5,7 @@
 # Uses Chainguard Wolfi for minimal attack surface
 # Build: podman build -t opsm:1.2.0 -f Containerfile .
 # Seal:  selur seal opsm:1.2.0
-# Sign:  cerro-torre sign opsm:1.2.0
+# Verify: vordr verify opsm:1.2.0
 
 # Stage 1: Rust NIF builder (post-quantum crypto + QUIC transport)
 FROM cgr.dev/chainguard/wolfi-base:latest AS rust-builder

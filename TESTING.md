@@ -302,10 +302,8 @@ Test trust service health checks:
 opsm status
 
 # Should show status of:
-# - claim-forge
 # - checky-monkey
 # - palimpsest-license
-# - cicd-hyper-a
 # - oikos
 ```
 
@@ -349,9 +347,8 @@ opsm publish .
 
 # Expected output:
 # ✓ Manifest ingested
-# ✓ Attestation generated (claim-forge)
 # ✓ License compatibility (palimpsest)
-# ✓ Published to registry (cicd-hyper-a)
+# ✓ Sustainability scored (oikos)
 # ⏳ Checky-monkey verification queued
 ```
 

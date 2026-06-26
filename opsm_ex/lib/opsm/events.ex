@@ -4,7 +4,7 @@ defmodule Opsm.Events do
   @moduledoc """
   Event dispatcher for federation and registry propagation.
 
-  Publishes events to CicdHyperA which propagates to federation targets
+  Publishes events to the federation targets
   (GitHub, GitLab, Codeberg, Radicle, IPFS).
 
   Event types:
@@ -17,7 +17,6 @@ defmodule Opsm.Events do
 
   require Logger
 
-  alias Opsm.Clients.CicdHyperA
   alias Opsm.Types.OpsmConfig
 
   @event_types [
@@ -45,7 +44,7 @@ defmodule Opsm.Events do
   Publish an event to the federation.
 
   ## Parameters
-  - `config`: OPSM configuration with cicd-hyper-a endpoint
+  - `config`: OPSM configuration
   - `event_type`: Type of event (see @event_types)
   - `event_data`: Event payload (package, version, etc.)
 
@@ -80,7 +79,7 @@ defmodule Opsm.Events do
     # Validate required fields
     with :ok <- validate_event_data(event_type, event_data),
          {:ok, payload} <- build_event_payload(event_type, event_data),
-         {:ok, response} <- post_to_cicd(config, payload) do
+         {:ok, response} <- post_event(config, payload) do
       Logger.info("Event published successfully: #{response.event_id}")
       {:ok, response}
     else
@@ -125,7 +124,7 @@ defmodule Opsm.Events do
     Logger.info("Finding dependents of #{package}")
 
     # In v1.0: Query local lockfiles
-    # In v2.0: Query cicd-hyper-a dependency graph API
+    # In v2.0: Query the federation dependency graph API
 
     # For now, return empty list (dependency graph query not implemented)
     _ = config
@@ -178,14 +177,12 @@ defmodule Opsm.Events do
     {:ok, payload}
   end
 
-  defp post_to_cicd(config, payload) do
-    _client = CicdHyperA.new(config.cicd_hyper_a, config.http)
+  defp post_event(_config, payload) do
+    # Federation /events endpoint.
+    # In v1.0: events are recorded locally; outbound propagation is aspirational.
+    # For now, log and return a queued response.
 
-    # POST /events endpoint
-    # In v1.0: This endpoint may not be implemented yet
-    # For now, log and return success
-
-    Logger.debug("Would POST to cicd-hyper-a /events: #{inspect(payload)}")
+    Logger.debug("Federation event queued: #{inspect(payload)}")
 
     # Simulate response
     response = %{

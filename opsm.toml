@@ -1,7 +1,3 @@
-[claim_forge]
-base_url = "http://127.0.0.1:7001"
-# token = ""
-
 [http]
 timeout_ms = 3000
 retries = 2
@@ -13,10 +9,6 @@ base_url = "http://127.0.0.1:7002"
 
 [palimpsest_license]
 base_url = "http://127.0.0.1:7003"
-# token = ""
-
-[cicd_hyper_a]
-base_url = "http://127.0.0.1:7004"
 # token = ""
 
 [oikos]

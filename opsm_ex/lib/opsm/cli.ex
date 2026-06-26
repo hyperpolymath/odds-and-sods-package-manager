@@ -248,7 +248,7 @@ defmodule Opsm.CLI do
       scan <package> --registry @forth  Scan in a specific ecosystem
 
     PUBLISHING (trust pipeline):
-      publish <path>           Publish through claim-forge -> checky-monkey -> registry
+      publish <path>           Publish with license + sustainability + verification checks
       audit <package>          Run sustainability + license analysis
       audit --workspace        Audit all workspace members in opsm.toml
 

@@ -178,9 +178,7 @@ defmodule Opsm.Errors do
   # SOFT_FAIL - Warn but allow with degraded trust
   def classify_severity(:checky_monkey_timeout), do: :soft_fail
   def classify_severity(:oikos_unreachable), do: :soft_fail
-  def classify_severity(:claim_forge_unavailable), do: :soft_fail
   def classify_severity(:palimpsest_unavailable), do: :soft_fail
-  def classify_severity(:cicd_hyper_a_unavailable), do: :soft_fail
   def classify_severity(:network_error), do: :soft_fail
   def classify_severity(:service_timeout), do: :soft_fail
   def classify_severity(:attestation_fetch_failed), do: :soft_fail

@@ -5,7 +5,6 @@
 
 Pipeline stages:
 
-- claim-forge: provenance (GPG + OpenTimestamps)
-- checky-monkey: 8-dimension analysis + CUBS
 - palimpsest-license: license sign/verify/audit
 - oikos: sustainability and health scoring
+- checky-monkey: 8-dimension analysis + CUBS

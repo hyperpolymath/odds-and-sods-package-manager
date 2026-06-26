@@ -15,47 +15,7 @@ let runPublish = async (config: opsmConfig, path: string): result<unit> => {
 
   Console.log(`Publishing package from: ${path}`)
 
-  // Step 1: Generate attestation via claim-forge
-  Console.log("  → Generating attestation via claim-forge...")
-  let claimForgeClient = ClaimForge.make(
-    config.claimForge.baseUrl,
-    config.claimForge.token,
-    httpOpts,
-  )
-
-  let attestResult = await claimForgeClient->ClaimForge.attest({
-    artifactPath: path,
-    artifactDigest: "sha256:placeholder",
-    claimType: BuildProvenance,
-    metadata: None,
-  })
-
-  switch attestResult {
-  | Error(e) => Console.log(`  ✗ Attestation failed: ${e}`)
-  | Ok(_) => Console.log("  ✓ Attestation generated")
-  }
-
-  // Step 2: Verify with checky-monkey
-  Console.log("  → Running verification via checky-monkey...")
-  let checkyClient = CheckyMonkey.make(
-    config.checkyMonkey.baseUrl,
-    config.checkyMonkey.token,
-    httpOpts,
-  )
-
-  let verifyResult = await checkyClient->CheckyMonkey.submitVerification({
-    repositoryUrl: path,
-    commitSha: "HEAD",
-    verificationTypes: [PropertyTests, TypeChecking],
-    timeout: Some(300),
-  })
-
-  switch verifyResult {
-  | Error(e) => Console.log(`  ✗ Verification failed: ${e}`)
-  | Ok(resp) => Console.log(`  ✓ Verification submitted: ${resp.requestId}`)
-  }
-
-  // Step 3: Check license compliance
+  // Step 1: Check license compliance via palimpsest-license
   Console.log("  → Checking license compliance via palimpsest-license...")
   let palimpsestClient = Palimpsest.make(
     config.palimpsestLicense.baseUrl,
@@ -79,33 +39,28 @@ let runPublish = async (config: opsmConfig, path: string): result<unit> => {
     }
   }
 
-  // Step 4: Publish to registry
-  Console.log("  → Publishing to registry via cicd-hyper-a...")
-  let cicdClient = CicdHyperA.make(config.cicdHyperA.baseUrl, config.cicdHyperA.token, httpOpts)
+  // Step 2: Verify with checky-monkey
+  Console.log("  → Running verification via checky-monkey...")
+  let checkyClient = CheckyMonkey.make(
+    config.checkyMonkey.baseUrl,
+    config.checkyMonkey.token,
+    httpOpts,
+  )
 
-  let publishResult = await cicdClient->CicdHyperA.publish({
-    manifest: {
-      name: path,
-      version: "0.1.0",
-      description: None,
-      license: "PMPL-1.0",
-      repository: None,
-      authors: [],
-      keywords: [],
-      dependencies: Dict.make(),
-      devDependencies: None,
-    },
-    tarballUrl: None,
-    attestations: [],
+  let verifyResult = await checkyClient->CheckyMonkey.submitVerification({
+    repositoryUrl: path,
+    commitSha: "HEAD",
+    verificationTypes: [PropertyTests, TypeChecking],
+    timeout: Some(300),
   })
 
-  switch publishResult {
+  switch verifyResult {
   | Error(e) => {
-      Console.log(`  ✗ Publish failed: ${e}`)
+      Console.log(`  ✗ Verification failed: ${e}`)
       Error(e)
     }
   | Ok(resp) => {
-      Console.log(`  ✓ Published: ${resp.packageId}`)
+      Console.log(`  ✓ Verification submitted: ${resp.requestId}`)
       Ok()
     }
   }
@@ -220,10 +175,8 @@ let runStatus = async (config: opsmConfig): result<unit> => {
   Console.log("")
   Console.log("Configuration")
   Console.log("-------------")
-  Console.log(`claim-forge: ${config.claimForge.baseUrl}`)
   Console.log(`checky-monkey: ${config.checkyMonkey.baseUrl}`)
   Console.log(`palimpsest-license: ${config.palimpsestLicense.baseUrl}`)
-  Console.log(`cicd-hyper-a: ${config.cicdHyperA.baseUrl}`)
   Console.log(`oikos: ${config.oikos.baseUrl}`)
 
   Ok()

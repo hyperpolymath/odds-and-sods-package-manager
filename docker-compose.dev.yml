@@ -24,10 +24,8 @@ services:
       - OPSM_ENV=development
       - OPSM_API_PORT=4466
       # Mock service URLs (services not yet implemented)
-      - CLAIM_FORGE_URL=http://localhost:8080
       - CHECKY_MONKEY_URL=http://localhost:8081
       - PALIMPSEST_URL=http://localhost:8082
-      - CICD_HYPER_A_URL=http://localhost:8083
       - OIKOS_URL=http://localhost:8084
     volumes:
       - opsm-dev-state:/app/data

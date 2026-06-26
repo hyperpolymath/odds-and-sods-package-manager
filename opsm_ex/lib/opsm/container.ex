@@ -8,7 +8,6 @@ defmodule Opsm.Container do
   - Svalinn (vulnerability scanning)
   - Selur (image signing and verification)
   - Vordr (runtime verification)
-  - Cerro-Torre (security monitoring)
   """
 
   require Logger
