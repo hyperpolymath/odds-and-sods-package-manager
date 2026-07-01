@@ -1,5 +1,5 @@
-# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # SPDX-License-Identifier: MPL-2.0
+# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 name: Mirror to Git Forges
 on:
   push:
@@ -9,6 +9,5 @@ permissions:
   contents: read
 jobs:
   mirror:
-    uses: hyperpolymath/standards/.github/workflows/mirror-reusable.yml@d135b05bfc647d0c0fbfedc7e80f37ea50f49236
-    timeout-minutes: 10
+    uses: hyperpolymath/standards/.github/workflows/mirror-reusable.yml@a44c93a5cd3d293ee3e8b488444dcdc19c4e5d49
     secrets: inherit
