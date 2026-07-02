@@ -236,8 +236,11 @@ defmodule Opsm.Trust.Pipeline do
         {:ok, %{verified: false, message: message}} ->
           {:error, "GitHub attestation failed verification: #{message}"}
 
+        # Attestations exist but none of the verifiers could check them —
+        # louder than info (the package claims provenance we cannot confirm),
+        # still non-blocking.
         {:unverified, message} ->
-          {:info, message}
+          {:warning, message}
 
         {:none, message} ->
           {:skipped, message}
