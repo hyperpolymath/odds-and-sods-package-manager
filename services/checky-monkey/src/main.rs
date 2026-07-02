@@ -438,9 +438,16 @@ async fn verify_github_attestation(
         // errors (auth, network). Only report a definitive rejection as
         // verified=false; surface operational errors as a gateway problem so
         // the caller can fall back instead of recording a false negative.
+        // Empirical rejection signatures on gh 2.92.0: cert-identity,
+        // digest and signer-repo mismatches all print
+        //   Error: verifying with issuer "sigstore.dev"
+        // and missing subjects print "no attestations found". Version-coupled;
+        // revisit on gh upgrades.
         let lower = trimmed.to_lowercase();
-        let definitive =
-            lower.contains("verif") && (lower.contains("fail") || lower.contains("none of the"));
+        let definitive = lower.contains("verifying with issuer")
+            || lower.contains("no attestations found")
+            || (lower.contains("verif")
+                && (lower.contains("fail") || lower.contains("none of the")));
 
         if definitive {
             Ok(Json(GithubAttestationResponse {

@@ -134,6 +134,36 @@ defmodule Opsm.Slsa.GithubAttestationTest do
     end
   end
 
+  describe "classify_gh_failure/1 — empirical gh 2.92.0 signatures" do
+    test "rejection signatures are definitive verified: false" do
+      # cert-identity / digest / signer-repo mismatches all print this
+      assert {:ok, %GithubAttestationVerification{verified: false}} =
+               GithubAttestation.classify_gh_failure(~s(Error: verifying with issuer "sigstore.dev"))
+
+      assert {:ok, %GithubAttestationVerification{verified: false}} =
+               GithubAttestation.classify_gh_failure("Error: no attestations found")
+
+      assert {:ok, %GithubAttestationVerification{verified: false}} =
+               GithubAttestation.classify_gh_failure("X verification failed: subject mismatch")
+    end
+
+    test "operational errors degrade fail-open, never as rejection" do
+      for msg <- [
+            "Error: the provided token was denied access to the requested resource",
+            "Error: HTTP 503: Service Unavailable",
+            "connection refused",
+            ""
+          ] do
+        assert {:error, _} = GithubAttestation.classify_gh_failure(msg)
+      end
+    end
+
+    test "a blocked or missing gh CLI is unavailable" do
+      assert {:error, "gh CLI unavailable:" <> _} =
+               GithubAttestation.classify_gh_failure("safe-exec blocked: command not found: gh")
+    end
+  end
+
   describe "decode_gh_output/1" do
     test "extracts builder identity from gh verify JSON" do
       gh_output = [

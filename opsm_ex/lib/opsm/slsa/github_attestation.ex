@@ -244,15 +244,24 @@ defmodule Opsm.Slsa.GithubAttestation do
   # errors (auth, network). Only a clear verification failure is reported
   # as a definitive rejection; everything else is "verifier unavailable"
   # so the caller degrades fail-open instead of raising a false alarm.
-  defp classify_gh_failure(message) do
+  #
+  # Empirical rejection signatures on gh 2.92.0 (cert-identity mismatch,
+  # digest mismatch, signer-repo mismatch all print the first form):
+  #   Error: verifying with issuer "sigstore.dev"
+  #   Error: no attestations found ...
+  # These are gh-version-coupled; revisit on gh upgrades (issue #56 review).
+  @doc false
+  def classify_gh_failure(message) do
     down = String.downcase(message)
 
     cond do
       String.contains?(down, "safe-exec blocked") ->
         {:error, "gh CLI unavailable: #{message}"}
 
-      String.contains?(down, "verif") and
-          (String.contains?(down, "fail") or String.contains?(down, "none of the")) ->
+      String.contains?(down, "verifying with issuer") or
+        String.contains?(down, "no attestations found") or
+          (String.contains?(down, "verif") and
+             (String.contains?(down, "fail") or String.contains?(down, "none of the"))) ->
         {:ok,
          %GithubAttestationVerification{
            verified: false,
