@@ -19,6 +19,7 @@ this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(slsa): GitHub native build-provenance attestation verification (#56) — `Opsm.Slsa.GithubAttestation` fetches Sigstore attestation records from the GitHub attestations API, verification is delegated to checky-monkey's new `POST /verify/github-attestation` endpoint (wrapping `gh attestation verify`) with a local-CLI SafeExec fallback, and `Opsm.Slsa.Provenance.verify_github_attestation/2` trusts the GitHub Actions builder identity only after the bundle cryptographically verifies. Wired into the trust pipeline as the fail-open `:github_attestation` check.
 - feat(storage): S3/IPFS tarball cache backends replacing /tmp-only caching
 - feat(security): CVE/OSV scanning + typosquat detection
 - feat(tui): wire opsm tui dispatch to ratatui binary

@@ -123,6 +123,21 @@ defmodule Opsm.Types do
     defstruct [:attestation_type, :uri, :digest]
   end
 
+  defmodule GithubAttestationVerification do
+    @moduledoc """
+    Result of verifying a GitHub native build-provenance attestation
+    (a Sigstore bundle) — via checky-monkey or the local gh CLI.
+    """
+    @type t :: %__MODULE__{
+            verified: boolean(),
+            builder_id: String.t() | nil,
+            predicate_type: String.t() | nil,
+            message: String.t(),
+            details: map() | nil
+          }
+    defstruct verified: false, builder_id: nil, predicate_type: nil, message: "", details: nil
+  end
+
   defmodule PackageMetadata do
     @type t :: %__MODULE__{
             name: String.t(),

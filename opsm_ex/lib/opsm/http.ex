@@ -78,29 +78,52 @@ defmodule Opsm.Http do
   def get_json(client, path) do
     case Req.get(client, url: path) do
       {:ok, %Req.Response{status: status, body: body}} when status in 200..299 ->
-        # Validate JSON response if it's a string
-        case body do
-          body when is_binary(body) ->
-            case Json.decode(body) do
-              {:ok, parsed} -> {:ok, parsed}
-              {:error, reason} -> {:error, "JSON validation failed: #{inspect(reason)}"}
-            end
-
-          body when is_map(body) or is_list(body) ->
-            # Already parsed by Req, return as-is
-            # Note: We trust Req's JSON decoder for now, but in v2.0
-            # we should validate all JSON regardless of source
-            {:ok, body}
-
-          _other ->
-            {:error, "Invalid response body type"}
-        end
+        validate_json_body(body)
 
       {:ok, %Req.Response{status: status, body: body}} ->
         {:error, "HTTP error: #{status} - #{inspect(body)}"}
 
       {:error, reason} ->
         {:error, "Request failed: #{inspect(reason)}"}
+    end
+  end
+
+  @doc """
+  POST JSON to a path and return the parsed JSON response body.
+
+  Unlike `post_json/3` (which discards 2xx bodies), this is for endpoints
+  whose response payload matters. Validated via Verified.Json like `get_json/2`.
+  """
+  def post_json_get_json(client, path, body) do
+    case Req.post(client, url: path, json: body) do
+      {:ok, %Req.Response{status: status, body: rbody}} when status in 200..299 ->
+        validate_json_body(rbody)
+
+      {:ok, %Req.Response{status: status, body: rbody}} ->
+        {:error, "HTTP error: #{status} - #{inspect(rbody)}"}
+
+      {:error, reason} ->
+        {:error, "Request failed: #{inspect(reason)}"}
+    end
+  end
+
+  # Validate a response body: strings go through Verified.Json (size/depth
+  # limits); Req-parsed maps/lists pass through.
+  defp validate_json_body(body) do
+    case body do
+      body when is_binary(body) ->
+        case Json.decode(body) do
+          {:ok, parsed} -> {:ok, parsed}
+          {:error, reason} -> {:error, "JSON validation failed: #{inspect(reason)}"}
+        end
+
+      body when is_map(body) or is_list(body) ->
+        # Already parsed by Req. Note: we trust Req's JSON decoder for now,
+        # but in v2.0 we should validate all JSON regardless of source.
+        {:ok, body}
+
+      _other ->
+        {:error, "Invalid response body type"}
     end
   end
 

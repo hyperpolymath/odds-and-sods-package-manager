@@ -165,7 +165,7 @@ defmodule Opsm.VeriSimDB do
   end
 
   def handle_call({:query, vql_query}, _from, %{client: client} = state) do
-    case VeriSimClient.Vql.execute(client, vql_query) do
+    case VeriSimClient.Vcl.execute(client, vql_query) do
       {:ok, result} ->
         {:reply, {:ok, result}, state}
 

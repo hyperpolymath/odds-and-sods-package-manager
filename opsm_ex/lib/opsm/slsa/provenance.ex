@@ -131,10 +131,10 @@ defmodule Opsm.Slsa.Provenance do
     result = %SlsaVerificationResult{}
 
     # Check builder trust
-    {builder_trusted, result} = check_builder(provenance, result)
+    {builder_trusted, result} = check_builder(provenance, result, opts)
 
     # Check materials consistency
-    {materials_match, result} = check_materials(provenance, package, result)
+    {materials_match, result} = check_materials(provenance, package, result, opts)
 
     # Check signature
     {sig_valid, result} = if provenance.signature && public_key do
@@ -217,6 +217,49 @@ defmodule Opsm.Slsa.Provenance do
 
   def from_envelope(_), do: {:error, "Invalid envelope format"}
 
+  @doc """
+  Verify a GitHub-native build-provenance statement (issue #56).
+
+  Takes the in-toto statement decoded from a GitHub attestation's DSSE
+  envelope plus a verification context. The GitHub Actions builder identity
+  (`https://github.com/<owner>/<repo>/.github/workflows/<wf>@<ref>`) is
+  treated as trusted ONLY when `:bundle_verified` is true — i.e. the
+  Sigstore bundle passed cryptographic verification (`gh attestation
+  verify` via checky-monkey or the local CLI). The builder string alone
+  never confers trust.
+
+  ## Options
+  - `:package` (required) — the ResolvedPackage the statement should cover
+  - `:bundle_verified` — result of the Sigstore bundle verification
+
+  Returns `{:ok, %SlsaVerificationResult{}}` or `{:error, reason}`.
+  """
+  def verify_github_attestation(statement, opts) when is_map(statement) do
+    package = Keyword.fetch!(opts, :package)
+    bundle_verified = Keyword.get(opts, :bundle_verified, false)
+
+    with {:ok, provenance} <- from_envelope(statement) do
+      verify(provenance, package,
+        github_builder_verified: bundle_verified,
+        subject_match: subject_matches_package?(statement, package)
+      )
+    end
+  end
+
+  # true/false when the statement subject and package checksum are both
+  # comparable sha256 digests; nil (fall back to materials) otherwise.
+  defp subject_matches_package?(%{"subject" => subjects}, %{checksum: checksum})
+       when is_list(subjects) and subjects != [] and is_binary(checksum) do
+    hex = checksum |> String.replace_prefix("sha256:", "") |> String.downcase()
+
+    Enum.any?(subjects, fn
+      %{"digest" => %{"sha256" => subject_hex}} -> String.downcase(subject_hex) == hex
+      _ -> false
+    end)
+  end
+
+  defp subject_matches_package?(_statement, _package), do: nil
+
   # ==========================================================================
   # Private
   # ==========================================================================
@@ -290,27 +333,47 @@ defmodule Opsm.Slsa.Provenance do
     end
   end
 
-  defp check_builder(provenance, result) do
-    if provenance.builder_id in @trusted_builders do
-      {true, result}
-    else
-      {false, add_warning(result, "Builder '#{provenance.builder_id}' is not in trusted list")}
+  defp check_builder(provenance, result, opts) do
+    cond do
+      provenance.builder_id in @trusted_builders ->
+        {true, result}
+
+      # GitHub Actions native builder: trusted only when the enclosing
+      # Sigstore bundle already passed cryptographic verification.
+      Keyword.get(opts, :github_builder_verified, false) and
+          Opsm.Slsa.GithubAttestation.github_actions_builder?(provenance.builder_id) ->
+        {true, result}
+
+      true ->
+        {false, add_warning(result, "Builder '#{provenance.builder_id}' is not in trusted list")}
     end
   end
 
-  defp check_materials(provenance, package, result) do
-    # Check if package tarball appears in materials
-    has_tarball = Enum.any?(provenance.materials, fn
-      %BuildMaterial{uri: uri} -> uri == package.tarball_url
-      %{uri: uri} -> uri == package.tarball_url
-      %{"uri" => uri} -> uri == package.tarball_url
-      _ -> false
-    end)
+  defp check_materials(provenance, package, result, opts) do
+    # GitHub-native provenance binds the artifact via the statement subject
+    # (digest), not via materials — when the caller already compared the
+    # subject to the package checksum, that comparison governs.
+    case Keyword.get(opts, :subject_match) do
+      true ->
+        {true, result}
 
-    if has_tarball or is_nil(package.tarball_url) do
-      {true, result}
-    else
-      {false, add_warning(result, "Package tarball not found in provenance materials")}
+      false ->
+        {false, add_warning(result, "Statement subject digest does not match package checksum")}
+
+      nil ->
+        # Check if package tarball appears in materials
+        has_tarball = Enum.any?(provenance.materials, fn
+          %BuildMaterial{uri: uri} -> uri == package.tarball_url
+          %{uri: uri} -> uri == package.tarball_url
+          %{"uri" => uri} -> uri == package.tarball_url
+          _ -> false
+        end)
+
+        if has_tarball or is_nil(package.tarball_url) do
+          {true, result}
+        else
+          {false, add_warning(result, "Package tarball not found in provenance materials")}
+        end
     end
   end
 

@@ -11,6 +11,7 @@ defmodule Opsm.Clients.CheckyMonkey do
     HttpConfig,
     CheckyMonkeyRequest,
     CheckyMonkeyResponse,
+    GithubAttestationVerification,
     VerificationResult,
     OikosHealthResponse
   }
@@ -73,6 +74,41 @@ defmodule Opsm.Clients.CheckyMonkey do
         else
           {:error, reason}
         end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Verify a GitHub native build-provenance attestation (Sigstore bundle)
+  for an artifact. The service wraps `gh attestation verify`.
+
+  Request map keys: `:owner_repo` (required, `"owner/repo"`), plus one
+  subject — `:oci_uri` (`"oci://..."`) or `:artifact_path` (a path the
+  service can read). Returns `{:ok, %GithubAttestationVerification{}}`
+  or `{:error, reason}` (service unreachable / bad request).
+  """
+  def verify_github_attestation(%__MODULE__{client: client}, request) when is_map(request) do
+    body = %{
+      "ownerRepo" => Map.fetch!(request, :owner_repo),
+      "ociUri" => Map.get(request, :oci_uri),
+      "artifactPath" => Map.get(request, :artifact_path)
+    }
+
+    case Http.post_json_get_json(client, "/verify/github-attestation", body) do
+      {:ok, json} when is_map(json) ->
+        {:ok,
+         %GithubAttestationVerification{
+           verified: json["verified"] == true,
+           builder_id: json["builderId"],
+           predicate_type: json["predicateType"],
+           message: json["message"] || "",
+           details: json["details"]
+         }}
+
+      {:ok, _other} ->
+        {:error, "Unexpected response shape from checky-monkey"}
 
       {:error, reason} ->
         {:error, reason}

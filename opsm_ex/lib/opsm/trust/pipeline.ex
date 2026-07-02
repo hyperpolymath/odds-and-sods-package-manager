@@ -62,6 +62,12 @@ defmodule Opsm.Trust.Pipeline do
       tasks
     end
 
+    tasks = if :github_attestation not in skip_checks do
+      [Task.async(fn -> {:github_attestation, check_github_attestation(package, config)} end) | tasks]
+    else
+      tasks
+    end
+
     # Collect results safely (D2: use yield_many to handle task crashes/timeouts)
     # 3s timeout — trust checks are advisory, install should not stall on unreachable services
     check_results =
@@ -209,6 +215,38 @@ defmodule Opsm.Trust.Pipeline do
       end
     rescue
       _ -> {:skipped, "SLSA check failed"}
+    end
+  end
+
+  # GitHub native build-provenance attestations (issue #56). Fail-open:
+  # a missing attestation or unreachable verifier never blocks install —
+  # only a cryptographically REJECTED attestation is an error.
+  defp check_github_attestation(package, config) do
+    try do
+      # timeout must fit the pipeline's 3s advisory yield_many budget —
+      # a slower lookup degrades to the timed-out-check path, not a stall
+      case Opsm.Slsa.GithubAttestation.verify_package(package, config, timeout: 2_500) do
+        {:ok, %{verified: true, builder_id: builder_id}} ->
+          if Opsm.Slsa.GithubAttestation.github_actions_builder?(builder_id) do
+            {:ok, "GitHub build provenance verified (builder: #{builder_id})"}
+          else
+            {:ok, "GitHub attestation verified (builder: #{builder_id || "unknown"})"}
+          end
+
+        {:ok, %{verified: false, message: message}} ->
+          {:error, "GitHub attestation failed verification: #{message}"}
+
+        {:unverified, message} ->
+          {:info, message}
+
+        {:none, message} ->
+          {:skipped, message}
+
+        {:error, reason} ->
+          {:skipped, "GitHub attestation lookup unavailable: #{inspect(reason)}"}
+      end
+    rescue
+      e -> {:skipped, "GitHub attestation check failed: #{Exception.message(e)}"}
     end
   end
 
