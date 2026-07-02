@@ -58,7 +58,7 @@ defmodule Opsm.Live.GithubAttestationLiveTest do
       assert verification.verified
       assert GithubAttestation.github_actions_builder?(verification.builder_id)
 
-      statement = verification.details[:statement]
+      statement = verification.details["statement"]
       assert is_map(statement)
 
       {:ok, slsa} =

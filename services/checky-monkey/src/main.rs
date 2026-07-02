@@ -308,7 +308,21 @@ async fn verify_github_attestation(
     }
 
     let subject = match (&request.oci_uri, &request.artifact_path) {
-        (Some(oci), _) if oci.starts_with("oci://") => oci.clone(),
+        (Some(oci), _) if oci.starts_with("oci://") => {
+            // SSRF guard: gh will connect to whatever registry host the URI
+            // names, so only allowlisted registries may be verified.
+            if !oci_registry_allowed(oci) {
+                return Err((
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    format!(
+                        "ociUri registry not in allowlist ({}): {}",
+                        oci_registry_allowlist().join(","),
+                        oci
+                    ),
+                ));
+            }
+            oci.clone()
+        }
         (Some(oci), _) => {
             return Err((
                 StatusCode::UNPROCESSABLE_ENTITY,
@@ -316,6 +330,14 @@ async fn verify_github_attestation(
             ))
         }
         (None, Some(path)) => {
+            // absolute, traversal-free paths only — this endpoint must not
+            // become a relative-path probe of the service working directory
+            if !path.starts_with('/') || path.contains("..") {
+                return Err((
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "artifactPath must be an absolute path without ..".to_string(),
+                ));
+            }
             if !std::path::Path::new(path).is_file() {
                 return Err((
                     StatusCode::UNPROCESSABLE_ENTITY,
@@ -337,7 +359,8 @@ async fn verify_github_attestation(
         subject, request.owner_repo
     );
 
-    let command = tokio::process::Command::new("gh")
+    let mut command = tokio::process::Command::new("gh");
+    command
         .args([
             "attestation",
             "verify",
@@ -349,9 +372,10 @@ async fn verify_github_attestation(
         ])
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
-        .output();
+        // reap the child if the timeout below drops the future
+        .kill_on_drop(true);
 
-    let output = match tokio::time::timeout(tokio::time::Duration::from_secs(120), command).await {
+    let output = match tokio::time::timeout(tokio::time::Duration::from_secs(120), command.output()).await {
         Err(_elapsed) => {
             return Err((
                 StatusCode::GATEWAY_TIMEOUT,
@@ -392,12 +416,19 @@ async fn verify_github_attestation(
             .and_then(|v| v.as_str())
             .map(String::from);
 
+        // "statement" mirrors the Elixir local-gh backend's details shape so
+        // callers read one key regardless of which verifier answered
+        let details = serde_json::json!({
+            "statement": statement.cloned().unwrap_or(serde_json::Value::Null),
+            "raw": parsed,
+        });
+
         Ok(Json(GithubAttestationResponse {
             verified: true,
             builder_id,
             predicate_type,
             message: "Verified via gh attestation verify".to_string(),
-            details: Some(parsed),
+            details: Some(details),
         }))
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -407,8 +438,9 @@ async fn verify_github_attestation(
         // errors (auth, network). Only report a definitive rejection as
         // verified=false; surface operational errors as a gateway problem so
         // the caller can fall back instead of recording a false negative.
-        let definitive = trimmed.contains("attestation")
-            && (trimmed.contains("verify") || trimmed.contains("not found") || trimmed.contains("failed"));
+        let lower = trimmed.to_lowercase();
+        let definitive =
+            lower.contains("verif") && (lower.contains("fail") || lower.contains("none of the"));
 
         if definitive {
             Ok(Json(GithubAttestationResponse {
@@ -433,6 +465,33 @@ fn extract_statement(parsed: &serde_json::Value) -> Option<&serde_json::Value> {
             .or_else(|| entry.get("statement"))
             .filter(|v| v.is_object())
     })
+}
+
+/// Registries the service will let gh connect to for oci:// subjects.
+/// Comma-separated override via CHECKY_MONKEY_OCI_REGISTRIES.
+fn oci_registry_allowlist() -> Vec<String> {
+    std::env::var("CHECKY_MONKEY_OCI_REGISTRIES")
+        .unwrap_or_else(|_| "ghcr.io".to_string())
+        .split(',')
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+fn oci_registry_allowed(oci_uri: &str) -> bool {
+    let rest = match oci_uri.strip_prefix("oci://") {
+        Some(rest) => rest,
+        None => return false,
+    };
+    let host = rest
+        .split(['/', '@'])
+        .next()
+        .unwrap_or("")
+        .split(':')
+        .next()
+        .unwrap_or("")
+        .to_lowercase();
+    !host.is_empty() && oci_registry_allowlist().iter().any(|allowed| allowed == &host)
 }
 
 /// "owner/repo" with both segments limited to GitHub-legal name characters —
@@ -629,5 +688,15 @@ mod tests {
         assert!(extract_statement(&flat).is_some());
         assert!(extract_statement(&serde_json::json!([])).is_none());
         assert!(extract_statement(&serde_json::json!({"not": "an array"})).is_none());
+    }
+
+    #[test]
+    fn oci_registry_guard() {
+        assert!(oci_registry_allowed("oci://ghcr.io/hyperpolymath/proven:latest"));
+        assert!(oci_registry_allowed("oci://GHCR.IO/x/y@sha256:abc"));
+        assert!(!oci_registry_allowed("oci://evil.example.com/x/y"));
+        assert!(!oci_registry_allowed("oci://ghcr.io.evil.com/x"));
+        assert!(!oci_registry_allowed("https://ghcr.io/x/y"));
+        assert!(!oci_registry_allowed("oci://"));
     }
 }

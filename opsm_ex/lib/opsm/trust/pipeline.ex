@@ -223,7 +223,9 @@ defmodule Opsm.Trust.Pipeline do
   # only a cryptographically REJECTED attestation is an error.
   defp check_github_attestation(package, config) do
     try do
-      case Opsm.Slsa.GithubAttestation.verify_package(package, config) do
+      # timeout must fit the pipeline's 3s advisory yield_many budget —
+      # a slower lookup degrades to the timed-out-check path, not a stall
+      case Opsm.Slsa.GithubAttestation.verify_package(package, config, timeout: 2_500) do
         {:ok, %{verified: true, builder_id: builder_id}} ->
           if Opsm.Slsa.GithubAttestation.github_actions_builder?(builder_id) do
             {:ok, "GitHub build provenance verified (builder: #{builder_id})"}

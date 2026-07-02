@@ -213,6 +213,34 @@ defmodule Opsm.Slsa.GithubAttestationTest do
 
       assert result.builder_trusted
     end
+
+    test "statement subject digest binds the artifact when it matches the package checksum" do
+      # subject digest in statement/1 is "abab...": tarball_url would fail the
+      # materials check, but the matching subject digest governs instead
+      package = %{tarball_url: "https://example.com/not-in-materials.tgz", checksum: String.duplicate("ab", 32)}
+
+      assert {:ok, result} =
+               Provenance.verify_github_attestation(statement(@gh_builder),
+                 package: package,
+                 bundle_verified: true
+               )
+
+      assert result.materials_match
+      assert result.slsa_level == 2
+    end
+
+    test "a mismatched subject digest fails the binding even with a verified bundle" do
+      package = %{tarball_url: nil, checksum: String.duplicate("ff", 32)}
+
+      assert {:ok, result} =
+               Provenance.verify_github_attestation(statement(@gh_builder),
+                 package: package,
+                 bundle_verified: true
+               )
+
+      refute result.materials_match
+      assert Enum.any?(result.warnings, &String.contains?(&1, "subject digest does not match"))
+    end
   end
 
   describe "trust pipeline integration (no network)" do

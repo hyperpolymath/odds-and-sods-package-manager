@@ -134,7 +134,7 @@ defmodule Opsm.Slsa.Provenance do
     {builder_trusted, result} = check_builder(provenance, result, opts)
 
     # Check materials consistency
-    {materials_match, result} = check_materials(provenance, package, result)
+    {materials_match, result} = check_materials(provenance, package, result, opts)
 
     # Check signature
     {sig_valid, result} = if provenance.signature && public_key do
@@ -239,9 +239,26 @@ defmodule Opsm.Slsa.Provenance do
     bundle_verified = Keyword.get(opts, :bundle_verified, false)
 
     with {:ok, provenance} <- from_envelope(statement) do
-      verify(provenance, package, github_builder_verified: bundle_verified)
+      verify(provenance, package,
+        github_builder_verified: bundle_verified,
+        subject_match: subject_matches_package?(statement, package)
+      )
     end
   end
+
+  # true/false when the statement subject and package checksum are both
+  # comparable sha256 digests; nil (fall back to materials) otherwise.
+  defp subject_matches_package?(%{"subject" => subjects}, %{checksum: checksum})
+       when is_list(subjects) and subjects != [] and is_binary(checksum) do
+    hex = checksum |> String.replace_prefix("sha256:", "") |> String.downcase()
+
+    Enum.any?(subjects, fn
+      %{"digest" => %{"sha256" => subject_hex}} -> String.downcase(subject_hex) == hex
+      _ -> false
+    end)
+  end
+
+  defp subject_matches_package?(_statement, _package), do: nil
 
   # ==========================================================================
   # Private
@@ -332,19 +349,31 @@ defmodule Opsm.Slsa.Provenance do
     end
   end
 
-  defp check_materials(provenance, package, result) do
-    # Check if package tarball appears in materials
-    has_tarball = Enum.any?(provenance.materials, fn
-      %BuildMaterial{uri: uri} -> uri == package.tarball_url
-      %{uri: uri} -> uri == package.tarball_url
-      %{"uri" => uri} -> uri == package.tarball_url
-      _ -> false
-    end)
+  defp check_materials(provenance, package, result, opts) do
+    # GitHub-native provenance binds the artifact via the statement subject
+    # (digest), not via materials — when the caller already compared the
+    # subject to the package checksum, that comparison governs.
+    case Keyword.get(opts, :subject_match) do
+      true ->
+        {true, result}
 
-    if has_tarball or is_nil(package.tarball_url) do
-      {true, result}
-    else
-      {false, add_warning(result, "Package tarball not found in provenance materials")}
+      false ->
+        {false, add_warning(result, "Statement subject digest does not match package checksum")}
+
+      nil ->
+        # Check if package tarball appears in materials
+        has_tarball = Enum.any?(provenance.materials, fn
+          %BuildMaterial{uri: uri} -> uri == package.tarball_url
+          %{uri: uri} -> uri == package.tarball_url
+          %{"uri" => uri} -> uri == package.tarball_url
+          _ -> false
+        end)
+
+        if has_tarball or is_nil(package.tarball_url) do
+          {true, result}
+        else
+          {false, add_warning(result, "Package tarball not found in provenance materials")}
+        end
     end
   end
 

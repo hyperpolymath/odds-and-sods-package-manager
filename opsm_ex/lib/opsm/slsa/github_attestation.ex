@@ -211,27 +211,56 @@ defmodule Opsm.Slsa.GithubAttestation do
     args = ["attestation", "verify", positional, "--repo", owner_repo, "--format", "json"]
     allowlist = Keyword.get(opts, :exec_allowlist, ["gh"])
 
-    case SafeExec.cmd("gh", args, allowlist: allowlist) do
+    # stderr_to_stdout: gh writes errors to stderr; without it every failure
+    # arrives as an empty string and cannot be classified. On success gh also
+    # writes diagnostics ("Loaded digest ...") to stderr, so the JSON must be
+    # carved out of the merged stream before parsing.
+    case SafeExec.cmd("gh", args, allowlist: allowlist, stderr_to_stdout: true) do
       {output, 0} ->
-        case Json.decode(output) do
+        case Json.decode(json_portion(output)) do
           {:ok, results} -> {:ok, decode_gh_output(results)}
           {:error, _} -> {:error, "gh produced unparseable output"}
         end
 
       {output, _nonzero} ->
         message = output |> to_string() |> String.trim() |> String.slice(0, 300)
+        classify_gh_failure(message)
+    end
+  end
 
-        if String.contains?(message, "safe-exec blocked") or
-             String.contains?(message, "not found") do
-          {:error, "gh CLI unavailable: #{message}"}
-        else
-          # gh ran and rejected the attestation — that is a definitive failure
-          {:ok,
-           %GithubAttestationVerification{
-             verified: false,
-             message: "gh attestation verify failed: #{message}"
-           }}
-        end
+  # gh interleaves stderr diagnostics with the stdout JSON when merged;
+  # the JSON payload starts at the first line beginning with [ or {.
+  defp json_portion(output) do
+    output
+    |> String.split("\n")
+    |> Enum.drop_while(fn line ->
+      trimmed = String.trim_leading(line)
+      not (String.starts_with?(trimmed, "[") or String.starts_with?(trimmed, "{"))
+    end)
+    |> Enum.join("\n")
+  end
+
+  # gh exits non-zero for both cryptographic rejections and operational
+  # errors (auth, network). Only a clear verification failure is reported
+  # as a definitive rejection; everything else is "verifier unavailable"
+  # so the caller degrades fail-open instead of raising a false alarm.
+  defp classify_gh_failure(message) do
+    down = String.downcase(message)
+
+    cond do
+      String.contains?(down, "safe-exec blocked") ->
+        {:error, "gh CLI unavailable: #{message}"}
+
+      String.contains?(down, "verif") and
+          (String.contains?(down, "fail") or String.contains?(down, "none of the")) ->
+        {:ok,
+         %GithubAttestationVerification{
+           verified: false,
+           message: "gh attestation verify rejected: #{message}"
+         }}
+
+      true ->
+        {:error, "gh error: #{message}"}
     end
   end
 
@@ -256,7 +285,8 @@ defmodule Opsm.Slsa.GithubAttestation do
       builder_id: builder_id,
       predicate_type: statement && statement["predicateType"],
       message: "Verified via gh attestation verify (#{length(results)} attestation(s))",
-      details: %{statement: statement}
+      # string key — matches the checky-monkey backend's details shape
+      details: %{"statement" => statement}
     }
   end
 
