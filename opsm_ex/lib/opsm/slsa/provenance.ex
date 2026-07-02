@@ -131,7 +131,7 @@ defmodule Opsm.Slsa.Provenance do
     result = %SlsaVerificationResult{}
 
     # Check builder trust
-    {builder_trusted, result} = check_builder(provenance, result)
+    {builder_trusted, result} = check_builder(provenance, result, opts)
 
     # Check materials consistency
     {materials_match, result} = check_materials(provenance, package, result)
@@ -217,6 +217,32 @@ defmodule Opsm.Slsa.Provenance do
 
   def from_envelope(_), do: {:error, "Invalid envelope format"}
 
+  @doc """
+  Verify a GitHub-native build-provenance statement (issue #56).
+
+  Takes the in-toto statement decoded from a GitHub attestation's DSSE
+  envelope plus a verification context. The GitHub Actions builder identity
+  (`https://github.com/<owner>/<repo>/.github/workflows/<wf>@<ref>`) is
+  treated as trusted ONLY when `:bundle_verified` is true — i.e. the
+  Sigstore bundle passed cryptographic verification (`gh attestation
+  verify` via checky-monkey or the local CLI). The builder string alone
+  never confers trust.
+
+  ## Options
+  - `:package` (required) — the ResolvedPackage the statement should cover
+  - `:bundle_verified` — result of the Sigstore bundle verification
+
+  Returns `{:ok, %SlsaVerificationResult{}}` or `{:error, reason}`.
+  """
+  def verify_github_attestation(statement, opts) when is_map(statement) do
+    package = Keyword.fetch!(opts, :package)
+    bundle_verified = Keyword.get(opts, :bundle_verified, false)
+
+    with {:ok, provenance} <- from_envelope(statement) do
+      verify(provenance, package, github_builder_verified: bundle_verified)
+    end
+  end
+
   # ==========================================================================
   # Private
   # ==========================================================================
@@ -290,11 +316,19 @@ defmodule Opsm.Slsa.Provenance do
     end
   end
 
-  defp check_builder(provenance, result) do
-    if provenance.builder_id in @trusted_builders do
-      {true, result}
-    else
-      {false, add_warning(result, "Builder '#{provenance.builder_id}' is not in trusted list")}
+  defp check_builder(provenance, result, opts) do
+    cond do
+      provenance.builder_id in @trusted_builders ->
+        {true, result}
+
+      # GitHub Actions native builder: trusted only when the enclosing
+      # Sigstore bundle already passed cryptographic verification.
+      Keyword.get(opts, :github_builder_verified, false) and
+          Opsm.Slsa.GithubAttestation.github_actions_builder?(provenance.builder_id) ->
+        {true, result}
+
+      true ->
+        {false, add_warning(result, "Builder '#{provenance.builder_id}' is not in trusted list")}
     end
   end
 

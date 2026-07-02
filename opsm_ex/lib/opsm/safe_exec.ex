@@ -69,7 +69,8 @@ defmodule Opsm.SafeExec do
 
     with :ok <- validate_command(command, allowlist),
          :ok <- validate_args(args) do
-      System.cmd(command, args, opts)
+      # :allowlist is ours, not System.cmd's — it rejects unknown options
+      System.cmd(command, args, Keyword.delete(opts, :allowlist))
     else
       {:error, reason} -> {"safe-exec blocked: #{reason}", 1}
     end
