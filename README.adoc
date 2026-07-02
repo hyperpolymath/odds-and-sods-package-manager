@@ -7,15 +7,15 @@
 :toclevels: 3
 
 image:https://img.shields.io/badge/Status-v2.0.0-success?style=flat[v2.0.0]
-image:https://img.shields.io/badge/Registries-101-blue?style=flat[101 Registries]
+image:https://img.shields.io/badge/Registries-114-blue?style=flat[114 Registries]
 image:https://img.shields.io/badge/Elixir-Inside-4e2a8e?style=flat&logo=elixir[Elixir Inside]
 image:https://img.shields.io/badge/Rust-NIF-orange?style=flat&logo=rust[Rust NIF]
 image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://www.mozilla.org/MPL/2.0/"]
-image:https://img.shields.io/badge/Tests-547%20%2B%2040%20props-success?style=flat[Tests Passing]
+image:https://img.shields.io/badge/Tests-824%20%2B%2068%20props-success?style=flat[Tests Passing]
 
-**A federated, universal package manager with 101 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and formal verification.**
+**A federated, universal package manager with 114 registry adapters, post-quantum cryptography, SLSA Level 3 compliance, PubGrub dependency resolution, sustainability scoring, and a formally modelled core.**
 
-*Latest: March 8, 2026 | Version: 2.0.0 | 547 core tests + 40 property tests + 49 integration tests*
+*Latest: July 1, 2026 | Version: 2.0.0 | 824 tests + 68 property tests (integration + E2E included)*
 
 toc::[]
 
@@ -23,14 +23,14 @@ toc::[]
 
 OPSM is the **first universal package manager** that combines:
 
-1. **101 Registry Adapters** - npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 91 more ecosystems
+1. **114 Registry Adapters** - npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 104 more (roughly ten of these target planned registries for hyperpolymath's own languages and currently resolve via git fallback)
 2. **Post-Quantum Cryptography** - Hybrid Ed25519+Dilithium5 signatures, Kyber-1024 KEM, SPHINCS+ (Rust NIF)
 3. **SLSA Level 3 Compliance** - Provenance generation, signature verification, policy enforcement
 4. **PubGrub Dependency Resolver** - Semver, PEP 440, Go MVS support with ETS caching
 5. **Trust Pipeline** - multi-microservice verification (checky-monkey, palimpsest-license, oikos)
 6. **Container Security** - 3 Rust services (svalinn, selur, vordr)
 7. **Sustainability Scoring** - Oikos-based real package-level analysis integrated into resolver
-8. **Formal Verification** - Proven library (SSRF/DoS prevention via property-based testing)
+8. **Formal Methods** - totality-checked Idris2 ABI model plus the proven library (SSRF/DoS prevention via property-based testing); full correctness proofs are tracked in link:PROOF-NEEDS.md[PROOF-NEEDS.md]
 9. **Federation-First** - Event propagation, distributed architecture, cross-registry search
 10. **Human-Assisted Discovery** - 3 agentic agents for obscure language packages
 
@@ -40,10 +40,11 @@ OPSM is the **first universal package manager** that combines:
 
 == OPSM UI
 
-OPSM has a dedicated UI spec and shell in the `opsm-ui` repo. The UI uses the OPSM
-CLI for dry-runs, backend capability detection, and apply actions.
+OPSM has a dedicated UI spec and shell in the in-repo link:opsm-ui/[`opsm-ui/`] directory
+(a Rust TUI plus web-UI specs). The UI uses the OPSM CLI for dry-runs, backend
+capability detection, and apply actions.
 
-See: link:docs/OPSM-UI.adoc[OPSM UI Integration] | link:docs/OPSM-API.adoc[OPSM Local API] | https://github.com/hyperpolymath/opsm-ui
+See: link:docs/OPSM-UI.adoc[OPSM UI Integration] | link:docs/OPSM-API.adoc[OPSM Local API]
 
 == Gitbot Fleet
 
@@ -84,7 +85,7 @@ OPSM v1.1.0 introduces a comprehensive container security pipeline with 4 dedica
 == Current Status (v2.0.0)
 
 **Core:**
-- ✅ **101 registry adapters** across all major ecosystems (npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 91 more)
+- ✅ **114 registry adapters** across all major ecosystems (npm, Hex, Crates, PyPI, RubyGems, Go, Pub, Hackage, NuGet, Maven, and 104 more; ~10 are planned registries served via git fallback)
 - ✅ **PubGrub dependency resolver** with semver, PEP 440, and Go MVS support
 - ✅ **ETS-based registry cache** with TTL for resolver performance
 - ✅ **Version constraint engine**: caret, tilde, wildcard, comparison, AND/OR combinators
@@ -108,13 +109,13 @@ OPSM v1.1.0 introduces a comprehensive container security pipeline with 4 dedica
 - ✅ **Manifest conversion**: 10 formats (package.json, Cargo.toml, mix.exs, pyproject.toml, pubspec.yaml, go.mod, Gemfile, opsm.toml, .ipkg, .ncl)
 - ✅ **Git clone/build/run pipeline**: 15 build systems, SSRF-safe, ref pinning
 - ✅ **System PM querying**: dpkg, rpm, pacman, brew, nix, flatpak, snap, guix
-- ✅ **547 core tests + 40 properties + 49 integration tests**
+- ✅ **824 tests + 68 properties** (unit, integration, E2E, security and concurrency aspects)
 
 **See:** link:CRYPTO-INTEGRATION-COMPLETE.md[Crypto Integration Report] | link:RELEASE-v1.0.0.md[v1.0.0 Release Notes] | link:docs/v2.0-PLAN.md[Roadmap] | link:docs/CLI-FEATURE-COMPARISON.md[CLI Comparison]
 
 == Supported Ecosystems
 
-OPSM supports **101 registry adapters** across all major ecosystems:
+OPSM supports **114 registry adapters** across all major ecosystems:
 
 [cols="2,3"]
 |===
@@ -268,7 +269,7 @@ opsm audit https://github.com/owner/repo
              │                                 │
     ┌────────▼─────────┐              ┌───────▼──────────┐
     │  Registry Layer  │              │  Trust Pipeline   │
-    │  (8 adapters)    │              │  (5 services)     │
+    │  (114 adapters)  │              │  (3 services)     │
     └────────┬─────────┘              └───────┬──────────┘
              │                                 │
     ┌────────▼─────────────────────────────────▼──────────┐
@@ -279,7 +280,7 @@ opsm audit https://github.com/owner/repo
     └─────────────────────────────────────────────────────┘
 ----
 
-=== Registry Adapters (101 Ecosystems)
+=== Registry Adapters (114 Ecosystems)
 
 Each registry adapter implements a common interface:
 
@@ -443,7 +444,7 @@ odds-and-sods-package-manager/
 │   │       ├── events.ex            # Federation events
 │   │       ├── har_queue.ex         # HAR queue manager
 │   │       ├── errors.ex            # Error classification
-│   │       ├── registries/          # 8 registry adapters
+│   │       ├── registries/          # 114 registry adapters
 │   │       │   ├── npm.ex
 │   │       │   ├── hex.ex
 │   │       │   ├── crates.ex

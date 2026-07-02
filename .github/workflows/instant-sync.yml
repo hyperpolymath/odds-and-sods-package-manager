@@ -1,5 +1,5 @@
-# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # SPDX-License-Identifier: MPL-2.0
+# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Instant Forge Sync - Triggers propagation to all forges on push/release
 name: Instant Sync
 on:
@@ -11,6 +11,10 @@ permissions:
   contents: read
 jobs:
   dispatch:
+    # Dormant: FARM_DISPATCH_TOKEN was retired in the 2026-06-30 credential
+    # rebuild. Re-arm by setting the repo variable INSTANT_SYNC_ENABLED=true
+    # once the replacement fine-grained dispatch PAT is in place.
+    if: ${{ vars.INSTANT_SYNC_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
