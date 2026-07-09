@@ -292,31 +292,55 @@ defmodule Opsm.Runtime.Manager do
         nil ->
           {:error, {:no_plugin, tool}}
         path ->
-          case System.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
-            {json_str, 0} ->
-              case Jason.decode(json_str) do
-                {:ok, plugin} ->
-                  # Cache for next time
-                  File.mkdir_p!(@plugins_dir)
-                  File.write!(cached, json_str)
-                  {:ok, plugin}
-                err -> {:error, {:json_decode, err}}
+          # System.cmd/3 raises ErlangError (:enoent) when the nickel binary
+          # is not installed — surface that as a structured error instead.
+          try do
+            case System.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
+              {json_str, 0} ->
+                case Jason.decode(json_str) do
+                  {:ok, plugin} ->
+                    # Cache for next time
+                    File.mkdir_p!(@plugins_dir)
+                    File.write!(cached, json_str)
+                    {:ok, plugin}
+                  err -> {:error, {:json_decode, err}}
+                end
+              {err_str, _} ->
+                {:error, {:nickel_eval, err_str}}
+            end
+          rescue
+            e in ErlangError ->
+              case e do
+                %ErlangError{original: :enoent} -> {:error, {:nickel_not_installed, tool}}
+                _ -> reraise e, __STACKTRACE__
               end
-            {err_str, _} ->
-              {:error, {:nickel_eval, err_str}}
           end
       end
     end
   end
 
-  @plugin_search_dirs [
-    # Relative to the OPSM install — resolved at runtime
-    Path.expand("../runtime/core", :code.priv_dir(:opsm)),
-    Path.expand("~/.opsm/plugins/core"),
-  ]
+  # Computed at call time, NOT a module attribute: an attribute freezes
+  # :code.priv_dir/1 at compile time (pointing inside whatever _build the
+  # module was compiled in), and the repo-checkout fallbacks depend on cwd.
+  defp plugin_search_dirs do
+    priv_relative =
+      case :code.priv_dir(:opsm) do
+        {:error, _} -> []
+        priv -> [Path.expand("../runtime/core", priv)]
+      end
 
-  defp find_plugin_ncl(tool) do
-    Enum.find_value(@plugin_search_dirs, fn dir ->
+    priv_relative ++
+      [
+        Path.expand("~/.opsm/plugins/core"),
+        # Repo checkout: cwd is opsm_ex/ under mix, the repo root as escript
+        Path.expand("../runtime/core", File.cwd!()),
+        Path.expand("runtime/core", File.cwd!())
+      ]
+  end
+
+  @doc false
+  def find_plugin_ncl(tool) do
+    Enum.find_value(plugin_search_dirs(), fn dir ->
       path = Path.join(dir, "#{tool}.ncl")
       if File.exists?(path), do: path
     end)

@@ -140,7 +140,6 @@ defmodule Opsm.Runtime.IntegrationTest do
   # ---------------------------------------------------------------------------
 
   describe "Manager.install/2 — live download (zig 0.13.0)" do
-    @tag :external_api
     @tag :live_download
     test "installs zig 0.13.0 and creates expected directory layout" do
       install_result = Manager.install("zig", @zig_stable)
@@ -158,7 +157,6 @@ defmodule Opsm.Runtime.IntegrationTest do
       assert File.dir?(install_dir), "expected install_dir #{install_dir} to exist"
     end
 
-    @tag :external_api
     @tag :live_download
     test "which/1 returns a path after successful install" do
       Manager.install("zig", @zig_stable)
@@ -175,7 +173,6 @@ defmodule Opsm.Runtime.IntegrationTest do
       end
     end
 
-    @tag :external_api
     @tag :live_download
     test "current_version/1 returns the installed version after install" do
       Manager.install("zig", @zig_stable)
@@ -185,7 +182,6 @@ defmodule Opsm.Runtime.IntegrationTest do
       assert version == @zig_stable or version == "none"
     end
 
-    @tag :external_api
     @tag :live_download
     test "remove/1 cleans up installed tool" do
       Manager.install("zig", @zig_stable)
@@ -202,7 +198,6 @@ defmodule Opsm.Runtime.IntegrationTest do
   # ---------------------------------------------------------------------------
 
   describe "Manager.install/2 — idempotency" do
-    @tag :external_api
     @tag :live_download
     test "installing the same version twice returns :ok both times" do
       on_exit(fn -> Manager.remove("zig") end)
@@ -229,7 +224,6 @@ defmodule Opsm.Runtime.IntegrationTest do
       {:ok, dir: dir}
     end
 
-    @tag :external_api
     @tag :live_download
     test "installs tools declared in [runtime] section", %{dir: dir} do
       manifest = Path.join(dir, "opsm.toml")
