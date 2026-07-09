@@ -106,6 +106,24 @@ defmodule Opsm.Runtime.ManagerTest do
   end
 
   # ---------------------------------------------------------------------------
+  # find_plugin_ncl/1 — plugin search path resolution
+  # ---------------------------------------------------------------------------
+
+  describe "find_plugin_ncl/1" do
+    test "resolves a core plugin from the repo checkout (runtime/core)" do
+      # Under mix, cwd is opsm_ex/ — the sibling runtime/core/ dir must be
+      # searched at call time (a compile-time priv_dir attribute cannot see it)
+      path = Manager.find_plugin_ncl("zig")
+      assert is_binary(path), "expected zig.ncl to resolve from the repo checkout"
+      assert String.ends_with?(path, "/zig.ncl")
+    end
+
+    test "returns nil for a tool with no plugin definition" do
+      assert Manager.find_plugin_ncl("definitely-not-a-real-tool-xyz") == nil
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # list_installed/0 — filesystem scan
   # ---------------------------------------------------------------------------
 
