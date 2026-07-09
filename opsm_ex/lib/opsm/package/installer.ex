@@ -190,14 +190,10 @@ defmodule Opsm.Package.Installer do
     # Trust is advisory during install; only an explicit :failed blocks.
     IO.puts("  Running trust checks...")
     {trust_result, enriched_package} = try do
-      case Pipeline.verify(package) do
-        {:ok, trust_result} ->
-          {trust_result, package}
-
-        {:error, reason} ->
-          IO.puts("  ⚠ Trust pipeline returned error: #{reason} — continuing")
-          {%{overall: :warning, warnings: ["Trust pipeline error: #{reason}"], checks: %{}, recommendations: []}, package}
-      end
+      # Pipeline.verify/2 cannot return {:error, _} — failed checks come back
+      # inside the {:ok, results} map; service failures raise into the rescue.
+      {:ok, trust_result} = Pipeline.verify(package)
+      {trust_result, package}
     rescue
       e ->
         IO.puts("  ⚠ Trust pipeline unavailable: #{Exception.message(e)} — continuing")

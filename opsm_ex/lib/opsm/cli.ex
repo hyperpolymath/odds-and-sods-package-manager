@@ -530,12 +530,10 @@ defmodule Opsm.CLI do
         results =
           Enum.map(members, fn member ->
             IO.puts("\n── #{member} ──")
-            case Wiring.run_audit(config, member) do
-              {:ok, _} -> {member, :ok}
-              {:error, reason} ->
-                IO.puts("  [ERROR] #{inspect(reason)}")
-                {member, {:error, reason}}
-            end
+            # run_audit/2 reports check failures on stdout and always returns
+            # {:ok, _}; an audit that cannot run at all raises instead.
+            {:ok, _} = Wiring.run_audit(config, member)
+            {member, :ok}
           end)
 
         failures = Enum.filter(results, fn {_, r} -> r != :ok end)
@@ -1702,17 +1700,6 @@ defmodule Opsm.CLI do
     System.halt(exit_code)
   end
 
-  defp resolve_installed_version(package, lockfile: lockfile_mod) do
-    case lockfile_mod.read() do
-      {:ok, lf} ->
-        case lockfile_mod.packages_for_name(lf, package) do
-          [entry | _] -> entry.version
-          []          -> nil
-        end
-      _ -> nil
-    end
-  end
-
   defp run({:tui, _opts}) do
     case find_tui_binary() do
       nil ->
@@ -1735,6 +1722,258 @@ defmodule Opsm.CLI do
     end
   end
 
+  defp run({:error, message}) do
+    Errors.print_error({:error, message})
+    IO.puts(:stderr, "Run 'opsm help' for usage information")
+    System.halt(1)
+  end
+
+  # ---------------------------------------------------------------------------
+  # Runtime management handlers (asdf replacement)
+  # ---------------------------------------------------------------------------
+
+  defp run({:runtime_list, opts}) do
+    alias Opsm.Runtime.Manager
+
+    json? = Keyword.get(opts, :json, false)
+    installed = Manager.list_installed()
+
+    if json? do
+      IO.puts(Jason.encode!(installed, pretty: true))
+    else
+      if installed == [] do
+        IO.puts("No runtime tools installed via OPSM.")
+        IO.puts("Use 'opsm runtime install <tool>@<version>' to install.")
+      else
+        IO.puts("Installed runtime tools")
+        IO.puts("=======================")
+        max_name = installed |> Enum.map(fn t -> String.length(t.name) end) |> Enum.max(fn -> 4 end)
+
+        for tool <- installed do
+          name_pad = String.pad_trailing(tool.name, max_name)
+          active_marker = if Map.get(tool, :active, false), do: " *", else: "  "
+          IO.puts("#{active_marker} #{name_pad}  #{tool.version}")
+        end
+
+        IO.puts("")
+        IO.puts("(* = active version)")
+      end
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_update, [], opts}) do
+    # Update all installed tools
+    alias Opsm.Runtime.Manager
+
+    dry_run? = Keyword.get(opts, :dry_run, false)
+    IO.puts("Checking for runtime tool updates...")
+
+    case Manager.check_updates() do
+      {:ok, []} ->
+        IO.puts("All runtime tools are up to date.")
+
+      {:ok, updates} ->
+        IO.puts("#{length(updates)} update(s) available:\n")
+        max_name = updates |> Enum.map(fn u -> String.length(u.name) end) |> Enum.max(fn -> 4 end)
+        max_cur = updates |> Enum.map(fn u -> String.length(u.current) end) |> Enum.max(fn -> 7 end)
+
+        for u <- updates do
+          name_pad = String.pad_trailing(u.name, max_name)
+          cur_pad  = String.pad_trailing(u.current, max_cur)
+          IO.puts("  #{name_pad}  #{cur_pad} → #{u.latest}")
+        end
+
+        unless dry_run? do
+          IO.puts("")
+          IO.puts("Updating...")
+          for u <- updates do
+            case Manager.install(u.name, u.latest) do
+              :ok ->
+                IO.puts("  ✓ #{u.name} #{u.current} → #{u.latest}")
+              {:error, reason} ->
+                IO.puts(:stderr, "  ✗ #{u.name}: #{inspect(reason)}")
+            end
+          end
+        end
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_update, tools, opts}) do
+    # Update specific tools
+    alias Opsm.Runtime.Manager
+
+    dry_run? = Keyword.get(opts, :dry_run, false)
+
+    for tool_spec <- tools do
+      {tool, _version} = parse_tool_spec(tool_spec)
+      IO.puts("Checking updates for #{tool}...")
+
+      case Manager.latest_version(tool) do
+        {:ok, latest} ->
+          current = Manager.current_version(tool)
+          if current == latest do
+            IO.puts("  #{tool} is already at #{latest}")
+          else
+            IO.puts("  #{tool}: #{current} → #{latest}")
+            unless dry_run? do
+              case Manager.install(tool, latest) do
+                :ok ->
+                  IO.puts("  ✓ Updated #{tool} to #{latest}")
+                {:error, reason} ->
+                  IO.puts(:stderr, "  ✗ #{tool}: #{inspect(reason)}")
+              end
+            end
+          end
+
+        {:error, :not_installed} ->
+          IO.puts("  #{tool} is not installed. Use: opsm runtime install #{tool}")
+
+        {:error, reason} ->
+          IO.puts(:stderr, "  Error: #{inspect(reason)}")
+      end
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_install, [], opts}) do
+    # Install from [runtime] section of opsm.toml
+    alias Opsm.Runtime.Manager
+
+    from = Keyword.get(opts, :from, "opsm.toml")
+    dry_run? = Keyword.get(opts, :dry_run, false)
+    IO.puts("Reading runtime pins from #{from}...")
+
+    case Manager.install_from_manifest(from) do
+      {:ok, tools} when tools == [] ->
+        IO.puts("No [runtime] section found in #{from}.")
+
+      {:ok, tools} ->
+        IO.puts("Installing #{length(tools)} pinned runtime tool(s)...")
+        for {tool, version} <- tools do
+          IO.puts("  #{tool}@#{version}")
+          unless dry_run? do
+            case Manager.install(tool, version) do
+              :ok -> IO.puts("  ✓ #{tool}@#{version}")
+              {:error, reason} -> IO.puts(:stderr, "  ✗ #{tool}@#{version}: #{inspect(reason)}")
+            end
+          end
+        end
+
+      {:error, reason} ->
+        IO.puts(:stderr, "Error reading #{from}: #{inspect(reason)}")
+        System.halt(1)
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_install, tool_specs, opts}) do
+    alias Opsm.Runtime.Manager
+
+    dry_run? = Keyword.get(opts, :dry_run, false)
+
+    for spec <- tool_specs do
+      {tool, version} = parse_tool_spec(spec)
+      resolved_version = if version == "latest" do
+        case Manager.latest_version(tool) do
+          {:ok, v} -> v
+          {:error, _} -> "latest"
+        end
+      else
+        version
+      end
+
+      IO.puts("Installing #{tool}@#{resolved_version}...")
+
+      unless dry_run? do
+        case Manager.install(tool, resolved_version) do
+          :ok ->
+            IO.puts("✓ Installed #{tool}@#{resolved_version}")
+            IO.puts("  Run: opsm runtime which #{tool}")
+          {:error, {:missing_system_dependencies, deps}} ->
+            IO.puts(:stderr, "✗ #{tool}: missing system dependencies: #{Enum.join(deps, ", ")}")
+            System.halt(1)
+          {:error, reason} ->
+            IO.puts(:stderr, "✗ #{tool}: #{inspect(reason)}")
+            System.halt(1)
+        end
+      end
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_remove, tool, _opts}) do
+    alias Opsm.Runtime.Manager
+
+    IO.puts("Removing runtime tool: #{tool}")
+
+    case Manager.remove(tool) do
+      :ok ->
+        IO.puts("✓ Removed #{tool}")
+      {:error, :not_installed} ->
+        IO.puts("#{tool} is not installed")
+      {:error, reason} ->
+        IO.puts(:stderr, "Error removing #{tool}: #{inspect(reason)}")
+        System.halt(1)
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_which, tool, _opts}) do
+    alias Opsm.Runtime.Manager
+
+    case Manager.which(tool) do
+      {:ok, path} ->
+        IO.puts(path)
+      {:error, :not_installed} ->
+        IO.puts(:stderr, "#{tool} is not managed by OPSM runtime")
+        System.halt(1)
+    end
+
+    System.halt(0)
+  end
+
+  defp run({:runtime_current, opts}) do
+    alias Opsm.Runtime.Manager
+
+    json? = Keyword.get(opts, :json, false)
+    current = Manager.list_active()
+
+    if json? do
+      IO.puts(Jason.encode!(current, pretty: true))
+    else
+      if current == [] do
+        IO.puts("No active runtime tools.")
+      else
+        IO.puts("Active runtime tools")
+        IO.puts("====================")
+        for {tool, version} <- current do
+          IO.puts("  #{tool}  #{version}")
+        end
+      end
+    end
+
+    System.halt(0)
+  end
+
+  defp resolve_installed_version(package, lockfile: lockfile_mod) do
+    case lockfile_mod.read() do
+      {:ok, lf} ->
+        case lockfile_mod.packages_for_name(lf, package) do
+          [entry | _] -> entry.version
+          []          -> nil
+        end
+      _ -> nil
+    end
+  end
+
   defp find_tui_binary do
     env_override = System.get_env("OPSM_TUI_BIN")
     cond do
@@ -1742,12 +1981,6 @@ defmodule Opsm.CLI do
       path = System.find_executable("opsm-tui") -> path
       true -> nil
     end
-  end
-
-  defp run({:error, message}) do
-    Errors.print_error({:error, message})
-    IO.puts(:stderr, "Run 'opsm help' for usage information")
-    System.halt(1)
   end
 
   # Helper functions
@@ -2011,241 +2244,6 @@ defmodule Opsm.CLI do
             System.halt(1)
         end
     end
-  end
-
-  # ---------------------------------------------------------------------------
-  # Runtime management handlers (asdf replacement)
-  # ---------------------------------------------------------------------------
-
-  defp run({:runtime_list, opts}) do
-    alias Opsm.Runtime.Manager
-
-    json? = Keyword.get(opts, :json, false)
-    installed = Manager.list_installed()
-
-    if json? do
-      IO.puts(Jason.encode!(installed, pretty: true))
-    else
-      if installed == [] do
-        IO.puts("No runtime tools installed via OPSM.")
-        IO.puts("Use 'opsm runtime install <tool>@<version>' to install.")
-      else
-        IO.puts("Installed runtime tools")
-        IO.puts("=======================")
-        max_name = installed |> Enum.map(fn t -> String.length(t.name) end) |> Enum.max(fn -> 4 end)
-
-        for tool <- installed do
-          name_pad = String.pad_trailing(tool.name, max_name)
-          active_marker = if Map.get(tool, :active, false), do: " *", else: "  "
-          IO.puts("#{active_marker} #{name_pad}  #{tool.version}")
-        end
-
-        IO.puts("")
-        IO.puts("(* = active version)")
-      end
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_update, [], opts}) do
-    # Update all installed tools
-    alias Opsm.Runtime.Manager
-
-    dry_run? = Keyword.get(opts, :dry_run, false)
-    IO.puts("Checking for runtime tool updates...")
-
-    case Manager.check_updates() do
-      {:ok, []} ->
-        IO.puts("All runtime tools are up to date.")
-
-      {:ok, updates} ->
-        IO.puts("#{length(updates)} update(s) available:\n")
-        max_name = updates |> Enum.map(fn u -> String.length(u.name) end) |> Enum.max(fn -> 4 end)
-        max_cur = updates |> Enum.map(fn u -> String.length(u.current) end) |> Enum.max(fn -> 7 end)
-
-        for u <- updates do
-          name_pad = String.pad_trailing(u.name, max_name)
-          cur_pad  = String.pad_trailing(u.current, max_cur)
-          IO.puts("  #{name_pad}  #{cur_pad} → #{u.latest}")
-        end
-
-        unless dry_run? do
-          IO.puts("")
-          IO.puts("Updating...")
-          for u <- updates do
-            case Manager.install(u.name, u.latest) do
-              :ok ->
-                IO.puts("  ✓ #{u.name} #{u.current} → #{u.latest}")
-              {:error, reason} ->
-                IO.puts(:stderr, "  ✗ #{u.name}: #{inspect(reason)}")
-            end
-          end
-        end
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_update, tools, opts}) do
-    # Update specific tools
-    alias Opsm.Runtime.Manager
-
-    dry_run? = Keyword.get(opts, :dry_run, false)
-
-    for tool_spec <- tools do
-      {tool, _version} = parse_tool_spec(tool_spec)
-      IO.puts("Checking updates for #{tool}...")
-
-      case Manager.latest_version(tool) do
-        {:ok, latest} ->
-          current = Manager.current_version(tool)
-          if current == latest do
-            IO.puts("  #{tool} is already at #{latest}")
-          else
-            IO.puts("  #{tool}: #{current} → #{latest}")
-            unless dry_run? do
-              case Manager.install(tool, latest) do
-                :ok ->
-                  IO.puts("  ✓ Updated #{tool} to #{latest}")
-                {:error, reason} ->
-                  IO.puts(:stderr, "  ✗ #{tool}: #{inspect(reason)}")
-              end
-            end
-          end
-
-        {:error, :not_installed} ->
-          IO.puts("  #{tool} is not installed. Use: opsm runtime install #{tool}")
-
-        {:error, reason} ->
-          IO.puts(:stderr, "  Error: #{inspect(reason)}")
-      end
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_install, [], opts}) do
-    # Install from [runtime] section of opsm.toml
-    alias Opsm.Runtime.Manager
-
-    from = Keyword.get(opts, :from, "opsm.toml")
-    dry_run? = Keyword.get(opts, :dry_run, false)
-    IO.puts("Reading runtime pins from #{from}...")
-
-    case Manager.install_from_manifest(from) do
-      {:ok, tools} when tools == [] ->
-        IO.puts("No [runtime] section found in #{from}.")
-
-      {:ok, tools} ->
-        IO.puts("Installing #{length(tools)} pinned runtime tool(s)...")
-        for {tool, version} <- tools do
-          IO.puts("  #{tool}@#{version}")
-          unless dry_run? do
-            case Manager.install(tool, version) do
-              :ok -> IO.puts("  ✓ #{tool}@#{version}")
-              {:error, reason} -> IO.puts(:stderr, "  ✗ #{tool}@#{version}: #{inspect(reason)}")
-            end
-          end
-        end
-
-      {:error, reason} ->
-        IO.puts(:stderr, "Error reading #{from}: #{inspect(reason)}")
-        System.halt(1)
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_install, tool_specs, opts}) do
-    alias Opsm.Runtime.Manager
-
-    dry_run? = Keyword.get(opts, :dry_run, false)
-
-    for spec <- tool_specs do
-      {tool, version} = parse_tool_spec(spec)
-      resolved_version = if version == "latest" do
-        case Manager.latest_version(tool) do
-          {:ok, v} -> v
-          {:error, _} -> "latest"
-        end
-      else
-        version
-      end
-
-      IO.puts("Installing #{tool}@#{resolved_version}...")
-
-      unless dry_run? do
-        case Manager.install(tool, resolved_version) do
-          :ok ->
-            IO.puts("✓ Installed #{tool}@#{resolved_version}")
-            IO.puts("  Run: opsm runtime which #{tool}")
-          {:error, {:missing_system_dependencies, deps}} ->
-            IO.puts(:stderr, "✗ #{tool}: missing system dependencies: #{Enum.join(deps, ", ")}")
-            System.halt(1)
-          {:error, reason} ->
-            IO.puts(:stderr, "✗ #{tool}: #{inspect(reason)}")
-            System.halt(1)
-        end
-      end
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_remove, tool, _opts}) do
-    alias Opsm.Runtime.Manager
-
-    IO.puts("Removing runtime tool: #{tool}")
-
-    case Manager.remove(tool) do
-      :ok ->
-        IO.puts("✓ Removed #{tool}")
-      {:error, :not_installed} ->
-        IO.puts("#{tool} is not installed")
-      {:error, reason} ->
-        IO.puts(:stderr, "Error removing #{tool}: #{inspect(reason)}")
-        System.halt(1)
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_which, tool, _opts}) do
-    alias Opsm.Runtime.Manager
-
-    case Manager.which(tool) do
-      {:ok, path} ->
-        IO.puts(path)
-      {:error, :not_installed} ->
-        IO.puts(:stderr, "#{tool} is not managed by OPSM runtime")
-        System.halt(1)
-    end
-
-    System.halt(0)
-  end
-
-  defp run({:runtime_current, opts}) do
-    alias Opsm.Runtime.Manager
-
-    json? = Keyword.get(opts, :json, false)
-    current = Manager.list_active()
-
-    if json? do
-      IO.puts(Jason.encode!(current, pretty: true))
-    else
-      if current == [] do
-        IO.puts("No active runtime tools.")
-      else
-        IO.puts("Active runtime tools")
-        IO.puts("====================")
-        for {tool, version} <- current do
-          IO.puts("  #{tool}  #{version}")
-        end
-      end
-    end
-
-    System.halt(0)
   end
 
   # Parse the [workspace] members list from an opsm.toml content string.

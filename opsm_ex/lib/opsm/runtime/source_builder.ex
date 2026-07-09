@@ -57,11 +57,9 @@ defmodule Opsm.Runtime.SourceBuilder do
           source_install(plugin, version, install_dir)
 
         :both ->
-          # Try prebuilt first, fall back to source
-          case prebuilt_available?(tool_name, version) do
-            true -> {:ok, :prebuilt}
-            false -> source_install(plugin, version, install_dir)
-          end
+          # Prebuilt binaries are not yet supported (the availability probe
+          # was a stub always returning false) — build from source for now.
+          source_install(plugin, version, install_dir)
 
         :prebuilt_binary ->
           # Source builder is not the right path for prebuilt — caller error
@@ -205,8 +203,6 @@ defmodule Opsm.Runtime.SourceBuilder do
   defp install_prefix(tool_name, version) do
     Path.join([@runtimes_dir, tool_name, version])
   end
-
-  defp prebuilt_available?(_tool_name, _version), do: false
 
   defp download_file(url, dest_path) do
     case VerifiedHttp.get(url, receive_timeout: 120_000) do

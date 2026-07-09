@@ -198,16 +198,14 @@ defmodule Opsm.Trust.Pipeline do
 
       cond do
         is_nil(slsa_attestation) ->
-          case Opsm.Slsa.Provenance.generate(package) do
-            {:ok, provenance} ->
-              if provenance.slsa_level >= 1 do
-                {:info, "SLSA Level #{provenance.slsa_level} (self-attested, unverified)"}
-              else
-                {:warning, "No SLSA provenance available (Level 0)"}
-              end
+          # Provenance.generate/2 cannot fail (raises are caught by the
+          # rescue below), so only the :ok shape exists to match on.
+          {:ok, provenance} = Opsm.Slsa.Provenance.generate(package)
 
-            {:error, _reason} ->
-              {:skipped, "SLSA provenance generation failed"}
+          if provenance.slsa_level >= 1 do
+            {:info, "SLSA Level #{provenance.slsa_level} (self-attested, unverified)"}
+          else
+            {:warning, "No SLSA provenance available (Level 0)"}
           end
 
         true ->
@@ -277,9 +275,8 @@ defmodule Opsm.Trust.Pipeline do
           # Clamp negative scores (defensive — heuristic should not produce them)
           {:ok, %{score: 0, level: :critical, source: :oikos_clamped}}
 
-        {:error, reason} ->
-          Logger.warning("Oikos analysis failed for #{package.package}: #{inspect(reason)}")
-          {:skipped, "Oikos analysis failed: #{inspect(reason)}"}
+        # No {:error, _} clause: analyze_package/4 is deliberately infallible —
+        # it falls back to heuristic scoring; exceptions hit the rescue below.
       end
     rescue
       e ->
