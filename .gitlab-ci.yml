@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
-// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Primary CI/CD - GitLab is the source of truth
+#
+# Toolchain images (elixir/rust) are pinned to the canonical versions in
+# opsm.toml [runtime] — drift is gated by `just toolchain-check`.
+# Scanner images (trivy/semgrep/trufflehog) deliberately float: their
+# detection databases need to stay fresh, so pinning them is worse.
 
 stages:
   - security
@@ -32,7 +37,7 @@ semgrep:
   allow_failure: true
 cargo-audit:
   stage: security
-  image: rust:latest
+  image: rust:1.97
   script:
     - cargo install cargo-audit
     - cargo audit
@@ -41,7 +46,7 @@ cargo-audit:
         - Cargo.toml
 cargo-deny:
   stage: security
-  image: rust:latest
+  image: rust:1.97
   script:
     - cargo install cargo-deny
     - cargo deny check
@@ -51,7 +56,7 @@ cargo-deny:
   allow_failure: true
 mix-audit:
   stage: security
-  image: elixir:latest
+  image: elixir:1.19.5-otp-28
   script:
     - mix local.hex --force
     - mix archive.install hex mix_audit --force
@@ -66,7 +71,7 @@ mix-audit:
 # ==================
 rustfmt:
   stage: lint
-  image: rust:latest
+  image: rust:1.97
   script:
     - rustup component add rustfmt
     - cargo fmt -- --check
@@ -75,7 +80,7 @@ rustfmt:
         - Cargo.toml
 clippy:
   stage: lint
-  image: rust:latest
+  image: rust:1.97
   script:
     - rustup component add clippy
     - cargo clippy -- -D warnings
@@ -85,7 +90,7 @@ clippy:
   allow_failure: true
 mix-format:
   stage: lint
-  image: elixir:latest
+  image: elixir:1.19.5-otp-28
   script:
     - mix format --check-formatted
   rules:
@@ -93,7 +98,7 @@ mix-format:
         - mix.exs
 credo:
   stage: lint
-  image: elixir:latest
+  image: elixir:1.19.5-otp-28
   script:
     - mix local.hex --force
     - mix deps.get
@@ -107,7 +112,7 @@ credo:
 # ==================
 cargo-test:
   stage: test
-  image: rust:latest
+  image: rust:1.97
   script:
     - cargo test --all-features
   rules:
@@ -115,7 +120,7 @@ cargo-test:
         - Cargo.toml
 mix-test:
   stage: test
-  image: elixir:latest
+  image: elixir:1.19.5-otp-28
   script:
     - mix local.hex --force
     - mix deps.get
@@ -128,7 +133,7 @@ mix-test:
 # ==================
 cargo-build:
   stage: build
-  image: rust:latest
+  image: rust:1.97
   script:
     - cargo build --release
   artifacts:
@@ -140,7 +145,7 @@ cargo-build:
         - Cargo.toml
 mix-build:
   stage: build
-  image: elixir:latest
+  image: elixir:1.19.5-otp-28
   script:
     - mix local.hex --force
     - mix deps.get

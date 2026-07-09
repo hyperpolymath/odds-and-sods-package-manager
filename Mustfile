@@ -11,4 +11,6 @@ checks:
     run: just test
   - name: format
     run: just fmt
+  - name: toolchain
+    run: just toolchain-check
 

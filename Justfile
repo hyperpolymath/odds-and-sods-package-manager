@@ -108,6 +108,18 @@ fmt-check:
 fmt: fmt-ex fmt-deno
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# TOOLCHAIN (single source of truth: opsm.toml [runtime] — docs/TOOLCHAIN.adoc)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Regenerate .tool-versions from opsm.toml [runtime]
+toolchain-sync:
+    sh scripts/toolchain.sh sync
+
+# Verify .tool-versions and CI image pins match opsm.toml [runtime]
+toolchain-check:
+    sh scripts/toolchain.sh check
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # RUN
 # ═══════════════════════════════════════════════════════════════════════════════
 

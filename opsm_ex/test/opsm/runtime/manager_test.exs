@@ -81,6 +81,28 @@ defmodule Opsm.Runtime.ManagerTest do
     test "returns error for missing file" do
       assert {:error, :enoent} = Manager.install_from_manifest("/no/such/file.toml")
     end
+
+    test "ignores comment lines, including comments containing =" do
+      manifest = Path.join(@runtimes_base, "opsm_comments.toml")
+      File.write!(manifest, """
+      [runtime]
+      # canonical pins, synced via just toolchain-sync
+      # example override: zig = "9.9.9"
+      zig = "0.14.0"
+      """)
+
+      assert {:ok, [{"zig", "0.14.0"}]} = Manager.install_from_manifest(manifest)
+    end
+
+    test "strips inline comments from pin values" do
+      manifest = Path.join(@runtimes_base, "opsm_inline.toml")
+      File.write!(manifest, """
+      [runtime]
+      nickel = "1.16.0" # config language
+      """)
+
+      assert {:ok, [{"nickel", "1.16.0"}]} = Manager.install_from_manifest(manifest)
+    end
   end
 
   # ---------------------------------------------------------------------------

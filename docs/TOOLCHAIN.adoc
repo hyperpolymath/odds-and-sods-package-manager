@@ -1,0 +1,171 @@
+= OPSM Toolchain — Single Source of Truth
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:toc-placement!:
+
+toc::[]
+
+== The rule
+
+*`opsm.toml [runtime]` is the canonical source of OPSM's own toolchain
+versions.* Every other copy is derived from it or checked against it. If you
+need to change a version, change it there and run `just toolchain-sync`.
+
+This is dogfooding, not just convention: `opsm runtime install` reads the
+`[runtime]` block of an `opsm.toml` and provisions the pinned tools
+(`opsm_ex/lib/opsm/runtime/manager.ex`). OPSM's own manifest declaring OPSM's
+own toolchain is the self-managed path the READINESS assessment (Target 1)
+already claims.
+
+== Derivation chain
+
+----
+opsm.toml [runtime]                          <- edit HERE, nowhere else
+  |
+  |  just toolchain-sync   (scripts/toolchain.sh sync)
+  v
+.tool-versions                               <- GENERATED; do not edit
+  |                                             consumed by:
+  |-- asdf / mise (local development bootstrap)
+  |-- GitHub CI: erlef/setup-beam via `version-file: .tool-versions`
+  |
+  |  just toolchain-check  (scripts/toolchain.sh check; Mustfile-gated)
+  v
+.gitlab-ci.yml image pins                    <- verified to match, fails loudly on drift
+----
+
+`just toolchain-check` is a mandatory check in the `Mustfile`. It regenerates
+`.tool-versions` to a temp file and diffs it against the committed copy, and
+verifies the GitLab CI `elixir:`/`rust:` image tags match the canonical
+versions. Any drift is a hard failure.
+
+== The toolchain
+
+[cols="1,1,3,2"]
+|===
+|Tool |Version |Why OPSM needs it |Provisioner
+
+|erlang
+|28.3.1
+|BEAM under the Elixir orchestration layer (`opsm_ex/`)
+|asdf core plugin / setup-beam in CI
+
+|elixir
+|1.19.5-otp-28
+|OPSM's primary implementation language — the escript CLI
+|asdf core plugin / setup-beam in CI
+
+|rust
+|1.97.0
+|PQ-crypto NIF (`opsm_ex/native/opsm_pq_nif`), QUIC transport
+ (`opsm_ex/native/quic_transport`), ratatui TUI (`opsm-ui/tui`), the six
+ `services/*` microservices
+|rustup / dtolnay/rust-toolchain in CI. *Deliberately excluded from
+ `.tool-versions`* — rust is asdf-global-managed locally so cargo-audit and
+ other cargo subcommands don't fight the pin; CI pins the same canonical
+ version explicitly.
+
+|zig
+|0.14.0
+|`build.zig` — unified CLI binary + the Idris2 FFI bridge (`src/abi/ffi.zig`)
+|estate plugin: https://github.com/hyperpolymath/asdf-tool-plugins[`asdf-zig-plugin`]
+
+|just
+|1.46.0
+|`Justfile` build recipes (estate standard, replaces Make)
+|community asdf plugin / mise core
+
+|deno
+|2.6.10
+|The *sole* JS runtime: drives the ReScript CLI build (`deno.json` tasks),
+ tests, lint, fmt
+|estate plugin: https://github.com/hyperpolymath/asdf-tool-plugins[`asdf-deno-plugin`]
+
+|nickel
+|1.16.0
+|`runtime/` version-management contracts and URL handlers (`**/*.ncl`) —
+ previously *unpinned anywhere*
+|estate plugin: https://github.com/hyperpolymath/asdf-tool-plugins[`asdf-nickel-plugin`]
+
+|idris2
+|0.8.0
+|ABI/FFI formal modelling (`src/abi/{Types,Layout,Foreign}.idr`) — a real
+ build dependency, not optional
+|pack + Chez Scheme + GMP — see below. *Excluded from `.tool-versions`*: no
+ asdf plugin exists.
+|===
+
+Tools that need *no* separate pin:
+
+* *ReScript* — locked by `deno.lock` (`npm:rescript ^12.0.0` in `deno.json`).
+  Deno resolves it; there is no separate toolchain install.
+* *Node.js* — *dropped, 2026-07-09.* The old `.tool-versions` pinned
+  `nodejs 25.6.1`, but nothing uses Node: there is no `package.json`, the
+  ReScript build runs through Deno's `npm:` specifiers, and no script or
+  workflow invokes `node`. Deno is the single JS runtime, per estate policy.
+
+== The bootstrap story (read this before calling OPSM an "asdf replacement")
+
+OPSM is an Elixir escript (`mix escript.build`). It therefore *cannot
+provision Erlang or Elixir for itself* — something must put a BEAM on the
+machine before `opsm` can run at all. That base layer is, explicitly:
+
+1. *asdf or mise*, reading the generated `.tool-versions` (this is why the
+   file is kept even though `opsm.toml` is canonical), or
+2. *Guix*, once `guix.scm` grows real inputs (see below), or
+3. any system package manager that installs Erlang 28.3.1 + Elixir
+   1.19.5-otp-28.
+
+Once the BEAM exists, `opsm runtime install` can provision everything else
+from `opsm.toml [runtime]`. So the honest claim is: *OPSM replaces asdf for
+the projects it manages; for its own bootstrap it sits on asdf/mise/Guix like
+everything else.* The "complete asdf replacement" wording in `opsm.toml`'s
+package description should be read with that scope.
+
+== Idris2: the hard one
+
+Idris2 0.8.0 is a genuine build dependency (the Zig FFI bridge in `build.zig`
+exists so Idris2 can call into the system). There is *no clean asdf/mise
+plugin* — Idris2 bootstraps through *Chez Scheme* (or Racket) plus *GMP*.
+
+Recommended route: https://github.com/stefan-hoeck/idris2-pack[pack]:
+
+[source,bash]
+----
+# Debian/Ubuntu prerequisites
+apt-get install chezscheme libgmp-dev
+
+# install pack, which installs and manages Idris2 toolchains
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/stefan-hoeck/idris2-pack/main/install.bash)"
+pack switch latest   # or a collection pinning Idris2 0.8.0
+----
+
+*Status of the Guix route:* `guix.scm` at the repo root is currently a stub
+(`source #f`, no inputs) — it does *not* yet provision Idris2, Chez, or
+anything else. Growing it into a real manifest (erlang, elixir, zig, just,
+nickel, idris2, chez-scheme, gmp) is the intended endgame for fully
+reproducible bootstrap, but it is TODO, not reality. Until then, pack is the
+documented path.
+
+== CI pinning decisions
+
+* *GitHub workflows* (`e2e.yml`, `nif-build.yml`, `trust-pipeline-e2e.yml`)
+  no longer hardcode BEAM versions — `erlef/setup-beam` reads
+  `.tool-versions` (`version-file` + `version-type: strict`), so they follow
+  the canonical pins automatically. Rust steps pin `toolchain: 1.97.0`.
+* *GitLab CI* (`.gitlab-ci.yml`) pins `elixir:1.19.5-otp-28` and `rust:1.97`
+  images (tags verified to exist on Docker Hub). `just toolchain-check` fails
+  if these drift from `opsm.toml`.
+* *Scanner images* (trivy, semgrep, trufflehog) deliberately float: their
+  value is fresh detection databases; pinning them trades real security for
+  cosmetic reproducibility.
+
+== History
+
+Before 2026-07-09 there were *five* disagreeing version sets across
+`.tool-versions` (28.3.1/1.19.5), `opsm.toml` (26.2.0/1.16.0),
+`.gitlab-ci.yml` (`latest`), `e2e.yml`+`nif-build.yml` (27.0/1.17), and
+`trust-pipeline-e2e.yml` (26.2/1.16.0) — plus Nickel used but pinned nowhere,
+Idris2 unpinned, and a vestigial Node pin. This document and
+`scripts/toolchain.sh` are the fix.
