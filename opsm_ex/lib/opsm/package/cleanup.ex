@@ -29,20 +29,20 @@ defmodule Opsm.Package.Cleanup do
     include_data = Keyword.get(opts, :include_data, false)
     secure = Keyword.get(opts, :secure, false)
 
-    actions = []
-
-    actions = actions ++ remove_desktop_shortcuts(package_name)
-    actions = actions ++ remove_autostart(package_name)
-    actions = actions ++ remove_systemd_units(package_name)
-    actions = actions ++ remove_file_associations(package_name)
+    actions =
+      remove_desktop_shortcuts(package_name) ++
+        remove_autostart(package_name) ++
+        remove_systemd_units(package_name) ++
+        remove_file_associations(package_name)
 
     if include_data do
-      actions = actions ++ remove_config_dirs(package_name, secure)
-      actions = actions ++ remove_data_dirs(package_name, secure)
-      actions = actions ++ remove_cache_dirs(package_name)
+      actions ++
+        remove_config_dirs(package_name, secure) ++
+        remove_data_dirs(package_name, secure) ++
+        remove_cache_dirs(package_name)
+    else
+      actions
     end
-
-    actions
   end
 
   @doc """
@@ -101,12 +101,10 @@ defmodule Opsm.Package.Cleanup do
     xdg_config = System.get_env("XDG_CONFIG_HOME", Path.join(System.user_home!(), ".config"))
     systemd_dir = Path.join([xdg_config, "systemd", "user"])
 
-    actions = []
-
-    for ext <- [".service", ".timer", ".socket"] do
-      unit_file = Path.join(systemd_dir, "#{package_name}#{ext}")
-
-      if File.exists?(unit_file) do
+    actions =
+      for ext <- [".service", ".timer", ".socket"],
+          unit_file = Path.join(systemd_dir, "#{package_name}#{ext}"),
+          File.exists?(unit_file) do
         # Stop and disable before removing
         System.cmd("systemctl", ["--user", "stop", "#{package_name}#{ext}"],
           stderr_to_stdout: true
@@ -118,16 +116,13 @@ defmodule Opsm.Package.Cleanup do
         case File.rm(unit_file) do
           :ok ->
             Logger.info("Removed systemd unit: #{unit_file}")
-            actions ++ [{:removed, :systemd_unit, unit_file}]
+            {:removed, :systemd_unit, unit_file}
 
           {:error, reason} ->
             Logger.warning("Failed to remove systemd unit #{unit_file}: #{reason}")
-            actions ++ [{:failed, :systemd_unit, unit_file, reason}]
+            {:failed, :systemd_unit, unit_file, reason}
         end
-      else
-        actions
       end
-    end
 
     # Reload systemd daemon if we removed anything
     if actions != [] do

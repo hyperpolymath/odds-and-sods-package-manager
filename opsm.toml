@@ -46,9 +46,17 @@ registry = "hf"
 self_hosted = true
 
 [runtime]
-# Pinned tool versions — managed by OPSM runtime extension (replaces .tool-versions)
-elixir = "1.16.0"
-erlang = "26.2.0"
+# CANONICAL toolchain pins — the single source of truth for OPSM's own toolchain.
+# `.tool-versions` is GENERATED from this block: run `just toolchain-sync` after
+# editing, and `just toolchain-check` verifies nothing drifted (CI-gated).
+# Full provisioning story (incl. idris2 via pack/Chez, rust rationale, the
+# bootstrap layer underneath OPSM): docs/TOOLCHAIN.adoc.
+# NOTE: keep pin lines free of inline comments; the [runtime] parser is line-based.
+erlang = "28.3.1"
+elixir = "1.19.5-otp-28"
+rust = "1.97.0"
+zig = "0.14.0"
 just = "1.46.0"
 deno = "2.6.10"
-zig = "0.14.0"
+nickel = "1.16.0"
+idris2 = "0.8.0"

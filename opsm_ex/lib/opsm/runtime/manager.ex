@@ -471,12 +471,19 @@ defmodule Opsm.Runtime.Manager do
         cond do
           stripped == "[runtime]" ->
             {true, acc}
+          String.starts_with?(stripped, "#") ->
+            {in_section, acc}
           String.starts_with?(stripped, "[") and in_section ->
             {false, acc}
           in_section and String.contains?(stripped, "=") ->
             [tool, version] = String.split(stripped, "=", parts: 2)
-            pair = {String.trim(tool), String.trim(version) |> String.trim("\"")}
-            {true, [pair | acc]}
+            version =
+              version
+              |> String.split("#", parts: 2)
+              |> hd()
+              |> String.trim()
+              |> String.trim("\"")
+            {true, [{String.trim(tool), version} | acc]}
           true ->
             {in_section, acc}
         end

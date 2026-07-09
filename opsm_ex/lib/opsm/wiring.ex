@@ -180,11 +180,8 @@ defmodule Opsm.Wiring do
         IO.puts("  ⚠ Low sustainability score: #{score}/100 — consider improving before publish")
         :ok
 
-      {:error, reason} ->
-        severity = Errors.classify_severity({:network_error, reason})
-        IO.puts("  ⚠ #{Errors.severity_description(severity)}")
-        IO.puts("    Sustainability analysis unavailable: #{inspect(reason)}")
-        :ok
+      # No {:error, _} clause: analyze_package/4 is deliberately infallible —
+      # it falls back to heuristic scoring when the oikos service is unreachable.
     end
   end
 

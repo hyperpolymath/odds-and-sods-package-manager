@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 # STATE.a2ml — Project state checkpoint
-# Updated 2026-04-25f: CRG-B achieved — 6 external targets documented
+# Updated 2026-07-09: toolchain single source of truth (opsm.toml [runtime])
 
 [metadata]
 project = "odds-and-sods-package-manager"
 version = "2.0.0"
-last-updated = "2026-04-25"
+last-updated = "2026-07-09"
 status = "first-class system active"
 
 [project-context]
@@ -169,5 +169,19 @@ evidence-file = "READINESS.md"
   - Health poll loop (180s deadline, 3s interval) before running tests
   - Full diagnostics (service logs) on failure; docker compose down always
 
+[completed-2026-07-09]
+- Toolchain single source of truth established: opsm.toml [runtime] canonical ✅
+  - Stale pins corrected (erlang 26.2.0→28.3.1, elixir 1.16.0→1.19.5-otp-28)
+  - Pin set completed: rust 1.97.0, nickel 1.16.0 (was unpinned), idris2 0.8.0
+  - Vestigial nodejs pin dropped — Deno is the sole JS runtime
+  - .tool-versions now GENERATED (scripts/toolchain.sh; just toolchain-sync)
+  - Drift gate: just toolchain-check, wired into Mustfile
+  - GitLab CI images pinned off :latest; GitHub workflows read .tool-versions
+    via setup-beam version-file (previously 3 disagreeing hardcoded sets)
+  - [runtime] parser hardened: comment lines + inline comments (manager.ex)
+  - Full story: docs/TOOLCHAIN.adoc (incl. bootstrap layering + Idris2/pack route)
+
 [next-actions]
 - Grade A: requires external user confirmation outside hyperpolymath
+- guix.scm is a stub (source #f) — grow into real manifest (erlang, elixir,
+  zig, just, nickel, idris2, chez-scheme, gmp) for reproducible bootstrap

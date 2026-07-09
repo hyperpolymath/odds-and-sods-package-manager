@@ -49,6 +49,8 @@ jobs:
         if: steps.detect.outputs.relevant == 'true'
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
+          # Pinned to the canonical rust version in opsm.toml [runtime]
+          toolchain: '1.97.0'
           components: clippy
       - name: Cache Rust dependencies
         if: steps.detect.outputs.relevant == 'true'
