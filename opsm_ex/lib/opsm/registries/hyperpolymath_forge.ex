@@ -71,7 +71,11 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   Fetch a package from the Hyperpolymath Forge Registry.
 
   The package name must match the `[package] name` field in `opsm.toml`.
-  On cache miss, refreshes the full org index before looking up.
+  On cache miss with a cold (empty) index, refreshes the full org index
+  before looking up. A miss against a warm index returns `:not_found`
+  without touching the network — re-crawling the GitHub org for every
+  unknown name burns unauthenticated rate limit (CI runners get 403s,
+  surfacing as spurious `{:http_error, _}` instead of `:not_found`).
 
   ## Examples
 
@@ -84,10 +88,14 @@ defmodule Opsm.Registries.HyperpPolymathForge do
         resolve_package(pkg_info, version)
 
       :miss ->
-        with :ok <- refresh_index() do
-          case lookup_cached(name) do
-            {:hit, pkg_info} -> resolve_package(pkg_info, version)
-            :miss -> {:error, :not_found}
+        if cache_warm?() do
+          {:error, :not_found}
+        else
+          with :ok <- refresh_index() do
+            case lookup_cached(name) do
+              {:hit, pkg_info} -> resolve_package(pkg_info, version)
+              :miss -> {:error, :not_found}
+            end
           end
         end
     end
@@ -296,6 +304,13 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   # ---------------------------------------------------------------------------
   # Cache helpers
   # ---------------------------------------------------------------------------
+
+  # Same warmth criterion as ensure_index/0: a non-empty cache is the
+  # populated org index (expired entries are purged lazily by lookups).
+  defp cache_warm? do
+    ensure_cache()
+    :ets.info(@cache_table, :size) > 0
+  end
 
   defp lookup_cached(name) do
     ensure_cache()
