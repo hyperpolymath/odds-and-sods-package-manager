@@ -6,6 +6,16 @@
 # opsm.toml [runtime] — drift is gated by `just toolchain-check`.
 # Scanner images (trivy/semgrep/trufflehog) deliberately float: their
 # detection databases need to stay fresh, so pinning them is worse.
+#
+# There is no root mix.exs or Cargo.toml — mix.exs lives in opsm_ex/, and
+# the estate's Rust code is nine independent first-party crates (the
+# ratatui TUI, two Elixir NIFs, and six microservices under services/).
+# `exists: mix.exs` / `exists: Cargo.toml` at repo root never matched
+# either, so every mix-*/cargo-* job below was permanently dormant.
+# mix-* jobs now target opsm_ex/ directly; cargo-* jobs loop over
+# $RUST_CRATE_DIRS. Keep that variable and each job's `rules: exists:`
+# list in sync when a crate is added or removed — `rules: exists:` needs
+# literal paths, it does not expand CI variables.
 
 stages:
   - security
@@ -14,11 +24,25 @@ stages:
   - build
 variables:
   CARGO_HOME: ${CI_PROJECT_DIR}/.cargo
+  # First-party Rust crates only — opsm_ex/deps/** is vendored (Mix deps
+  # cache), never linted/audited/built as our own code.
+  RUST_CRATE_DIRS: >-
+    opsm-ui/tui
+    opsm_ex/native/opsm_pq_nif
+    opsm_ex/native/quic_transport
+    services/checky-monkey
+    services/oikos
+    services/palimpsest-license
+    services/selur
+    services/svalinn
+    services/vordr
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - .cargo/
-    - target/
+    - "*/target/"
+    - "*/*/target/"
+    - "*/*/*/target/"
 # ==================
 # Security Scanning
 # ==================
@@ -39,32 +63,57 @@ cargo-audit:
   stage: security
   image: rust:1.97
   script:
-    - cargo install cargo-audit
-    - cargo audit
+    - cargo install cargo-audit --locked
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo audit: $dir =="
+        (cd "$dir" && cargo audit)
+      done
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
 cargo-deny:
   stage: security
   image: rust:1.97
   script:
-    - cargo install cargo-deny
-    - cargo deny check
+    - cargo install cargo-deny --locked
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo deny: $dir =="
+        (cd "$dir" && cargo deny check)
+      done
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
   allow_failure: true
 mix-audit:
   stage: security
   image: elixir:1.19.5-otp-28
   script:
+    - cd opsm_ex
     - mix local.hex --force
     - mix archive.install hex mix_audit --force
     - mix deps.get
     - mix deps.audit
   rules:
     - exists:
-        - mix.exs
+        - opsm_ex/mix.exs
   allow_failure: true
 # ==================
 # Linting
@@ -74,38 +123,64 @@ rustfmt:
   image: rust:1.97
   script:
     - rustup component add rustfmt
-    - cargo fmt -- --check
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo fmt --check: $dir =="
+        (cd "$dir" && cargo fmt -- --check)
+      done
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
 clippy:
   stage: lint
   image: rust:1.97
   script:
     - rustup component add clippy
-    - cargo clippy -- -D warnings
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo clippy: $dir =="
+        (cd "$dir" && cargo clippy -- -D warnings)
+      done
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
   allow_failure: true
 mix-format:
   stage: lint
   image: elixir:1.19.5-otp-28
   script:
+    - cd opsm_ex
     - mix format --check-formatted
   rules:
     - exists:
-        - mix.exs
+        - opsm_ex/mix.exs
 credo:
   stage: lint
   image: elixir:1.19.5-otp-28
   script:
+    - cd opsm_ex
     - mix local.hex --force
     - mix deps.get
     - mix credo --strict
   rules:
     - exists:
-        - mix.exs
+        - opsm_ex/mix.exs
   allow_failure: true
 # ==================
 # Testing
@@ -114,20 +189,33 @@ cargo-test:
   stage: test
   image: rust:1.97
   script:
-    - cargo test --all-features
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo test: $dir =="
+        (cd "$dir" && cargo test --all-features)
+      done
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
 mix-test:
   stage: test
   image: elixir:1.19.5-otp-28
   script:
+    - cd opsm_ex
     - mix local.hex --force
     - mix deps.get
     - mix test
   rules:
     - exists:
-        - mix.exs
+        - opsm_ex/mix.exs
 # ==================
 # Build
 # ==================
@@ -135,24 +223,45 @@ cargo-build:
   stage: build
   image: rust:1.97
   script:
-    - cargo build --release
+    - |
+      for dir in $RUST_CRATE_DIRS; do
+        echo "== cargo build --release: $dir =="
+        (cd "$dir" && cargo build --release)
+      done
   artifacts:
     paths:
-      - target/release/
+      - opsm-ui/tui/target/release/
+      - opsm_ex/native/opsm_pq_nif/target/release/
+      - opsm_ex/native/quic_transport/target/release/
+      - services/checky-monkey/target/release/
+      - services/oikos/target/release/
+      - services/palimpsest-license/target/release/
+      - services/selur/target/release/
+      - services/svalinn/target/release/
+      - services/vordr/target/release/
     expire_in: 1 week
   rules:
     - exists:
-        - Cargo.toml
+        - opsm-ui/tui/Cargo.toml
+        - opsm_ex/native/opsm_pq_nif/Cargo.toml
+        - opsm_ex/native/quic_transport/Cargo.toml
+        - services/checky-monkey/Cargo.toml
+        - services/oikos/Cargo.toml
+        - services/palimpsest-license/Cargo.toml
+        - services/selur/Cargo.toml
+        - services/svalinn/Cargo.toml
+        - services/vordr/Cargo.toml
 mix-build:
   stage: build
   image: elixir:1.19.5-otp-28
   script:
+    - cd opsm_ex
     - mix local.hex --force
     - mix deps.get
     - MIX_ENV=prod mix compile
   rules:
     - exists:
-        - mix.exs
+        - opsm_ex/mix.exs
 trufflehog:
   stage: security
   image: trufflesecurity/trufflehog:latest
