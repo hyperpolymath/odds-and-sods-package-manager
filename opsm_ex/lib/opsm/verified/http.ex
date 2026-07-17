@@ -123,18 +123,21 @@ defmodule Opsm.Verified.Http do
   # =============================================================================
 
   defp do_get(url, opts) do
-    timeout = Keyword.get(opts, :timeout, 30_000)
+    # :receive_timeout is Req's actual option name — callers pass it
+    # throughout the codebase, so read that key, not a nonexistent :timeout.
+    timeout = Keyword.get(opts, :receive_timeout, Keyword.get(opts, :timeout, 30_000))
     headers = Keyword.get(opts, :headers, [])
     retry_count = Keyword.get(opts, :retry, 2)
 
+    # :into (e.g. File.stream!/1 for streaming a download to disk) must be
+    # forwarded, not silently dropped, or the caller gets a success tuple
+    # with nothing ever written to the destination.
+    req_opts =
+      [receive_timeout: timeout, retry: :transient, max_retries: retry_count, headers: headers]
+      |> maybe_put_into(opts)
+
     try do
-      result =
-        Req.get(url,
-          receive_timeout: timeout,
-          retry: :transient,
-          max_retries: retry_count,
-          headers: headers
-        )
+      result = Req.get(url, req_opts)
 
       case result do
         {:ok, %Req.Response{status: status, body: body}} when status in 200..299 ->
@@ -170,7 +173,7 @@ defmodule Opsm.Verified.Http do
   end
 
   defp do_post(url, json_body, opts) do
-    timeout = Keyword.get(opts, :timeout, 30_000)
+    timeout = Keyword.get(opts, :receive_timeout, Keyword.get(opts, :timeout, 30_000))
     headers = Keyword.get(opts, :headers, [])
     retry_count = Keyword.get(opts, :retry, 2)
 
@@ -206,6 +209,13 @@ defmodule Opsm.Verified.Http do
       exception ->
         Logger.error("HTTP POST exception for #{url}: #{inspect(exception)}")
         {:error, {:exception, exception}}
+    end
+  end
+
+  defp maybe_put_into(req_opts, opts) do
+    case Keyword.fetch(opts, :into) do
+      {:ok, into} -> Keyword.put(req_opts, :into, into)
+      :error -> req_opts
     end
   end
 end
