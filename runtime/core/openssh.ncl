@@ -9,7 +9,7 @@
 # archive format) in OPSM's Nickel contract format. The asdf plugin
 # ecosystem's pioneering work is gratefully acknowledged.
 
-let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
+let RuntimePlugin = import "../contract/runtime-plugin.ncl" in
 
 {
   name = "openssh",

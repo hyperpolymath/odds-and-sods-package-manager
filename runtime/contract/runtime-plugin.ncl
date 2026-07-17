@@ -154,8 +154,8 @@ let RuntimePlugin = {
 
   version_sort
     | [| 'Semver, 'Lexicographic, 'Numeric |]
-    | default = 'Semver
-    | doc "How to sort versions for 'latest' resolution",
+    | doc "How to sort versions for 'latest' resolution"
+    | default = 'Semver,
 
   # === Installation (required) ===
   install
@@ -256,13 +256,13 @@ let RuntimePlugin = {
   # === Metadata ===
   license
     | String
-    | default = "MPL-2.0"
-    | doc "License for this plugin definition (not the tool itself)",
+    | doc "License for this plugin definition (not the tool itself)"
+    | default = "MPL-2.0",
 
   schema_version
     | String
-    | default = "1.0.0"
-    | doc "Contract version this definition was written against",
+    | doc "Contract version this definition was written against"
+    | default = "1.0.0",
 } in
 
 RuntimePlugin
