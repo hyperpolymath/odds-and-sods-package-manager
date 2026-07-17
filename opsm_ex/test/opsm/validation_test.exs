@@ -113,7 +113,9 @@ defmodule Opsm.ValidationTest do
     end
 
     test "rejects data: URLs" do
-      assert {:error, reason} = Validation.validate_url("data:text/html,<script>alert(1)</script>")
+      assert {:error, reason} =
+               Validation.validate_url("data:text/html,<script>alert(1)</script>")
+
       # data: URLs have no host, so we get "must have a host" error
       assert reason =~ "host" or reason =~ "not allowed"
     end

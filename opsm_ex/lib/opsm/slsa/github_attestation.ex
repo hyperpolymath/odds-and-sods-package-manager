@@ -145,7 +145,13 @@ defmodule Opsm.Slsa.GithubAttestation do
 
         {:ok, bundles} ->
           subject = verification_subject(package, opts)
-          verify_subject(subject, owner_repo, config, Keyword.put(opts, :bundle_count, length(bundles)))
+
+          verify_subject(
+            subject,
+            owner_repo,
+            config,
+            Keyword.put(opts, :bundle_count, length(bundles))
+          )
 
         {:error, reason} ->
           {:error, reason}
@@ -300,7 +306,10 @@ defmodule Opsm.Slsa.GithubAttestation do
   end
 
   def decode_gh_output(_),
-    do: %GithubAttestationVerification{verified: false, message: "gh returned no verification results"}
+    do: %GithubAttestationVerification{
+      verified: false,
+      message: "gh returned no verification results"
+    }
 
   # ==========================================================================
   # Package helpers
@@ -310,7 +319,10 @@ defmodule Opsm.Slsa.GithubAttestation do
   Extract `"owner/repo"` from a package's manifest repository URL.
   """
   def github_owner_repo(%{manifest: %{repository: repo}}) when is_binary(repo) do
-    case Regex.run(~r{\Ahttps?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?\z}, repo) do
+    case Regex.run(
+           ~r{\Ahttps?://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?\z},
+           repo
+         ) do
       [_, owner, name] -> {:ok, "#{owner}/#{name}"}
       _ -> {:none, "Package repository is not a GitHub URL"}
     end
@@ -330,7 +342,8 @@ defmodule Opsm.Slsa.GithubAttestation do
     end
   end
 
-  def artifact_digest(_package), do: {:none, "Package has no sha256 checksum for attestation lookup"}
+  def artifact_digest(_package),
+    do: {:none, "Package has no sha256 checksum for attestation lookup"}
 
   defp verification_subject(package, opts) do
     cond do

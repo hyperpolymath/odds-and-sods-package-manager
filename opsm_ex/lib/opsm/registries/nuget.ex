@@ -26,41 +26,49 @@ defmodule Opsm.Registries.NuGet do
         # Registration pages contain version catalogs
         # Some pages inline items, others have only @id and need separate fetching
         items = body["items"] || []
-        all_entries = items
+
+        all_entries =
+          items
           |> Enum.flat_map(fn page ->
             case page["items"] do
               nil ->
                 # Page doesn't inline items — fetch the page by @id
                 case page["@id"] do
-                  nil -> []
+                  nil ->
+                    []
+
                   page_url ->
                     case VerifiedHttp.get_json(page_url, receive_timeout: 10_000) do
                       {:ok, page_body} -> page_body["items"] || []
                       _ -> []
                     end
                 end
-              inlined -> inlined
+
+              inlined ->
+                inlined
             end
           end)
 
-        target_version = if version == "latest" do
-          # Find the latest non-prerelease version
-          all_entries
-          |> Enum.map(fn entry ->
-            catalog = entry["catalogEntry"] || %{}
-            catalog["version"]
-          end)
-          |> Enum.reject(&is_nil/1)
-          |> Enum.reject(fn v -> String.contains?(v, "-") end)
-          |> List.last()
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            # Find the latest non-prerelease version
+            all_entries
+            |> Enum.map(fn entry ->
+              catalog = entry["catalogEntry"] || %{}
+              catalog["version"]
+            end)
+            |> Enum.reject(&is_nil/1)
+            |> Enum.reject(fn v -> String.contains?(v, "-") end)
+            |> List.last()
+          else
+            version
+          end
 
-        entry = Enum.find(all_entries, fn e ->
-          catalog = e["catalogEntry"] || %{}
-          catalog["version"] == target_version
-        end)
+        entry =
+          Enum.find(all_entries, fn e ->
+            catalog = e["catalogEntry"] || %{}
+            catalog["version"] == target_version
+          end)
 
         if is_nil(target_version) do
           {:error, :not_found}
@@ -92,6 +100,7 @@ defmodule Opsm.Registries.NuGet do
     groups
     |> Enum.flat_map(fn group ->
       deps = group["dependencies"] || []
+
       Enum.map(deps, fn dep ->
         {dep["id"], dep["range"] || ">= 0.0.0"}
       end)
@@ -110,14 +119,17 @@ defmodule Opsm.Registries.NuGet do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         data = body["data"] || []
-        results = Enum.map(data, fn pkg ->
-          %{
-            name: pkg["id"],
-            version: pkg["version"],
-            description: pkg["description"],
-            downloads: pkg["totalDownloads"] || 0
-          }
-        end)
+
+        results =
+          Enum.map(data, fn pkg ->
+            %{
+              name: pkg["id"],
+              version: pkg["version"],
+              description: pkg["description"],
+              downloads: pkg["totalDownloads"] || 0
+            }
+          end)
+
         {:ok, results}
 
       {:error, %{status: status}} ->
@@ -178,17 +190,19 @@ defmodule Opsm.Registries.NuGet do
 
     if hash do
       # NuGet provides base64-encoded hashes; convert to hex
-      hex_hash = case Base.decode64(hash) do
-        {:ok, raw} -> Base.encode16(raw, case: :lower)
-        :error -> hash
-      end
+      hex_hash =
+        case Base.decode64(hash) do
+          {:ok, raw} -> Base.encode16(raw, case: :lower)
+          :error -> hash
+        end
 
-      algo = case algo_str do
-        "SHA512" -> :sha512
-        "SHA256" -> :sha256
-        "SHA1" -> :sha1
-        _ -> :sha512
-      end
+      algo =
+        case algo_str do
+          "SHA512" -> :sha512
+          "SHA256" -> :sha256
+          "SHA1" -> :sha1
+          _ -> :sha512
+        end
 
       {hex_hash, algo}
     else
@@ -204,7 +218,8 @@ defmodule Opsm.Registries.NuGet do
       version: version,
       forth: :nuget,
       registry_url: "https://www.nuget.org/packages/#{name}",
-      tarball_url: "#{@download_base}/#{String.downcase(name)}/#{String.downcase(version)}/#{String.downcase(name)}.#{String.downcase(version)}.nupkg",
+      tarball_url:
+        "#{@download_base}/#{String.downcase(name)}/#{String.downcase(version)}/#{String.downcase(name)}.#{String.downcase(version)}.nupkg",
       checksum: hash,
       checksum_algo: hash_algo,
       manifest: %ManifestFormat{
@@ -227,8 +242,10 @@ defmodule Opsm.Registries.NuGet do
   end
 
   defp parse_authors(nil), do: []
+
   defp parse_authors(authors) when is_binary(authors) do
     String.split(authors, ",") |> Enum.map(&String.trim/1)
   end
+
   defp parse_authors(authors) when is_list(authors), do: authors
 end

@@ -24,6 +24,7 @@ defmodule Opsm.Integration.GitPipelineTest do
       version = "0.1.0"
       edition = "2021"
       """)
+
       File.mkdir_p!(Path.join(dir, "src"))
       File.write!(Path.join(dir, "src/main.rs"), ~s[fn main() { println!("hello"); }])
 

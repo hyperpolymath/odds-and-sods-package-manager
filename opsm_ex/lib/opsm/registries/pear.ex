@@ -107,9 +107,14 @@ defmodule Opsm.Registries.Pear do
         vers = Enum.map(releases, fn r -> r["version"] || r["v"] end)
         {:ok, Enum.reject(vers, &is_nil/1)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

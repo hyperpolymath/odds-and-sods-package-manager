@@ -27,38 +27,55 @@ defmodule Opsm.Registries.Homebrew do
 
   defp fetch_formula(name, version) do
     url = "#{@formula_api}/#{name}.json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: get_in(body, ["versions", "stable"]),
-          else: version
+        ver =
+          if version == "latest",
+            do: get_in(body, ["versions", "stable"]),
+            else: version
+
         {:ok, parse_formula(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp fetch_cask(name, version) do
     url = "#{@cask_api}/#{name}.json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"],
+            else: version
+
         {:ok, parse_cask(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp parse_formula(name, body, version) do
-    deps = (body["dependencies"] || [])
-           |> Enum.map(fn d -> {d, "*"} end)
-           |> Map.new()
+    deps =
+      (body["dependencies"] || [])
+      |> Enum.map(fn d -> {d, "*"} end)
+      |> Map.new()
 
     manifest = %ManifestFormat{
       name: name,
@@ -77,7 +94,7 @@ defmodule Opsm.Registries.Homebrew do
       manifest: manifest,
       tarball_url: get_in(body, ["urls", "stable", "url"]),
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -92,10 +109,11 @@ defmodule Opsm.Registries.Homebrew do
       dependencies: %{}
     }
 
-    url = case body["url"] do
-      url when is_binary(url) -> url
-      _ -> nil
-    end
+    url =
+      case body["url"] do
+        url when is_binary(url) -> url
+        _ -> nil
+      end
 
     %ResolvedPackage{
       package: name,
@@ -105,7 +123,7 @@ defmodule Opsm.Registries.Homebrew do
       tarball_url: url,
       checksum: body["sha256"],
       checksum_algo: if(body["sha256"], do: :sha256),
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -124,21 +142,27 @@ defmodule Opsm.Registries.Homebrew do
   """
   def search(query, _opts \\ []) do
     url = "#{@formula_api}.json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 30_000) do
       {:ok, formulae} when is_list(formulae) ->
-        matches = formulae
-        |> Enum.filter(fn f ->
-          name = f["name"] || ""
-          desc = f["desc"] || ""
-          String.contains?(String.downcase(name), String.downcase(query)) or
-          String.contains?(String.downcase(desc), String.downcase(query))
-        end)
-        |> Enum.take(20)
-        |> Enum.map(fn f -> %{name: f["name"], version: get_in(f, ["versions", "stable"]), description: f["desc"]} end)
+        matches =
+          formulae
+          |> Enum.filter(fn f ->
+            name = f["name"] || ""
+            desc = f["desc"] || ""
+
+            String.contains?(String.downcase(name), String.downcase(query)) or
+              String.contains?(String.downcase(desc), String.downcase(query))
+          end)
+          |> Enum.take(20)
+          |> Enum.map(fn f ->
+            %{name: f["name"], version: get_in(f, ["versions", "stable"]), description: f["desc"]}
+          end)
 
         {:ok, matches}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

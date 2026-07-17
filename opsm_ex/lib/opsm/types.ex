@@ -96,7 +96,14 @@ defmodule Opsm.Types do
             recommendations: [String.t()],
             risks: [OikosRisk.t()]
           }
-    defstruct [:repository_url, :analyzed_at, :overall_score, :scores, recommendations: [], risks: []]
+    defstruct [
+      :repository_url,
+      :analyzed_at,
+      :overall_score,
+      :scores,
+      recommendations: [],
+      risks: []
+    ]
   end
 
   defmodule OikosHealthResponse do
@@ -150,16 +157,29 @@ defmodule Opsm.Types do
             dependencies: map(),
             dev_dependencies: map() | nil
           }
-    defstruct [:name, :version, :description, :license, :repository,
-               authors: [], keywords: [], dependencies: %{}, dev_dependencies: nil]
+    defstruct [
+      :name,
+      :version,
+      :description,
+      :license,
+      :repository,
+      authors: [],
+      keywords: [],
+      dependencies: %{},
+      dev_dependencies: nil
+    ]
   end
 
   # =============================================================================
   # CHECKY-MONKEY - Code Verification
   # =============================================================================
 
-  @type verification_type :: :property_tests | :fuzz_testing | :type_checking
-                            | :formal_verification | :mutation_testing
+  @type verification_type ::
+          :property_tests
+          | :fuzz_testing
+          | :type_checking
+          | :formal_verification
+          | :mutation_testing
   @type verification_status :: :queued | :running | :completed | :failed
   @type finding_severity :: :low | :medium | :high | :critical
 
@@ -291,8 +311,7 @@ defmodule Opsm.Types do
             obligations: [LicenseObligation.t()],
             risks: [LicenseRisk.t()]
           }
-    defstruct [:analyzed_at, :compatibility,
-               detected_licenses: [], obligations: [], risks: []]
+    defstruct [:analyzed_at, :compatibility, detected_licenses: [], obligations: [], risks: []]
   end
 
   # =============================================================================
@@ -301,9 +320,29 @@ defmodule Opsm.Types do
 
   @type federation_mode :: :manifest_convert | :agentic_fetch | :connection_port
 
-  @type forth_type :: :npm | :cargo | :hex | :pypi | :gem | :nuget | :maven | :pub | :go
-                     | :deb | :rpm | :winget | :choco | :scoop | :pacman | :homebrew
-                     | :nix | :guix | :flatpak | :snap | :custom | :eclexia
+  @type forth_type ::
+          :npm
+          | :cargo
+          | :hex
+          | :pypi
+          | :gem
+          | :nuget
+          | :maven
+          | :pub
+          | :go
+          | :deb
+          | :rpm
+          | :winget
+          | :choco
+          | :scoop
+          | :pacman
+          | :homebrew
+          | :nix
+          | :guix
+          | :flatpak
+          | :snap
+          | :custom
+          | :eclexia
 
   @type release_channel :: :snapshot | :alpha | :beta | :rc | :esr | :stable
 
@@ -321,8 +360,14 @@ defmodule Opsm.Types do
             manifest_converter: String.t() | nil,
             enabled: boolean()
           }
-    defstruct [:name, :forth_type, :base_url, :federation_mode,
-               :manifest_converter, enabled: true]
+    defstruct [
+      :name,
+      :forth_type,
+      :base_url,
+      :federation_mode,
+      :manifest_converter,
+      enabled: true
+    ]
   end
 
   defmodule ManifestFormat do
@@ -348,10 +393,24 @@ defmodule Opsm.Types do
             source_forth: Opsm.Types.forth_type() | nil,
             raw_manifest: map() | nil
           }
-    defstruct [:name, :version, :description, :license, :homepage, :repository,
-               :source_forth, :raw_manifest,
-               authors: [], keywords: [], dependencies: %{}, dev_dependencies: %{},
-               optional_dependencies: %{}, peer_dependencies: %{}, bin: %{}, scripts: %{}]
+    defstruct [
+      :name,
+      :version,
+      :description,
+      :license,
+      :homepage,
+      :repository,
+      :source_forth,
+      :raw_manifest,
+      authors: [],
+      keywords: [],
+      dependencies: %{},
+      dev_dependencies: %{},
+      optional_dependencies: %{},
+      peer_dependencies: %{},
+      bin: %{},
+      scripts: %{}
+    ]
   end
 
   defmodule InstallRequest do
@@ -369,9 +428,17 @@ defmodule Opsm.Types do
             optional_deps: boolean(),
             dev_deps: boolean()
           }
-    defstruct [:package, :version, :forth,
-               channel: :stable, scope: :user, dry_run: false,
-               force: false, optional_deps: false, dev_deps: false]
+    defstruct [
+      :package,
+      :version,
+      :forth,
+      channel: :stable,
+      scope: :user,
+      dry_run: false,
+      force: false,
+      optional_deps: false,
+      dev_deps: false
+    ]
   end
 
   defmodule ResolvedPackage do
@@ -390,9 +457,18 @@ defmodule Opsm.Types do
             attestations: [AttestationRef.t()],
             resolved_deps: [__MODULE__.t()]
           }
-    defstruct [:package, :version, :forth, :registry_url, :tarball_url,
-               :checksum, :manifest,
-               checksum_algo: :sha256, attestations: [], resolved_deps: []]
+    defstruct [
+      :package,
+      :version,
+      :forth,
+      :registry_url,
+      :tarball_url,
+      :checksum,
+      :manifest,
+      checksum_algo: :sha256,
+      attestations: [],
+      resolved_deps: []
+    ]
   end
 
   defmodule PinSpec do
@@ -426,8 +502,17 @@ defmodule Opsm.Types do
             user: String.t() | nil,
             scope: Opsm.Types.install_scope()
           }
-    defstruct [:id, :action, :package, :version, :previous_version,
-               :forth, :timestamp, :user, :scope]
+    defstruct [
+      :id,
+      :action,
+      :package,
+      :version,
+      :previous_version,
+      :forth,
+      :timestamp,
+      :user,
+      :scope
+    ]
   end
 
   # =============================================================================
@@ -449,9 +534,14 @@ defmodule Opsm.Types do
             signature_algo: atom() | nil
           }
     defstruct [
-      :builder_id, :build_type, :invocation, :metadata,
-      :signature, :signature_algo,
-      materials: [], slsa_level: 0
+      :builder_id,
+      :build_type,
+      :invocation,
+      :metadata,
+      :signature,
+      :signature_algo,
+      materials: [],
+      slsa_level: 0
     ]
   end
 
@@ -475,11 +565,13 @@ defmodule Opsm.Types do
             warnings: [String.t()],
             errors: [String.t()]
           }
-    defstruct [
-      verified: false, slsa_level: 0, builder_trusted: false,
-      materials_match: false, signature_valid: :not_checked,
-      warnings: [], errors: []
-    ]
+    defstruct verified: false,
+              slsa_level: 0,
+              builder_trusted: false,
+              materials_match: false,
+              signature_valid: :not_checked,
+              warnings: [],
+              errors: []
   end
 
   defmodule ConnectionPort do

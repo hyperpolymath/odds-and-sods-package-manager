@@ -22,30 +22,41 @@ defmodule Opsm.Registries.Pacstall do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          body["version"] || body["latestVersion"] || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            body["version"] || body["latestVersion"] || "0.0.0"
+          else
+            version
+          end
 
         {:ok, parse_pacstall(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp parse_pacstall(name, body, version) do
     # Pacstall packages declare dependencies as space-separated strings
     raw_deps = body["dependencies"] || body["depends"] || []
-    deps = case raw_deps do
-      d when is_binary(d) ->
-        d |> String.split() |> Enum.map(fn dep -> {dep, "*"} end) |> Map.new()
-      d when is_list(d) ->
-        d |> Enum.map(fn dep -> {dep, "*"} end) |> Map.new()
-      _ -> %{}
-    end
+
+    deps =
+      case raw_deps do
+        d when is_binary(d) ->
+          d |> String.split() |> Enum.map(fn dep -> {dep, "*"} end) |> Map.new()
+
+        d when is_list(d) ->
+          d |> Enum.map(fn dep -> {dep, "*"} end) |> Map.new()
+
+        _ ->
+          %{}
+      end
 
     manifest = %ManifestFormat{
       name: name,
@@ -85,31 +96,38 @@ defmodule Opsm.Registries.Pacstall do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"] || pkg["packageName"],
-            version: pkg["version"] || pkg["latestVersion"],
-            description: pkg["description"] || pkg["pkgdesc"]
-          }
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"] || pkg["packageName"],
+              version: pkg["version"] || pkg["latestVersion"],
+              description: pkg["description"] || pkg["pkgdesc"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"] || pkg["packageName"],
-            version: pkg["version"] || pkg["latestVersion"],
-            description: pkg["description"] || pkg["pkgdesc"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"] || pkg["packageName"],
+              version: pkg["version"] || pkg["latestVersion"],
+              description: pkg["description"] || pkg["pkgdesc"]
+            }
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

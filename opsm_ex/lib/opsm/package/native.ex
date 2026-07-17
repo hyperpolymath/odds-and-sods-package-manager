@@ -144,7 +144,10 @@ defmodule Opsm.Package.Native do
 
   defp do_native_remove(:hex, package, _global) do
     # mix deps.unlock + remove from mix.exs (interactive)
-    IO.puts("  Note: Remove '#{package}' from mix.exs deps, then run 'mix deps.unlock #{package}'")
+    IO.puts(
+      "  Note: Remove '#{package}' from mix.exs deps, then run 'mix deps.unlock #{package}'"
+    )
+
     {:ok, :manual_required}
   end
 
@@ -166,22 +169,24 @@ defmodule Opsm.Package.Native do
   defp build_install_command(:npm, package, version, global, dev) do
     pkg_spec = if version, do: "#{package}@#{version}", else: package
 
-    args = cond do
-      global && dev -> ["install", "-g", "--save-dev", pkg_spec]
-      global -> ["install", "-g", pkg_spec]
-      dev -> ["install", "--save-dev", pkg_spec]
-      true -> ["install", pkg_spec]
-    end
+    args =
+      cond do
+        global && dev -> ["install", "-g", "--save-dev", pkg_spec]
+        global -> ["install", "-g", pkg_spec]
+        dev -> ["install", "--save-dev", pkg_spec]
+        true -> ["install", pkg_spec]
+      end
 
     {"npm", args}
   end
 
   defp build_install_command(:cargo, package, version, _global, _dev) do
-    args = if version do
-      ["install", package, "--version", version]
-    else
-      ["install", package]
-    end
+    args =
+      if version do
+        ["install", package, "--version", version]
+      else
+        ["install", package]
+      end
 
     {"cargo", args}
   end
@@ -197,22 +202,24 @@ defmodule Opsm.Package.Native do
   defp build_install_command(:pypi, package, version, global, _dev) do
     pkg_spec = if version, do: "#{package}==#{version}", else: package
 
-    args = if global do
-      ["install", pkg_spec]
-    else
-      ["install", "--user", pkg_spec]
-    end
+    args =
+      if global do
+        ["install", pkg_spec]
+      else
+        ["install", "--user", pkg_spec]
+      end
 
     {"pip", args}
   end
 
   defp build_install_command(:gem, package, version, global, _dev) do
-    args = cond do
-      version && global -> ["install", package, "-v", version]
-      version -> ["install", package, "-v", version, "--user-install"]
-      global -> ["install", package]
-      true -> ["install", package, "--user-install"]
-    end
+    args =
+      cond do
+        version && global -> ["install", package, "-v", version]
+        version -> ["install", package, "-v", version, "--user-install"]
+        global -> ["install", package]
+        true -> ["install", package, "--user-install"]
+      end
 
     {"gem", args}
   end
@@ -223,11 +230,12 @@ defmodule Opsm.Package.Native do
   end
 
   defp build_install_command(:pub, package, version, _global, dev) do
-    args = if dev do
-      ["pub", "add", "--dev", package]
-    else
-      ["pub", "add", package]
-    end
+    args =
+      if dev do
+        ["pub", "add", "--dev", package]
+      else
+        ["pub", "add", package]
+      end
 
     args = if version, do: args ++ ["--version", version], else: args
     {"dart", args}
@@ -248,9 +256,10 @@ defmodule Opsm.Package.Native do
     IO.puts("  $ #{cmd} #{Enum.join(args, " ")}")
 
     # Use Port for better control and timeout handling
-    task = Task.async(fn ->
-      run_command_sync(cmd, args)
-    end)
+    task =
+      Task.async(fn ->
+        run_command_sync(cmd, args)
+      end)
 
     case Task.yield(task, timeout) do
       {:ok, result} ->
@@ -270,12 +279,13 @@ defmodule Opsm.Package.Native do
         {:error, "Command not found: #{cmd}"}
 
       exe_path ->
-        port = Port.open({:spawn_executable, exe_path}, [
-          :binary,
-          :exit_status,
-          :stderr_to_stdout,
-          args: args
-        ])
+        port =
+          Port.open({:spawn_executable, exe_path}, [
+            :binary,
+            :exit_status,
+            :stderr_to_stdout,
+            args: args
+          ])
 
         collect_output(port, [])
     end

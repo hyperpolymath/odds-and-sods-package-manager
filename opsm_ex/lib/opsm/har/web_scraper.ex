@@ -254,21 +254,27 @@ defmodule Opsm.Har.WebScraper do
   @doc false
   def check_github(query, language) do
     lang_param = if language != "unknown", do: "+language:#{language}", else: ""
-    url = "https://api.github.com/search/repositories?q=#{URI.encode(query)}#{lang_param}&per_page=5"
 
-    case Http.get_json(url, timeout: @request_timeout, headers: [{"accept", "application/vnd.github.v3+json"}]) do
+    url =
+      "https://api.github.com/search/repositories?q=#{URI.encode(query)}#{lang_param}&per_page=5"
+
+    case Http.get_json(url,
+           timeout: @request_timeout,
+           headers: [{"accept", "application/vnd.github.v3+json"}]
+         ) do
       {:ok, %{"items" => [first | _]}} ->
         confidence = github_confidence(first)
 
-        {:ok, %{
-          url: first["html_url"],
-          type: :git,
-          ref: first["default_branch"],
-          description: first["description"],
-          license: get_in(first, ["license", "spdx_id"]),
-          stars: first["stargazers_count"],
-          confidence: confidence
-        }}
+        {:ok,
+         %{
+           url: first["html_url"],
+           type: :git,
+           ref: first["default_branch"],
+           description: first["description"],
+           license: get_in(first, ["license", "spdx_id"]),
+           stars: first["stargazers_count"],
+           confidence: confidence
+         }}
 
       _ ->
         {:error, :not_found}
@@ -281,13 +287,14 @@ defmodule Opsm.Har.WebScraper do
 
     case Http.get_json(url, timeout: @request_timeout) do
       {:ok, [first | _]} ->
-        {:ok, %{
-          url: first["web_url"],
-          type: :git,
-          ref: first["default_branch"],
-          description: first["description"],
-          confidence: 0.5
-        }}
+        {:ok,
+         %{
+           url: first["web_url"],
+           type: :git,
+           ref: first["default_branch"],
+           description: first["description"],
+           confidence: 0.5
+         }}
 
       _ ->
         {:error, :not_found}
@@ -300,13 +307,14 @@ defmodule Opsm.Har.WebScraper do
 
     case Http.get_json(url, timeout: @request_timeout) do
       {:ok, %{"data" => [first | _]}} ->
-        {:ok, %{
-          url: first["html_url"],
-          type: :git,
-          ref: first["default_branch"],
-          description: first["description"],
-          confidence: 0.4
-        }}
+        {:ok,
+         %{
+           url: first["html_url"],
+           type: :git,
+           ref: first["default_branch"],
+           description: first["description"],
+           confidence: 0.4
+         }}
 
       _ ->
         {:error, :not_found}
@@ -353,13 +361,15 @@ defmodule Opsm.Har.WebScraper do
     Enum.reduce_while(registry_checks, {:error, :not_found}, fn {url, registry}, _acc ->
       case Http.get_json(url, timeout: @request_timeout) do
         {:ok, body} when is_map(body) ->
-          {:halt, {:ok, %{
-            url: url,
-            type: :registry,
-            registry: registry,
-            body: body,
-            confidence: 0.95
-          }}}
+          {:halt,
+           {:ok,
+            %{
+              url: url,
+              type: :registry,
+              registry: registry,
+              body: body,
+              confidence: 0.95
+            }}}
 
         _ ->
           {:cont, {:error, :not_found}}

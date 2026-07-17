@@ -20,11 +20,12 @@ defmodule Opsm.Registries.Astrolabe do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          fetch_latest_version(body)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            fetch_latest_version(body)
+          else
+            version
+          end
 
         deps = extract_deps(body, target_version)
         {:ok, parse_package(name, body, target_version, deps)}
@@ -61,29 +62,33 @@ defmodule Opsm.Registries.Astrolabe do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["latest_version"] || pkg["version"],
-            description: pkg["description"] || "",
-            downloads: pkg["downloads"] || 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["latest_version"] || pkg["version"],
+              description: pkg["description"] || "",
+              downloads: pkg["downloads"] || 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, packages} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["latest_version"] || pkg["version"],
-            description: pkg["description"] || "",
-            downloads: pkg["downloads"] || 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["latest_version"] || pkg["version"],
+              description: pkg["description"] || "",
+              downloads: pkg["downloads"] || 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -117,25 +122,29 @@ defmodule Opsm.Registries.Astrolabe do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions}} when is_list(versions) ->
-        ver_list = Enum.map(versions, fn v ->
-          case v do
-            %{"version" => ver} -> ver
-            ver when is_binary(ver) -> ver
-            _ -> nil
-          end
-        end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          Enum.map(versions, fn v ->
+            case v do
+              %{"version" => ver} -> ver
+              ver when is_binary(ver) -> ver
+              _ -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:ok, versions} when is_list(versions) ->
-        ver_list = Enum.map(versions, fn v ->
-          case v do
-            %{"version" => ver} -> ver
-            ver when is_binary(ver) -> ver
-            _ -> nil
-          end
-        end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          Enum.map(versions, fn v ->
+            case v do
+              %{"version" => ver} -> ver
+              ver when is_binary(ver) -> ver
+              _ -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:error, :not_found} ->
@@ -162,11 +171,13 @@ defmodule Opsm.Registries.Astrolabe do
     case body do
       %{"dependencies" => deps} when is_map(deps) ->
         Enum.reduce(deps, %{}, fn {dep_name, constraint}, acc ->
-          ver = case constraint do
-            c when is_binary(c) -> c
-            %{"version" => v} -> v
-            _ -> ">= 0.0.0"
-          end
+          ver =
+            case constraint do
+              c when is_binary(c) -> c
+              %{"version" => v} -> v
+              _ -> ">= 0.0.0"
+            end
+
           Map.put(acc, dep_name, ver)
         end)
 

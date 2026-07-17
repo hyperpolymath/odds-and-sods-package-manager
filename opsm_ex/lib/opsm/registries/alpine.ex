@@ -17,11 +17,14 @@ defmodule Opsm.Registries.Alpine do
   """
   def fetch_package(name, version \\ "latest") do
     url = "#{@api_url}/package/edge/main/x86_64/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"] || body["pkgver"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"] || body["pkgver"],
+            else: version
+
         {:ok, parse_alpine_package(name, body, ver)}
 
       {:error, :not_found} ->
@@ -38,26 +41,35 @@ defmodule Opsm.Registries.Alpine do
 
   defp fetch_community(name, version) do
     url = "#{@api_url}/package/edge/community/x86_64/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"] || body["pkgver"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"] || body["pkgver"],
+            else: version
+
         {:ok, parse_alpine_package(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp parse_alpine_package(name, body, version) do
-    deps = (body["depends"] || [])
-           |> Enum.map(fn d ->
-             dep_name = String.replace(d, ~r/[><=].*/, "")
-             {dep_name, "*"}
-           end)
-           |> Map.new()
+    deps =
+      (body["depends"] || [])
+      |> Enum.map(fn d ->
+        dep_name = String.replace(d, ~r/[><=].*/, "")
+        {dep_name, "*"}
+      end)
+      |> Map.new()
 
     manifest = %ManifestFormat{
       name: name,
@@ -76,7 +88,7 @@ defmodule Opsm.Registries.Alpine do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -95,17 +107,23 @@ defmodule Opsm.Registries.Alpine do
   """
   def search(query, _opts \\ []) do
     url = "#{@api_url}/packages?name=#{URI.encode(query)}*&branch=edge&arch=x86_64"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn p ->
-          %{name: p["name"], version: p["version"], description: p["description"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn p ->
+            %{name: p["name"], version: p["version"], description: p["description"]}
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

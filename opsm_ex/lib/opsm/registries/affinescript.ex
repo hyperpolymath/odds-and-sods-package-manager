@@ -22,7 +22,8 @@ defmodule Opsm.Registries.AffineScript do
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.affinescript.dev/api/v1"
-  @fallback_mode :git  # Switch to :registry once packages.affinescript.dev is live
+  # Switch to :registry once packages.affinescript.dev is live
+  @fallback_mode :git
 
   # ---------------------------------------------------------------------------
   # Curated package catalogue
@@ -78,7 +79,8 @@ defmodule Opsm.Registries.AffineScript do
     %{
       name: "affine-crypto",
       url: "https://github.com/hyperpolymath/affine-crypto",
-      description: "Post-quantum cryptographic primitives (Dilithium5, Kyber-1024) for AffineScript"
+      description:
+        "Post-quantum cryptographic primitives (Dilithium5, Kyber-1024) for AffineScript"
     },
     %{
       name: "typed-wasm-rt",
@@ -187,6 +189,7 @@ defmodule Opsm.Registries.AffineScript do
 
   defp registry_exists?(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -454,6 +457,7 @@ defmodule Opsm.Registries.AffineScript do
 
   # Parse a TOML inline array string ["a", "b", "c"] into a list.
   defp parse_toml_array(nil), do: nil
+
   defp parse_toml_array(str) when is_binary(str) do
     str
     |> String.trim("[")

@@ -78,6 +78,7 @@ defmodule Opsm.SafeExec do
 
   defp validate_command(command, allowlist) do
     name = Path.basename(command)
+
     cond do
       String.trim(command) == "" ->
         {:error, "command is empty"}

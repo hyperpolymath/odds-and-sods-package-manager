@@ -32,8 +32,7 @@ defmodule Opsm.Runtime.IntegrationTest do
   @golang_handler %{
     "versions_url" => "https://go.dev/dl/?mode=json&include=all",
     "version_key_pattern" => "^go[0-9]+\\.[0-9]+",
-    "archive_url_template" =>
-      "https://go.dev/dl/{{go_version}}.{{go_os}}-{{go_arch}}.tar.gz"
+    "archive_url_template" => "https://go.dev/dl/{{go_version}}.{{go_os}}-{{go_arch}}.tar.gz"
   }
 
   @nodejs_handler %{
@@ -44,7 +43,7 @@ defmodule Opsm.Runtime.IntegrationTest do
   }
 
   # Known stable versions used as anchors for URL validation tests
-  @zig_stable    "0.13.0"
+  @zig_stable "0.13.0"
   @golang_stable "1.21.0"
   @nodejs_stable "v20.11.0"
 
@@ -127,7 +126,9 @@ defmodule Opsm.Runtime.IntegrationTest do
 
     @tag :external_api
     test "constructed URL for golang stable has correct structure" do
-      assert {:ok, url} = UrlHandler.archive_url("golang", @golang_stable, :linux_amd64, @golang_handler)
+      assert {:ok, url} =
+               UrlHandler.archive_url("golang", @golang_stable, :linux_amd64, @golang_handler)
+
       assert url =~ "go.dev/dl/go#{@golang_stable}.linux-amd64.tar.gz"
     end
   end
@@ -167,6 +168,7 @@ defmodule Opsm.Runtime.IntegrationTest do
         {:ok, path} ->
           assert is_binary(path)
           assert String.contains?(path, "zig")
+
         {:error, :not_installed} ->
           # Install may have been skipped if zig was already present — acceptable
           :ok
@@ -215,18 +217,24 @@ defmodule Opsm.Runtime.IntegrationTest do
 
   describe "install_from_manifest/1 — live manifest install" do
     setup do
-      dir = System.tmp_dir!() |> Path.join("opsm_runtime_integration_#{System.unique_integer([:positive])}")
+      dir =
+        System.tmp_dir!()
+        |> Path.join("opsm_runtime_integration_#{System.unique_integer([:positive])}")
+
       File.mkdir_p!(dir)
+
       on_exit(fn ->
         File.rm_rf!(dir)
         Manager.remove("zig")
       end)
+
       {:ok, dir: dir}
     end
 
     @tag :live_download
     test "installs tools declared in [runtime] section", %{dir: dir} do
       manifest = Path.join(dir, "opsm.toml")
+
       File.write!(manifest, """
       [package]
       name = "test-project"

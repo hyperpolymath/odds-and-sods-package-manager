@@ -27,7 +27,12 @@ defmodule Opsm.Events do
     :dependency_update
   ]
 
-  @type event_type :: :security_advisory | :package_publish | :package_deprecate | :package_update | :dependency_update
+  @type event_type ::
+          :security_advisory
+          | :package_publish
+          | :package_deprecate
+          | :package_update
+          | :dependency_update
 
   @type event_data :: %{
           required(:package) => String.t(),

@@ -7,14 +7,15 @@ defmodule Opsm.Api.MobileRouter do
 
   use Plug.Router
 
-  plug Plug.Logger
+  plug(Plug.Logger)
 
-  plug Plug.Parsers,
+  plug(Plug.Parsers,
     parsers: [:json],
     json_decoder: Jason
+  )
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   get "/api/health" do
     send_json(conn, 200, %{
@@ -29,32 +30,33 @@ defmodule Opsm.Api.MobileRouter do
     registry = conn.query_params["registry"]
 
     # Mock search results for testing
-    packages = [
-      %{
-        name: "react",
-        version: "18.2.0",
-        registry: "npm",
-        description: "A JavaScript library for building user interfaces"
-      },
-      %{
-        name: "vue",
-        version: "3.3.4",
-        registry: "npm",
-        description: "Progressive JavaScript Framework"
-      },
-      %{
-        name: "axum",
-        version: "0.7.3",
-        registry: "crates",
-        description: "Web framework for Rust"
-      }
-    ]
-    |> Enum.filter(fn pkg ->
-      String.contains?(String.downcase(pkg.name), String.downcase(query))
-    end)
-    |> Enum.filter(fn pkg ->
-      is_nil(registry) || pkg.registry == registry
-    end)
+    packages =
+      [
+        %{
+          name: "react",
+          version: "18.2.0",
+          registry: "npm",
+          description: "A JavaScript library for building user interfaces"
+        },
+        %{
+          name: "vue",
+          version: "3.3.4",
+          registry: "npm",
+          description: "Progressive JavaScript Framework"
+        },
+        %{
+          name: "axum",
+          version: "0.7.3",
+          registry: "crates",
+          description: "Web framework for Rust"
+        }
+      ]
+      |> Enum.filter(fn pkg ->
+        String.contains?(String.downcase(pkg.name), String.downcase(query))
+      end)
+      |> Enum.filter(fn pkg ->
+        is_nil(registry) || pkg.registry == registry
+      end)
 
     send_json(conn, 200, %{
       packages: packages,
@@ -127,6 +129,7 @@ defmodule Opsm.Api.MobileRouter do
 
   defp send_json(conn, status, data) do
     body = Jason.encode!(data)
+
     conn
     |> Plug.Conn.put_resp_content_type("application/json")
     |> Plug.Conn.send_resp(status, body)

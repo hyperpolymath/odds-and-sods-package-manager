@@ -15,11 +15,12 @@ defmodule Opsm.Registries.Npm do
   Fetch package metadata from npm registry.
   """
   def fetch_package(name, version \\ "latest") do
-    url = if version == "latest" do
-      "#{@base_url}/#{URI.encode(name)}/latest"
-    else
-      "#{@base_url}/#{URI.encode(name)}/#{version}"
-    end
+    url =
+      if version == "latest" do
+        "#{@base_url}/#{URI.encode(name)}/latest"
+      else
+        "#{@base_url}/#{URI.encode(name)}/#{version}"
+      end
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
@@ -142,6 +143,7 @@ defmodule Opsm.Registries.Npm do
 
   defp parse_search_result(obj) do
     pkg = obj["package"] || %{}
+
     %{
       name: pkg["name"],
       version: pkg["version"],
@@ -169,24 +171,30 @@ defmodule Opsm.Registries.Npm do
   end
 
   defp extract_authors(author, maintainers) do
-    author_list = case author do
-      nil -> []
-      a when is_binary(a) -> [a]
-      %{"name" => name} -> [name]
-      _ -> []
-    end
+    author_list =
+      case author do
+        nil -> []
+        a when is_binary(a) -> [a]
+        %{"name" => name} -> [name]
+        _ -> []
+      end
 
-    maintainer_list = case maintainers do
-      nil -> []
-      list when is_list(list) ->
-        Enum.map(list, fn
-          %{"name" => name} -> name
-          name when is_binary(name) -> name
-          _ -> nil
-        end)
-        |> Enum.reject(&is_nil/1)
-      _ -> []
-    end
+    maintainer_list =
+      case maintainers do
+        nil ->
+          []
+
+        list when is_list(list) ->
+          Enum.map(list, fn
+            %{"name" => name} -> name
+            name when is_binary(name) -> name
+            _ -> nil
+          end)
+          |> Enum.reject(&is_nil/1)
+
+        _ ->
+          []
+      end
 
     (author_list ++ maintainer_list) |> Enum.uniq()
   end

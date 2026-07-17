@@ -73,8 +73,8 @@ defmodule Opsm.Storage.Ipfs do
 
         case Req.post(url, into: File.stream!(dest_path), receive_timeout: @timeout_ms) do
           {:ok, %{status: 200}} -> {:ok, dest_path}
-          {:ok, %{status: s}}   -> {:error, "IPFS cat returned #{s}"}
-          {:error, reason}      -> {:error, "IPFS cat failed: #{inspect(reason)}"}
+          {:ok, %{status: s}} -> {:error, "IPFS cat returned #{s}"}
+          {:error, reason} -> {:error, "IPFS cat failed: #{inspect(reason)}"}
         end
     end
   end
@@ -82,13 +82,16 @@ defmodule Opsm.Storage.Ipfs do
   @impl true
   def exists?(key, _opts) do
     case load_cid(key) do
-      nil -> false
+      nil ->
+        false
+
       cid ->
         api = api_url()
         url = "#{api}/api/v0/pin/ls?arg=#{cid}&type=recursive"
+
         case Req.post(url, receive_timeout: 5_000) do
           {:ok, %{status: 200}} -> true
-          _                     -> false
+          _ -> false
         end
     end
   end
@@ -96,7 +99,9 @@ defmodule Opsm.Storage.Ipfs do
   @impl true
   def url(key, _opts) do
     case load_cid(key) do
-      nil -> nil
+      nil ->
+        nil
+
       cid ->
         gateway = System.get_env("OPSM_IPFS_GATEWAY", @default_gateway)
         "#{gateway}/ipfs/#{cid}"
@@ -110,12 +115,14 @@ defmodule Opsm.Storage.Ipfs do
   defp api_url, do: System.get_env("OPSM_IPFS_API", @default_api)
 
   defp extract_cid(resp) when is_map(resp), do: resp["Hash"] || resp["Cid"] || resp["cid"]
+
   defp extract_cid(resp) when is_binary(resp) do
     case Jason.decode(resp) do
       {:ok, map} -> extract_cid(map)
-      _          -> nil
+      _ -> nil
     end
   end
+
   defp extract_cid(_), do: nil
 
   # Build a minimal multipart/form-data body for /api/v0/add.
@@ -153,10 +160,11 @@ defmodule Opsm.Storage.Ipfs do
       {:ok, content} ->
         case Jason.decode(content) do
           {:ok, map} when is_map(map) -> map
-          _                           -> %{}
+          _ -> %{}
         end
 
-      {:error, _} -> %{}
+      {:error, _} ->
+        %{}
     end
   end
 end

@@ -168,15 +168,20 @@ defmodule Opsm.Package.Installer do
 
     # CVE/OSV advisory scan + typosquat check (warn-only — never blocks install).
     try do
-      {:ok, sec_report} = Opsm.Security.Scanner.scan_resolved(package.package, version, package.forth)
+      {:ok, sec_report} =
+        Opsm.Security.Scanner.scan_resolved(package.package, version, package.forth)
+
       if !Opsm.Security.Scanner.Report.clean?(sec_report) do
         IO.puts("  ⚠ Security warnings for #{package.package}@#{version}:")
+
         if match?({:suspicious, _}, sec_report.typosquat) do
           IO.puts("    Possible typosquat — verify package origin before use")
         end
+
         crit = Opsm.Security.Scanner.Report.critical_count(sec_report)
         high = Opsm.Security.Scanner.Report.high_count(sec_report)
         total = length(sec_report.vulnerabilities)
+
         if total > 0 do
           IO.puts("    #{total} OSV advisory/ies (#{crit} critical, #{high} high)")
           IO.puts("    Run `opsm scan #{package.package}` for full details")
@@ -189,47 +194,67 @@ defmodule Opsm.Package.Installer do
     # Run trust pipeline — gracefully degrade if services are unreachable.
     # Trust is advisory during install; only an explicit :failed blocks.
     IO.puts("  Running trust checks...")
-    {trust_result, enriched_package} = try do
-      # Pipeline.verify/2 cannot return {:error, _} — failed checks come back
-      # inside the {:ok, results} map; service failures raise into the rescue.
-      {:ok, trust_result} = Pipeline.verify(package)
-      {trust_result, package}
-    rescue
-      e ->
-        IO.puts("  ⚠ Trust pipeline unavailable: #{Exception.message(e)} — continuing")
-        {%{overall: :warning, warnings: ["Trust services unreachable"], checks: %{}, recommendations: []}, package}
-    end
+
+    {trust_result, enriched_package} =
+      try do
+        # Pipeline.verify/2 cannot return {:error, _} — failed checks come back
+        # inside the {:ok, results} map; service failures raise into the rescue.
+        {:ok, trust_result} = Pipeline.verify(package)
+        {trust_result, package}
+      rescue
+        e ->
+          IO.puts("  ⚠ Trust pipeline unavailable: #{Exception.message(e)} — continuing")
+
+          {%{
+             overall: :warning,
+             warnings: ["Trust services unreachable"],
+             checks: %{},
+             recommendations: []
+           }, package}
+      end
 
     # Generate PQ trust attestation (non-blocking — failures don't halt install)
-    pq_attestation = try do
-      PqTrust.trust_attestation(package.package, version, package.checksum)
-    rescue
-      _ -> nil
-    end
-
-    # Generate SLSA provenance (non-blocking)
-    slsa_provenance = try do
-      pkg_info = %{name: package.package, version: version, forth: package.forth,
-                   tarball_url: package.tarball_url}
-      case Slsa.generate_provenance(pkg_info) do
-        {:ok, statement} -> statement
+    pq_attestation =
+      try do
+        PqTrust.trust_attestation(package.package, version, package.checksum)
+      rescue
         _ -> nil
       end
-    rescue
-      _ -> nil
-    end
+
+    # Generate SLSA provenance (non-blocking)
+    slsa_provenance =
+      try do
+        pkg_info = %{
+          name: package.package,
+          version: version,
+          forth: package.forth,
+          tarball_url: package.tarball_url
+        }
+
+        case Slsa.generate_provenance(pkg_info) do
+          {:ok, statement} -> statement
+          _ -> nil
+        end
+      rescue
+        _ -> nil
+      end
 
     # Attach attestations to package for lockfile
     # Use Map.put for fields not in the ResolvedPackage struct
-    enriched = enriched_package
-    |> Map.put(:attestations, List.wrap(pq_attestation) ++ List.wrap(Map.get(enriched_package, :attestations)))
-    |> Map.put(:slsa_provenance, slsa_provenance)
+    enriched =
+      enriched_package
+      |> Map.put(
+        :attestations,
+        List.wrap(pq_attestation) ++ List.wrap(Map.get(enriched_package, :attestations))
+      )
+      |> Map.put(:slsa_provenance, slsa_provenance)
 
-    result = case handle_trust_result(trust_result, enriched, scope, dry_run) do
-      {:ok, :dry_run} -> {:ok, :dry_run}
-      {:ok, _} -> {:ok, enriched}
-      {:error, reason} -> {:error, {package.package, reason}}
-    end
+    result =
+      case handle_trust_result(trust_result, enriched, scope, dry_run) do
+        {:ok, :dry_run} -> {:ok, :dry_run}
+        {:ok, _} -> {:ok, enriched}
+        {:error, reason} -> {:error, {package.package, reason}}
+      end
 
     case result do
       {:ok, _} ->
@@ -241,8 +266,10 @@ defmodule Opsm.Package.Installer do
         if installed != [] and not dry_run do
           IO.puts("")
           IO.puts("Rolling back #{length(installed)} previously installed package(s)...")
+
           Enum.each(installed, fn pkg ->
             IO.puts("  Removing #{pkg.package}...")
+
             case find_installed(pkg.package) do
               nil -> :ok
               entry -> do_remove(entry)
@@ -279,23 +306,26 @@ defmodule Opsm.Package.Installer do
       Enum.reduce(packages, lockfile, fn {version, pkg}, acc ->
         dep_names = Map.keys(pkg.manifest.dependencies || %{})
 
-        {checksum, algo} = if is_nil(pkg.checksum) do
-          # Compute checksum from cached download
-          cache_path = Downloader.cache_path_for(pkg)
-          if File.exists?(cache_path) do
-            {Downloader.compute_file_checksum(cache_path, :sha256), :sha256}
+        {checksum, algo} =
+          if is_nil(pkg.checksum) do
+            # Compute checksum from cached download
+            cache_path = Downloader.cache_path_for(pkg)
+
+            if File.exists?(cache_path) do
+              {Downloader.compute_file_checksum(cache_path, :sha256), :sha256}
+            else
+              {nil, nil}
+            end
           else
-            {nil, nil}
+            {pkg.checksum, pkg.checksum_algo}
           end
-        else
-          {pkg.checksum, pkg.checksum_algo}
-        end
 
         # Extract SLSA metadata if provenance was generated
-        slsa_meta = case Map.get(pkg, :slsa_provenance) do
-          nil -> %{slsa_level: nil, slsa_provenance_uri: nil}
-          prov -> Slsa.lockfile_metadata(%{statement: prov})
-        end
+        slsa_meta =
+          case Map.get(pkg, :slsa_provenance) do
+            nil -> %{slsa_level: nil, slsa_provenance_uri: nil}
+            prov -> Slsa.lockfile_metadata(%{statement: prov})
+          end
 
         Lockfile.add_package(acc, %{
           name: pkg.package,
@@ -328,16 +358,20 @@ defmodule Opsm.Package.Installer do
     case trust_result.overall do
       :failed ->
         IO.puts("  ✗ Trust pipeline failed")
+
         for warn <- trust_result.warnings do
           IO.puts("    - #{warn}")
         end
+
         {:error, Errors.format(Errors.trust_failed(package.package, trust_result.warnings))}
 
       :warning ->
         IO.puts("  ⚠ Trust pipeline warnings:")
+
         for warn <- trust_result.warnings do
           IO.puts("    - #{warn}")
         end
+
         IO.puts("  Proceeding with installation...")
         continue_install(package, scope, dry_run)
 
@@ -358,6 +392,7 @@ defmodule Opsm.Package.Installer do
 
       # Download
       IO.puts("")
+
       case Downloader.download(package) do
         {:ok, tarball_path} ->
           # Compute checksum post-download if registry didn't provide one
@@ -370,7 +405,9 @@ defmodule Opsm.Package.Installer do
           txn = Transaction.record_file(txn, tarball_path)
 
           # Unpack and install
-          install_path = Path.join([install_dir(scope), to_string(package.forth), package.package])
+          install_path =
+            Path.join([install_dir(scope), to_string(package.forth), package.package])
+
           IO.puts("  Installing to: #{install_path}")
 
           # Create install directory with transaction tracking
@@ -382,7 +419,9 @@ defmodule Opsm.Package.Installer do
                   case link_binaries_safe(txn, install_path, package.forth, scope) do
                     {:ok, txn, linked_bins} ->
                       if linked_bins != [] do
-                        IO.puts("  Linked #{length(linked_bins)} executable(s) to #{bin_dir(scope)}")
+                        IO.puts(
+                          "  Linked #{length(linked_bins)} executable(s) to #{bin_dir(scope)}"
+                        )
                       end
 
                       # Register in installed db
@@ -392,13 +431,24 @@ defmodule Opsm.Package.Installer do
                       _txn = Transaction.complete(txn)
 
                       IO.puts("")
-                      IO.puts(Opsm.Colour.ok("Installed #{Opsm.Colour.cyan("#{package.package}@#{package.version}")}"))
+
+                      IO.puts(
+                        Opsm.Colour.ok(
+                          "Installed #{Opsm.Colour.cyan("#{package.package}@#{package.version}")}"
+                        )
+                      )
+
                       {:ok, package}
 
                     {:error, reason} ->
                       # Rollback on symlink failure
                       Transaction.rollback(txn)
-                      {:error, Errors.format({:install, "Failed to link binaries: #{reason}", "Check permissions on #{bin_dir(scope)}"})}
+
+                      {:error,
+                       Errors.format(
+                         {:install, "Failed to link binaries: #{reason}",
+                          "Check permissions on #{bin_dir(scope)}"}
+                       )}
                   end
 
                 {:error, reason} ->
@@ -410,7 +460,11 @@ defmodule Opsm.Package.Installer do
             {:error, reason} ->
               # Rollback on mkdir failure
               Transaction.rollback(txn)
-              {:error, Errors.format({:install, "Failed to create install directory: #{reason}", "Check permissions"})}
+
+              {:error,
+               Errors.format(
+                 {:install, "Failed to create install directory: #{reason}", "Check permissions"}
+               )}
           end
 
         {:error, reason} ->
@@ -444,7 +498,8 @@ defmodule Opsm.Package.Installer do
   defp unpack_npm(tarball_path, dest_path) do
     # npm packages are .tgz with a `package/` prefix
     case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-          stderr_to_stdout: true) do
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end
@@ -453,7 +508,8 @@ defmodule Opsm.Package.Installer do
   defp unpack_crate(tarball_path, dest_path) do
     # Rust crates are .crate (gzipped tar) with package-version/ prefix
     case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-          stderr_to_stdout: true) do
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {error, _} -> {:error, error}
     end
@@ -462,18 +518,22 @@ defmodule Opsm.Package.Installer do
   defp unpack_hex(tarball_path, dest_path) do
     # Hex packages are .tar containing contents.tar.gz
     # First extract the outer tar
-    tmp_dir = Path.join(System.tmp_dir!(), "opsm_hex_#{:rand.uniform(100000)}")
+    tmp_dir = Path.join(System.tmp_dir!(), "opsm_hex_#{:rand.uniform(100_000)}")
     File.mkdir_p!(tmp_dir)
 
     case Opsm.SafeExec.cmd("tar", ["-xf", tarball_path, "-C", tmp_dir], stderr_to_stdout: true) do
       {_, 0} ->
         # Now extract contents.tar.gz
         contents_tar = Path.join(tmp_dir, "contents.tar.gz")
+
         if File.exists?(contents_tar) do
-          case Opsm.SafeExec.cmd("tar", ["-xzf", contents_tar, "-C", dest_path], stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd("tar", ["-xzf", contents_tar, "-C", dest_path],
+                 stderr_to_stdout: true
+               ) do
             {_, 0} ->
               File.rm_rf!(tmp_dir)
               :ok
+
             {error, _} ->
               File.rm_rf!(tmp_dir)
               {:error, error}
@@ -492,13 +552,18 @@ defmodule Opsm.Package.Installer do
   defp unpack_pypi(tarball_path, dest_path) do
     # Python packages are .tar.gz or .whl (zip) with package-version/ prefix
     if String.ends_with?(tarball_path, ".whl") do
-      case Opsm.SafeExec.cmd("unzip", ["-q", tarball_path, "-d", dest_path], stderr_to_stdout: true) do
+      case Opsm.SafeExec.cmd("unzip", ["-q", tarball_path, "-d", dest_path],
+             stderr_to_stdout: true
+           ) do
         {_, 0} -> :ok
         {error, _} -> {:error, error}
       end
     else
-      case Opsm.SafeExec.cmd("tar", ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
-            stderr_to_stdout: true) do
+      case Opsm.SafeExec.cmd(
+             "tar",
+             ["-xzf", tarball_path, "-C", dest_path, "--strip-components=1"],
+             stderr_to_stdout: true
+           ) do
         {_, 0} -> :ok
         {error, _} -> {:error, error}
       end
@@ -507,17 +572,21 @@ defmodule Opsm.Package.Installer do
 
   defp unpack_gem(tarball_path, dest_path) do
     # Ruby gems are tar archives containing data.tar.gz + metadata.gz
-    tmp_dir = Path.join(System.tmp_dir!(), "opsm_gem_#{:rand.uniform(100000)}")
+    tmp_dir = Path.join(System.tmp_dir!(), "opsm_gem_#{:rand.uniform(100_000)}")
     File.mkdir_p!(tmp_dir)
 
     case Opsm.SafeExec.cmd("tar", ["-xf", tarball_path, "-C", tmp_dir], stderr_to_stdout: true) do
       {_, 0} ->
         data_tar = Path.join(tmp_dir, "data.tar.gz")
+
         if File.exists?(data_tar) do
-          case Opsm.SafeExec.cmd("tar", ["-xzf", data_tar, "-C", dest_path], stderr_to_stdout: true) do
+          case Opsm.SafeExec.cmd("tar", ["-xzf", data_tar, "-C", dest_path],
+                 stderr_to_stdout: true
+               ) do
             {_, 0} ->
               File.rm_rf!(tmp_dir)
               :ok
+
             {error, _} ->
               File.rm_rf!(tmp_dir)
               {:error, error}
@@ -538,7 +607,7 @@ defmodule Opsm.Package.Installer do
     # Go module zips contain: module/path@version/ as the prefix
     # e.g. github.com/fatih/color@v1.18.0/color.go
     # Unzip to temp dir, find the versioned dir, move its contents to dest
-    tmp_dir = Path.join(System.tmp_dir!(), "opsm_go_#{:rand.uniform(100000)}")
+    tmp_dir = Path.join(System.tmp_dir!(), "opsm_go_#{:rand.uniform(100_000)}")
     File.mkdir_p!(tmp_dir)
 
     case Opsm.SafeExec.cmd("unzip", ["-q", zip_path, "-d", tmp_dir], stderr_to_stdout: true) do
@@ -559,8 +628,10 @@ defmodule Opsm.Package.Installer do
                     File.cp!(src, dst)
                   end
                 end)
+
                 File.rm_rf!(tmp_dir)
                 :ok
+
               _ ->
                 File.rm_rf!(tmp_dir)
                 :ok
@@ -575,8 +646,11 @@ defmodule Opsm.Package.Installer do
                   dst = Path.join(dest_path, file)
                   if File.dir?(src), do: File.cp_r!(src, dst), else: File.cp!(src, dst)
                 end)
-              _ -> :ok
+
+              _ ->
+                :ok
             end
+
             File.rm_rf!(tmp_dir)
             :ok
         end
@@ -592,21 +666,25 @@ defmodule Opsm.Package.Installer do
     case File.ls(dir) do
       {:ok, entries} ->
         # Check if any entry has @v pattern (module@version format)
-        versioned = Enum.find(entries, fn entry ->
-          String.contains?(entry, "@v")
-        end)
+        versioned =
+          Enum.find(entries, fn entry ->
+            String.contains?(entry, "@v")
+          end)
 
         if versioned do
           {:ok, Path.join(dir, versioned)}
         else
           # Recurse into single subdirectory
           subdirs = Enum.filter(entries, fn entry -> File.dir?(Path.join(dir, entry)) end)
+
           case subdirs do
             [single] -> find_go_module_root(Path.join(dir, single))
             _ -> :error
           end
         end
-      _ -> :error
+
+      _ ->
+        :error
     end
   end
 
@@ -620,11 +698,12 @@ defmodule Opsm.Package.Installer do
   defp unpack_tarball(tarball_path, dest_path, opts) do
     strip = Keyword.get(opts, :strip, 0)
 
-    args = if strip > 0 do
-      ["-xzf", tarball_path, "-C", dest_path, "--strip-components=#{strip}"]
-    else
-      ["-xzf", tarball_path, "-C", dest_path]
-    end
+    args =
+      if strip > 0 do
+        ["-xzf", tarball_path, "-C", dest_path, "--strip-components=#{strip}"]
+      else
+        ["-xzf", tarball_path, "-C", dest_path]
+      end
 
     case Opsm.SafeExec.cmd("tar", args, stderr_to_stdout: true) do
       {_, 0} -> :ok
@@ -633,16 +712,20 @@ defmodule Opsm.Package.Installer do
   end
 
   defp unpack_generic(tarball_path, dest_path) do
-    {cmd, args} = cond do
-      String.ends_with?(tarball_path, ".tar.gz") or String.ends_with?(tarball_path, ".tgz") ->
-        {"tar", ["-xzf", tarball_path, "-C", dest_path]}
-      String.ends_with?(tarball_path, ".tar") ->
-        {"tar", ["-xf", tarball_path, "-C", dest_path]}
-      String.ends_with?(tarball_path, ".zip") or String.ends_with?(tarball_path, ".nupkg") ->
-        {"unzip", ["-q", tarball_path, "-d", dest_path]}
-      true ->
-        {"tar", ["-xzf", tarball_path, "-C", dest_path]}
-    end
+    {cmd, args} =
+      cond do
+        String.ends_with?(tarball_path, ".tar.gz") or String.ends_with?(tarball_path, ".tgz") ->
+          {"tar", ["-xzf", tarball_path, "-C", dest_path]}
+
+        String.ends_with?(tarball_path, ".tar") ->
+          {"tar", ["-xf", tarball_path, "-C", dest_path]}
+
+        String.ends_with?(tarball_path, ".zip") or String.ends_with?(tarball_path, ".nupkg") ->
+          {"unzip", ["-q", tarball_path, "-d", dest_path]}
+
+        true ->
+          {"tar", ["-xzf", tarball_path, "-C", dest_path]}
+      end
 
     case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
       {_, 0} -> :ok
@@ -685,16 +768,20 @@ defmodule Opsm.Package.Installer do
       {:ok, %{type: :symlink}} ->
         # Remove old symlink
         File.rm(link_path)
+
       {:ok, %{type: :regular}} ->
         # Regular file exists - don't overwrite, warn user
         IO.puts("    ⚠ Skipping #{exe_name}: regular file exists at #{link_path}")
         link_executables_safe(txn, rest, bin_target, acc)
+
       {:ok, %{type: :directory}} ->
         IO.puts("    ⚠ Skipping #{exe_name}: directory exists at #{link_path}")
         link_executables_safe(txn, rest, bin_target, acc)
+
       {:error, :enoent} ->
         # Doesn't exist - good
         :ok
+
       {:error, _} ->
         :ok
     end
@@ -732,7 +819,11 @@ defmodule Opsm.Package.Installer do
     package_json = Path.join(install_path, "package.json")
 
     if File.exists?(package_json) do
-      case File.read(package_json) |> then(fn {:ok, c} -> Jason.decode(c); e -> e end) do
+      case File.read(package_json)
+           |> then(fn
+             {:ok, c} -> Jason.decode(c)
+             e -> e
+           end) do
         {:ok, %{"bin" => bins}} when is_binary(bins) ->
           # Single binary with package name
           [Path.join(install_path, bins)]
@@ -760,20 +851,23 @@ defmodule Opsm.Package.Installer do
       case File.read(cargo_toml) do
         {:ok, content} ->
           # Parse bin names from Cargo.toml
-          bins = Regex.scan(~r/\[\[bin\]\].*?name\s*=\s*"([^"]+)"/s, content)
-          |> Enum.map(fn [_, name] -> name end)
+          bins =
+            Regex.scan(~r/\[\[bin\]\].*?name\s*=\s*"([^"]+)"/s, content)
+            |> Enum.map(fn [_, name] -> name end)
 
           # Also check for default binary (same as package name)
-          pkg_name = case Regex.run(~r/name\s*=\s*"([^"]+)"/, content) do
-            [_, name] -> name
-            _ -> nil
-          end
+          pkg_name =
+            case Regex.run(~r/name\s*=\s*"([^"]+)"/, content) do
+              [_, name] -> name
+              _ -> nil
+            end
 
-          all_bins = if pkg_name && File.exists?(Path.join(install_path, "src/main.rs")) do
-            [pkg_name | bins]
-          else
-            bins
-          end
+          all_bins =
+            if pkg_name && File.exists?(Path.join(install_path, "src/main.rs")) do
+              [pkg_name | bins]
+            else
+              bins
+            end
 
           # Return paths (these would need to be built)
           Enum.map(Enum.uniq(all_bins), fn name ->
@@ -781,7 +875,8 @@ defmodule Opsm.Package.Installer do
           end)
           |> Enum.filter(&File.exists?/1)
 
-        _ -> []
+        _ ->
+          []
       end
     else
       []
@@ -823,6 +918,7 @@ defmodule Opsm.Package.Installer do
   defp find_go_bins(install_path) do
     # Go source packages need `go build` — check for cmd/ directory pattern
     cmd_dir = Path.join(install_path, "cmd")
+
     if File.dir?(cmd_dir) do
       case File.ls(cmd_dir) do
         {:ok, entries} ->
@@ -835,7 +931,9 @@ defmodule Opsm.Package.Installer do
             built = Path.join(install_path, bin_name)
             if File.exists?(built), do: [built], else: []
           end)
-        _ -> []
+
+        _ ->
+          []
       end
     else
       find_in_bin_dir(install_path)
@@ -845,6 +943,7 @@ defmodule Opsm.Package.Installer do
   defp find_nuget_bins(install_path) do
     # NuGet packages may have tools/ directory with executables
     tools_dir = Path.join(install_path, "tools")
+
     if File.dir?(tools_dir) do
       list_executables(tools_dir)
     else
@@ -861,6 +960,7 @@ defmodule Opsm.Package.Installer do
   defp find_hackage_bins(install_path) do
     # Haskell packages need cabal build; check for pre-built executables
     dist_dir = Path.join(install_path, "dist-newstyle")
+
     if File.dir?(dist_dir) do
       # Walk dist-newstyle for built executables
       find_in_bin_dir(install_path)
@@ -880,6 +980,7 @@ defmodule Opsm.Package.Installer do
 
   defp find_in_bin_dir(install_path) do
     bin_dir = Path.join(install_path, "bin")
+
     if File.dir?(bin_dir) do
       list_executables(bin_dir)
     else
@@ -897,11 +998,14 @@ defmodule Opsm.Package.Installer do
             {:ok, %{type: :regular, mode: mode}} ->
               # Check if executable (any execute bit set)
               (mode &&& 0o111) != 0
-            _ -> false
+
+            _ ->
+              false
           end
         end)
 
-      _ -> []
+      _ ->
+        []
     end
   end
 
@@ -949,12 +1053,15 @@ defmodule Opsm.Package.Installer do
 
     # Unlink binaries first
     linked_bins = Map.get(installed, "linked_bins", [])
+
     if linked_bins != [] do
       IO.puts("  Unlinking #{length(linked_bins)} executable(s)...")
+
       Enum.each(linked_bins, fn link_path ->
         case File.rm(link_path) do
           :ok -> IO.puts("    ✓ #{Path.basename(link_path)}")
-          {:error, :enoent} -> :ok  # Already gone
+          # Already gone
+          {:error, :enoent} -> :ok
           {:error, reason} -> IO.puts("    ⚠ Failed to unlink #{link_path}: #{reason}")
         end
       end)
@@ -965,6 +1072,7 @@ defmodule Opsm.Package.Installer do
       {:ok, _} ->
         # Extended cleanup: desktop shortcuts, services, config, etc.
         cleanup_actions = Opsm.Package.Cleanup.cleanup(installed["name"])
+
         if cleanup_actions != [] do
           IO.puts("Extended cleanup:")
           IO.puts(Opsm.Package.Cleanup.format_report(cleanup_actions))
@@ -988,7 +1096,10 @@ defmodule Opsm.Package.Installer do
         :ok
 
       {:error, reason, path} ->
-        {:error, Errors.format({:install, "Failed to remove #{path}: #{reason}", "Check file permissions"})}
+        {:error,
+         Errors.format(
+           {:install, "Failed to remove #{path}: #{reason}", "Check file permissions"}
+         )}
     end
   end
 
@@ -1000,7 +1111,8 @@ defmodule Opsm.Package.Installer do
           {:error, _} -> []
         end
 
-      {:error, _} -> []
+      {:error, _} ->
+        []
     end
   end
 

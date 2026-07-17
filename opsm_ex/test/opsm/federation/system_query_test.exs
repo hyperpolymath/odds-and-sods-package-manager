@@ -49,7 +49,11 @@ defmodule Opsm.Federation.SystemQueryTest do
   describe "query_version/2" do
     test "returns :not_installed for unknown package" do
       if System.find_executable("rpm") do
-        assert {:error, :not_installed} = SystemQuery.query_version(:rpm, "nonexistent-package-xyz-#{:rand.uniform(100_000)}")
+        assert {:error, :not_installed} =
+                 SystemQuery.query_version(
+                   :rpm,
+                   "nonexistent-package-xyz-#{:rand.uniform(100_000)}"
+                 )
       end
     end
   end

@@ -56,10 +56,12 @@ defmodule Opsm.Package.Cleanup do
       case File.rm(desktop_file) do
         :ok ->
           # Update desktop database
-          System.cmd("update-desktop-database",
+          System.cmd(
+            "update-desktop-database",
             [Path.join(xdg_data, "applications")],
             stderr_to_stdout: true
           )
+
           Logger.info("Removed desktop shortcut: #{desktop_file}")
           [{:removed, :desktop_shortcut, desktop_file}]
 
@@ -109,6 +111,7 @@ defmodule Opsm.Package.Cleanup do
         System.cmd("systemctl", ["--user", "stop", "#{package_name}#{ext}"],
           stderr_to_stdout: true
         )
+
         System.cmd("systemctl", ["--user", "disable", "#{package_name}#{ext}"],
           stderr_to_stdout: true
         )
@@ -145,6 +148,7 @@ defmodule Opsm.Package.Cleanup do
           System.cmd("update-mime-database", [Path.join(xdg_data, "mime")],
             stderr_to_stdout: true
           )
+
           Logger.info("Removed MIME associations: #{mime_file}")
           [{:removed, :mime_type, mime_file}]
 

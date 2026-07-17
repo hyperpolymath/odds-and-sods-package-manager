@@ -31,7 +31,9 @@ defmodule Opsm.Crypto.PostQuantum.Nif do
   # SLH-DSA (SPHINCS+-256f) --- FIPS 205
   def sphincs_plus_keypair, do: :erlang.nif_error(:nif_not_loaded)
   def sphincs_plus_sign(_message, _secret_key), do: :erlang.nif_error(:nif_not_loaded)
-  def sphincs_plus_verify(_message, _signature, _public_key), do: :erlang.nif_error(:nif_not_loaded)
+
+  def sphincs_plus_verify(_message, _signature, _public_key),
+    do: :erlang.nif_error(:nif_not_loaded)
 
   # ML-KEM-1024 (Kyber-1024) --- FIPS 203
   def kyber1024_keypair, do: :erlang.nif_error(:nif_not_loaded)

@@ -25,11 +25,13 @@ defmodule Opsm.Registries.WordPress do
         {:error, :not_found}
 
       {:ok, body} when is_map(body) ->
-        resolved_version = if version == "latest" do
-          body["version"]
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            body["version"]
+          else
+            version
+          end
+
         {:ok, parse_plugin(body, resolved_version)}
 
       {:error, :not_found} ->

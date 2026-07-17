@@ -59,7 +59,8 @@ defmodule Opsm.MaintenanceTest do
       id = Maintenance.record_history("install", %{"package" => "test-pkg", "version" => "1.0.0"})
 
       assert is_binary(id)
-      assert String.length(id) == 16  # 8 bytes hex encoded
+      # 8 bytes hex encoded
+      assert String.length(id) == 16
     end
   end
 
@@ -175,8 +176,10 @@ defmodule Opsm.MaintenanceTest do
 
       case result do
         {:error, "No history to undo"} -> assert true
-        {:ok, _, _} -> assert true  # Has history from other tests
-        {:error, _} -> assert true  # Cannot undo some operations
+        # Has history from other tests
+        {:ok, _, _} -> assert true
+        # Cannot undo some operations
+        {:error, _} -> assert true
       end
     end
   end
@@ -276,6 +279,7 @@ defmodule Opsm.MaintenanceTest do
       pin = Maintenance.get_pin(pkg)
       assert pin["version"] == "1.0.0"
       assert Maintenance.pinned?(pkg)
+
       # upgrade_path itself would return {:error, :not_installed} for a package not in installed.json,
       # but the pin check logic is covered by pinned? + get_pin above
     end

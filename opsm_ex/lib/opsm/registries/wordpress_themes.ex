@@ -25,11 +25,13 @@ defmodule Opsm.Registries.WordPressThemes do
         {:error, :not_found}
 
       {:ok, body} when is_map(body) ->
-        resolved_version = if version == "latest" do
-          body["version"]
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            body["version"]
+          else
+            version
+          end
+
         {:ok, parse_theme(body, resolved_version)}
 
       {:error, :not_found} ->
@@ -191,7 +193,8 @@ defmodule Opsm.Registries.WordPressThemes do
   end
 
   defp normalize_version(v) do
-    parts = v |> String.replace(~r/^v/, "") |> String.split("-") |> List.first() |> String.split(".")
+    parts =
+      v |> String.replace(~r/^v/, "") |> String.split("-") |> List.first() |> String.split(".")
 
     case length(parts) do
       1 -> Enum.at(parts, 0) <> ".0.0"

@@ -64,12 +64,12 @@ defmodule Opsm.Security.Typosquat do
   ]
 
   @popular %{
-    npm:     @popular_npm,
-    cargo:   @popular_cargo,
-    pypi:    @popular_pypi,
-    hex:     @popular_hex,
-    gem:     @popular_gem,
-    go:      @popular_go
+    npm: @popular_npm,
+    cargo: @popular_cargo,
+    pypi: @popular_pypi,
+    hex: @popular_hex,
+    gem: @popular_gem,
+    go: @popular_go
   }
 
   defmodule Match do
@@ -78,10 +78,10 @@ defmodule Opsm.Security.Typosquat do
 
     @type similarity :: :edit_distance_1 | :edit_distance_2 | :homoglyph
     @type t :: %__MODULE__{
-      package:    String.t(),
-      similarity: similarity(),
-      flags:      [atom()]
-    }
+            package: String.t(),
+            similarity: similarity(),
+            flags: [atom()]
+          }
   end
 
   @doc """
@@ -100,7 +100,7 @@ defmodule Opsm.Security.Typosquat do
       |> Enum.flat_map(&suspect_match(name_lower, &1))
 
     case matches do
-      []   -> {:clean}
+      [] -> {:clean}
       hits -> {:suspicious, hits}
     end
   end

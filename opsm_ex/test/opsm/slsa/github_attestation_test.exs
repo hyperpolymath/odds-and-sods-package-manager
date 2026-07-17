@@ -54,8 +54,15 @@ defmodule Opsm.Slsa.GithubAttestationTest do
 
     test "rejects non-builder identities" do
       refute GithubAttestation.github_actions_builder?("https://github.com/o/r")
-      refute GithubAttestation.github_actions_builder?("https://evil.com/o/r/.github/workflows/w@x")
-      refute GithubAttestation.github_actions_builder?("https://github.com/o/r/.github/workflows/w.yml")
+
+      refute GithubAttestation.github_actions_builder?(
+               "https://evil.com/o/r/.github/workflows/w@x"
+             )
+
+      refute GithubAttestation.github_actions_builder?(
+               "https://github.com/o/r/.github/workflows/w.yml"
+             )
+
       refute GithubAttestation.github_actions_builder?("https://opsm.dev/builders/elixir-mix")
       refute GithubAttestation.github_actions_builder?(nil)
       refute GithubAttestation.github_actions_builder?(42)
@@ -77,7 +84,9 @@ defmodule Opsm.Slsa.GithubAttestationTest do
 
     test "returns :none for non-GitHub or missing repositories" do
       assert {:none, _} =
-               GithubAttestation.github_owner_repo(%{manifest: %{repository: "https://gitlab.com/a/b"}})
+               GithubAttestation.github_owner_repo(%{
+                 manifest: %{repository: "https://gitlab.com/a/b"}
+               })
 
       assert {:none, _} =
                GithubAttestation.github_owner_repo(%{manifest: %{repository: nil}})
@@ -97,21 +106,37 @@ defmodule Opsm.Slsa.GithubAttestationTest do
     end
 
     test "returns :none for missing or non-sha256 checksums" do
-      assert {:none, _} = GithubAttestation.artifact_digest(%{checksum: nil, checksum_algo: :sha256})
-      assert {:none, _} = GithubAttestation.artifact_digest(%{checksum: "abc", checksum_algo: :sha512})
-      assert {:none, _} = GithubAttestation.artifact_digest(%{checksum: "not-hex", checksum_algo: :sha256})
+      assert {:none, _} =
+               GithubAttestation.artifact_digest(%{checksum: nil, checksum_algo: :sha256})
+
+      assert {:none, _} =
+               GithubAttestation.artifact_digest(%{checksum: "abc", checksum_algo: :sha512})
+
+      assert {:none, _} =
+               GithubAttestation.artifact_digest(%{checksum: "not-hex", checksum_algo: :sha256})
     end
   end
 
   describe "fetch_attestations/3 input validation" do
     test "rejects malformed owner/repo without touching the network" do
-      assert {:error, _} = GithubAttestation.fetch_attestations("owner repo; rm", "sha256:" <> String.duplicate("a", 64))
-      assert {:error, _} = GithubAttestation.fetch_attestations("noslash", "sha256:" <> String.duplicate("a", 64))
+      assert {:error, _} =
+               GithubAttestation.fetch_attestations(
+                 "owner repo; rm",
+                 "sha256:" <> String.duplicate("a", 64)
+               )
+
+      assert {:error, _} =
+               GithubAttestation.fetch_attestations(
+                 "noslash",
+                 "sha256:" <> String.duplicate("a", 64)
+               )
     end
 
     test "rejects malformed digests without touching the network" do
       assert {:error, _} = GithubAttestation.fetch_attestations("o/r", "sha256:short")
-      assert {:error, _} = GithubAttestation.fetch_attestations("o/r", "md5:" <> String.duplicate("a", 64))
+
+      assert {:error, _} =
+               GithubAttestation.fetch_attestations("o/r", "md5:" <> String.duplicate("a", 64))
     end
   end
 
@@ -138,7 +163,9 @@ defmodule Opsm.Slsa.GithubAttestationTest do
     test "rejection signatures are definitive verified: false" do
       # cert-identity / digest / signer-repo mismatches all print this
       assert {:ok, %GithubAttestationVerification{verified: false}} =
-               GithubAttestation.classify_gh_failure(~s(Error: verifying with issuer "sigstore.dev"))
+               GithubAttestation.classify_gh_failure(
+                 ~s(Error: verifying with issuer "sigstore.dev")
+               )
 
       assert {:ok, %GithubAttestationVerification{verified: false}} =
                GithubAttestation.classify_gh_failure("Error: no attestations found")
@@ -182,8 +209,11 @@ defmodule Opsm.Slsa.GithubAttestationTest do
     end
 
     test "empty output is not a verification" do
-      assert %GithubAttestationVerification{verified: false} = GithubAttestation.decode_gh_output([])
-      assert %GithubAttestationVerification{verified: false} = GithubAttestation.decode_gh_output(%{})
+      assert %GithubAttestationVerification{verified: false} =
+               GithubAttestation.decode_gh_output([])
+
+      assert %GithubAttestationVerification{verified: false} =
+               GithubAttestation.decode_gh_output(%{})
     end
   end
 
@@ -247,7 +277,10 @@ defmodule Opsm.Slsa.GithubAttestationTest do
     test "statement subject digest binds the artifact when it matches the package checksum" do
       # subject digest in statement/1 is "abab...": tarball_url would fail the
       # materials check, but the matching subject digest governs instead
-      package = %{tarball_url: "https://example.com/not-in-materials.tgz", checksum: String.duplicate("ab", 32)}
+      package = %{
+        tarball_url: "https://example.com/not-in-materials.tgz",
+        checksum: String.duplicate("ab", 32)
+      }
 
       assert {:ok, result} =
                Provenance.verify_github_attestation(statement(@gh_builder),
@@ -301,7 +334,11 @@ defmodule Opsm.Slsa.GithubAttestationTest do
         registry_url: "https://example.invalid",
         tarball_url: nil,
         checksum: nil,
-        manifest: %{repository: "https://github.com/hyperpolymath/proven", license: "MPL-2.0", dependencies: %{}}
+        manifest: %{
+          repository: "https://github.com/hyperpolymath/proven",
+          license: "MPL-2.0",
+          dependencies: %{}
+        }
       }
 
       {:ok, results} =

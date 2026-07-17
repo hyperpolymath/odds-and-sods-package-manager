@@ -81,12 +81,29 @@ defmodule Opsm.Federation.DepMapper do
   defp known_mappings do
     %{
       # Python packages → system packages
-      {"numpy", :pypi} => %{deb: "python3-numpy", rpm: "python3-numpy", pacman: "python-numpy", homebrew: "numpy"},
-      {"pandas", :pypi} => %{deb: "python3-pandas", rpm: "python3-pandas", pacman: "python-pandas"},
+      {"numpy", :pypi} => %{
+        deb: "python3-numpy",
+        rpm: "python3-numpy",
+        pacman: "python-numpy",
+        homebrew: "numpy"
+      },
+      {"pandas", :pypi} => %{
+        deb: "python3-pandas",
+        rpm: "python3-pandas",
+        pacman: "python-pandas"
+      },
       {"scipy", :pypi} => %{deb: "python3-scipy", rpm: "python3-scipy", pacman: "python-scipy"},
-      {"requests", :pypi} => %{deb: "python3-requests", rpm: "python3-requests", pacman: "python-requests"},
+      {"requests", :pypi} => %{
+        deb: "python3-requests",
+        rpm: "python3-requests",
+        pacman: "python-requests"
+      },
       {"flask", :pypi} => %{deb: "python3-flask", rpm: "python3-flask", pacman: "python-flask"},
-      {"django", :pypi} => %{deb: "python3-django", rpm: "python3-django", pacman: "python-django"},
+      {"django", :pypi} => %{
+        deb: "python3-django",
+        rpm: "python3-django",
+        pacman: "python-django"
+      },
       {"pillow", :pypi} => %{deb: "python3-pil", rpm: "python3-pillow", pacman: "python-pillow"},
       {"cryptography", :pypi} => %{deb: "python3-cryptography", rpm: "python3-cryptography"},
       {"pyyaml", :pypi} => %{deb: "python3-yaml", rpm: "python3-pyyaml", pacman: "python-yaml"},
@@ -105,20 +122,48 @@ defmodule Opsm.Federation.DepMapper do
       {"nokogiri", :gem} => %{deb: "ruby-nokogiri", rpm: "rubygem-nokogiri"},
 
       # Rust crates → system packages
-      {"ripgrep", :cargo} => %{deb: "ripgrep", rpm: "ripgrep", pacman: "ripgrep", homebrew: "ripgrep"},
+      {"ripgrep", :cargo} => %{
+        deb: "ripgrep",
+        rpm: "ripgrep",
+        pacman: "ripgrep",
+        homebrew: "ripgrep"
+      },
       {"fd-find", :cargo} => %{deb: "fd-find", pacman: "fd", homebrew: "fd"},
       {"bat", :cargo} => %{deb: "bat", pacman: "bat", homebrew: "bat"},
       {"exa", :cargo} => %{deb: "exa", pacman: "exa", homebrew: "exa"},
       {"tokei", :cargo} => %{deb: "tokei", pacman: "tokei", homebrew: "tokei"},
 
       # Go modules → system packages
-      {"github.com/junegunn/fzf", :go} => %{deb: "fzf", rpm: "fzf", pacman: "fzf", homebrew: "fzf"},
+      {"github.com/junegunn/fzf", :go} => %{
+        deb: "fzf",
+        rpm: "fzf",
+        pacman: "fzf",
+        homebrew: "fzf"
+      },
       {"github.com/jesseduffield/lazygit", :go} => %{pacman: "lazygit", homebrew: "lazygit"},
 
       # Cross-ecosystem equivalents (same function, different ecosystems)
-      {"req", :hex} => %{npm: "axios", pypi: "requests", cargo: "reqwest", gem: "httparty", go: "net/http"},
-      {"jason", :hex} => %{npm: "json5", pypi: "json", cargo: "serde_json", gem: "json", go: "encoding/json"},
-      {"plug", :hex} => %{npm: "express", pypi: "flask", cargo: "actix-web", gem: "rack", go: "net/http"}
+      {"req", :hex} => %{
+        npm: "axios",
+        pypi: "requests",
+        cargo: "reqwest",
+        gem: "httparty",
+        go: "net/http"
+      },
+      {"jason", :hex} => %{
+        npm: "json5",
+        pypi: "json",
+        cargo: "serde_json",
+        gem: "json",
+        go: "encoding/json"
+      },
+      {"plug", :hex} => %{
+        npm: "express",
+        pypi: "flask",
+        cargo: "actix-web",
+        gem: "rack",
+        go: "net/http"
+      }
     }
   end
 
@@ -126,7 +171,9 @@ defmodule Opsm.Federation.DepMapper do
     key = {String.downcase(package_name), source_forth}
 
     case Map.get(known_mappings(), key) do
-      nil -> :not_found
+      nil ->
+        :not_found
+
       mappings ->
         case Map.get(mappings, target_forth) do
           nil -> :not_found

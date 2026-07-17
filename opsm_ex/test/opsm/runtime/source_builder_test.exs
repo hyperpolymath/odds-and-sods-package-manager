@@ -23,9 +23,13 @@ defmodule Opsm.Runtime.SourceBuilderTest do
     test "returns missing dependencies for unavailable tools" do
       plugin = %{
         "system_dependencies" => [
-          %{"name" => "definitely-nonexistent-tool-xyz-999", "check_command" => "definitely-nonexistent-tool-xyz-999 --version"}
+          %{
+            "name" => "definitely-nonexistent-tool-xyz-999",
+            "check_command" => "definitely-nonexistent-tool-xyz-999 --version"
+          }
         ]
       }
+
       result = SourceBuilder.check_system_dependencies(plugin)
       assert {:error, {:missing_system_dependencies, missing}} = result
       assert "definitely-nonexistent-tool-xyz-999" in missing
@@ -37,6 +41,7 @@ defmodule Opsm.Runtime.SourceBuilderTest do
           %{"name" => "bash", "check_command" => "bash --version"}
         ]
       }
+
       # bash is available on any system running these tests
       assert :ok = SourceBuilder.check_system_dependencies(plugin)
     end
@@ -53,10 +58,12 @@ defmodule Opsm.Runtime.SourceBuilderTest do
         "install" => %{
           "strategy" => "DelegateToManager",
           "delegate_to" => "ghcup-definitely-not-installed-xyz",
-          "delegate_install_command" => "ghcup-definitely-not-installed-xyz install ghc {{version}} --set"
+          "delegate_install_command" =>
+            "ghcup-definitely-not-installed-xyz install ghc {{version}} --set"
         },
         "system_dependencies" => []
       }
+
       result = SourceBuilder.install(plugin, "9.6.4")
       # Should fail because the delegate tool doesn't exist
       assert match?({:error, _}, result)
@@ -77,6 +84,7 @@ defmodule Opsm.Runtime.SourceBuilderTest do
         },
         "system_dependencies" => []
       }
+
       result = SourceBuilder.install(plugin, "1.0.0")
       assert match?({:error, _}, result)
     end

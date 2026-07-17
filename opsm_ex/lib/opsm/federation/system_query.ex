@@ -176,7 +176,9 @@ defmodule Opsm.Federation.SystemQuery do
       # Split from the right: name-version-release.arch
       # Strategy: find the last dash before a digit sequence
       case Regex.run(~r/^(.+)-(\d[^-]*)-[^-]+$/, line) do
-        [_, name, version] -> %{name: name, version: version}
+        [_, name, version] ->
+          %{name: name, version: version}
+
         _ ->
           # Fallback: split on first dash-digit
           case Regex.run(~r/^(.+?)-(\d.*)$/, line) do
@@ -203,8 +205,11 @@ defmodule Opsm.Federation.SystemQuery do
     |> String.split("\n", trim: true)
     |> Enum.map(fn line ->
       case String.split(line, ~r/\s+/, parts: 2) do
-        [name, versions] -> %{name: name, version: String.split(versions) |> List.last() || "unknown"}
-        [name] -> %{name: name, version: "unknown"}
+        [name, versions] ->
+          %{name: name, version: String.split(versions) |> List.last() || "unknown"}
+
+        [name] ->
+          %{name: name, version: "unknown"}
       end
     end)
   end
@@ -228,7 +233,8 @@ defmodule Opsm.Federation.SystemQuery do
   defp parse_snap_list(output) do
     output
     |> String.split("\n", trim: true)
-    |> Enum.drop(1)  # Skip header line
+    # Skip header line
+    |> Enum.drop(1)
     |> Enum.map(fn line ->
       case String.split(line, ~r/\s+/) do
         [name, version | _] -> %{name: name, version: version}
@@ -315,6 +321,7 @@ defmodule Opsm.Federation.SystemQuery do
       |> Enum.drop(1)
       |> Enum.flat_map(fn line ->
         parts = String.split(line, "\t")
+
         case Enum.at(parts, 1) do
           nil -> []
           v -> [String.trim(v)]

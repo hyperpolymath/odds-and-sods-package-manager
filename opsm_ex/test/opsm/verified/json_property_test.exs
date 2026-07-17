@@ -106,9 +106,7 @@ defmodule Opsm.Verified.JsonPropertyTest do
     end
 
     property "handles empty structures" do
-      check all(
-              empty <- member_of([%{}, [], nil, ""])
-            ) do
+      check all(empty <- member_of([%{}, [], nil, ""])) do
         wrapped = %{"empty" => empty}
 
         case Json.encode(wrapped) do

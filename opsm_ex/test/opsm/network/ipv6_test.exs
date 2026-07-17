@@ -21,7 +21,7 @@ defmodule Opsm.Network.Ipv6Test do
   describe "ipv6?/1" do
     test "identifies IPv6 tuples" do
       assert Ipv6.ipv6?({0, 0, 0, 0, 0, 0, 0, 1})
-      assert Ipv6.ipv6?({0x2001, 0xdb8, 0, 0, 0, 0, 0, 1})
+      assert Ipv6.ipv6?({0x2001, 0xDB8, 0, 0, 0, 0, 0, 1})
     end
 
     test "rejects IPv4 tuples" do
@@ -48,7 +48,7 @@ defmodule Opsm.Network.Ipv6Test do
     end
 
     test "passes through IPv6 addresses unchanged" do
-      addr = {0x2001, 0xdb8, 0, 0, 0, 0, 0, 1}
+      addr = {0x2001, 0xDB8, 0, 0, 0, 0, 0, 1}
       assert Ipv6.to_ipv6_mapped(addr) == addr
     end
   end

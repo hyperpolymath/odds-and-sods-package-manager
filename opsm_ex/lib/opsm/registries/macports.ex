@@ -20,14 +20,21 @@ defmodule Opsm.Registries.Macports do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"],
+            else: version
+
         {:ok, parse_macport(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -40,7 +47,8 @@ defmodule Opsm.Registries.Macports do
       description: body["description"] || body["long_description"],
       license: format_license(body["license"]),
       homepage: body["homepage"],
-      repository: "https://github.com/macports/macports-ports/tree/master/#{body["portdir"] || name}",
+      repository:
+        "https://github.com/macports/macports-ports/tree/master/#{body["portdir"] || name}",
       dependencies: deps
     }
 
@@ -51,7 +59,7 @@ defmodule Opsm.Registries.Macports do
       manifest: manifest,
       tarball_url: build_distfile_url(body),
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -65,8 +73,10 @@ defmodule Opsm.Registries.Macports do
         d when is_binary(d) ->
           dep_name = d |> String.split(":") |> List.last() |> String.trim()
           {dep_name, "*"}
+
         d when is_map(d) ->
           {d["port_name"] || d["name"] || "", "*"}
+
         _ ->
           nil
       end)
@@ -84,7 +94,9 @@ defmodule Opsm.Registries.Macports do
     case body["distfiles"] do
       [first | _] when is_binary(first) ->
         "https://distfiles.macports.org/#{body["name"] || "unknown"}/#{first}"
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -97,10 +109,12 @@ defmodule Opsm.Registries.Macports do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        versions_list = body
-        |> Enum.map(fn entry -> entry["version"] end)
-        |> Enum.reject(&is_nil/1)
-        |> Enum.uniq()
+        versions_list =
+          body
+          |> Enum.map(fn entry -> entry["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, versions_list}
 
       {:ok, _} ->
@@ -110,7 +124,8 @@ defmodule Opsm.Registries.Macports do
           {:error, _} = err -> err
         end
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -122,23 +137,30 @@ defmodule Opsm.Registries.Macports do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        hits = results
-        |> Enum.take(20)
-        |> Enum.map(fn port ->
-          %{name: port["name"], version: port["version"], description: port["description"]}
-        end)
+        hits =
+          results
+          |> Enum.take(20)
+          |> Enum.map(fn port ->
+            %{name: port["name"], version: port["version"], description: port["description"]}
+          end)
+
         {:ok, hits}
 
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn port ->
-          %{name: port["name"], version: port["version"], description: port["description"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn port ->
+            %{name: port["name"], version: port["version"], description: port["description"]}
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

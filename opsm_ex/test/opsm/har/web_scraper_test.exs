@@ -48,7 +48,11 @@ defmodule Opsm.Har.WebScraperTest do
     test "builds task with all required fields" do
       task = %{
         "task_id" => "test-003",
-        "package" => %{"name" => "nonexistent-pkg-zzz", "version" => "latest", "language" => "unknown"},
+        "package" => %{
+          "name" => "nonexistent-pkg-zzz",
+          "version" => "latest",
+          "language" => "unknown"
+        },
         "hints" => %{}
       }
 

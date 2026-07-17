@@ -61,38 +61,42 @@ defmodule Opsm.Registries.Spack do
       {:ok, packages} when is_list(packages) ->
         query_lower = String.downcase(query)
 
-        results = packages
-        |> Enum.filter(fn pkg ->
-          name = String.downcase(pkg["name"] || "")
-          desc = String.downcase(pkg["description"] || "")
-          String.contains?(name, query_lower) or String.contains?(desc, query_lower)
-        end)
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: List.first(pkg["versions"] || []),
-            description: pkg["description"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.filter(fn pkg ->
+            name = String.downcase(pkg["name"] || "")
+            desc = String.downcase(pkg["description"] || "")
+            String.contains?(name, query_lower) or String.contains?(desc, query_lower)
+          end)
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: List.first(pkg["versions"] || []),
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"packages" => packages}} when is_list(packages) ->
         query_lower = String.downcase(query)
 
-        results = packages
-        |> Enum.filter(fn pkg ->
-          name = String.downcase(pkg["name"] || "")
-          String.contains?(name, query_lower)
-        end)
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: nil,
-            description: pkg["description"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.filter(fn pkg ->
+            name = String.downcase(pkg["name"] || "")
+            String.contains?(name, query_lower)
+          end)
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: nil,
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->

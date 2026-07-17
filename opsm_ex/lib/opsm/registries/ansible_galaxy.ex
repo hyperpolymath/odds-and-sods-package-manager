@@ -20,15 +20,18 @@ defmodule Opsm.Registries.AnsibleGalaxy do
   """
   def fetch_package(name, version \\ "latest") do
     {namespace, collection} = split_collection_name(name)
-    url = "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/"
+
+    url =
+      "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          body["highest_version"] && body["highest_version"]["version"]
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            body["highest_version"] && body["highest_version"]["version"]
+          else
+            version
+          end
 
         # Fetch version-specific metadata for dependencies
         {deps, version_meta} = fetch_version_metadata(namespace, collection, target_version)
@@ -54,12 +57,14 @@ defmodule Opsm.Registries.AnsibleGalaxy do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => [role | _]}} ->
-        ver = if version == "latest" do
-          get_in(role, ["summary_fields", "versions", Access.at(0), "name"]) ||
-            role["version"]
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            get_in(role, ["summary_fields", "versions", Access.at(0), "name"]) ||
+              role["version"]
+          else
+            version
+          end
+
         {:ok, parse_role(name, role, ver)}
 
       {:ok, _} ->
@@ -71,7 +76,8 @@ defmodule Opsm.Registries.AnsibleGalaxy do
   end
 
   defp fetch_version_metadata(namespace, collection, version) do
-    url = "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/#{version}/"
+    url =
+      "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/#{version}/"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
@@ -90,33 +96,39 @@ defmodule Opsm.Registries.AnsibleGalaxy do
     limit = Keyword.get(opts, :limit, 20)
 
     # Search collections via v3 API
-    url = "#{@api_url}/plugin/ansible/search/collection-versions/?q=#{URI.encode_www_form(query)}&limit=#{limit}"
+    url =
+      "#{@api_url}/plugin/ansible/search/collection-versions/?q=#{URI.encode_www_form(query)}&limit=#{limit}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"data" => results}} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(fn r ->
-          %{
-            name: "#{r["namespace"]}.#{r["name"]}",
-            version: r["version"],
-            description: r["description"] || "",
-            downloads: r["download_count"] || 0
-          }
-        end)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(fn r ->
+            %{
+              name: "#{r["namespace"]}.#{r["name"]}",
+              version: r["version"],
+              description: r["description"] || "",
+              downloads: r["download_count"] || 0
+            }
+          end)
+
         {:ok, packages}
 
       {:ok, %{"results" => results}} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(fn r ->
-          %{
-            name: r["namespace"] && r["name"] && "#{r["namespace"]}.#{r["name"]}" || r["name"],
-            version: r["version"] || get_in(r, ["latest_version", "version"]),
-            description: r["description"] || "",
-            downloads: r["download_count"] || 0
-          }
-        end)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(fn r ->
+            %{
+              name:
+                (r["namespace"] && r["name"] && "#{r["namespace"]}.#{r["name"]}") || r["name"],
+              version: r["version"] || get_in(r, ["latest_version", "version"]),
+              description: r["description"] || "",
+              downloads: r["download_count"] || 0
+            }
+          end)
+
         {:ok, packages}
 
       {:ok, _} ->
@@ -135,13 +147,18 @@ defmodule Opsm.Registries.AnsibleGalaxy do
   """
   def exists?(name) do
     {namespace, collection} = split_collection_name(name)
-    url = "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/"
+
+    url =
+      "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/"
 
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
-      {:ok, _} -> true
+      {:ok, _} ->
+        true
+
       _ ->
         # Fallback: check v2 roles API
         role_url = "#{@api_v2_url}/roles/?search=#{URI.encode_www_form(name)}"
+
         case VerifiedHttp.get_json(role_url, receive_timeout: 5_000) do
           {:ok, %{"count" => count}} when count > 0 -> true
           _ -> false
@@ -154,17 +171,23 @@ defmodule Opsm.Registries.AnsibleGalaxy do
   """
   def versions(name) do
     {namespace, collection} = split_collection_name(name)
-    url = "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/"
+
+    url =
+      "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"data" => versions}} when is_list(versions) ->
-        ver_list = Enum.map(versions, fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          Enum.map(versions, fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:ok, %{"results" => versions}} when is_list(versions) ->
-        ver_list = Enum.map(versions, fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          Enum.map(versions, fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:error, :not_found} ->
@@ -183,7 +206,9 @@ defmodule Opsm.Registries.AnsibleGalaxy do
   """
   def tarball_url(name, version) do
     {namespace, collection} = split_collection_name(name)
-    url = "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/#{version}/"
+
+    url =
+      "#{@api_url}/plugin/ansible/content/published/collections/index/#{namespace}/#{collection}/versions/#{version}/"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"download_url" => dl_url}} when is_binary(dl_url) ->

@@ -11,7 +11,6 @@ defmodule Opsm.Maintenance do
   - Autoremove unused dependencies
   """
 
-
   @history_path Path.expand("~/.local/share/opsm/history.json")
   @pins_path Path.expand("~/.local/share/opsm/pins.json")
   @max_history_entries 100
@@ -95,6 +94,7 @@ defmodule Opsm.Maintenance do
           {:ok, _} ->
             IO.puts("  ✓ Removed #{label}: #{format_size(size)}")
             {:ok, size}
+
           {:error, reason, p} ->
             IO.puts("  ✗ Failed to remove #{p}: #{reason}")
             {:error, reason}
@@ -111,13 +111,16 @@ defmodule Opsm.Maintenance do
       {:ok, files} ->
         Enum.reduce(files, 0, fn file, acc ->
           full_path = Path.join(path, file)
+
           case File.stat(full_path) do
             {:ok, %{type: :directory}} -> acc + dir_size(full_path)
             {:ok, %{size: size}} -> acc + size
             _ -> acc
           end
         end)
-      _ -> 0
+
+      _ ->
+        0
     end
   end
 
@@ -175,6 +178,7 @@ defmodule Opsm.Maintenance do
 
   def undo_by_id(id_or_pos) when is_integer(id_or_pos) do
     history = load_history()
+
     case Enum.at(history, id_or_pos - 1) do
       nil -> {:error, "No history entry at position #{id_or_pos}"}
       entry -> do_undo_entry(entry)
@@ -183,6 +187,7 @@ defmodule Opsm.Maintenance do
 
   def undo_by_id(id) when is_binary(id) do
     history = load_history()
+
     case Enum.find(history, fn e -> e["id"] == id end) do
       nil -> {:error, "No history entry with id #{id}"}
       entry -> do_undo_entry(entry)
@@ -196,11 +201,13 @@ defmodule Opsm.Maintenance do
       "install" ->
         package = entry["details"]["package"]
         IO.puts("Undoing: install #{package}")
+
         case Installer.remove(package) do
           :ok ->
             record_history("undo_install", %{"package" => package, "undone_id" => entry["id"]})
             IO.puts("✓ Removed #{package}")
             {:ok, :removed, package}
+
           {:error, reason} ->
             IO.puts("✗ Failed to undo install: #{reason}")
             {:error, reason}
@@ -213,11 +220,13 @@ defmodule Opsm.Maintenance do
         forth = Opsm.Validation.safe_to_forth(forth_str)
 
         IO.puts("Undoing: remove #{package}")
+
         case Installer.install(forth, package, version: version || "latest") do
           {:ok, _} ->
             record_history("undo_remove", %{"package" => package, "undone_id" => entry["id"]})
             IO.puts("✓ Reinstalled #{package}")
             {:ok, :reinstalled, package}
+
           {:error, reason} ->
             IO.puts("✗ Failed to undo remove: #{inspect(reason)}")
             {:error, reason}
@@ -243,11 +252,13 @@ defmodule Opsm.Maintenance do
           "install" ->
             package = last["details"]["package"]
             IO.puts("Undoing: install #{package}")
+
             case Installer.remove(package) do
               :ok ->
                 record_history("undo_install", %{"package" => package, "undone_id" => last["id"]})
                 IO.puts("✓ Removed #{package}")
                 {:ok, :removed, package}
+
               {:error, reason} ->
                 IO.puts("✗ Failed to undo install: #{reason}")
                 {:error, reason}
@@ -260,11 +271,13 @@ defmodule Opsm.Maintenance do
             forth = Opsm.Validation.safe_to_forth(forth_str)
 
             IO.puts("Undoing: remove #{package}")
+
             case Installer.install(forth, package, version: version || "latest") do
               {:ok, _} ->
                 record_history("undo_remove", %{"package" => package, "undone_id" => last["id"]})
                 IO.puts("✓ Reinstalled #{package}")
                 {:ok, :reinstalled, package}
+
               {:error, reason} ->
                 IO.puts("✗ Failed to undo remove: #{inspect(reason)}")
                 {:error, reason}
@@ -298,11 +311,13 @@ defmodule Opsm.Maintenance do
             forth = Opsm.Validation.safe_to_forth(forth_str)
 
             IO.puts("Redoing: install #{package}")
+
             case Installer.install(forth, package, version: version) do
               {:ok, _} ->
                 record_history("redo_install", %{"package" => package, "redone_id" => last["id"]})
                 IO.puts("✓ Reinstalled #{package}")
                 {:ok, :reinstalled, package}
+
               {:error, reason} ->
                 IO.puts("✗ Failed to redo: #{inspect(reason)}")
                 {:error, reason}
@@ -312,11 +327,13 @@ defmodule Opsm.Maintenance do
             # The undo reinstalled a package — redo means remove it again
             package = last["details"]["package"]
             IO.puts("Redoing: remove #{package}")
+
             case Installer.remove(package) do
               :ok ->
                 record_history("redo_remove", %{"package" => package, "redone_id" => last["id"]})
                 IO.puts("✓ Removed #{package}")
                 {:ok, :removed, package}
+
               {:error, reason} ->
                 IO.puts("✗ Failed to redo: #{inspect(reason)}")
                 {:error, reason}
@@ -343,7 +360,9 @@ defmodule Opsm.Maintenance do
           {:ok, data} when is_list(data) -> data
           _ -> []
         end
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -429,7 +448,9 @@ defmodule Opsm.Maintenance do
           {:ok, data} when is_list(data) -> data
           _ -> []
         end
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -454,36 +475,46 @@ defmodule Opsm.Maintenance do
     IO.puts("Checking for unused dependencies...")
 
     # Load installed packages
-    installed = case File.read(db_path) do
-      {:ok, data} ->
-        case Jason.decode(data) do
-          {:ok, pkgs} when is_map(pkgs) -> pkgs
-          _ -> %{}
-        end
-      {:error, _} -> %{}
-    end
+    installed =
+      case File.read(db_path) do
+        {:ok, data} ->
+          case Jason.decode(data) do
+            {:ok, pkgs} when is_map(pkgs) -> pkgs
+            _ -> %{}
+          end
+
+        {:error, _} ->
+          %{}
+      end
 
     # Load lockfile to determine dependency graph
-    lockfile_deps = case File.read(lockfile_path) do
-      {:ok, data} ->
-        case Jason.decode(data) do
-          {:ok, lock} when is_map(lock) ->
-            lock["packages"] || []
-          _ -> []
-        end
-      {:error, _} -> []
-    end
+    lockfile_deps =
+      case File.read(lockfile_path) do
+        {:ok, data} ->
+          case Jason.decode(data) do
+            {:ok, lock} when is_map(lock) ->
+              lock["packages"] || []
+
+            _ ->
+              []
+          end
+
+        {:error, _} ->
+          []
+      end
 
     # Build set of packages that are dependencies of other packages
-    all_dep_names = lockfile_deps
+    all_dep_names =
+      lockfile_deps
       |> Enum.flat_map(fn pkg ->
-        (pkg["dependencies"] || [])
+        pkg["dependencies"] || []
       end)
       |> MapSet.new()
 
     # Find packages that were installed as dependencies (not explicitly)
     # and are no longer required by any other package
-    orphans = installed
+    orphans =
+      installed
       |> Enum.filter(fn {_name, info} ->
         info["auto_installed"] == true
       end)
@@ -499,9 +530,11 @@ defmodule Opsm.Maintenance do
     else
       IO.puts("")
       IO.puts("Found #{length(orphans)} unused dependencies:")
+
       for {name, version} <- orphans do
         IO.puts("  #{name}@#{version}")
       end
+
       IO.puts("")
 
       if dry_run do
@@ -509,15 +542,16 @@ defmodule Opsm.Maintenance do
         {:ok, orphans}
       else
         # Remove each orphan
-        removed = Enum.map(orphans, fn {name, _version} ->
-          updated = Map.delete(installed, name)
-          db_path |> Path.dirname() |> File.mkdir_p!()
-          File.write!(db_path, Jason.encode!(updated, pretty: true))
+        removed =
+          Enum.map(orphans, fn {name, _version} ->
+            updated = Map.delete(installed, name)
+            db_path |> Path.dirname() |> File.mkdir_p!()
+            File.write!(db_path, Jason.encode!(updated, pretty: true))
 
-          # Record in history
-          record_history("autoremove", %{"package" => name})
-          name
-        end)
+            # Record in history
+            record_history("autoremove", %{"package" => name})
+            name
+          end)
 
         IO.puts("Removed #{length(removed)} unused dependencies")
         {:ok, removed}
@@ -546,14 +580,17 @@ defmodule Opsm.Maintenance do
   def upgrade_path(package_name, opts \\ []) do
     db_path = Keyword.get(opts, :db_path, Path.expand("~/.local/share/opsm/installed.json"))
 
-    installed = case File.read(db_path) do
-      {:ok, data} ->
-        case Jason.decode(data) do
-          {:ok, pkgs} when is_map(pkgs) -> pkgs
-          _ -> %{}
-        end
-      {:error, _} -> %{}
-    end
+    installed =
+      case File.read(db_path) do
+        {:ok, data} ->
+          case Jason.decode(data) do
+            {:ok, pkgs} when is_map(pkgs) -> pkgs
+            _ -> %{}
+          end
+
+        {:error, _} ->
+          %{}
+      end
 
     case Map.get(installed, package_name) do
       nil ->
@@ -571,33 +608,36 @@ defmodule Opsm.Maintenance do
         case Opsm.Registries.Registry.versions(forth, package_name) do
           {:ok, all_versions} ->
             # Filter to versions newer than current
-            newer = Enum.filter(all_versions, fn v ->
-              version_newer?(v, current_version)
-            end)
+            newer =
+              Enum.filter(all_versions, fn v ->
+                version_newer?(v, current_version)
+              end)
 
             latest = List.first(newer) || current_version
 
-            action = cond do
-              is_pinned and pinned_version != nil ->
-                :pinned_skip
+            action =
+              cond do
+                is_pinned and pinned_version != nil ->
+                  :pinned_skip
 
-              newer == [] ->
-                :up_to_date
+                newer == [] ->
+                  :up_to_date
 
-              true ->
-                :upgrade_available
-            end
+                true ->
+                  :upgrade_available
+              end
 
-            {:ok, %{
-              package: package_name,
-              forth: forth,
-              current: current_version,
-              latest: latest,
-              available: newer,
-              pinned: is_pinned,
-              pinned_version: pinned_version,
-              action: action
-            }}
+            {:ok,
+             %{
+               package: package_name,
+               forth: forth,
+               current: current_version,
+               latest: latest,
+               available: newer,
+               pinned: is_pinned,
+               pinned_version: pinned_version,
+               action: action
+             }}
 
           {:error, reason} ->
             {:error, {:registry_error, reason}}

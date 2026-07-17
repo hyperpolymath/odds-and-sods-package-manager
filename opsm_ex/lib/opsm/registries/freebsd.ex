@@ -23,14 +23,21 @@ defmodule Opsm.Registries.Freebsd do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"] || body["portversion"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"] || body["portversion"],
+            else: version
+
         {:ok, parse_freebsd_package(name, body, ver)}
 
-      {:error, :not_found} -> fetch_from_pkg_api(name, version)
-      {:error, %{status: 404}} -> fetch_from_pkg_api(name, version)
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        fetch_from_pkg_api(name, version)
+
+      {:error, %{status: 404}} ->
+        fetch_from_pkg_api(name, version)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -38,21 +45,28 @@ defmodule Opsm.Registries.Freebsd do
     _url = "#{@api_url}/#{@repo_branch}/latest/All/#{URI.encode(name)}.pkg"
 
     case VerifiedHttp.get_json(
-      "#{@api_url}/#{@repo_branch}/latest/packagesite.json",
-      receive_timeout: 10_000
-    ) do
+           "#{@api_url}/#{@repo_branch}/latest/packagesite.json",
+           receive_timeout: 10_000
+         ) do
       {:ok, body} when is_map(body) ->
         case find_package_in_index(body, name) do
-          nil -> {:error, :not_found}
+          nil ->
+            {:error, :not_found}
+
           pkg_data ->
-            ver = if version == "latest",
-              do: pkg_data["version"] || "0.0.0",
-              else: version
+            ver =
+              if version == "latest",
+                do: pkg_data["version"] || "0.0.0",
+                else: version
+
             {:ok, build_resolved_from_index(name, pkg_data, ver)}
         end
 
-      {:ok, _} -> {:error, :not_found}
-      {:error, _} -> {:error, :not_found}
+      {:ok, _} ->
+        {:error, :not_found}
+
+      {:error, _} ->
+        {:error, :not_found}
     end
   end
 
@@ -61,18 +75,22 @@ defmodule Opsm.Registries.Freebsd do
   end
 
   defp parse_freebsd_package(name, body, version) do
-    deps = (body["run_depends"] || body["depends"] || [])
-           |> Enum.map(fn
-             d when is_binary(d) ->
-               dep_name = d |> String.split(":") |> hd() |> String.trim()
-               {dep_name, "*"}
-             d when is_map(d) ->
-               {d["name"] || "", "*"}
-             _ -> nil
-           end)
-           |> Enum.reject(&is_nil/1)
-           |> Enum.reject(fn {n, _} -> n == "" end)
-           |> Map.new()
+    deps =
+      (body["run_depends"] || body["depends"] || [])
+      |> Enum.map(fn
+        d when is_binary(d) ->
+          dep_name = d |> String.split(":") |> hd() |> String.trim()
+          {dep_name, "*"}
+
+        d when is_map(d) ->
+          {d["name"] || "", "*"}
+
+        _ ->
+          nil
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(fn {n, _} -> n == "" end)
+      |> Map.new()
 
     origin = body["origin"] || body["port_origin"] || name
 
@@ -93,7 +111,7 @@ defmodule Opsm.Registries.Freebsd do
       manifest: manifest,
       tarball_url: "#{@api_url}/#{@repo_branch}/latest/All/#{name}-#{version || "0.0.0"}.pkg",
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -116,7 +134,7 @@ defmodule Opsm.Registries.Freebsd do
       tarball_url: data["repopath"],
       checksum: data["sum"],
       checksum_algo: if(data["sum"], do: :sha256),
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -146,23 +164,34 @@ defmodule Opsm.Registries.Freebsd do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{name: pkg["name"] || pkg["package_name"], version: pkg["version"], description: pkg["comment"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"] || pkg["package_name"],
+              version: pkg["version"],
+              description: pkg["comment"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"results" => results}} when is_list(results) ->
-        hits = results
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{name: pkg["name"], version: pkg["version"], description: pkg["comment"]}
-        end)
+        hits =
+          results
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{name: pkg["name"], version: pkg["version"], description: pkg["comment"]}
+          end)
+
         {:ok, hits}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

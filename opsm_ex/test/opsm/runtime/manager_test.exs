@@ -6,7 +6,8 @@ defmodule Opsm.Runtime.ManagerTest do
   alias Opsm.Runtime.Manager
 
   # Use a temp dir so tests don't touch ~/.opsm/runtimes
-  @runtimes_base System.tmp_dir!() |> Path.join("opsm_manager_test_#{System.unique_integer([:positive])}")
+  @runtimes_base System.tmp_dir!()
+                 |> Path.join("opsm_manager_test_#{System.unique_integer([:positive])}")
 
   setup do
     # Ensure clean temp dir for each test
@@ -23,6 +24,7 @@ defmodule Opsm.Runtime.ManagerTest do
   describe "install_from_manifest/1" do
     test "returns empty list when no [runtime] section" do
       manifest = Path.join(@runtimes_base, "opsm_no_runtime.toml")
+
       File.write!(manifest, """
       [package]
       name = "myapp"
@@ -34,6 +36,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "parses [runtime] section into tool/version pairs" do
       manifest = Path.join(@runtimes_base, "opsm_with_runtime.toml")
+
       File.write!(manifest, """
       [package]
       name = "myapp"
@@ -54,6 +57,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "handles quoted values" do
       manifest = Path.join(@runtimes_base, "opsm_quoted.toml")
+
       File.write!(manifest, ~S"""
       [runtime]
       julia = "1.10.2"
@@ -64,6 +68,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "stops reading [runtime] when next section starts" do
       manifest = Path.join(@runtimes_base, "opsm_sections.toml")
+
       File.write!(manifest, """
       [runtime]
       zig = "0.13.0"
@@ -84,6 +89,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "ignores comment lines, including comments containing =" do
       manifest = Path.join(@runtimes_base, "opsm_comments.toml")
+
       File.write!(manifest, """
       [runtime]
       # canonical pins, synced via just toolchain-sync
@@ -96,6 +102,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "strips inline comments from pin values" do
       manifest = Path.join(@runtimes_base, "opsm_inline.toml")
+
       File.write!(manifest, """
       [runtime]
       nickel = "1.16.0" # config language
@@ -137,6 +144,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "each entry has required keys" do
       result = Manager.list_installed()
+
       for entry <- result do
         assert Map.has_key?(entry, :name)
         assert Map.has_key?(entry, :version)
@@ -156,6 +164,7 @@ defmodule Opsm.Runtime.ManagerTest do
     test "returns list of {tool, version} tuples" do
       result = Manager.list_active()
       assert is_list(result)
+
       for {tool, version} <- result do
         assert is_binary(tool)
         assert is_binary(version)
@@ -205,6 +214,7 @@ defmodule Opsm.Runtime.ManagerTest do
 
     test "each update entry has required keys" do
       {:ok, updates} = Manager.check_updates()
+
       for update <- updates do
         assert Map.has_key?(update, :name)
         assert Map.has_key?(update, :current)

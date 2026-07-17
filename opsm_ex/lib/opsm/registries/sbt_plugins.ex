@@ -25,11 +25,12 @@ defmodule Opsm.Registries.SbtPlugins do
     {group_id, artifact_id} = parse_coordinate(name)
     group_path = String.replace(group_id, ".", "/")
 
-    target_version = if version == "latest" do
-      fetch_latest_version(group_id, artifact_id)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(group_id, artifact_id)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -59,7 +60,8 @@ defmodule Opsm.Registries.SbtPlugins do
   end
 
   defp fetch_latest_version(group_id, artifact_id) do
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"response" => %{"docs" => [%{"latestVersion" => ver} | _]}}} ->
@@ -74,7 +76,8 @@ defmodule Opsm.Registries.SbtPlugins do
   end
 
   defp fetch_from_search(group_id, artifact_id, version) do
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}+AND+v:#{URI.encode(version)}&rows=1&wt=json"
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}+AND+v:#{URI.encode(version)}&rows=1&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"response" => %{"docs" => [doc | _]}}} ->
@@ -128,7 +131,8 @@ defmodule Opsm.Registries.SbtPlugins do
   def exists?(name) do
     {group_id, artifact_id} = parse_coordinate(name)
 
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 5_000) do
       {:ok, %{"response" => %{"numFound" => n}}} when n > 0 -> true
@@ -191,7 +195,8 @@ defmodule Opsm.Registries.SbtPlugins do
       version: version,
       forth: :sbt_plugins,
       registry_url: "https://search.maven.org/artifact/#{group_id}/#{artifact_id}/#{version}/jar",
-      tarball_url: "#{@maven_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
+      tarball_url:
+        "#{@maven_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
       checksum: nil,
       checksum_algo: nil,
       manifest: %ManifestFormat{
@@ -222,7 +227,8 @@ defmodule Opsm.Registries.SbtPlugins do
       version: version,
       forth: :sbt_plugins,
       registry_url: "https://search.maven.org/artifact/#{group_id}/#{artifact_id}/#{version}/jar",
-      tarball_url: "#{@maven_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
+      tarball_url:
+        "#{@maven_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
       checksum: nil,
       checksum_algo: nil,
       manifest: %ManifestFormat{
@@ -253,6 +259,7 @@ defmodule Opsm.Registries.SbtPlugins do
   defp extract_scm(_), do: nil
 
   defp extract_developers(nil), do: []
+
   defp extract_developers(devs) when is_list(devs) do
     Enum.map(devs, fn
       %{"name" => name} -> name
@@ -261,14 +268,17 @@ defmodule Opsm.Registries.SbtPlugins do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
   defp extract_developers(_), do: []
 
   defp extract_deps(nil), do: %{}
+
   defp extract_deps(deps) when is_list(deps) do
     Enum.reduce(deps, %{}, fn dep, acc ->
       key = "#{dep["groupId"]}:#{dep["artifactId"]}"
       Map.put(acc, key, dep["version"] || "latest")
     end)
   end
+
   defp extract_deps(_), do: %{}
 end

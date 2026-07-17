@@ -228,24 +228,28 @@ defmodule Opsm.Registries.Idris2 do
   end
 
   defp fetch_from_git(pkg_info, version) do
-    opts = if Map.has_key?(pkg_info, :path) do
-      [subpath: pkg_info.path]
-    else
-      []
-    end
+    opts =
+      if Map.has_key?(pkg_info, :path) do
+        [subpath: pkg_info.path]
+      else
+        []
+      end
 
     case Git.fetch_package(pkg_info.url, version, opts) do
       {:ok, git_pkg} ->
         # Enhance with Idris2-specific metadata
-        enhanced = %{git_pkg |
-          metadata: Map.merge(git_pkg.metadata, %{
-            "registry" => "idris2-curated",
-            "language" => "idris2",
-            "manifest_format" => "ipkg",
-            "build_system" => "idris2",
-            "subpath" => Map.get(pkg_info, :path)
-          })
+        enhanced = %{
+          git_pkg
+          | metadata:
+              Map.merge(git_pkg.metadata, %{
+                "registry" => "idris2-curated",
+                "language" => "idris2",
+                "manifest_format" => "ipkg",
+                "build_system" => "idris2",
+                "subpath" => Map.get(pkg_info, :path)
+              })
         }
+
         {:ok, enhanced}
 
       {:error, reason} ->

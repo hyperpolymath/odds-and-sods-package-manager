@@ -20,11 +20,12 @@ defmodule Opsm.Registries.Helm do
   def fetch_package(name, version \\ "latest") do
     {repo_name, chart_name} = split_chart_name(name)
 
-    url = if version == "latest" do
-      "#{@api_url}/packages/helm/#{repo_name}/#{URI.encode(chart_name)}"
-    else
-      "#{@api_url}/packages/helm/#{repo_name}/#{URI.encode(chart_name)}/#{version}"
-    end
+    url =
+      if version == "latest" do
+        "#{@api_url}/packages/helm/#{repo_name}/#{URI.encode(chart_name)}"
+      else
+        "#{@api_url}/packages/helm/#{repo_name}/#{URI.encode(chart_name)}/#{version}"
+      end
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
@@ -53,23 +54,28 @@ defmodule Opsm.Registries.Helm do
     limit = Keyword.get(opts, :limit, 20)
     offset = Keyword.get(opts, :offset, 0)
 
-    url = "#{@api_url}/packages/search?" <>
-      "ts_query_web=#{URI.encode_www_form(query)}" <>
-      "&kind=0" <>
-      "&limit=#{limit}" <>
-      "&offset=#{offset}"
+    url =
+      "#{@api_url}/packages/search?" <>
+        "ts_query_web=#{URI.encode_www_form(query)}" <>
+        "&kind=0" <>
+        "&limit=#{limit}" <>
+        "&offset=#{offset}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, results}
 
       {:ok, packages} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -105,15 +111,17 @@ defmodule Opsm.Registries.Helm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"available_versions" => versions}} when is_list(versions) ->
-        ver_list = versions
-        |> Enum.map(fn v ->
-          case v do
-            %{"version" => ver} -> ver
-            ver when is_binary(ver) -> ver
-            _ -> nil
-          end
-        end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          versions
+          |> Enum.map(fn v ->
+            case v do
+              %{"version" => ver} -> ver
+              ver when is_binary(ver) -> ver
+              _ -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:ok, %{"version" => ver}} ->
@@ -229,11 +237,15 @@ defmodule Opsm.Registries.Helm do
 
   defp extract_repository(body) do
     case body do
-      %{"repository" => %{"url" => url}} -> url
+      %{"repository" => %{"url" => url}} ->
+        url
+
       %{"links" => links} when is_list(links) ->
         source = Enum.find(links, fn l -> l["name"] == "source" end)
         if source, do: source["url"], else: nil
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 

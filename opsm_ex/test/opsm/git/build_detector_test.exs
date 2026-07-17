@@ -75,7 +75,9 @@ defmodule Opsm.Git.BuildDetectorTest do
     end
 
     test "returns error for non-existent directory" do
-      assert {:error, msg} = BuildDetector.detect("/tmp/nonexistent_dir_#{:rand.uniform(100_000)}")
+      assert {:error, msg} =
+               BuildDetector.detect("/tmp/nonexistent_dir_#{:rand.uniform(100_000)}")
+
       assert msg =~ "Not a directory"
     end
   end

@@ -57,11 +57,12 @@ defmodule Opsm.Registries.Wapm do
         {:error, :not_found}
 
       {:ok, %{"data" => %{"getPackage" => pkg}}} when is_map(pkg) ->
-        target_version = if version == "latest" do
-          get_in(pkg, ["lastVersion", "version"])
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            get_in(pkg, ["lastVersion", "version"])
+          else
+            version
+          end
 
         deps = extract_deps(pkg)
         {:ok, parse_package(pkg, target_version, deps)}
@@ -109,14 +110,16 @@ defmodule Opsm.Registries.Wapm do
 
     case post_graphql(body) do
       {:ok, %{"data" => %{"searchPackages" => %{"edges" => edges}}}} when is_list(edges) ->
-        results = Enum.map(edges, fn %{"node" => node} ->
-          %{
-            name: node["name"],
-            version: get_in(node, ["lastVersion", "version"]),
-            description: node["description"] || "",
-            downloads: 0
-          }
-        end)
+        results =
+          Enum.map(edges, fn %{"node" => node} ->
+            %{
+              name: node["name"],
+              version: get_in(node, ["lastVersion", "version"]),
+              description: node["description"] || "",
+              downloads: 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -158,9 +161,11 @@ defmodule Opsm.Registries.Wapm do
 
     case post_graphql(body) do
       {:ok, %{"data" => %{"getPackage" => %{"versions" => versions}}}} when is_list(versions) ->
-        ver_list = versions
-        |> Enum.map(fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          versions
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:ok, %{"data" => %{"getPackage" => nil}}} ->
@@ -206,8 +211,10 @@ defmodule Opsm.Registries.Wapm do
           case dep do
             %{"name" => dep_name, "version" => ver} ->
               Map.put(acc, dep_name, ver)
+
             %{"name" => dep_name} ->
               Map.put(acc, dep_name, ">= 0.0.0")
+
             _ ->
               acc
           end

@@ -64,17 +64,21 @@ defmodule Opsm.Registries.DockerHub do
   """
   def search(query, opts \\ []) do
     page_size = Keyword.get(opts, :limit, 20)
-    url = "#{@api_url}/search/repositories/?query=#{URI.encode_www_form(query)}&page_size=#{page_size}"
+
+    url =
+      "#{@api_url}/search/repositories/?query=#{URI.encode_www_form(query)}&page_size=#{page_size}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        parsed = Enum.map(results, fn item ->
-          %{
-            name: item["repo_name"] || item["name"],
-            version: "latest",
-            description: item["short_description"] || item["description"]
-          }
-        end)
+        parsed =
+          Enum.map(results, fn item ->
+            %{
+              name: item["repo_name"] || item["name"],
+              version: "latest",
+              description: item["short_description"] || item["description"]
+            }
+          end)
+
         {:ok, parsed}
 
       {:ok, _} ->
@@ -104,7 +108,9 @@ defmodule Opsm.Registries.DockerHub do
   """
   def versions(name) do
     {namespace, repo} = parse_image_name(name)
-    url = "#{@api_url}/repositories/#{namespace}/#{repo}/tags?page_size=100&ordering=-last_updated"
+
+    url =
+      "#{@api_url}/repositories/#{namespace}/#{repo}/tags?page_size=100&ordering=-last_updated"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => tags}} when is_list(tags) ->
@@ -139,8 +145,9 @@ defmodule Opsm.Registries.DockerHub do
   defp parse_image(namespace, repo, tag_data, repo_data, tag) do
     full_name = if namespace == "library", do: repo, else: "#{namespace}/#{repo}"
 
-    digest = tag_data["digest"] ||
-      get_in(tag_data, ["images", Access.at(0), "digest"])
+    digest =
+      tag_data["digest"] ||
+        get_in(tag_data, ["images", Access.at(0), "digest"])
 
     manifest = %ManifestFormat{
       name: full_name,

@@ -8,8 +8,9 @@ defmodule Opsm.Verified.UrlPropertyTest do
 
   describe "Url.validate/1 properties" do
     property "always rejects URLs without schemes" do
-      check all(host <- string(:alphanumeric, min_length: 1),
-                path <- string(:alphanumeric)
+      check all(
+              host <- string(:alphanumeric, min_length: 1),
+              path <- string(:alphanumeric)
             ) do
         url = "#{host}/#{path}"
         assert {:error, :missing_scheme} = Url.validate(url)
@@ -23,9 +24,10 @@ defmodule Opsm.Verified.UrlPropertyTest do
     end
 
     property "always rejects localhost variants" do
-      check all(scheme <- member_of(["http", "https"]),
-                localhost <- member_of(["localhost", "127.0.0.1", "0.0.0.0", "::1"]),
-                path <- string(:alphanumeric)
+      check all(
+              scheme <- member_of(["http", "https"]),
+              localhost <- member_of(["localhost", "127.0.0.1", "0.0.0.0", "::1"]),
+              path <- string(:alphanumeric)
             ) do
         url = "#{scheme}://#{localhost}/#{path}"
         assert {:error, :blocked_host} = Url.validate(url)
@@ -33,10 +35,11 @@ defmodule Opsm.Verified.UrlPropertyTest do
     end
 
     property "always rejects private IP ranges" do
-      check all(scheme <- member_of(["http", "https"]),
-                octet2 <- integer(0..255),
-                octet3 <- integer(0..255),
-                octet4 <- integer(0..255)
+      check all(
+              scheme <- member_of(["http", "https"]),
+              octet2 <- integer(0..255),
+              octet3 <- integer(0..255),
+              octet4 <- integer(0..255)
             ) do
         # Test 192.168.x.x range
         url = "#{scheme}://192.168.#{octet3}.#{octet4}/test"
@@ -49,8 +52,9 @@ defmodule Opsm.Verified.UrlPropertyTest do
     end
 
     property "always rejects unsupported schemes" do
-      check all(scheme <- member_of(["ftp", "file", "javascript", "data", "ssh"]),
-                host <- string(:alphanumeric, min_length: 1)
+      check all(
+              scheme <- member_of(["ftp", "file", "javascript", "data", "ssh"]),
+              host <- string(:alphanumeric, min_length: 1)
             ) do
         url = "#{scheme}://#{host}/path"
         assert match?({:error, {:invalid_scheme, _}}, Url.validate(url))
@@ -58,10 +62,11 @@ defmodule Opsm.Verified.UrlPropertyTest do
     end
 
     property "accepts valid http/https URLs to public domains" do
-      check all(scheme <- member_of(["http", "https"]),
-                # Use known safe domains
-                host <- member_of(["example.com", "github.com", "registry.npmjs.org"]),
-                path <- string(:alphanumeric)
+      check all(
+              scheme <- member_of(["http", "https"]),
+              # Use known safe domains
+              host <- member_of(["example.com", "github.com", "registry.npmjs.org"]),
+              path <- string(:alphanumeric)
             ) do
         url = "#{scheme}://#{host}/#{path}"
 
@@ -79,10 +84,11 @@ defmodule Opsm.Verified.UrlPropertyTest do
     end
 
     property "preserves original URL in validated struct" do
-      check all(scheme <- member_of(["http", "https"]),
-                host <- member_of(["example.com", "github.com"]),
-                port <- integer(1..65535),
-                path <- string(:alphanumeric)
+      check all(
+              scheme <- member_of(["http", "https"]),
+              host <- member_of(["example.com", "github.com"]),
+              port <- integer(1..65535),
+              path <- string(:alphanumeric)
             ) do
         url = "#{scheme}://#{host}:#{port}/#{path}"
 
@@ -100,9 +106,10 @@ defmodule Opsm.Verified.UrlPropertyTest do
 
   describe "Url.to_string/1 properties" do
     property "roundtrip: validate -> to_string returns original" do
-      check all(scheme <- member_of(["http", "https"]),
-                host <- member_of(["example.com", "test.org"]),
-                path <- string(:alphanumeric, max_length: 20)
+      check all(
+              scheme <- member_of(["http", "https"]),
+              host <- member_of(["example.com", "test.org"]),
+              path <- string(:alphanumeric, max_length: 20)
             ) do
         url = "#{scheme}://#{host}/#{path}"
 

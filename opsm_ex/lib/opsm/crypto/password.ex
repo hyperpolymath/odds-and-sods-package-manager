@@ -13,7 +13,8 @@ defmodule Opsm.Crypto.Password do
   Aligns with SECURITY-STANDARDS.scm PasswordHashing requirements.
   """
 
-  @memory_cost 19  # 2^19 KiB = 512 MiB (argon2 uses log2 of memory in KiB)
+  # 2^19 KiB = 512 MiB (argon2 uses log2 of memory in KiB)
+  @memory_cost 19
   @time_cost 8
   @parallelism 4
   @hash_length 64

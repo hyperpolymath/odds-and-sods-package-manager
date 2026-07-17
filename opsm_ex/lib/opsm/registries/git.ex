@@ -58,7 +58,7 @@ defmodule Opsm.Registries.Git do
       {:ok, %ResolvedPackage{...}}
   """
   @spec fetch_package(String.t(), String.t(), keyword()) ::
-    {:ok, ResolvedPackage.t()} | {:error, term()}
+          {:ok, ResolvedPackage.t()} | {:error, term()}
   def fetch_package(url, version \\ "latest", opts \\ []) do
     Logger.debug("Fetching package from git: #{url}@#{version}")
 
@@ -91,9 +91,10 @@ defmodule Opsm.Registries.Git do
     with {:ok, cache_path} <- ensure_cloned(url, shallow: false) do
       case Opsm.SafeExec.cmd("git", ["tag", "--sort=-v:refname"], cd: cache_path) do
         {output, 0} ->
-          tags = output
-          |> String.split("\n", trim: true)
-          |> Enum.map(&String.trim/1)
+          tags =
+            output
+            |> String.split("\n", trim: true)
+            |> Enum.map(&String.trim/1)
 
           {:ok, tags}
 
@@ -116,9 +117,10 @@ defmodule Opsm.Registries.Git do
     with {:ok, cache_path} <- ensure_cloned(url, []) do
       case Opsm.SafeExec.cmd("git", ["symbolic-ref", "refs/remotes/origin/HEAD"], cd: cache_path) do
         {output, 0} ->
-          branch = output
-          |> String.trim()
-          |> String.replace("refs/remotes/origin/", "")
+          branch =
+            output
+            |> String.trim()
+            |> String.replace("refs/remotes/origin/", "")
 
           {:ok, branch}
 
@@ -174,11 +176,12 @@ defmodule Opsm.Registries.Git do
   defp clone_repo(url, dest, shallow) do
     File.mkdir_p!(Path.dirname(dest))
 
-    args = if shallow do
-      ["clone", "--depth", "1", url, dest]
-    else
-      ["clone", url, dest]
-    end
+    args =
+      if shallow do
+        ["clone", "--depth", "1", url, dest]
+      else
+        ["clone", url, dest]
+      end
 
     case Opsm.SafeExec.cmd("git", args, stderr_to_stdout: true) do
       {_, 0} ->
@@ -186,7 +189,8 @@ defmodule Opsm.Registries.Git do
         {:ok, dest}
 
       {error, _code} ->
-        File.rm_rf(dest)  # Clean up partial clone
+        # Clean up partial clone
+        File.rm_rf(dest)
         {:error, "Git clone failed: #{error}"}
     end
   end
@@ -198,7 +202,8 @@ defmodule Opsm.Registries.Git do
 
       {error, _code} ->
         Logger.warning("Failed to update git cache: #{error}")
-        :ok  # Non-fatal, use existing cache
+        # Non-fatal, use existing cache
+        :ok
     end
   end
 
@@ -211,7 +216,9 @@ defmodule Opsm.Registries.Git do
       {_, _} ->
         # Fallback to main/master
         case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/main"], cd: cache_path) do
-          {output, 0} -> {:ok, String.trim(output)}
+          {output, 0} ->
+            {:ok, String.trim(output)}
+
           {_, _} ->
             case Opsm.SafeExec.cmd("git", ["rev-parse", "origin/master"], cd: cache_path) do
               {output, 0} -> {:ok, String.trim(output)}
@@ -251,11 +258,13 @@ defmodule Opsm.Registries.Git do
 
   defp find_manifest(cache_path, opts) do
     subpath = Keyword.get(opts, :subpath)
-    search_path = if subpath do
-      Path.join(cache_path, subpath)
-    else
-      cache_path
-    end
+
+    search_path =
+      if subpath do
+        Path.join(cache_path, subpath)
+      else
+        cache_path
+      end
 
     manifest_file = Keyword.get(opts, :manifest_file)
 
@@ -272,25 +281,39 @@ defmodule Opsm.Registries.Git do
   defp detect_manifest(search_path) do
     # Common manifest filenames by ecosystem
     candidates = [
-      "package.json",      # npm
-      "Cargo.toml",        # Rust
-      "mix.exs",           # Elixir
-      "*.nimble",          # Nim
-      "*.ipkg",            # Idris2
-      "*.cabal",           # Haskell
-      "dune-project",      # OCaml
-      "*.gpr",             # Ada
-      "_CoqProject",       # Coq
-      "lakefile.lean",     # Lean 4
-      "META.json",         # Mercury
-      "*.asd",             # Common Lisp
-      "shard.yml"          # Crystal
+      # npm
+      "package.json",
+      # Rust
+      "Cargo.toml",
+      # Elixir
+      "mix.exs",
+      # Nim
+      "*.nimble",
+      # Idris2
+      "*.ipkg",
+      # Haskell
+      "*.cabal",
+      # OCaml
+      "dune-project",
+      # Ada
+      "*.gpr",
+      # Coq
+      "_CoqProject",
+      # Lean 4
+      "lakefile.lean",
+      # Mercury
+      "META.json",
+      # Common Lisp
+      "*.asd",
+      # Crystal
+      "shard.yml"
     ]
 
-    found = Enum.find_value(candidates, fn pattern ->
-      matches = Path.wildcard(Path.join(search_path, pattern))
-      if matches != [], do: List.first(matches)
-    end)
+    found =
+      Enum.find_value(candidates, fn pattern ->
+        matches = Path.wildcard(Path.join(search_path, pattern))
+        if matches != [], do: List.first(matches)
+      end)
 
     case found do
       nil -> {:error, "No manifest file found in repository"}
@@ -378,6 +401,7 @@ defmodule Opsm.Registries.Git do
     ref
     |> String.replace("refs/tags/", "")
     |> String.replace("refs/heads/", "")
-    |> String.slice(0..10)  # Truncate SHA if needed
+    # Truncate SHA if needed
+    |> String.slice(0..10)
   end
 end

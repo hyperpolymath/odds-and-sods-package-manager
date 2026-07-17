@@ -42,7 +42,8 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   @github_org "hyperpolymath"
   @github_api "https://api.github.com"
   @cache_table :hfr_cache
-  @cache_ttl_ms 30 * 60 * 1_000  # 30 minutes
+  # 30 minutes
+  @cache_ttl_ms 30 * 60 * 1_000
   @per_page 100
   @opsm_manifest_name "opsm.toml"
 
@@ -58,6 +59,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
     case :ets.info(@cache_table) do
       :undefined ->
         :ets.new(@cache_table, [:named_table, :public, :set, read_concurrency: true])
+
       _ ->
         :ok
     end
@@ -149,6 +151,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   """
   def exists?(name) do
     ensure_index()
+
     case lookup_cached(name) do
       {:hit, _} -> true
       :miss -> false
@@ -186,6 +189,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
     if :ets.info(@cache_table, :size) == 0 do
       refresh_index()
     end
+
     :ok
   end
 
@@ -244,7 +248,9 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   defp index_repo(repo) do
     repo_name = repo["name"]
     default_branch = repo["default_branch"] || "main"
-    raw_url = "https://raw.githubusercontent.com/#{@github_org}/#{repo_name}/#{default_branch}/#{@opsm_manifest_name}"
+
+    raw_url =
+      "https://raw.githubusercontent.com/#{@github_org}/#{repo_name}/#{default_branch}/#{@opsm_manifest_name}"
 
     case VerifiedHttp.get(raw_url, headers: github_headers(), receive_timeout: 5_000) do
       {:ok, %{status: 200, body: toml_text}} ->
@@ -291,8 +297,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   defp github_headers do
     token = System.get_env("GITHUB_TOKEN") || Application.get_env(:opsm, :github_token, nil)
 
-    base = [{"Accept", "application/vnd.github+json"},
-            {"X-GitHub-Api-Version", "2022-11-28"}]
+    base = [{"Accept", "application/vnd.github+json"}, {"X-GitHub-Api-Version", "2022-11-28"}]
 
     if token do
       [{"Authorization", "Bearer #{token}"} | base]
@@ -335,14 +340,17 @@ defmodule Opsm.Registries.HyperpPolymathForge do
 
   defp resolve_package(pkg_info, version) do
     repo_name = pkg_info[:repo_name]
-    branch = if version in ["latest", "main"], do: pkg_info[:default_branch] || "main", else: version
+
+    branch =
+      if version in ["latest", "main"], do: pkg_info[:default_branch] || "main", else: version
 
     pkg = %ResolvedPackage{
       package: pkg_info[:pkg_name],
       version: version,
       forth: pkg_info[:forth] || :hyperpolymath,
       registry_url: pkg_info[:repo_url],
-      tarball_url: "https://github.com/#{@github_org}/#{repo_name}/archive/refs/heads/#{branch}.tar.gz",
+      tarball_url:
+        "https://github.com/#{@github_org}/#{repo_name}/archive/refs/heads/#{branch}.tar.gz",
       checksum: nil,
       checksum_algo: :sha256,
       manifest: %ManifestFormat{
@@ -372,7 +380,8 @@ defmodule Opsm.Registries.HyperpPolymathForge do
       version: entry[:version] || version,
       forth: entry[:forth] || :hyperpolymath,
       registry_url: entry[:repo_url],
-      tarball_url: "https://github.com/#{@github_org}/#{entry[:repo_name]}/archive/refs/heads/main.tar.gz",
+      tarball_url:
+        "https://github.com/#{@github_org}/#{entry[:repo_name]}/archive/refs/heads/main.tar.gz",
       checksum: nil,
       checksum_algo: :sha256,
       manifest: %ManifestFormat{
@@ -482,6 +491,7 @@ defmodule Opsm.Registries.HyperpPolymathForge do
   defp default_authors, do: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 
   defp safe_to_atom(nil), do: nil
+
   defp safe_to_atom(str) when is_binary(str) do
     # Fallback to a string if the atom doesn't exist to prevent atom exhaustion.
     # The caller must be prepared to handle strings.
@@ -491,5 +501,6 @@ defmodule Opsm.Registries.HyperpPolymathForge do
       ArgumentError -> str
     end
   end
+
   defp safe_to_atom(atom) when is_atom(atom), do: atom
 end

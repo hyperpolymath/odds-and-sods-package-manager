@@ -19,24 +19,35 @@ defmodule Opsm.Registries.Apt do
   """
   def fetch_package(name, version \\ "latest") do
     url = "#{@debian_api}/src/#{name}/"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         versions = body["versions"] || []
+
         case versions do
-          [] -> {:error, :not_found}
+          [] ->
+            {:error, :not_found}
+
           _ ->
-            ver = if version == "latest" do
-              latest = List.first(versions)
-              latest["version"]
-            else
-              version
-            end
+            ver =
+              if version == "latest" do
+                latest = List.first(versions)
+                latest["version"]
+              else
+                version
+              end
+
             {:ok, parse_debian_package(name, body, ver, versions)}
         end
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -58,7 +69,7 @@ defmodule Opsm.Registries.Apt do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -67,14 +78,18 @@ defmodule Opsm.Registries.Apt do
   """
   def get_versions(name) do
     url = "#{@debian_api}/src/#{name}/"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        versions = (body["versions"] || [])
-                   |> Enum.map(fn v -> v["version"] end)
-                   |> Enum.reject(&is_nil/1)
+        versions =
+          (body["versions"] || [])
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, versions}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -83,24 +98,37 @@ defmodule Opsm.Registries.Apt do
   """
   def search(query, _opts \\ []) do
     url = "#{@debian_api}/search/#{URI.encode(query)}/"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        results = (body["results"] || %{})
-        |> then(fn r when is_map(r) -> r; _ -> %{} end)
-        |> Map.get("exact", %{})
-        |> then(fn r when is_map(r) -> r; _ -> %{} end)
-        |> Map.get("source", [])
-        |> then(fn r when is_list(r) -> r; _ -> [] end)
-        |> Enum.take(20)
-        |> Enum.map(fn pkg when is_map(pkg) ->
-          %{name: pkg["name"], version: nil, description: nil}
-        end)
+        results =
+          (body["results"] || %{})
+          |> then(fn
+            r when is_map(r) -> r
+            _ -> %{}
+          end)
+          |> Map.get("exact", %{})
+          |> then(fn
+            r when is_map(r) -> r
+            _ -> %{}
+          end)
+          |> Map.get("source", [])
+          |> then(fn
+            r when is_list(r) -> r
+            _ -> []
+          end)
+          |> Enum.take(20)
+          |> Enum.map(fn pkg when is_map(pkg) ->
+            %{name: pkg["name"], version: nil, description: nil}
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
         {:ok, []}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

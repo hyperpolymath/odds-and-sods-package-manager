@@ -4,6 +4,7 @@ defmodule Opsm.Integration.TrustPipelineTest do
   use ExUnit.Case, async: false
 
   alias Opsm.Clients.{CheckyMonkey, Palimpsest, Oikos}
+
   alias Opsm.Types.{
     ServiceConfig,
     HttpConfig,
@@ -72,7 +73,7 @@ defmodule Opsm.Integration.TrustPipelineTest do
       client = CheckyMonkey.new(configs.checky_monkey, configs.http)
       request_id = "test-request-123"
 
-      case CheckyMonkey.get_verification_status(client,request_id) do
+      case CheckyMonkey.get_verification_status(client, request_id) do
         {:ok, response} ->
           assert response.status in [:queued, :running, :completed, :failed]
 
@@ -90,7 +91,7 @@ defmodule Opsm.Integration.TrustPipelineTest do
       client = CheckyMonkey.new(configs.checky_monkey, %{configs.http | timeout_ms: 100})
 
       # Poll for non-existent request
-      case CheckyMonkey.get_verification_status(client,"nonexistent") do
+      case CheckyMonkey.get_verification_status(client, "nonexistent") do
         {:error, _reason} ->
           # Expected - service unavailable or not found
           :ok
@@ -239,19 +240,16 @@ defmodule Opsm.Integration.TrustPipelineTest do
       :attestation_invalid -> :hard_fail
       :checksum_mismatch -> :hard_fail
       :malware_detected -> :hard_fail
-
       # SOFT_FAIL - Warn but allow with degraded trust
       :checky_monkey_timeout -> :soft_fail
       :oikos_unreachable -> :soft_fail
       :network_error -> :soft_fail
       :service_timeout -> :soft_fail
-
       # WARNING - Inform user but proceed
       :low_sustainability_score -> :warning
       :dev_dependency_issue -> :warning
       :optional_dep_unavailable -> :warning
       :missing_documentation -> :warning
-
       _ -> :unknown
     end
   end

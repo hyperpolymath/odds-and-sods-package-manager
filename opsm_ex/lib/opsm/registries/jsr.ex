@@ -23,11 +23,12 @@ defmodule Opsm.Registries.Jsr do
         {:error, reason}
 
       {:ok, {scope, pkg_name}} ->
-        target_version = if version == "latest" do
-          fetch_latest_version(scope, pkg_name)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            fetch_latest_version(scope, pkg_name)
+          else
+            version
+          end
 
         case target_version do
           nil ->
@@ -35,6 +36,7 @@ defmodule Opsm.Registries.Jsr do
 
           ver ->
             url = "#{@api_url}/scopes/#{scope}/packages/#{pkg_name}/versions/#{ver}"
+
             case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
               {:ok, body} ->
                 {:ok, parse_package(name, scope, pkg_name, body, ver)}
@@ -71,34 +73,38 @@ defmodule Opsm.Registries.Jsr do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"items" => items}} when is_list(items) ->
-        results = Enum.map(items, fn item ->
-          scope = item["scope"]
-          name = item["name"]
-          full_name = "@#{scope}/#{name}"
+        results =
+          Enum.map(items, fn item ->
+            scope = item["scope"]
+            name = item["name"]
+            full_name = "@#{scope}/#{name}"
 
-          %{
-            name: full_name,
-            version: item["latestVersion"],
-            description: item["description"] || "",
-            downloads: item["score"] || 0
-          }
-        end)
+            %{
+              name: full_name,
+              version: item["latestVersion"],
+              description: item["description"] || "",
+              downloads: item["score"] || 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, items} when is_list(items) ->
         # Alternative response format
-        results = Enum.map(items, fn item ->
-          scope = item["scope"]
-          name = item["name"]
-          full_name = "@#{scope}/#{name}"
+        results =
+          Enum.map(items, fn item ->
+            scope = item["scope"]
+            name = item["name"]
+            full_name = "@#{scope}/#{name}"
 
-          %{
-            name: full_name,
-            version: item["latestVersion"],
-            description: item["description"] || "",
-            downloads: item["score"] || 0
-          }
-        end)
+            %{
+              name: full_name,
+              version: item["latestVersion"],
+              description: item["description"] || "",
+              downloads: item["score"] || 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -119,6 +125,7 @@ defmodule Opsm.Registries.Jsr do
 
       {:ok, {scope, pkg_name}} ->
         url = "#{@api_url}/scopes/#{scope}/packages/#{pkg_name}/versions"
+
         case VerifiedHttp.get(url, receive_timeout: 5_000) do
           {:ok, _} -> true
           _ -> false
@@ -188,26 +195,31 @@ defmodule Opsm.Registries.Jsr do
         {:error, "Invalid scoped package name format. Expected @scope/name"}
     end
   end
+
   defp parse_scoped_name(_), do: {:error, "JSR packages must be scoped (start with @)"}
 
   # Parsers
 
   defp parse_package(full_name, scope, pkg_name, metadata, version) do
     # Extract dependencies from metadata
-    deps = case metadata do
-      %{"dependencies" => deps_map} when is_map(deps_map) ->
-        Map.new(deps_map, fn {dep, ver} -> {dep, ver} end)
-      _ ->
-        %{}
-    end
+    deps =
+      case metadata do
+        %{"dependencies" => deps_map} when is_map(deps_map) ->
+          Map.new(deps_map, fn {dep, ver} -> {dep, ver} end)
+
+        _ ->
+          %{}
+      end
 
     # Extract checksum if available
-    checksum = case metadata do
-      %{"integrity" => integrity} when is_binary(integrity) ->
-        parse_integrity_hash(integrity)
-      _ ->
-        nil
-    end
+    checksum =
+      case metadata do
+        %{"integrity" => integrity} when is_binary(integrity) ->
+          parse_integrity_hash(integrity)
+
+        _ ->
+          nil
+      end
 
     %ResolvedPackage{
       package: full_name,
@@ -240,8 +252,10 @@ defmodule Opsm.Registries.Jsr do
     case metadata do
       %{"author" => author} when is_binary(author) ->
         [author]
+
       %{"authors" => authors} when is_list(authors) ->
         authors
+
       _ ->
         []
     end
@@ -251,11 +265,13 @@ defmodule Opsm.Registries.Jsr do
   # Convert to hex-encoded SHA256
   defp parse_integrity_hash("sha256-" <> b64_hash) do
     b64_clean = String.trim_trailing(b64_hash, "=") |> pad_base64()
+
     case Base.decode64(b64_clean) do
       {:ok, raw_hash} -> Base.encode16(raw_hash, case: :lower)
       :error -> nil
     end
   end
+
   defp parse_integrity_hash(_), do: nil
 
   defp pad_base64(s) do

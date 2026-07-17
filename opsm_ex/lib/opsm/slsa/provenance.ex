@@ -84,28 +84,31 @@ defmodule Opsm.Slsa.Provenance do
     # Sign if key provided (supports both classical and hybrid)
     hybrid_keypair = Keyword.get(opts, :hybrid_keypair)
 
-    provenance = cond do
-      hybrid_keypair ->
-        # Hybrid Ed25519 + Dilithium5 signing
-        case sign_provenance_hybrid(provenance, hybrid_keypair) do
-          {:ok, sig, algo} ->
-            %{provenance | signature: sig, signature_algo: algo}
-          {:error, _} ->
-            provenance
-        end
+    provenance =
+      cond do
+        hybrid_keypair ->
+          # Hybrid Ed25519 + Dilithium5 signing
+          case sign_provenance_hybrid(provenance, hybrid_keypair) do
+            {:ok, sig, algo} ->
+              %{provenance | signature: sig, signature_algo: algo}
 
-      signing_key ->
-        # Classical Ed25519 signing
-        case sign_provenance(provenance, signing_key) do
-          {:ok, sig} ->
-            %{provenance | signature: sig, signature_algo: :ed25519}
-          {:error, _} ->
-            provenance
-        end
+            {:error, _} ->
+              provenance
+          end
 
-      true ->
-        provenance
-    end
+        signing_key ->
+          # Classical Ed25519 signing
+          case sign_provenance(provenance, signing_key) do
+            {:ok, sig} ->
+              %{provenance | signature: sig, signature_algo: :ed25519}
+
+            {:error, _} ->
+              provenance
+          end
+
+        true ->
+          provenance
+      end
 
     {:ok, provenance}
   end
@@ -137,28 +140,32 @@ defmodule Opsm.Slsa.Provenance do
     {materials_match, result} = check_materials(provenance, package, result, opts)
 
     # Check signature
-    {sig_valid, result} = if provenance.signature && public_key do
-      check_signature(provenance, public_key, result)
-    else
-      if provenance.signature do
-        {false, add_warning(result, "Provenance is signed but no public key provided for verification")}
+    {sig_valid, result} =
+      if provenance.signature && public_key do
+        check_signature(provenance, public_key, result)
       else
-        {:not_checked, add_warning(result, "Provenance is unsigned")}
+        if provenance.signature do
+          {false,
+           add_warning(result, "Provenance is signed but no public key provided for verification")}
+        else
+          {:not_checked, add_warning(result, "Provenance is unsigned")}
+        end
       end
-    end
 
     # Calculate verified level
     verified_level = verified_slsa_level(builder_trusted, materials_match, sig_valid)
 
     verified = verified_level >= 1 and result.errors == []
 
-    {:ok, %{result |
-      verified: verified,
-      slsa_level: verified_level,
-      builder_trusted: builder_trusted,
-      materials_match: materials_match,
-      signature_valid: sig_valid
-    }}
+    {:ok,
+     %{
+       result
+       | verified: verified,
+         slsa_level: verified_level,
+         builder_trusted: builder_trusted,
+         materials_match: materials_match,
+         signature_valid: sig_valid
+     }}
   end
 
   @doc """
@@ -268,29 +275,40 @@ defmodule Opsm.Slsa.Provenance do
     materials = []
 
     # Source material
-    materials = if source_uri != "" do
-      [%BuildMaterial{
-        uri: source_uri,
-        digest: digest_map(source_digest)
-      } | materials]
-    else
-      materials
-    end
+    materials =
+      if source_uri != "" do
+        [
+          %BuildMaterial{
+            uri: source_uri,
+            digest: digest_map(source_digest)
+          }
+          | materials
+        ]
+      else
+        materials
+      end
 
     # Package tarball material
-    materials = if package.tarball_url do
-      [%BuildMaterial{
-        uri: package.tarball_url,
-        digest: if(package.checksum,
-          do: %{to_string(package.checksum_algo || "sha256") => package.checksum},
-          else: %{})
-      } | materials]
-    else
-      materials
-    end
+    materials =
+      if package.tarball_url do
+        [
+          %BuildMaterial{
+            uri: package.tarball_url,
+            digest:
+              if(package.checksum,
+                do: %{to_string(package.checksum_algo || "sha256") => package.checksum},
+                else: %{}
+              )
+          }
+          | materials
+        ]
+      else
+        materials
+      end
 
     # Dependency materials
-    dep_materials = (package.manifest.dependencies || %{})
+    dep_materials =
+      (package.manifest.dependencies || %{})
       |> Enum.map(fn {name, version} ->
         %BuildMaterial{uri: "pkg:#{package.forth}/#{name}@#{version}", digest: %{}}
       end)
@@ -362,12 +380,13 @@ defmodule Opsm.Slsa.Provenance do
 
       nil ->
         # Check if package tarball appears in materials
-        has_tarball = Enum.any?(provenance.materials, fn
-          %BuildMaterial{uri: uri} -> uri == package.tarball_url
-          %{uri: uri} -> uri == package.tarball_url
-          %{"uri" => uri} -> uri == package.tarball_url
-          _ -> false
-        end)
+        has_tarball =
+          Enum.any?(provenance.materials, fn
+            %BuildMaterial{uri: uri} -> uri == package.tarball_url
+            %{uri: uri} -> uri == package.tarball_url
+            %{"uri" => uri} -> uri == package.tarball_url
+            _ -> false
+          end)
 
         if has_tarball or is_nil(package.tarball_url) do
           {true, result}
@@ -385,18 +404,28 @@ defmodule Opsm.Slsa.Provenance do
       :hybrid_ed25519_dilithium5 ->
         # Hybrid verification — public_key should be a map with :ed25519_pk and :dilithium5_pk
         sig_info = %{signature: provenance.signature, algorithm: algo}
+
         case HybridSignatures.verify_payload(envelope, sig_info, public_key) do
-          :ok -> {true, result}
-          {:ok, :classical_only} -> {true, add_warning(result, "Only classical Ed25519 verified (PQ NIF not loaded)")}
-          {:ok, :pq_not_verified} -> {true, add_warning(result, "PQ signature not verified (NIF not loaded)")}
-          {:error, reason} -> {false, add_error(result, "Hybrid signature invalid: #{reason}")}
+          :ok ->
+            {true, result}
+
+          {:ok, :classical_only} ->
+            {true, add_warning(result, "Only classical Ed25519 verified (PQ NIF not loaded)")}
+
+          {:ok, :pq_not_verified} ->
+            {true, add_warning(result, "PQ signature not verified (NIF not loaded)")}
+
+          {:error, reason} ->
+            {false, add_error(result, "Hybrid signature invalid: #{reason}")}
         end
 
       :ed25519_only ->
         # Classical Ed25519 from hybrid keypair
-        pk = if is_map(public_key) and Map.has_key?(public_key, :ed25519_pk),
-          do: public_key.ed25519_pk,
-          else: public_key
+        pk =
+          if is_map(public_key) and Map.has_key?(public_key, :ed25519_pk),
+            do: public_key.ed25519_pk,
+            else: public_key
+
         case Signatures.verify_payload(envelope, provenance.signature, pk, :ed25519) do
           :ok -> {true, result}
           {:error, reason} -> {false, add_error(result, "Signature invalid: #{reason}")}
@@ -418,6 +447,7 @@ defmodule Opsm.Slsa.Provenance do
 
   defp sign_provenance_hybrid(provenance, hybrid_keypair) do
     envelope = to_envelope(provenance)
+
     case HybridSignatures.sign_payload(envelope, hybrid_keypair) do
       {:ok, %{signature: sig, algorithm: algo}} -> {:ok, sig, algo}
       {:error, reason} -> {:error, reason}

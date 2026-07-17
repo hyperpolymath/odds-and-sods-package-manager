@@ -17,25 +17,37 @@ defmodule Opsm.Registries.Guix do
   """
   def fetch_package(name, version \\ "latest") do
     url = "#{@api_url}/packages?name=#{URI.encode(name)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 15_000) do
       {:ok, body} when is_list(body) ->
         case body do
-          [] -> {:error, :not_found}
+          [] ->
+            {:error, :not_found}
+
           packages ->
-            pkg = if version == "latest" do
-              List.first(packages)
-            else
-              Enum.find(packages, fn p -> p["version"] == version end) ||
-              List.first(packages)
-            end
+            pkg =
+              if version == "latest" do
+                List.first(packages)
+              else
+                Enum.find(packages, fn p -> p["version"] == version end) ||
+                  List.first(packages)
+              end
+
             ver = if version == "latest", do: pkg["version"], else: version
             {:ok, parse_guix_package(name, pkg, ver)}
         end
 
-      {:ok, %{"error" => _}} -> {:error, :not_found}
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:ok, %{"error" => _}} ->
+        {:error, :not_found}
+
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -57,7 +69,7 @@ defmodule Opsm.Registries.Guix do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -66,15 +78,19 @@ defmodule Opsm.Registries.Guix do
   """
   def get_versions(name) do
     url = "#{@api_url}/packages?name=#{URI.encode(name)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 15_000) do
       {:ok, body} when is_list(body) ->
-        versions = body
-        |> Enum.map(fn p -> p["version"] end)
-        |> Enum.reject(&is_nil/1)
-        |> Enum.uniq()
+        versions =
+          body
+          |> Enum.map(fn p -> p["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, versions}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -83,17 +99,23 @@ defmodule Opsm.Registries.Guix do
   """
   def search(query, _opts \\ []) do
     url = "#{@api_url}/packages?search=#{URI.encode(query)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 15_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn p ->
-          %{name: p["name"], version: p["version"], description: p["synopsis"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn p ->
+            %{name: p["name"], version: p["version"], description: p["synopsis"]}
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

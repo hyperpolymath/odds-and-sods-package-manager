@@ -22,22 +22,31 @@ defmodule Opsm.Registries.Jetbrains do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          extract_latest_version(body)
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            extract_latest_version(body)
+          else
+            version
+          end
+
         {:ok, parse_plugin(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp extract_latest_version(body) do
     case body["updates"] || body["releases"] do
-      [latest | _] -> latest["version"] || "0.0.0"
+      [latest | _] ->
+        latest["version"] || "0.0.0"
+
       _ ->
         case body["version"] do
           nil -> "0.0.0"
@@ -50,23 +59,25 @@ defmodule Opsm.Registries.Jetbrains do
     plugin_id = body["id"] || name
     xml_id = body["xmlId"] || body["pluginId"] || to_string(name)
 
-    deps = (body["dependencies"] || [])
-           |> Enum.map(fn
-             d when is_binary(d) -> {d, "*"}
-             d when is_map(d) -> {d["xmlId"] || d["id"] || "", d["version"] || "*"}
-             _ -> nil
-           end)
-           |> Enum.reject(&is_nil/1)
-           |> Enum.reject(fn {n, _} -> n == "" end)
-           |> Map.new()
+    deps =
+      (body["dependencies"] || [])
+      |> Enum.map(fn
+        d when is_binary(d) -> {d, "*"}
+        d when is_map(d) -> {d["xmlId"] || d["id"] || "", d["version"] || "*"}
+        _ -> nil
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(fn {n, _} -> n == "" end)
+      |> Map.new()
 
-    compatible_products = (body["compatibleProducts"] || body["products"] || [])
-                          |> Enum.map(fn
-                            p when is_binary(p) -> p
-                            p when is_map(p) -> p["code"] || p["name"]
-                            _ -> nil
-                          end)
-                          |> Enum.reject(&is_nil/1)
+    compatible_products =
+      (body["compatibleProducts"] || body["products"] || [])
+      |> Enum.map(fn
+        p when is_binary(p) -> p
+        p when is_map(p) -> p["code"] || p["name"]
+        _ -> nil
+      end)
+      |> Enum.reject(&is_nil/1)
 
     description = build_description(body, compatible_products)
 
@@ -80,10 +91,14 @@ defmodule Opsm.Registries.Jetbrains do
       dependencies: deps
     }
 
-    download_url = case body["updates"] || body["releases"] do
-      [_latest | _] -> "#{@marketplace_url}/plugin/download?pluginId=#{plugin_id}&version=#{version}"
-      _ -> nil
-    end
+    download_url =
+      case body["updates"] || body["releases"] do
+        [_latest | _] ->
+          "#{@marketplace_url}/plugin/download?pluginId=#{plugin_id}&version=#{version}"
+
+        _ ->
+          nil
+      end
 
     %ResolvedPackage{
       package: to_string(name),
@@ -92,17 +107,20 @@ defmodule Opsm.Registries.Jetbrains do
       manifest: manifest,
       tarball_url: download_url,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
   defp build_description(body, compatible_products) do
     base = body["description"] || body["preview"] || body["name"]
-    products_str = if compatible_products != [] do
-      " (#{Enum.join(compatible_products, ", ")})"
-    else
-      ""
-    end
+
+    products_str =
+      if compatible_products != [] do
+        " (#{Enum.join(compatible_products, ", ")})"
+      else
+        ""
+      end
+
     "#{base}#{products_str}"
   end
 
@@ -118,10 +136,12 @@ defmodule Opsm.Registries.Jetbrains do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        versions_list = body
-                        |> Enum.map(fn u -> u["version"] end)
-                        |> Enum.reject(&is_nil/1)
-                        |> Enum.uniq()
+        versions_list =
+          body
+          |> Enum.map(fn u -> u["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, versions_list}
 
       {:ok, _} ->
@@ -130,7 +150,8 @@ defmodule Opsm.Registries.Jetbrains do
           {:error, _} = err -> err
         end
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -142,31 +163,38 @@ defmodule Opsm.Registries.Jetbrains do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn plugin ->
-          %{
-            name: plugin["xmlId"] || plugin["name"] || to_string(plugin["id"]),
-            version: extract_latest_version(plugin),
-            description: plugin["preview"] || plugin["name"]
-          }
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn plugin ->
+            %{
+              name: plugin["xmlId"] || plugin["name"] || to_string(plugin["id"]),
+              version: extract_latest_version(plugin),
+              description: plugin["preview"] || plugin["name"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"plugins" => plugins}} when is_list(plugins) ->
-        results = plugins
-        |> Enum.take(20)
-        |> Enum.map(fn plugin ->
-          %{
-            name: plugin["xmlId"] || plugin["name"] || to_string(plugin["id"]),
-            version: nil,
-            description: plugin["preview"] || plugin["name"]
-          }
-        end)
+        results =
+          plugins
+          |> Enum.take(20)
+          |> Enum.map(fn plugin ->
+            %{
+              name: plugin["xmlId"] || plugin["name"] || to_string(plugin["id"]),
+              version: nil,
+              description: plugin["preview"] || plugin["name"]
+            }
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

@@ -28,9 +28,10 @@ defmodule Opsm.Package.TransactionTest do
     end
 
     test "accumulates multiple directories" do
-      txn = Transaction.new("pkg")
-      |> Transaction.record_directory("/tmp/dir1")
-      |> Transaction.record_directory("/tmp/dir2")
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.record_directory("/tmp/dir1")
+        |> Transaction.record_directory("/tmp/dir2")
 
       assert length(txn.directories) == 2
     end
@@ -56,8 +57,9 @@ defmodule Opsm.Package.TransactionTest do
 
   describe "mark_completed/1" do
     test "marks transaction as completed" do
-      txn = Transaction.new("pkg")
-      |> Transaction.complete()
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.complete()
 
       assert txn.completed == true
     end
@@ -130,8 +132,9 @@ defmodule Opsm.Package.TransactionTest do
       file_path = Path.join(tmp_dir, "created_file.txt")
       File.write!(file_path, "content")
 
-      txn = Transaction.new("pkg")
-      |> Transaction.record_file(file_path)
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.record_file(file_path)
 
       assert File.exists?(file_path)
 
@@ -147,8 +150,9 @@ defmodule Opsm.Package.TransactionTest do
       File.write!(source, "content")
       File.ln_s!(source, link)
 
-      txn = Transaction.new("pkg")
-      |> Transaction.record_symlink(link)
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.record_symlink(link)
 
       assert File.exists?(link)
 
@@ -163,8 +167,9 @@ defmodule Opsm.Package.TransactionTest do
       dir_path = Path.join(tmp_dir, "created_dir")
       File.mkdir_p!(dir_path)
 
-      txn = Transaction.new("pkg")
-      |> Transaction.record_directory(dir_path)
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.record_directory(dir_path)
 
       assert File.dir?(dir_path)
 
@@ -177,9 +182,10 @@ defmodule Opsm.Package.TransactionTest do
       file_path = Path.join(tmp_dir, "keep_file.txt")
       File.write!(file_path, "content")
 
-      txn = Transaction.new("pkg")
-      |> Transaction.record_file(file_path)
-      |> Transaction.complete()
+      txn =
+        Transaction.new("pkg")
+        |> Transaction.record_file(file_path)
+        |> Transaction.complete()
 
       Transaction.rollback(txn)
 

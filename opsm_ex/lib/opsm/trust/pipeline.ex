@@ -38,35 +38,43 @@ defmodule Opsm.Trust.Pipeline do
     # Run checks in parallel
     tasks = []
 
-    tasks = if :attestation not in skip_checks do
-      [Task.async(fn -> {:attestation, check_attestations(package, config)} end) | tasks]
-    else
-      tasks
-    end
+    tasks =
+      if :attestation not in skip_checks do
+        [Task.async(fn -> {:attestation, check_attestations(package, config)} end) | tasks]
+      else
+        tasks
+      end
 
-    tasks = if :license not in skip_checks do
-      [Task.async(fn -> {:license, check_license(package, config)} end) | tasks]
-    else
-      tasks
-    end
+    tasks =
+      if :license not in skip_checks do
+        [Task.async(fn -> {:license, check_license(package, config)} end) | tasks]
+      else
+        tasks
+      end
 
-    tasks = if :sustainability not in skip_checks do
-      [Task.async(fn -> {:sustainability, check_sustainability(package, config)} end) | tasks]
-    else
-      tasks
-    end
+    tasks =
+      if :sustainability not in skip_checks do
+        [Task.async(fn -> {:sustainability, check_sustainability(package, config)} end) | tasks]
+      else
+        tasks
+      end
 
-    tasks = if :slsa not in skip_checks do
-      [Task.async(fn -> {:slsa, check_slsa_provenance(package, config)} end) | tasks]
-    else
-      tasks
-    end
+    tasks =
+      if :slsa not in skip_checks do
+        [Task.async(fn -> {:slsa, check_slsa_provenance(package, config)} end) | tasks]
+      else
+        tasks
+      end
 
-    tasks = if :github_attestation not in skip_checks do
-      [Task.async(fn -> {:github_attestation, check_github_attestation(package, config)} end) | tasks]
-    else
-      tasks
-    end
+    tasks =
+      if :github_attestation not in skip_checks do
+        [
+          Task.async(fn -> {:github_attestation, check_github_attestation(package, config)} end)
+          | tasks
+        ]
+      else
+        tasks
+      end
 
     # Collect results safely (D2: use yield_many to handle task crashes/timeouts)
     # 3s timeout — trust checks are advisory, install should not stall on unreachable services
@@ -91,11 +99,7 @@ defmodule Opsm.Trust.Pipeline do
     # Determine overall status
     {overall, recommendations, warnings} = evaluate_results(check_results)
 
-    results = %{results |
-      overall: overall,
-      recommendations: recommendations,
-      warnings: warnings
-    }
+    results = %{results | overall: overall, recommendations: recommendations, warnings: warnings}
 
     if verbose do
       print_verification_results(results)
@@ -128,27 +132,33 @@ defmodule Opsm.Trust.Pipeline do
 
     # Step 1: Check licenses
     IO.puts("Step 1: Checking licenses...")
-    license_result = case Palimpsest.cli_check_licenses(path) do
-      {:ok, licenses} ->
-        IO.puts("  ✓ License check passed")
-        {:ok, licenses}
-      {:error, reason} ->
-        IO.puts("  ⚠ License check failed: #{reason}")
-        {:warning, reason}
-    end
+
+    license_result =
+      case Palimpsest.cli_check_licenses(path) do
+        {:ok, licenses} ->
+          IO.puts("  ✓ License check passed")
+          {:ok, licenses}
+
+        {:error, reason} ->
+          IO.puts("  ⚠ License check failed: #{reason}")
+          {:warning, reason}
+      end
 
     # Step 2: Code verification (if services available)
     IO.puts("")
     IO.puts("Step 2: Code verification...")
     checky_client = CheckyMonkey.new(config.checky_monkey, config.http)
-    verification_result = case CheckyMonkey.health(checky_client) do
-      {:ok, _} ->
-        IO.puts("  ✓ Checky-monkey available (would run verification)")
-        {:ok, :available}
-      {:error, _} ->
-        IO.puts("  ⊘ Checky-monkey not available (skipped)")
-        {:skipped, :service_unavailable}
-    end
+
+    verification_result =
+      case CheckyMonkey.health(checky_client) do
+        {:ok, _} ->
+          IO.puts("  ✓ Checky-monkey available (would run verification)")
+          {:ok, :available}
+
+        {:error, _} ->
+          IO.puts("  ⊘ Checky-monkey not available (skipped)")
+          {:skipped, :service_unavailable}
+      end
 
     %{
       license: license_result,
@@ -190,11 +200,12 @@ defmodule Opsm.Trust.Pipeline do
   defp check_slsa_provenance(package, _config) do
     try do
       # Check if package has SLSA provenance attestation
-      slsa_attestation = Enum.find(package.attestations || [], fn
-        %{attestation_type: :in_toto} -> true
-        %{attestation_type: :sigstore} -> true
-        _ -> false
-      end)
+      slsa_attestation =
+        Enum.find(package.attestations || [], fn
+          %{attestation_type: :in_toto} -> true
+          %{attestation_type: :sigstore} -> true
+          _ -> false
+        end)
 
       cond do
         is_nil(slsa_attestation) ->
@@ -275,8 +286,8 @@ defmodule Opsm.Trust.Pipeline do
           # Clamp negative scores (defensive — heuristic should not produce them)
           {:ok, %{score: 0, level: :critical, source: :oikos_clamped}}
 
-        # No {:error, _} clause: analyze_package/4 is deliberately infallible —
-        # it falls back to heuristic scoring; exceptions hit the rescue below.
+          # No {:error, _} clause: analyze_package/4 is deliberately infallible —
+          # it falls back to heuristic scoring; exceptions hit the rescue below.
       end
     rescue
       e ->
@@ -288,7 +299,9 @@ defmodule Opsm.Trust.Pipeline do
   # Extract repository URL from the package manifest when available.
   # This lets oikos perform full repository-level analysis rather than
   # falling back to heuristic scoring.
-  defp extract_repository_url(%{manifest: %{repository: repo}}) when is_binary(repo) and repo != "", do: repo
+  defp extract_repository_url(%{manifest: %{repository: repo}})
+       when is_binary(repo) and repo != "", do: repo
+
   defp extract_repository_url(_package), do: nil
 
   # Map a numeric sustainability score (0-100) to a human-readable level.
@@ -311,6 +324,7 @@ defmodule Opsm.Trust.Pipeline do
       _ -> 0
     end
   end
+
   defp extract_slsa_level(_), do: 0
 
   # Extract the numeric sustainability score from the check results map.
@@ -329,21 +343,23 @@ defmodule Opsm.Trust.Pipeline do
     _warnings = []
 
     # Check each result
-    {recs, warns} = Enum.reduce(checks, {[], []}, fn {name, result}, {r, w} ->
-      case result do
-        {:ok, _msg} -> {r, w}
-        {:info, msg} -> {[msg | r], w}
-        {:warning, msg} -> {r, [msg | w]}
-        {:error, msg} -> {r, ["#{name}: #{msg}" | w]}
-        {:skipped, _msg} -> {r, w}
-      end
-    end)
+    {recs, warns} =
+      Enum.reduce(checks, {[], []}, fn {name, result}, {r, w} ->
+        case result do
+          {:ok, _msg} -> {r, w}
+          {:info, msg} -> {[msg | r], w}
+          {:warning, msg} -> {r, [msg | w]}
+          {:error, msg} -> {r, ["#{name}: #{msg}" | w]}
+          {:skipped, _msg} -> {r, w}
+        end
+      end)
 
-    overall = cond do
-      Enum.any?(checks, fn {_, r} -> match?({:error, _}, r) end) -> :failed
-      Enum.any?(checks, fn {_, r} -> match?({:warning, _}, r) end) -> :warning
-      true -> :passed
-    end
+    overall =
+      cond do
+        Enum.any?(checks, fn {_, r} -> match?({:error, _}, r) end) -> :failed
+        Enum.any?(checks, fn {_, r} -> match?({:warning, _}, r) end) -> :warning
+        true -> :passed
+      end
 
     {overall, Enum.reverse(recs), Enum.reverse(warns)}
   end
@@ -357,19 +373,22 @@ defmodule Opsm.Trust.Pipeline do
     IO.puts("")
 
     for {name, result} <- results.checks do
-      status = case result do
-        {:ok, msg} -> "✓ #{msg}"
-        {:info, msg} -> "ℹ #{msg}"
-        {:warning, msg} -> "⚠ #{msg}"
-        {:error, msg} -> "✗ #{msg}"
-        {:skipped, msg} -> "⊘ #{msg}"
-      end
+      status =
+        case result do
+          {:ok, msg} -> "✓ #{msg}"
+          {:info, msg} -> "ℹ #{msg}"
+          {:warning, msg} -> "⚠ #{msg}"
+          {:error, msg} -> "✗ #{msg}"
+          {:skipped, msg} -> "⊘ #{msg}"
+        end
+
       IO.puts("  #{name}: #{status}")
     end
 
     if results.warnings != [] do
       IO.puts("")
       IO.puts("Warnings:")
+
       for warn <- results.warnings do
         IO.puts("  - #{warn}")
       end
@@ -378,6 +397,7 @@ defmodule Opsm.Trust.Pipeline do
     if results.recommendations != [] do
       IO.puts("")
       IO.puts("Recommendations:")
+
       for rec <- results.recommendations do
         IO.puts("  - #{rec}")
       end
@@ -396,6 +416,7 @@ defmodule Opsm.Trust.Pipeline do
 
   defp known_permissive?(license) do
     normalized = normalize_license(license)
+
     Enum.any?(@permissive_licenses, fn l ->
       String.contains?(normalized, String.downcase(l))
     end)
@@ -403,6 +424,7 @@ defmodule Opsm.Trust.Pipeline do
 
   defp known_copyleft?(license) do
     normalized = normalize_license(license)
+
     Enum.any?(@copyleft_licenses, fn l ->
       String.contains?(normalized, String.downcase(l))
     end)

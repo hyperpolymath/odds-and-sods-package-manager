@@ -5,9 +5,9 @@ defmodule Opsm.RegistryGateway.Router do
 
   alias Opsm.RegistryGateway
 
-  plug :match
-  plug Plug.Parsers, parsers: [:json], json_decoder: Jason
-  plug :dispatch
+  plug(:match)
+  plug(Plug.Parsers, parsers: [:json], json_decoder: Jason)
+  plug(:dispatch)
 
   post "/packages/publish" do
     case RegistryGateway.handle_publish(conn.body_params) do

@@ -30,11 +30,12 @@ defmodule Opsm.Registries.Terraform do
   end
 
   defp fetch_module(namespace, name, provider, version) do
-    target_version = if version == "latest" do
-      fetch_latest_module_version(namespace, name, provider)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_module_version(namespace, name, provider)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -42,6 +43,7 @@ defmodule Opsm.Registries.Terraform do
 
       ver ->
         url = "#{@registry_url}/modules/#{namespace}/#{name}/#{provider}/#{ver}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             {:ok, parse_module(namespace, name, provider, body, ver)}
@@ -62,11 +64,12 @@ defmodule Opsm.Registries.Terraform do
   end
 
   defp fetch_provider(namespace, name, version) do
-    target_version = if version == "latest" do
-      fetch_latest_provider_version(namespace, name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_provider_version(namespace, name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -74,6 +77,7 @@ defmodule Opsm.Registries.Terraform do
 
       ver ->
         url = "#{@registry_url}/providers/#{namespace}/#{name}/#{ver}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             {:ok, parse_provider(namespace, name, body, ver)}
@@ -114,10 +118,11 @@ defmodule Opsm.Registries.Terraform do
     limit = Keyword.get(opts, :limit, 20)
     type = Keyword.get(opts, :type, :module)
 
-    endpoint = case type do
-      :provider -> "/providers"
-      _ -> "/modules"
-    end
+    endpoint =
+      case type do
+        :provider -> "/providers"
+        _ -> "/modules"
+      end
 
     url = "#{@registry_url}#{endpoint}?q=#{URI.encode_www_form(query)}&limit=#{limit}"
 
@@ -184,9 +189,11 @@ defmodule Opsm.Registries.Terraform do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"modules" => [%{"versions" => versions}]}} when is_list(versions) ->
-        version_list = versions
-        |> Enum.map(fn %{"version" => v} -> v end)
-        |> Enum.reverse()
+        version_list =
+          versions
+          |> Enum.map(fn %{"version" => v} -> v end)
+          |> Enum.reverse()
+
         {:ok, version_list}
 
       {:ok, _} ->
@@ -208,9 +215,11 @@ defmodule Opsm.Registries.Terraform do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions}} when is_list(versions) ->
-        version_list = versions
-        |> Enum.map(fn %{"version" => v} -> v end)
-        |> Enum.reverse()
+        version_list =
+          versions
+          |> Enum.map(fn %{"version" => v} -> v end)
+          |> Enum.reverse()
+
         {:ok, version_list}
 
       {:ok, _} ->
@@ -262,7 +271,8 @@ defmodule Opsm.Registries.Terraform do
         {:provider, namespace, pkg_name}
 
       _ ->
-        {:error, "Invalid package name format. Expected 'namespace/name' or 'namespace/name/provider'"}
+        {:error,
+         "Invalid package name format. Expected 'namespace/name' or 'namespace/name/provider'"}
     end
   end
 
@@ -332,31 +342,37 @@ defmodule Opsm.Registries.Terraform do
   defp extract_module_dependencies(data) do
     # Terraform modules can have dependencies on other modules or providers
     # These are typically in the "dependencies" or "providers" fields
-    providers = data
-    |> Map.get("providers", [])
-    |> Enum.reduce(%{}, fn provider, acc ->
-      case provider do
-        %{"name" => name, "version" => version} ->
-          Map.put(acc, name, version)
-        %{"name" => name} ->
-          Map.put(acc, name, "*")
-        _ ->
-          acc
-      end
-    end)
+    providers =
+      data
+      |> Map.get("providers", [])
+      |> Enum.reduce(%{}, fn provider, acc ->
+        case provider do
+          %{"name" => name, "version" => version} ->
+            Map.put(acc, name, version)
 
-    dependencies = data
-    |> Map.get("dependencies", [])
-    |> Enum.reduce(providers, fn dep, acc ->
-      case dep do
-        %{"name" => name, "version" => version} ->
-          Map.put(acc, name, version)
-        %{"name" => name} ->
-          Map.put(acc, name, "*")
-        _ ->
-          acc
-      end
-    end)
+          %{"name" => name} ->
+            Map.put(acc, name, "*")
+
+          _ ->
+            acc
+        end
+      end)
+
+    dependencies =
+      data
+      |> Map.get("dependencies", [])
+      |> Enum.reduce(providers, fn dep, acc ->
+        case dep do
+          %{"name" => name, "version" => version} ->
+            Map.put(acc, name, version)
+
+          %{"name" => name} ->
+            Map.put(acc, name, "*")
+
+          _ ->
+            acc
+        end
+      end)
 
     dependencies
   end

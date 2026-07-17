@@ -14,7 +14,8 @@ defmodule Opsm.Cache do
   """
 
   @table_name :opsm_cache
-  @default_ttl_ms 5 * 60 * 1000  # 5 minutes
+  # 5 minutes
+  @default_ttl_ms 5 * 60 * 1000
 
   # Client API
 
@@ -27,6 +28,7 @@ defmodule Opsm.Cache do
       :undefined ->
         :ets.new(@table_name, [:set, :public, :named_table, read_concurrency: true])
         :ok
+
       _ ->
         :ok
     end
@@ -96,6 +98,7 @@ defmodule Opsm.Cache do
   """
   def stats do
     info = :ets.info(@table_name)
+
     %{
       size: Keyword.get(info, :size, 0),
       memory_bytes: Keyword.get(info, :memory, 0) * :erlang.system_info(:wordsize)
@@ -121,6 +124,7 @@ defmodule Opsm.Cache do
           {:ok, _} -> put(key, value, ttl_ms)
           _ -> :ok
         end
+
         value
     end
   end
@@ -147,5 +151,4 @@ defmodule Opsm.Cache do
   def exists_key(forth, name) do
     {:exists, forth, name}
   end
-
 end

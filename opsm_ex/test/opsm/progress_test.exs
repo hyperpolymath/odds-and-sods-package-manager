@@ -55,9 +55,10 @@ defmodule Opsm.ProgressTest do
 
   describe "complete_bar/1" do
     test "sets current to total" do
-      state = Progress.new_bar(100)
-      |> Progress.update_bar(50)
-      |> Progress.complete_bar()
+      state =
+        Progress.new_bar(100)
+        |> Progress.update_bar(50)
+        |> Progress.complete_bar()
 
       assert state.current == state.total
     end
@@ -65,8 +66,9 @@ defmodule Opsm.ProgressTest do
 
   describe "render_bar/1" do
     test "returns string representation" do
-      state = Progress.new_bar(100)
-      |> Progress.update_bar(50)
+      state =
+        Progress.new_bar(100)
+        |> Progress.update_bar(50)
 
       output = Progress.render_bar(state)
 
@@ -83,8 +85,9 @@ defmodule Opsm.ProgressTest do
     end
 
     test "shows 100% when complete" do
-      state = Progress.new_bar(100)
-      |> Progress.complete_bar()
+      state =
+        Progress.new_bar(100)
+        |> Progress.complete_bar()
 
       output = Progress.render_bar(state)
 
@@ -157,10 +160,11 @@ defmodule Opsm.ProgressTest do
     end
 
     test "does not exceed total" do
-      state = Progress.new_steps(2)
-      |> Progress.next_step("Step 1")
-      |> Progress.next_step("Step 2")
-      |> Progress.next_step("Step 3")
+      state =
+        Progress.new_steps(2)
+        |> Progress.next_step("Step 1")
+        |> Progress.next_step("Step 2")
+        |> Progress.next_step("Step 3")
 
       assert state.current == 2
     end

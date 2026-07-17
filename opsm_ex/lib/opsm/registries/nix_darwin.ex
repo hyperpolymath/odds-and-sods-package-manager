@@ -38,9 +38,11 @@ defmodule Opsm.Registries.NixDarwin do
         case Map.get(options, name) do
           nil ->
             # Try partial match
-            matches = options
-                      |> Enum.filter(fn {k, _v} -> String.contains?(k, name) end)
-                      |> Enum.take(1)
+            matches =
+              options
+              |> Enum.filter(fn {k, _v} -> String.contains?(k, name) end)
+              |> Enum.take(1)
+
             case matches do
               [{key, opt} | _] -> {:ok, parse_hm_option(key, opt)}
               [] -> {:error, :not_found}
@@ -51,24 +53,28 @@ defmodule Opsm.Registries.NixDarwin do
         end
 
       {:ok, options} when is_list(options) ->
-        match = Enum.find(options, fn opt ->
-          (opt["name"] || opt["option"]) == name
-        end)
+        match =
+          Enum.find(options, fn opt ->
+            (opt["name"] || opt["option"]) == name
+          end)
+
         case match do
           nil -> {:error, :not_found}
           opt -> {:ok, parse_hm_option(name, opt)}
         end
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
   defp parse_hm_option(name, opt) do
-    description = case opt do
-      o when is_map(o) -> o["description"] || o["type"] || "Home Manager option"
-      o when is_binary(o) -> o
-      _ -> "Home Manager option"
-    end
+    description =
+      case opt do
+        o when is_map(o) -> o["description"] || o["type"] || "Home Manager option"
+        o when is_binary(o) -> o
+        _ -> "Home Manager option"
+      end
 
     option_type = if is_map(opt), do: opt["type"], else: nil
     default_val = if is_map(opt), do: opt["default"], else: nil
@@ -80,7 +86,8 @@ defmodule Opsm.Registries.NixDarwin do
       license: "MIT",
       homepage: "https://nix-community.github.io/home-manager/",
       repository: "https://github.com/nix-community/home-manager",
-      keywords: ["nix-darwin", "home-manager", "nix-option", option_type] |> Enum.reject(&is_nil/1),
+      keywords:
+        ["nix-darwin", "home-manager", "nix-option", option_type] |> Enum.reject(&is_nil/1),
       dependencies: %{},
       source_forth: :nix_darwin,
       raw_manifest: %{
@@ -120,33 +127,41 @@ defmodule Opsm.Registries.NixDarwin do
     case VerifiedHttp.post_json(@nixpkgs_search_api, query, receive_timeout: 10_000) do
       {:ok, body} ->
         hits = get_in(body, ["hits", "hits"]) || []
+
         case hits do
           [hit | _] ->
             source = hit["_source"] || %{}
-            ver = if version == "latest",
-              do: source["package_version"] || "0.0.0",
-              else: version
+
+            ver =
+              if version == "latest",
+                do: source["package_version"] || "0.0.0",
+                else: version
+
             {:ok, parse_nixpkgs(name, source, ver)}
 
-          [] -> {:error, :not_found}
+          [] ->
+            {:error, :not_found}
         end
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp parse_nixpkgs(name, source, version) do
-    licenses = case source["package_license"] do
-      l when is_list(l) -> Enum.join(l, " AND ")
-      l when is_binary(l) -> l
-      _ -> nil
-    end
+    licenses =
+      case source["package_license"] do
+        l when is_list(l) -> Enum.join(l, " AND ")
+        l when is_binary(l) -> l
+        _ -> nil
+      end
 
-    homepage = case source["package_homepage"] do
-      [url | _] -> url
-      url when is_binary(url) -> url
-      _ -> nil
-    end
+    homepage =
+      case source["package_homepage"] do
+        [url | _] -> url
+        url when is_binary(url) -> url
+        _ -> nil
+      end
 
     manifest = %ManifestFormat{
       name: name,
@@ -193,17 +208,22 @@ defmodule Opsm.Registries.NixDarwin do
     case VerifiedHttp.post_json(@nixpkgs_search_api, search_query, receive_timeout: 10_000) do
       {:ok, body} ->
         hits = get_in(body, ["hits", "hits"]) || []
-        results = Enum.map(hits, fn hit ->
-          s = hit["_source"] || %{}
-          %{
-            name: s["package_attr_name"],
-            version: s["package_version"],
-            description: s["package_description"]
-          }
-        end)
+
+        results =
+          Enum.map(hits, fn hit ->
+            s = hit["_source"] || %{}
+
+            %{
+              name: s["package_attr_name"],
+              version: s["package_version"],
+              description: s["package_description"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

@@ -20,11 +20,12 @@ defmodule Opsm.Registries.GoModules do
     # Go modules use paths like "github.com/gin-gonic/gin"
     encoded = encode_module_path(name)
 
-    target_version = if version == "latest" do
-      fetch_latest_version(encoded)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(encoded)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -33,6 +34,7 @@ defmodule Opsm.Registries.GoModules do
       ver ->
         # Fetch version info
         url = "#{@proxy_url}/#{encoded}/@v/#{ver}.info"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             deps = fetch_go_mod_deps(encoded, ver)
@@ -56,8 +58,11 @@ defmodule Opsm.Registries.GoModules do
 
   defp fetch_latest_version(encoded) do
     url = "#{@proxy_url}/#{encoded}/@latest"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, %{"Version" => version}} -> version
+      {:ok, %{"Version" => version}} ->
+        version
+
       _ ->
         # Fallback: get version list
         case versions_internal(encoded) do
@@ -69,12 +74,16 @@ defmodule Opsm.Registries.GoModules do
 
   defp fetch_go_mod_deps(encoded, version) do
     url = "#{@proxy_url}/#{encoded}/@v/#{version}.mod"
+
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         parse_go_mod(body)
+
       {:ok, body} when is_binary(body) ->
         parse_go_mod(body)
-      _ -> %{}
+
+      _ ->
+        %{}
     end
   end
 
@@ -86,6 +95,7 @@ defmodule Opsm.Registries.GoModules do
     |> String.split("\n")
     |> Enum.reduce({false, %{}}, fn line, {in_require, deps} ->
       trimmed = String.trim(line)
+
       cond do
         trimmed == "require (" ->
           {true, deps}
@@ -106,7 +116,9 @@ defmodule Opsm.Registries.GoModules do
                 ver = String.trim(ver, "\"")
                 {true, Map.put(deps, mod, ">= #{ver}")}
               end
-            _ -> {true, deps}
+
+            _ ->
+              {true, deps}
           end
 
         String.starts_with?(trimmed, "require ") ->
@@ -115,7 +127,9 @@ defmodule Opsm.Registries.GoModules do
               mod = String.trim(mod, "\"")
               ver = String.trim(ver, "\"")
               {false, Map.put(deps, mod, ">= #{ver}")}
-            _ -> {false, deps}
+
+            _ ->
+              {false, deps}
           end
 
         true ->
@@ -135,6 +149,7 @@ defmodule Opsm.Registries.GoModules do
 
     # The Go proxy has no search API. Check if the query is a direct module path.
     encoded = encode_module_path(query)
+
     case VerifiedHttp.get_json("#{@proxy_url}/#{encoded}/@latest", receive_timeout: 10_000) do
       {:ok, %{"Version" => version}} ->
         {:ok, [%{name: query, version: version, description: "Go module", downloads: 0}]}
@@ -171,6 +186,7 @@ defmodule Opsm.Registries.GoModules do
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         versions = body |> String.split("\n", trim: true) |> Enum.reverse()
+
         if versions == [] do
           # Some Go modules only have pseudo-versions (no tags)
           # Fall back to @latest
@@ -181,6 +197,7 @@ defmodule Opsm.Registries.GoModules do
 
       {:ok, body} when is_binary(body) ->
         versions = body |> String.split("\n", trim: true) |> Enum.reverse()
+
         if versions == [] do
           fetch_latest_as_list(encoded)
         else
@@ -233,12 +250,16 @@ defmodule Opsm.Registries.GoModules do
   defp fetch_ziphash(name, version) do
     # Use the Go checksum database (sum.golang.org) for zip hash
     url = "#{@sum_db}/lookup/#{name}@#{version}"
+
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         parse_sum_db_hash(body, name, version)
+
       {:ok, body} when is_binary(body) ->
         parse_sum_db_hash(body, name, version)
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -250,6 +271,7 @@ defmodule Opsm.Registries.GoModules do
     |> String.split("\n")
     |> Enum.find_value(fn line ->
       prefix = "#{name} #{version} h1:"
+
       if String.starts_with?(line, prefix) do
         "h1:" <> _ = String.trim_leading(line, "#{name} #{version} ")
         parse_h1_hash(String.trim(line) |> String.split(" ") |> List.last())
@@ -261,11 +283,13 @@ defmodule Opsm.Registries.GoModules do
   # Convert to hex-encoded SHA256 for compatibility with our checksum system
   defp parse_h1_hash("h1:" <> b64_hash) do
     b64_clean = String.trim_trailing(b64_hash, "=") |> pad_base64()
+
     case Base.decode64(b64_clean) do
       {:ok, raw_hash} -> Base.encode16(raw_hash, case: :lower)
       :error -> nil
     end
   end
+
   defp parse_h1_hash(_), do: nil
 
   defp pad_base64(s) do
@@ -292,7 +316,8 @@ defmodule Opsm.Registries.GoModules do
         description: nil,
         license: nil,
         homepage: "#{@pkg_url}/#{name}",
-        repository: if(String.starts_with?(name, "github.com/"), do: "https://#{name}", else: nil),
+        repository:
+          if(String.starts_with?(name, "github.com/"), do: "https://#{name}", else: nil),
         authors: [],
         keywords: [],
         dependencies: deps,

@@ -57,22 +57,24 @@ defmodule Opsm.Crypto.HybridSignatures do
 
     case PostQuantum.dilithium5_keypair() do
       {:ok, pq_keys} ->
-        {:ok, %{
-          ed25519_pk: ed_keys.public_key,
-          ed25519_sk: ed_keys.secret_key,
-          dilithium5_pk: pq_keys.public_key,
-          dilithium5_sk: pq_keys.secret_key,
-          algorithm: :hybrid_ed25519_dilithium5
-        }}
+        {:ok,
+         %{
+           ed25519_pk: ed_keys.public_key,
+           ed25519_sk: ed_keys.secret_key,
+           dilithium5_pk: pq_keys.public_key,
+           dilithium5_sk: pq_keys.secret_key,
+           algorithm: :hybrid_ed25519_dilithium5
+         }}
 
       {:error, :pq_not_available} ->
-        {:ok, %{
-          ed25519_pk: ed_keys.public_key,
-          ed25519_sk: ed_keys.secret_key,
-          dilithium5_pk: nil,
-          dilithium5_sk: nil,
-          algorithm: :ed25519_only
-        }}
+        {:ok,
+         %{
+           ed25519_pk: ed_keys.public_key,
+           ed25519_sk: ed_keys.secret_key,
+           dilithium5_pk: nil,
+           dilithium5_sk: nil,
+           algorithm: :ed25519_only
+         }}
     end
   end
 
@@ -98,10 +100,11 @@ defmodule Opsm.Crypto.HybridSignatures do
         if keypair.dilithium5_sk do
           case PostQuantum.dilithium5_sign(message, keypair.dilithium5_sk) do
             {:ok, pq_sig} ->
-              {:ok, %{
-                signature: ed_sig <> pq_sig,
-                algorithm: :hybrid_ed25519_dilithium5
-              }}
+              {:ok,
+               %{
+                 signature: ed_sig <> pq_sig,
+                 algorithm: :hybrid_ed25519_dilithium5
+               }}
 
             {:error, _} ->
               # PQ failed — fall back to classical only
@@ -154,10 +157,13 @@ defmodule Opsm.Crypto.HybridSignatures do
       :ok ->
         # Verify Dilithium5 (post-quantum)
         case PostQuantum.dilithium5_verify(message, pq_sig, public_keys.dilithium5_pk) do
-          :ok -> :ok
+          :ok ->
+            :ok
+
           {:error, :pq_not_available} ->
             # PQ NIF not loaded — classical verified, PQ unchecked
             {:ok, :pq_not_verified}
+
           {:error, reason} ->
             {:error, "Dilithium5 verification failed: #{reason}"}
         end
@@ -215,18 +221,23 @@ defmodule Opsm.Crypto.HybridSignatures do
   """
   def decode_public_keys(encoded) when is_map(encoded) do
     with {:ok, ed_pk} <- Base.decode16(encoded["ed25519_pk"], case: :mixed) do
-      pq_pk = case encoded["dilithium5_pk"] do
-        nil -> nil
-        hex -> case Base.decode16(hex, case: :mixed) do
-          {:ok, pk} -> pk
-          :error -> nil
-        end
-      end
+      pq_pk =
+        case encoded["dilithium5_pk"] do
+          nil ->
+            nil
 
-      algorithm = case encoded["algorithm"] do
-        "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
-        _ -> :ed25519_only
-      end
+          hex ->
+            case Base.decode16(hex, case: :mixed) do
+              {:ok, pk} -> pk
+              :error -> nil
+            end
+        end
+
+      algorithm =
+        case encoded["algorithm"] do
+          "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
+          _ -> :ed25519_only
+        end
 
       {:ok, %{ed25519_pk: ed_pk, dilithium5_pk: pq_pk, algorithm: algorithm}}
     else

@@ -11,6 +11,7 @@ defmodule Opsm.RegistryGateway do
   def publish(manifest, imp, digest) do
     manifest_map = normalize_manifest(manifest)
     name = manifest_map["name"]
+
     entry = %{
       manifest: manifest_map,
       imp: imp,

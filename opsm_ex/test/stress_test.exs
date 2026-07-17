@@ -125,7 +125,7 @@ test_packages = [
   {:maven, "org.projectlombok:lombok", "latest"},
   {:maven, "com.google.code.gson:gson", "latest"},
   {:maven, "org.mockito:mockito-core", "latest"},
-  {:maven, "ch.qos.logback:logback-classic", "latest"},
+  {:maven, "ch.qos.logback:logback-classic", "latest"}
 ]
 
 IO.puts("=" |> String.duplicate(70))
@@ -152,7 +152,11 @@ errors = []
             elapsed = System.monotonic_time(:millisecond) - start
             checksum_status = if pkg.checksum, do: "✓ #{pkg.checksum_algo}", else: "✗ none"
             dep_count = map_size(pkg.manifest.dependencies || %{})
-            IO.puts("  ✓ #{name}@#{pkg.version} (#{elapsed}ms, deps: #{dep_count}, checksum: #{checksum_status})")
+
+            IO.puts(
+              "  ✓ #{name}@#{pkg.version} (#{elapsed}ms, deps: #{dep_count}, checksum: #{checksum_status})"
+            )
+
             {%{r | ok: r.ok + 1}, e}
 
           {:error, reason} ->
@@ -173,6 +177,7 @@ IO.puts("=" |> String.duplicate(70))
 if errors != [] do
   IO.puts("")
   IO.puts("FAILURES:")
+
   for {forth, name, reason} <- Enum.reverse(errors) do
     IO.puts("  @#{forth}/#{name}: #{inspect(reason)}")
   end

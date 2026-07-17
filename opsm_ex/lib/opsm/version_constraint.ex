@@ -108,15 +108,19 @@ defmodule Opsm.VersionConstraint do
   # - Hackage: "2.2.3.0" → take first 3 segments
   # - Pre-release: "1.2.3-beta.1" → standard semver
   defp parse_version_lenient(version_string) do
-    normalized = version_string
+    normalized =
+      version_string
       |> String.trim_leading("v")
       |> String.trim_leading("V")
 
     case Version.parse(normalized) do
-      {:ok, version} -> {:ok, version}
+      {:ok, version} ->
+        {:ok, version}
+
       :error ->
         # Try truncating to 3 segments (handles Hackage 4-part versions)
         parts = String.split(normalized, ".")
+
         if length(parts) > 3 do
           truncated = parts |> Enum.take(3) |> Enum.join(".")
           Version.parse(truncated)
@@ -189,7 +193,8 @@ defmodule Opsm.VersionConstraint do
 
       # Exact version: 1.2.3 or v1.2.3 (Go-style)
       true ->
-        normalized = str |> String.trim_leading("v") |> String.trim_leading("V") |> normalize_version()
+        normalized =
+          str |> String.trim_leading("v") |> String.trim_leading("V") |> normalize_version()
 
         case Version.parse(normalized) do
           {:ok, version} ->
@@ -207,7 +212,12 @@ defmodule Opsm.VersionConstraint do
   end
 
   defp parse_comparison(op, version_str, original) do
-    normalized = version_str |> String.trim() |> String.trim_leading("v") |> String.trim_leading("V") |> normalize_version()
+    normalized =
+      version_str
+      |> String.trim()
+      |> String.trim_leading("v")
+      |> String.trim_leading("V")
+      |> normalize_version()
 
     case Version.parse(normalized) do
       {:ok, version} ->
@@ -226,28 +236,33 @@ defmodule Opsm.VersionConstraint do
   # Normalize version to x.y.z format (Elixir Version module requirement)
   # Handles: "1.0" → "1.0.0", "v1.2.3" → "1.2.3", "2.2.3.0" → "2.2.3"
   defp normalize_version(version_str) do
-    cleaned = version_str
+    cleaned =
+      version_str
       |> String.trim_leading("v")
       |> String.trim_leading("V")
 
     # Split on "." but preserve pre-release/build metadata
-    {base, suffix} = case String.split(cleaned, "-", parts: 2) do
-      [base, rest] -> {base, "-" <> rest}
-      [base] ->
-        case String.split(base, "+", parts: 2) do
-          [b, meta] -> {b, "+" <> meta}
-          [b] -> {b, ""}
-        end
-    end
+    {base, suffix} =
+      case String.split(cleaned, "-", parts: 2) do
+        [base, rest] ->
+          {base, "-" <> rest}
+
+        [base] ->
+          case String.split(base, "+", parts: 2) do
+            [b, meta] -> {b, "+" <> meta}
+            [b] -> {b, ""}
+          end
+      end
 
     parts = String.split(base, ".")
 
-    normalized_base = case length(parts) do
-      1 -> "#{base}.0.0"
-      2 -> "#{base}.0"
-      n when n > 3 -> parts |> Enum.take(3) |> Enum.join(".")
-      _ -> base
-    end
+    normalized_base =
+      case length(parts) do
+        1 -> "#{base}.0.0"
+        2 -> "#{base}.0"
+        n when n > 3 -> parts |> Enum.take(3) |> Enum.join(".")
+        _ -> base
+      end
 
     normalized_base <> suffix
   end

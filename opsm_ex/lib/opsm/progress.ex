@@ -75,7 +75,9 @@ defmodule Opsm.Progress do
     speed_str = format_speed(speed)
     eta_str = format_eta(eta)
 
-    output = "#{state.label}: [#{bar}] #{percent_int}% #{size_str}/#{total_str} #{speed_str} #{eta_str}"
+    output =
+      "#{state.label}: [#{bar}] #{percent_int}% #{size_str}/#{total_str} #{speed_str} #{eta_str}"
+
     IO.write("\r  #{output}  ")
     output
   end
@@ -134,11 +136,13 @@ defmodule Opsm.Progress do
   def next_step(state, description \\ nil) do
     new_current = min(state.current + 1, state.total)
     state = %{state | current: new_current}
+
     if description do
       IO.puts("  [#{state.current}/#{state.total}] #{description}")
     else
       IO.puts("  [#{state.current}/#{state.total}] #{state.label} #{state.current}")
     end
+
     state
   end
 
@@ -178,12 +182,15 @@ defmodule Opsm.Progress do
   Format bytes as human-readable string (B, KB, MB, GB).
   """
   def format_bytes(bytes) when bytes < 1024, do: "#{bytes} B"
+
   def format_bytes(bytes) when bytes < 1024 * 1024 do
     "#{Float.round(bytes / 1024, 1)} KB"
   end
+
   def format_bytes(bytes) when bytes < 1024 * 1024 * 1024 do
     "#{Float.round(bytes / (1024 * 1024), 2)} MB"
   end
+
   def format_bytes(bytes) do
     "#{Float.round(bytes / (1024 * 1024 * 1024), 2)} GB"
   end
@@ -194,11 +201,13 @@ defmodule Opsm.Progress do
   def format_duration(seconds) when seconds < 60 do
     "#{round(seconds)}s"
   end
+
   def format_duration(seconds) when seconds < 3600 do
     mins = div(round(seconds), 60)
     secs = rem(round(seconds), 60)
     "#{mins}m #{secs}s"
   end
+
   def format_duration(seconds) do
     hours = div(round(seconds), 3600)
     mins = rem(div(round(seconds), 60), 60)
@@ -214,22 +223,27 @@ defmodule Opsm.Progress do
   defp format_speed(bytes_per_sec) when bytes_per_sec < 1024 do
     "#{round(bytes_per_sec)}B/s"
   end
+
   defp format_speed(bytes_per_sec) when bytes_per_sec < 1024 * 1024 do
     "#{Float.round(bytes_per_sec / 1024, 1)}KB/s"
   end
+
   defp format_speed(bytes_per_sec) do
     "#{Float.round(bytes_per_sec / (1024 * 1024), 2)}MB/s"
   end
 
   defp format_eta(seconds) when seconds < 1, do: ""
+
   defp format_eta(seconds) when seconds < 60 do
     "ETA: #{round(seconds)}s"
   end
+
   defp format_eta(seconds) when seconds < 3600 do
     mins = div(round(seconds), 60)
     secs = rem(round(seconds), 60)
     "ETA: #{mins}m#{secs}s"
   end
+
   defp format_eta(seconds) do
     hours = div(round(seconds), 3600)
     mins = rem(div(round(seconds), 60), 60)

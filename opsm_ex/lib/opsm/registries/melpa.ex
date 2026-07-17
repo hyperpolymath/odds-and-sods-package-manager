@@ -26,11 +26,12 @@ defmodule Opsm.Registries.Melpa do
             {:error, :not_found}
 
           pkg_data ->
-            target_version = if version == "latest" do
-              extract_version(pkg_data)
-            else
-              version
-            end
+            target_version =
+              if version == "latest" do
+                extract_version(pkg_data)
+              else
+                version
+              end
 
             deps = extract_deps(pkg_data)
             {:ok, parse_package(name, pkg_data, target_version, deps)}
@@ -61,21 +62,23 @@ defmodule Opsm.Registries.Melpa do
       {:ok, archive} when is_map(archive) ->
         downcased = String.downcase(query)
 
-        results = archive
-        |> Enum.filter(fn {name, data} ->
-          desc = Map.get(data, "desc", "") || ""
-          String.contains?(String.downcase(name), downcased) ||
-            String.contains?(String.downcase(desc), downcased)
-        end)
-        |> Enum.take(limit)
-        |> Enum.map(fn {name, data} ->
-          %{
-            name: name,
-            version: extract_version(data),
-            description: Map.get(data, "desc", ""),
-            downloads: 0
-          }
-        end)
+        results =
+          archive
+          |> Enum.filter(fn {name, data} ->
+            desc = Map.get(data, "desc", "") || ""
+
+            String.contains?(String.downcase(name), downcased) ||
+              String.contains?(String.downcase(desc), downcased)
+          end)
+          |> Enum.take(limit)
+          |> Enum.map(fn {name, data} ->
+            %{
+              name: name,
+              version: extract_version(data),
+              description: Map.get(data, "desc", ""),
+              downloads: 0
+            }
+          end)
 
         {:ok, results}
 
@@ -143,10 +146,12 @@ defmodule Opsm.Registries.Melpa do
     case Map.get(data, "deps") do
       deps when is_map(deps) ->
         Enum.reduce(deps, %{}, fn {dep_name, ver_list}, acc ->
-          constraint = case ver_list do
-            ver when is_list(ver) -> ">= #{Enum.join(ver, ".")}"
-            _ -> ">= 0.0.0"
-          end
+          constraint =
+            case ver_list do
+              ver when is_list(ver) -> ">= #{Enum.join(ver, ".")}"
+              _ -> ">= 0.0.0"
+            end
+
           Map.put(acc, dep_name, constraint)
         end)
 

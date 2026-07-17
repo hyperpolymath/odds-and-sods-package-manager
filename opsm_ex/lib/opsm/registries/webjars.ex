@@ -19,11 +19,12 @@ defmodule Opsm.Registries.WebJars do
   The `name` is the WebJar artifact name (e.g., "jquery", "bootstrap").
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -215,6 +216,7 @@ defmodule Opsm.Registries.WebJars do
 
   defp build_jar_url(group_id, artifact_id, version) do
     group_path = String.replace(group_id, ".", "/")
+
     "https://repo1.maven.org/maven2/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar"
   end
 
@@ -225,6 +227,7 @@ defmodule Opsm.Registries.WebJars do
 
   defp extract_deps(nil), do: %{}
   defp extract_deps(deps) when is_map(deps), do: deps
+
   defp extract_deps(deps) when is_list(deps) do
     Enum.reduce(deps, %{}, fn
       %{"name" => name, "version" => ver}, acc -> Map.put(acc, name, ver)
@@ -232,5 +235,6 @@ defmodule Opsm.Registries.WebJars do
       _, acc -> acc
     end)
   end
+
   defp extract_deps(_), do: %{}
 end

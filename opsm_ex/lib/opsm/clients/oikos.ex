@@ -6,6 +6,7 @@ defmodule Opsm.Clients.Oikos do
   """
 
   alias Opsm.Http
+
   alias Opsm.Types.{
     ServiceConfig,
     HttpConfig,
@@ -88,10 +89,11 @@ defmodule Opsm.Clients.Oikos do
   """
   def analyze_packages(%__MODULE__{} = oikos, packages) do
     packages
-    |> Task.async_stream(fn {name, version, opts} ->
-      {:ok, score} = analyze_package(oikos, name, version, opts)
-      {"#{name}@#{version}", score}
-    end, max_concurrency: 5, timeout: 10_000, on_timeout: :kill_task)
+    |> Task.async_stream(
+      fn {name, version, opts} ->
+        {:ok, score} = analyze_package(oikos, name, version, opts)
+        {"#{name}@#{version}", score}
+      end, max_concurrency: 5, timeout: 10_000, on_timeout: :kill_task)
     |> Enum.reduce(%{}, fn
       {:ok, {key, score}}, acc -> Map.put(acc, key, score)
       {:exit, _}, acc -> acc
@@ -103,18 +105,20 @@ defmodule Opsm.Clients.Oikos do
     base = 50
 
     # Bonus for well-known ecosystems
-    ecosystem_bonus = case forth do
-      f when f in [:npm, :cargo, :hex, :pypi, :gem, :go] -> 10
-      f when f in [:pub, :hackage, :nuget, :maven] -> 8
-      _ -> 0
-    end
+    ecosystem_bonus =
+      case forth do
+        f when f in [:npm, :cargo, :hex, :pypi, :gem, :go] -> 10
+        f when f in [:pub, :hackage, :nuget, :maven] -> 8
+        _ -> 0
+      end
 
     # Bonus for semver-compliant versions (indicates maturity)
-    version_bonus = case Version.parse(version || "") do
-      {:ok, %{major: m}} when m >= 1 -> 15
-      {:ok, _} -> 5
-      :error -> 0
-    end
+    version_bonus =
+      case Version.parse(version || "") do
+        {:ok, %{major: m}} when m >= 1 -> 15
+        {:ok, _} -> 5
+        :error -> 0
+      end
 
     # Penalty for very short names (potential typosquatting)
     name_penalty = if String.length(name || "") < 3, do: -10, else: 0
@@ -136,6 +140,7 @@ defmodule Opsm.Clients.Oikos do
   end
 
   defp decode_scores(nil), do: %SustainabilityScores{}
+
   defp decode_scores(json) do
     %SustainabilityScores{
       maintainability: json["maintainability"] || 0,

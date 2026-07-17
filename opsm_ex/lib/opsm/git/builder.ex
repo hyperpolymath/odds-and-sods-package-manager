@@ -41,7 +41,8 @@ defmodule Opsm.Git.Builder do
 
   Returns `{:ok, output}` or `{:error, reason}`.
   """
-  @spec run(String.t(), atom(), [String.t()], keyword()) :: {:ok, String.t()} | {:error, String.t()}
+  @spec run(String.t(), atom(), [String.t()], keyword()) ::
+          {:ok, String.t()} | {:error, String.t()}
   def run(repo_path, build_system, args \\ [], _opts \\ []) do
     {cmd, cmd_args} = run_command(build_system, args)
 

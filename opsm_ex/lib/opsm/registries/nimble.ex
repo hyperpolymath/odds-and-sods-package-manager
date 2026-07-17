@@ -32,7 +32,7 @@ defmodule Opsm.Registries.Nimble do
       {:ok, %ResolvedPackage{version: "0.5.0", ...}}
   """
   @spec fetch_package(String.t(), String.t()) ::
-    {:ok, ResolvedPackage.t()} | {:error, term()}
+          {:ok, ResolvedPackage.t()} | {:error, term()}
   def fetch_package(name, version \\ "latest") do
     Logger.debug("Fetching Nimble package: #{name}@#{version}")
 
@@ -73,7 +73,7 @@ defmodule Opsm.Registries.Nimble do
       {:ok, [%ResolvedPackage{name: "jester", ...}, ...]}
   """
   @spec search(String.t(), keyword()) ::
-    {:ok, [ResolvedPackage.t()]} | {:error, term()}
+          {:ok, [ResolvedPackage.t()]} | {:error, term()}
   def search(query, opts \\ []) do
     limit = Keyword.get(opts, :limit, 20)
 
@@ -83,10 +83,12 @@ defmodule Opsm.Registries.Nimble do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        packages = body
-        |> get_in(["packages"]) || []
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        packages =
+          body
+          |> get_in(["packages"]) ||
+            []
+            |> Enum.take(limit)
+            |> Enum.map(&parse_search_result/1)
 
         {:ok, packages}
 
@@ -157,19 +159,21 @@ defmodule Opsm.Registries.Nimble do
     versions_data = body["versions"] || []
 
     # Resolve target version
-    target_version = if requested_version == "latest" do
-      case versions_data do
-        [latest | _] -> latest["version"] || latest["name"]
-        [] -> "0.0.0"
+    target_version =
+      if requested_version == "latest" do
+        case versions_data do
+          [latest | _] -> latest["version"] || latest["name"]
+          [] -> "0.0.0"
+        end
+      else
+        requested_version
       end
-    else
-      requested_version
-    end
 
     # Find version data
-    version_info = Enum.find(versions_data, fn v ->
-      (v["version"] || v["name"]) == target_version
-    end) || List.first(versions_data) || %{}
+    version_info =
+      Enum.find(versions_data, fn v ->
+        (v["version"] || v["name"]) == target_version
+      end) || List.first(versions_data) || %{}
 
     # Extract dependencies
     deps_list = parse_dependencies(version_info["requires"] || [])
@@ -196,9 +200,10 @@ defmodule Opsm.Registries.Nimble do
         "language" => "nim",
         "manifest_format" => "nimble",
         "build_system" => "nimble",
-        "versions" => Enum.map(versions_data, fn v ->
-          v["version"] || v["name"]
-        end),
+        "versions" =>
+          Enum.map(versions_data, fn v ->
+            v["version"] || v["name"]
+          end),
         "tags" => body["tags"] || [],
         "author" => body["author"],
         "nimble_file" => "#{pkg_name}.nimble"

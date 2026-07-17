@@ -9,10 +9,12 @@ defmodule Opsm.LockfileTest do
     test "creates an empty lockfile" do
       lockfile = Lockfile.new()
 
-      assert lockfile.version == "2"  # v2: Added crypto integration
+      # v2: Added crypto integration
+      assert lockfile.version == "2"
       assert lockfile.packages == %{}
       assert lockfile.generated_at != nil
-      assert lockfile.integrity_hash == nil  # Not computed until write
+      # Not computed until write
+      assert lockfile.integrity_hash == nil
       assert lockfile.integrity_algo == "sha3-512"
     end
   end
@@ -46,9 +48,10 @@ defmodule Opsm.LockfileTest do
       package1 = %{name: "pkg", version: "1.0.0", forth: :npm}
       package2 = %{name: "pkg", version: "2.0.0", forth: :npm}
 
-      updated = lockfile
-      |> Lockfile.add_package(package1)
-      |> Lockfile.add_package(package2)
+      updated =
+        lockfile
+        |> Lockfile.add_package(package1)
+        |> Lockfile.add_package(package2)
 
       entry = Lockfile.get_package(updated, "pkg", :npm)
       assert entry.version == "2.0.0"
@@ -60,9 +63,10 @@ defmodule Opsm.LockfileTest do
       npm_pkg = %{name: "chalk", version: "5.0.0", forth: :npm}
       cargo_pkg = %{name: "serde", version: "1.0.0", forth: :cargo}
 
-      updated = lockfile
-      |> Lockfile.add_package(npm_pkg)
-      |> Lockfile.add_package(cargo_pkg)
+      updated =
+        lockfile
+        |> Lockfile.add_package(npm_pkg)
+        |> Lockfile.add_package(cargo_pkg)
 
       assert Lockfile.has_package?(updated, "chalk", :npm)
       assert Lockfile.has_package?(updated, "serde", :cargo)
@@ -72,8 +76,9 @@ defmodule Opsm.LockfileTest do
 
   describe "remove_package/3" do
     test "removes a package from the lockfile" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       assert Lockfile.has_package?(lockfile, "pkg", :npm)
 
@@ -92,10 +97,11 @@ defmodule Opsm.LockfileTest do
 
   describe "list_packages/1" do
     test "returns sorted list of packages" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "zebra", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "alpha", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "beta", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "zebra", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "alpha", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "beta", version: "1.0.0", forth: :npm})
 
       packages = Lockfile.list_packages(lockfile)
 
@@ -108,10 +114,11 @@ defmodule Opsm.LockfileTest do
 
   describe "packages_for_forth/2" do
     test "filters packages by forth" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "lodash", version: "4.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "serde", version: "1.0.0", forth: :cargo})
-      |> Lockfile.add_package(%{name: "chalk", version: "5.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "lodash", version: "4.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "serde", version: "1.0.0", forth: :cargo})
+        |> Lockfile.add_package(%{name: "chalk", version: "5.0.0", forth: :npm})
 
       npm_packages = Lockfile.packages_for_forth(lockfile, :npm)
 
@@ -122,15 +129,17 @@ defmodule Opsm.LockfileTest do
 
   describe "verify_package/4" do
     test "returns :ok when checksum matches" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
 
       assert :ok = Lockfile.verify_package(lockfile, "pkg", :npm, "abc123")
     end
 
     test "returns mismatch when checksum differs" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
 
       assert {:mismatch, details} = Lockfile.verify_package(lockfile, "pkg", :npm, "xyz789")
       assert details.expected == "abc123"
@@ -138,8 +147,9 @@ defmodule Opsm.LockfileTest do
     end
 
     test "returns ok with warning when no checksum recorded" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       assert {:ok, :no_checksum_recorded} = Lockfile.verify_package(lockfile, "pkg", :npm, "any")
     end
@@ -153,9 +163,10 @@ defmodule Opsm.LockfileTest do
 
   describe "check_sync/2" do
     test "reports in sync when matching" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
 
       installed = [
         %{name: "pkg1", forth: :npm},
@@ -170,8 +181,9 @@ defmodule Opsm.LockfileTest do
     end
 
     test "reports packages missing from lockfile" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
 
       installed = [
         %{name: "pkg1", forth: :npm},
@@ -185,9 +197,10 @@ defmodule Opsm.LockfileTest do
     end
 
     test "reports packages not installed" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
 
       installed = [
         %{name: "pkg1", forth: :npm}
@@ -213,15 +226,16 @@ defmodule Opsm.LockfileTest do
     test "roundtrip write and read", %{tmp_dir: tmp_dir} do
       path = Path.join(tmp_dir, "opsm.lock")
 
-      original = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "lodash",
-        version: "4.17.21",
-        forth: :npm,
-        checksum: "abc123",
-        source_url: "https://example.com/lodash.tgz",
-        dependencies: ["dep1", "dep2"]
-      })
+      original =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "lodash",
+          version: "4.17.21",
+          forth: :npm,
+          checksum: "abc123",
+          source_url: "https://example.com/lodash.tgz",
+          dependencies: ["dep1", "dep2"]
+        })
 
       {:ok, ^path} = Lockfile.write(original, path)
       {:ok, loaded} = Lockfile.read(path)
@@ -282,31 +296,36 @@ defmodule Opsm.LockfileTest do
 
   describe "compute_integrity_hash/1" do
     test "computes SHA3-512 integrity hash for lockfile" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
 
       lockfile_with_hash = Lockfile.compute_integrity_hash(lockfile)
 
       assert lockfile_with_hash.integrity_hash != nil
-      assert String.length(lockfile_with_hash.integrity_hash) == 128  # 512 bits = 128 hex chars
+      # 512 bits = 128 hex chars
+      assert String.length(lockfile_with_hash.integrity_hash) == 128
       assert lockfile_with_hash.integrity_algo == "sha3-512"
     end
 
     test "produces different hashes for different lockfiles" do
-      lockfile1 = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
-      |> Lockfile.compute_integrity_hash()
+      lockfile1 =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+        |> Lockfile.compute_integrity_hash()
 
-      lockfile2 = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
-      |> Lockfile.compute_integrity_hash()
+      lockfile2 =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
+        |> Lockfile.compute_integrity_hash()
 
       assert lockfile1.integrity_hash != lockfile2.integrity_hash
     end
 
     test "produces same hash for same lockfile" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       hash1 = Lockfile.compute_integrity_hash(lockfile).integrity_hash
       hash2 = Lockfile.compute_integrity_hash(lockfile).integrity_hash
@@ -317,17 +336,19 @@ defmodule Opsm.LockfileTest do
 
   describe "verify_integrity/1" do
     test "verifies valid integrity hash" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+        |> Lockfile.compute_integrity_hash()
 
       assert :ok = Lockfile.verify_integrity(lockfile)
     end
 
     test "detects tampering (modified packages)" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+        |> Lockfile.compute_integrity_hash()
 
       # Tamper with the lockfile (change version)
       tampered = Lockfile.add_package(lockfile, %{name: "pkg", version: "2.0.0", forth: :npm})
@@ -338,8 +359,10 @@ defmodule Opsm.LockfileTest do
     end
 
     test "allows lockfiles without integrity hash (backward compatibility)" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+
       # No integrity hash computed
 
       assert {:ok, :no_integrity_hash} = Lockfile.verify_integrity(lockfile)
@@ -360,8 +383,9 @@ defmodule Opsm.LockfileTest do
       path = Path.join(tmp_dir, "opsm.lock")
       key = Opsm.Crypto.Symmetric.generate_key()
 
-      original = Lockfile.new()
-      |> Lockfile.add_package(%{name: "secret-pkg", version: "1.0.0", forth: :npm})
+      original =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "secret-pkg", version: "1.0.0", forth: :npm})
 
       {:ok, ^path} = Lockfile.write(original, path, encrypt: true, key: key)
       {:ok, loaded} = Lockfile.read(path, decrypt: true, key: key, verify_integrity: false)
@@ -375,8 +399,9 @@ defmodule Opsm.LockfileTest do
       path = Path.join(tmp_dir, "opsm.lock")
       key = Opsm.Crypto.Symmetric.generate_key()
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       {:ok, ^path} = Lockfile.write(lockfile, path, encrypt: true, key: key)
 
@@ -389,8 +414,9 @@ defmodule Opsm.LockfileTest do
       correct_key = Opsm.Crypto.Symmetric.generate_key()
       wrong_key = Opsm.Crypto.Symmetric.generate_key()
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       {:ok, ^path} = Lockfile.write(lockfile, path, encrypt: true, key: correct_key)
 
@@ -401,7 +427,9 @@ defmodule Opsm.LockfileTest do
 
   describe "write with integrity hash" do
     setup do
-      tmp_dir = Path.join(System.tmp_dir!(), "opsm_lockfile_integrity_#{:rand.uniform(1_000_000)}")
+      tmp_dir =
+        Path.join(System.tmp_dir!(), "opsm_lockfile_integrity_#{:rand.uniform(1_000_000)}")
+
       File.mkdir_p!(tmp_dir)
 
       on_exit(fn -> File.rm_rf!(tmp_dir) end)
@@ -412,8 +440,9 @@ defmodule Opsm.LockfileTest do
     test "write automatically computes integrity hash", %{tmp_dir: tmp_dir} do
       path = Path.join(tmp_dir, "opsm.lock")
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       {:ok, ^path} = Lockfile.write(lockfile, path)
       {:ok, loaded} = Lockfile.read(path)
@@ -426,8 +455,9 @@ defmodule Opsm.LockfileTest do
     test "read detects tampered lockfile", %{tmp_dir: tmp_dir} do
       path = Path.join(tmp_dir, "opsm.lock")
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
 
       {:ok, ^path} = Lockfile.write(lockfile, path)
 
@@ -443,22 +473,25 @@ defmodule Opsm.LockfileTest do
 
   describe "BLAKE2b package checksums" do
     test "new packages default to BLAKE2b checksums" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc123"})
 
       entry = Lockfile.get_package(lockfile, "pkg", :npm)
-      assert entry.checksum_algo == "blake2b"  # v1.0.1: Default to BLAKE2b
+      # v1.0.1: Default to BLAKE2b
+      assert entry.checksum_algo == "blake2b"
     end
 
     test "can specify custom checksum algorithm" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "pkg",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "xyz789",
-        checksum_algo: "sha3-512"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "pkg",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "xyz789",
+          checksum_algo: "sha3-512"
+        })
 
       entry = Lockfile.get_package(lockfile, "pkg", :npm)
       assert entry.checksum_algo == "sha3-512"

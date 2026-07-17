@@ -22,11 +22,12 @@ defmodule Opsm.Registries.Bioconductor do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          body["Version"] || extract_version_from_body(body)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            body["Version"] || extract_version_from_body(body)
+          else
+            version
+          end
 
         deps = parse_dependencies(body)
         {:ok, parse_package(name, body, target_version, deps)}
@@ -70,29 +71,33 @@ defmodule Opsm.Registries.Bioconductor do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, results} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["Package"] || pkg["name"],
-            version: pkg["Version"] || pkg["version"],
-            description: pkg["Title"] || pkg["description"] || "",
-            downloads: pkg["downloads"] || 0
-          }
-        end)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["Package"] || pkg["name"],
+              version: pkg["Version"] || pkg["version"],
+              description: pkg["Title"] || pkg["description"] || "",
+              downloads: pkg["downloads"] || 0
+            }
+          end)
+
         {:ok, packages}
 
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["Package"] || pkg["name"],
-            version: pkg["Version"] || pkg["version"],
-            description: pkg["Title"] || pkg["description"] || "",
-            downloads: 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["Package"] || pkg["name"],
+              version: pkg["Version"] || pkg["version"],
+              description: pkg["Title"] || pkg["description"] || "",
+              downloads: 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -113,10 +118,13 @@ defmodule Opsm.Registries.Bioconductor do
     url = "#{@packages_url}/#{URI.encode(name)}"
 
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
-      {:ok, _} -> true
+      {:ok, _} ->
+        true
+
       _ ->
         # Fallback: check release HTML page
         views_url = "#{@release_url}/html/#{URI.encode(name)}.html"
+
         case VerifiedHttp.get(views_url, receive_timeout: 5_000) do
           {:ok, _} -> true
           _ -> false
@@ -179,6 +187,7 @@ defmodule Opsm.Registries.Bioconductor do
       end
     end)
   end
+
   defp parse_dep_field(_), do: %{}
 
   defp parse_single_dep(dep_str) do
@@ -228,6 +237,7 @@ defmodule Opsm.Registries.Bioconductor do
   end
 
   defp parse_authors(nil), do: []
+
   defp parse_authors(author) when is_binary(author) do
     author
     |> String.split(",")
@@ -236,6 +246,7 @@ defmodule Opsm.Registries.Bioconductor do
     end)
     |> Enum.reject(&(&1 == ""))
   end
+
   defp parse_authors(_), do: []
 
   # biocViews is a comma-separated list of classification terms
@@ -245,5 +256,6 @@ defmodule Opsm.Registries.Bioconductor do
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
   end
+
   defp parse_bioc_views(_), do: []
 end

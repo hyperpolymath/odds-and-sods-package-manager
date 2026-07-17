@@ -16,9 +16,12 @@ defmodule Opsm.Crypto.Symmetric do
   (never reuse nonces with the same key).
   """
 
-  @key_size 32  # 256 bits
-  @nonce_size 12  # 96 bits (ChaCha20-Poly1305 standard nonce)
-  @tag_size 16  # 128 bits (Poly1305 tag)
+  # 256 bits
+  @key_size 32
+  # 96 bits (ChaCha20-Poly1305 standard nonce)
+  @nonce_size 12
+  # 128 bits (Poly1305 tag)
+  @tag_size 16
 
   @doc """
   Encrypt plaintext with XChaCha20-Poly1305 AEAD.

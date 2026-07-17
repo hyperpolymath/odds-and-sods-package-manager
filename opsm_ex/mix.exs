@@ -35,7 +35,8 @@ defmodule Opsm.MixProject do
       {:optimus, "~> 0.5"},
       {:jason, "~> 1.4"},
       {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
-      {:verisim_client, git: "https://github.com/hyperpolymath/verisimdb.git", sparse: "connectors/clients/elixir"},
+      {:verisim_client,
+       git: "https://github.com/hyperpolymath/verisimdb.git", sparse: "connectors/clients/elixir"},
       {:stream_data, "~> 0.6", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"},
@@ -78,7 +79,8 @@ defmodule Opsm.MixProject do
       links: %{
         "GitHub" => "https://github.com/hyperpolymath/odds-and-sods-package-manager",
         "Docs" => "https://github.com/hyperpolymath/odds-and-sods-package-manager#readme",
-        "Roadmap" => "https://github.com/hyperpolymath/odds-and-sods-package-manager/blob/main/ROADMAP.adoc",
+        "Roadmap" =>
+          "https://github.com/hyperpolymath/odds-and-sods-package-manager/blob/main/ROADMAP.adoc",
         "Changelog" => "https://github.com/hyperpolymath/odds-and-sods-package-manager/releases"
       },
       maintainers: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]

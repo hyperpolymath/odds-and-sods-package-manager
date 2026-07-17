@@ -36,9 +36,14 @@ defmodule Opsm.Registries.Bower do
             {:ok, parse_bower_basic(name, body, version)}
         end
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -63,7 +68,8 @@ defmodule Opsm.Registries.Bower do
         ver = if resolved_ver == "latest", do: "0.0.0", else: resolved_ver
         {:ok, body, ver}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -147,19 +153,24 @@ defmodule Opsm.Registries.Bower do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, results} when is_list(results) ->
-        parsed = results
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: nil,
-            description: pkg["url"]
-          }
-        end)
+        parsed =
+          results
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: nil,
+              description: pkg["url"]
+            }
+          end)
+
         {:ok, parsed}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

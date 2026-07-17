@@ -58,7 +58,8 @@ defmodule Opsm.Registries.Tangle do
     %{
       name: "tangle-julia",
       url: "https://github.com/hyperpolymath/KRLAdapter.jl",
-      description: "Julia adapter for Tangle/KRL — KnotTheory.jl integration, verisim modular bridge"
+      description:
+        "Julia adapter for Tangle/KRL — KnotTheory.jl integration, verisim modular bridge"
     },
     %{
       name: "tangle-groovebind",
@@ -98,17 +99,21 @@ defmodule Opsm.Registries.Tangle do
 
   defp fetch_from_registry(name, version) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         target = if version == "latest", do: body["latest_version"], else: version
         {:ok, parse_registry_package(body, target)}
-      {:error, reason} -> {:error, reason}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp search_registry(query, opts) do
     limit = Keyword.get(opts, :limit, 20)
     url = "#{@base_url}/packages?q=#{URI.encode(query)}&limit=#{limit}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) -> {:ok, Enum.map(body, &parse_search_result/1)}
       {:error, reason} -> {:error, reason}
@@ -124,6 +129,7 @@ defmodule Opsm.Registries.Tangle do
 
   defp registry_versions(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}/versions"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) -> {:ok, Enum.map(body, & &1["version"])}
       {:error, reason} -> {:error, reason}
@@ -139,9 +145,12 @@ defmodule Opsm.Registries.Tangle do
 
   defp search_curated(query, _opts) do
     q = String.downcase(query)
-    results = Enum.filter(@known_packages, fn p ->
-      String.contains?(String.downcase("#{p.name} #{p.description}"), q)
-    end)
+
+    results =
+      Enum.filter(@known_packages, fn p ->
+        String.contains?(String.downcase("#{p.name} #{p.description}"), q)
+      end)
+
     {:ok, Enum.map(results, &curated_to_resolved(&1, "latest"))}
   end
 
@@ -154,13 +163,18 @@ defmodule Opsm.Registries.Tangle do
           pkg_info.url
           |> String.replace("https://github.com/", "https://api.github.com/repos/")
           |> Kernel.<>("/tags")
+
         case VerifiedHttp.get_json(tags_url, receive_timeout: 10_000) do
           {:ok, tags} when is_list(tags) ->
             versions = Enum.map(tags, & &1["name"]) |> Enum.reject(&is_nil/1)
             {:ok, if(versions == [], do: ["main"], else: versions)}
-          _ -> {:ok, ["main"]}
+
+          _ ->
+            {:ok, ["main"]}
         end
-      :not_found -> {:error, :not_found}
+
+      :not_found ->
+        {:error, :not_found}
     end
   end
 
@@ -170,6 +184,7 @@ defmodule Opsm.Registries.Tangle do
       "https://github.com/hyperpolymath/tangle-#{name}",
       "https://github.com/hyperpolymath/krl-#{name}"
     ]
+
     Enum.find_value(urls, {:error, :not_found}, fn url ->
       case fetch_git_manifest(%{name: name, url: url, description: nil}, version) do
         {:ok, pkg} -> {:ok, pkg}
@@ -184,8 +199,11 @@ defmodule Opsm.Registries.Tangle do
     base = pkg_info.url
 
     try_url = fn manifest ->
-      url = if path, do: "#{base}/raw/#{branch}/#{path}/#{manifest}",
-                    else: "#{base}/raw/#{branch}/#{manifest}"
+      url =
+        if path,
+          do: "#{base}/raw/#{branch}/#{path}/#{manifest}",
+          else: "#{base}/raw/#{branch}/#{manifest}"
+
       case VerifiedHttp.get(url, receive_timeout: 10_000) do
         {:ok, %{body: text}} -> {:ok, text}
         _ -> :not_found
@@ -229,53 +247,84 @@ defmodule Opsm.Registries.Tangle do
     resolved_version = manifest.version || version
 
     pkg = %ResolvedPackage{
-      package: pkg_name, version: resolved_version, forth: :tangle,
+      package: pkg_name,
+      version: resolved_version,
+      forth: :tangle,
       registry_url: pkg_info.url,
       tarball_url: "#{pkg_info.url}/archive/#{version}.tar.gz",
-      checksum: nil, checksum_algo: :sha256,
+      checksum: nil,
+      checksum_algo: :sha256,
       manifest: manifest,
-      attestations: [], resolved_deps: []
+      attestations: [],
+      resolved_deps: []
     }
+
     {:ok, pkg}
   end
 
   defp curated_to_resolved(pkg_info, version) do
     %ResolvedPackage{
-      package: pkg_info.name, version: version, forth: :tangle,
+      package: pkg_info.name,
+      version: version,
+      forth: :tangle,
       registry_url: pkg_info.url,
       tarball_url: "#{pkg_info.url}/archive/#{version}.tar.gz",
-      checksum: nil, checksum_algo: :sha256,
+      checksum: nil,
+      checksum_algo: :sha256,
       manifest: %ManifestFormat{
-        name: pkg_info.name, version: version, description: pkg_info.description,
-        license: "MPL-2.0", homepage: pkg_info.url, repository: pkg_info.url,
-        authors: default_authors(), keywords: default_keywords(),
-        dependencies: %{}, dev_dependencies: %{},
-        source_forth: :tangle, raw_manifest: %{"registry" => "tangle-curated"}
+        name: pkg_info.name,
+        version: version,
+        description: pkg_info.description,
+        license: "MPL-2.0",
+        homepage: pkg_info.url,
+        repository: pkg_info.url,
+        authors: default_authors(),
+        keywords: default_keywords(),
+        dependencies: %{},
+        dev_dependencies: %{},
+        source_forth: :tangle,
+        raw_manifest: %{"registry" => "tangle-curated"}
       },
-      attestations: [], resolved_deps: []
+      attestations: [],
+      resolved_deps: []
     }
   end
 
   defp parse_registry_package(data, version) do
     %ResolvedPackage{
-      package: data["name"], version: version, forth: :tangle, registry_url: @base_url,
+      package: data["name"],
+      version: version,
+      forth: :tangle,
+      registry_url: @base_url,
       tarball_url: "#{@base_url}/packages/#{data["name"]}/#{version}/download",
-      checksum: data["checksum"], checksum_algo: :sha256,
+      checksum: data["checksum"],
+      checksum_algo: :sha256,
       manifest: %ManifestFormat{
-        name: data["name"], version: version, description: data["description"],
-        license: data["license"], homepage: data["homepage"], repository: data["repository"],
-        authors: data["authors"] || [], keywords: data["keywords"] || [],
+        name: data["name"],
+        version: version,
+        description: data["description"],
+        license: data["license"],
+        homepage: data["homepage"],
+        repository: data["repository"],
+        authors: data["authors"] || [],
+        keywords: data["keywords"] || [],
         dependencies: data["dependencies"] || %{},
         dev_dependencies: data["dev_dependencies"] || %{},
-        source_forth: :tangle, raw_manifest: data
+        source_forth: :tangle,
+        raw_manifest: data
       },
-      attestations: data["attestations"] || [], resolved_deps: []
+      attestations: data["attestations"] || [],
+      resolved_deps: []
     }
   end
 
   defp parse_search_result(r) do
-    %{name: r["name"], version: r["latest_version"],
-      description: r["description"], downloads: r["downloads"] || 0}
+    %{
+      name: r["name"],
+      version: r["latest_version"],
+      description: r["description"],
+      downloads: r["downloads"] || 0
+    }
   end
 
   defp find_curated(name) do

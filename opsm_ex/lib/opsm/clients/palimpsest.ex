@@ -7,6 +7,7 @@ defmodule Opsm.Clients.Palimpsest do
   """
 
   alias Opsm.Http
+
   alias Opsm.Types.{
     ServiceConfig,
     HttpConfig,
@@ -40,11 +41,14 @@ defmodule Opsm.Clients.Palimpsest do
     case Http.post_json(client, "/licenses/analyze", body) do
       :ok ->
         encoded_path = URI.encode_www_form(request.artifact_path)
+
         case Http.get_json(client, "/licenses/analysis/#{encoded_path}") do
           {:ok, json} -> {:ok, decode_response(json)}
           {:error, reason} -> {:error, reason}
         end
-      {:error, reason} -> {:error, reason}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -54,12 +58,15 @@ defmodule Opsm.Clients.Palimpsest do
   def health(%__MODULE__{client: client}) do
     case Http.get_json(client, "/health") do
       {:ok, json} ->
-        {:ok, %OikosHealthResponse{
-          status: decode_status(json["status"]),
-          version: json["version"] || "unknown",
-          uptime: json["uptime"] || 0
-        }}
-      {:error, reason} -> {:error, reason}
+        {:ok,
+         %OikosHealthResponse{
+           status: decode_status(json["status"]),
+           version: json["version"] || "unknown",
+           uptime: json["uptime"] || 0
+         }}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -73,6 +80,7 @@ defmodule Opsm.Clients.Palimpsest do
           {:ok, json} -> {:ok, json}
           {:error, _} -> {:ok, %{"raw" => output}}
         end
+
       {error, _code} ->
         {:error, "license-checker failed: #{error}"}
     end
@@ -94,9 +102,11 @@ defmodule Opsm.Clients.Palimpsest do
   end
 
   defp decode_licenses(nil), do: []
+
   defp decode_licenses(licenses) when is_list(licenses) do
     Enum.map(licenses, &decode_license/1)
   end
+
   defp decode_licenses(_), do: []
 
   defp decode_license(json) when is_map(json) do
@@ -107,6 +117,7 @@ defmodule Opsm.Clients.Palimpsest do
       source: decode_license_source(json["source"])
     }
   end
+
   defp decode_license(_), do: nil
 
   defp decode_license_source("file_header"), do: :file_header
@@ -128,9 +139,11 @@ defmodule Opsm.Clients.Palimpsest do
   end
 
   defp decode_conflicts(nil), do: []
+
   defp decode_conflicts(conflicts) when is_list(conflicts) do
     Enum.map(conflicts, &decode_conflict/1)
   end
+
   defp decode_conflicts(_), do: []
 
   defp decode_conflict(json) when is_map(json) do
@@ -141,6 +154,7 @@ defmodule Opsm.Clients.Palimpsest do
       severity: decode_conflict_severity(json["severity"])
     }
   end
+
   defp decode_conflict(_), do: nil
 
   defp decode_conflict_severity("error"), do: :error

@@ -21,11 +21,12 @@ defmodule Opsm.Registries.Clojars do
     # Clojars artifacts can be grouped (e.g., "org.clojure/clojure") or simple (e.g., "compojure")
     {group_id, artifact_id} = parse_artifact_name(name)
 
-    target_version = if version == "latest" do
-      fetch_latest_version(group_id, artifact_id)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(group_id, artifact_id)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -34,6 +35,7 @@ defmodule Opsm.Registries.Clojars do
       ver ->
         # Fetch artifact metadata
         url = build_artifact_url(group_id, artifact_id)
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             {:ok, parse_artifact(name, body, ver)}
@@ -55,6 +57,7 @@ defmodule Opsm.Registries.Clojars do
 
   defp fetch_latest_version(group_id, artifact_id) do
     url = build_artifact_url(group_id, artifact_id)
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"latest_version" => version}} -> version
       {:ok, %{"versions" => [latest | _]}} -> latest
@@ -65,7 +68,8 @@ defmodule Opsm.Registries.Clojars do
   defp parse_artifact_name(name) do
     case String.split(name, "/", parts: 2) do
       [group, artifact] -> {group, artifact}
-      [artifact] -> {artifact, artifact}  # Simple artifact name uses itself as group
+      # Simple artifact name uses itself as group
+      [artifact] -> {artifact, artifact}
     end
   end
 
@@ -87,15 +91,19 @@ defmodule Opsm.Registries.Clojars do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, packages}
 
       {:ok, results} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, packages}
 
       {:error, :not_found} ->
@@ -121,6 +129,7 @@ defmodule Opsm.Registries.Clojars do
   defp build_full_name(%{"group_name" => group, "jar_name" => artifact}) when group != artifact do
     "#{group}/#{artifact}"
   end
+
   defp build_full_name(%{"jar_name" => artifact}), do: artifact
   defp build_full_name(%{"artifact_id" => artifact}), do: artifact
   defp build_full_name(_), do: "unknown"
@@ -152,13 +161,15 @@ defmodule Opsm.Registries.Clojars do
 
       {:ok, %{"recent_versions" => versions}} when is_list(versions) ->
         # Some endpoints might only return recent versions
-        versions_list = versions
-        |> Enum.map(fn
-          %{"version" => v} -> v
-          v when is_binary(v) -> v
-          _ -> nil
-        end)
-        |> Enum.reject(&is_nil/1)
+        versions_list =
+          versions
+          |> Enum.map(fn
+            %{"version" => v} -> v
+            v when is_binary(v) -> v
+            _ -> nil
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, Enum.reverse(versions_list)}
 
       {:error, :not_found} ->
@@ -199,18 +210,20 @@ defmodule Opsm.Registries.Clojars do
     {:ok, jar_url} = tarball_url(name, version)
 
     # Build web URL for the artifact
-    web_url = if group_id == artifact_id do
-      "#{@web_url}/#{artifact_id}"
-    else
-      "#{@web_url}/#{group_id}/#{artifact_id}"
-    end
+    web_url =
+      if group_id == artifact_id do
+        "#{@web_url}/#{artifact_id}"
+      else
+        "#{@web_url}/#{group_id}/#{artifact_id}"
+      end
 
     # Repository URL (often hosted on GitHub)
-    repo_url = case metadata do
-      %{"scm" => %{"url" => url}} -> url
-      %{"homepage" => url} when is_binary(url) -> url
-      _ -> nil
-    end
+    repo_url =
+      case metadata do
+        %{"scm" => %{"url" => url}} -> url
+        %{"homepage" => url} when is_binary(url) -> url
+        _ -> nil
+      end
 
     %ResolvedPackage{
       package: name,
@@ -218,7 +231,8 @@ defmodule Opsm.Registries.Clojars do
       forth: :clojars,
       registry_url: web_url,
       tarball_url: jar_url,
-      checksum: nil,  # Clojars API doesn't provide checksums directly
+      # Clojars API doesn't provide checksums directly
+      checksum: nil,
       checksum_algo: nil,
       manifest: %ManifestFormat{
         name: name,
@@ -263,10 +277,12 @@ defmodule Opsm.Registries.Clojars do
     # or [{"group/artifact", "version"}]
     deps
   end
+
   defp normalize_deps(deps) when is_list(deps) do
     # Convert list of tuples to map
     Enum.into(deps, %{})
   end
+
   defp normalize_deps(_), do: %{}
 
   defp extract_license(metadata) do

@@ -16,8 +16,10 @@ defmodule Opsm.Registries.ScoopApi do
   @extras_raw "https://raw.githubusercontent.com/ScoopInstaller/Extras/master/bucket"
   @scoop_search_api "https://scoopsearch.github.io/api/search"
 
-  @headers [{"accept", "application/vnd.github.v3+json"},
-            {"user-agent", "opsm/0.1.0 (https://github.com/hyperpolymath/opsm)"}]
+  @headers [
+    {"accept", "application/vnd.github.v3+json"},
+    {"user-agent", "opsm/0.1.0 (https://github.com/hyperpolymath/opsm)"}
+  ]
 
   @doc """
   Fetch package manifest from Scoop buckets.
@@ -25,13 +27,17 @@ defmodule Opsm.Registries.ScoopApi do
   """
   def fetch_package(name, version \\ "latest") do
     case fetch_from_bucket(name, @main_raw, :main) do
-      {:ok, _} = result -> maybe_pin_version(result, version)
+      {:ok, _} = result ->
+        maybe_pin_version(result, version)
+
       {:error, :not_found} ->
         case fetch_from_bucket(name, @extras_raw, :extras) do
           {:ok, _} = result -> maybe_pin_version(result, version)
           {:error, _} = err -> err
         end
-      {:error, _} = err -> err
+
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -42,13 +48,19 @@ defmodule Opsm.Registries.ScoopApi do
       {:ok, body} ->
         {:ok, parse_scoop_manifest(name, body, bucket)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp maybe_pin_version({:ok, pkg}, "latest"), do: {:ok, pkg}
+
   defp maybe_pin_version({:ok, pkg}, version) do
     updated_manifest = %{pkg.manifest | version: version}
     {:ok, %{pkg | version: version, manifest: updated_manifest}}
@@ -63,27 +75,31 @@ defmodule Opsm.Registries.ScoopApi do
     hash = arch_64["hash"] || body["hash"]
 
     # Normalize URL (can be string or list)
-    download_url = case url do
-      u when is_binary(u) -> u
-      [u | _] when is_binary(u) -> u
-      _ -> nil
-    end
+    download_url =
+      case url do
+        u when is_binary(u) -> u
+        [u | _] when is_binary(u) -> u
+        _ -> nil
+      end
 
-    download_hash = case hash do
-      h when is_binary(h) -> h
-      [h | _] when is_binary(h) -> h
-      _ -> nil
-    end
+    download_hash =
+      case hash do
+        h when is_binary(h) -> h
+        [h | _] when is_binary(h) -> h
+        _ -> nil
+      end
 
-    deps = (body["depends"] || [])
-           |> List.wrap()
-           |> Enum.map(fn dep -> {dep, "*"} end)
-           |> Map.new()
+    deps =
+      (body["depends"] || [])
+      |> List.wrap()
+      |> Enum.map(fn dep -> {dep, "*"} end)
+      |> Map.new()
 
-    bucket_name = case bucket do
-      :main -> "ScoopInstaller/Main"
-      :extras -> "ScoopInstaller/Extras"
-    end
+    bucket_name =
+      case bucket do
+        :main -> "ScoopInstaller/Main"
+        :extras -> "ScoopInstaller/Extras"
+      end
 
     manifest = %ManifestFormat{
       name: name,
@@ -130,26 +146,32 @@ defmodule Opsm.Registries.ScoopApi do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
         hits = body["hits"] || body["results"] || []
-        results = hits
-        |> Enum.take(20)
-        |> Enum.map(fn hit ->
-          %{
-            name: hit["name"] || hit["_source"]["name"],
-            version: hit["version"] || hit["_source"]["version"],
-            description: hit["description"] || hit["_source"]["description"]
-          }
-        end)
+
+        results =
+          hits
+          |> Enum.take(20)
+          |> Enum.map(fn hit ->
+            %{
+              name: hit["name"] || hit["_source"]["name"],
+              version: hit["version"] || hit["_source"]["version"],
+              description: hit["description"] || hit["_source"]["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, items} when is_list(items) ->
-        results = items
-        |> Enum.take(20)
-        |> Enum.map(fn item ->
-          %{name: item["name"], version: item["version"], description: item["description"]}
-        end)
+        results =
+          items
+          |> Enum.take(20)
+          |> Enum.map(fn item ->
+            %{name: item["name"], version: item["version"], description: item["description"]}
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

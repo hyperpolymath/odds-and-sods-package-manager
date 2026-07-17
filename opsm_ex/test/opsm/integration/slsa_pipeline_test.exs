@@ -91,14 +91,19 @@ defmodule Opsm.Integration.SlsaPipelineTest do
 
     test "provenance with custom build info" do
       pkg_info = %{name: "custom-build", version: "1.0.0", forth: :cargo, tarball_url: nil}
+
       build_info = %{
         builder_id: "https://custom-builder.example.com",
         started_at: "2026-01-01T00:00:00Z"
       }
 
       assert {:ok, statement} = Slsa.generate_provenance(pkg_info, build_info)
-      assert statement["predicate"]["runDetails"]["builder"]["id"] == "https://custom-builder.example.com"
-      assert statement["predicate"]["runDetails"]["metadata"]["startedOn"] == "2026-01-01T00:00:00Z"
+
+      assert statement["predicate"]["runDetails"]["builder"]["id"] ==
+               "https://custom-builder.example.com"
+
+      assert statement["predicate"]["runDetails"]["metadata"]["startedOn"] ==
+               "2026-01-01T00:00:00Z"
     end
 
     test "provenance includes resolved dependencies when provided" do
@@ -169,10 +174,11 @@ defmodule Opsm.Integration.SlsaPipelineTest do
       pkg_info = %{name: "uri-pkg", version: "1.0.0", forth: :npm, tarball_url: nil}
       {:ok, statement} = Slsa.generate_provenance(pkg_info)
 
-      meta = Slsa.lockfile_metadata(%{
-        statement: statement,
-        uri: "https://attestations.opsm.dev/abc123"
-      })
+      meta =
+        Slsa.lockfile_metadata(%{
+          statement: statement,
+          uri: "https://attestations.opsm.dev/abc123"
+        })
 
       assert meta.slsa_provenance_uri == "https://attestations.opsm.dev/abc123"
     end

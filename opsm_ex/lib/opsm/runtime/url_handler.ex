@@ -96,7 +96,8 @@ defmodule Opsm.Runtime.UrlHandler do
 
   # Public for testing only — not part of the external API.
   @doc false
-  def process_versions_body(body, pattern, tool_name), do: extract_versions(body, pattern, tool_name)
+  def process_versions_body(body, pattern, tool_name),
+    do: extract_versions(body, pattern, tool_name)
 
   defp extract_versions(body, pattern, tool_name) when is_map(body) do
     # JSON object: keys are version strings (e.g., Zig's index.json)
@@ -120,6 +121,7 @@ defmodule Opsm.Runtime.UrlHandler do
   end
 
   defp filter_versions(versions, nil), do: versions
+
   defp filter_versions(versions, pattern) do
     {:ok, re} = Regex.compile(pattern)
     Enum.filter(versions, &Regex.match?(re, &1))
@@ -135,6 +137,7 @@ defmodule Opsm.Runtime.UrlHandler do
   defp parse_ver(v) do
     # Strip leading "v" or "go" prefixes, then parse as semver
     cleaned = v |> String.trim_leading("v") |> String.trim_leading("go")
+
     parts =
       cleaned
       |> String.split(".")
@@ -143,6 +146,7 @@ defmodule Opsm.Runtime.UrlHandler do
         {n, _} -> n
         :error -> 0
       end)
+
     List.to_tuple(parts)
   rescue
     _ -> {0, 0, 0}
@@ -154,8 +158,8 @@ defmodule Opsm.Runtime.UrlHandler do
 
   defp platform_vars("zig", platform) do
     case platform do
-      :linux_amd64  -> {:ok, %{"zig_platform" => "linux-x86_64"}}
-      :linux_arm64  -> {:ok, %{"zig_platform" => "linux-aarch64"}}
+      :linux_amd64 -> {:ok, %{"zig_platform" => "linux-x86_64"}}
+      :linux_arm64 -> {:ok, %{"zig_platform" => "linux-aarch64"}}
       :darwin_amd64 -> {:ok, %{"zig_platform" => "macos-x86_64"}}
       :darwin_arm64 -> {:ok, %{"zig_platform" => "macos-aarch64"}}
       :windows_amd64 -> {:ok, %{"zig_platform" => "windows-x86_64"}}
@@ -165,46 +169,86 @@ defmodule Opsm.Runtime.UrlHandler do
 
   defp platform_vars("julia", platform) do
     case platform do
-      :linux_amd64  -> {:ok, %{"julia_os" => "linux", "julia_arch" => "x64",
-                               "julia_arch_suffix" => ".tar.gz", "julia_minor" => "1"}}
-      :linux_arm64  -> {:ok, %{"julia_os" => "linux", "julia_arch" => "aarch64",
-                               "julia_arch_suffix" => ".tar.gz", "julia_minor" => "1"}}
-      :darwin_amd64 -> {:ok, %{"julia_os" => "mac", "julia_arch" => "x64",
-                               "julia_arch_suffix" => ".dmg", "julia_minor" => "1"}}
-      :darwin_arm64 -> {:ok, %{"julia_os" => "mac", "julia_arch" => "aarch64",
-                               "julia_arch_suffix" => ".dmg", "julia_minor" => "1"}}
-      _ -> {:error, :unsupported_platform}
+      :linux_amd64 ->
+        {:ok,
+         %{
+           "julia_os" => "linux",
+           "julia_arch" => "x64",
+           "julia_arch_suffix" => ".tar.gz",
+           "julia_minor" => "1"
+         }}
+
+      :linux_arm64 ->
+        {:ok,
+         %{
+           "julia_os" => "linux",
+           "julia_arch" => "aarch64",
+           "julia_arch_suffix" => ".tar.gz",
+           "julia_minor" => "1"
+         }}
+
+      :darwin_amd64 ->
+        {:ok,
+         %{
+           "julia_os" => "mac",
+           "julia_arch" => "x64",
+           "julia_arch_suffix" => ".dmg",
+           "julia_minor" => "1"
+         }}
+
+      :darwin_arm64 ->
+        {:ok,
+         %{
+           "julia_os" => "mac",
+           "julia_arch" => "aarch64",
+           "julia_arch_suffix" => ".dmg",
+           "julia_minor" => "1"
+         }}
+
+      _ ->
+        {:error, :unsupported_platform}
     end
   end
 
   defp platform_vars("golang", platform) do
     case platform do
-      :linux_amd64   -> {:ok, %{"go_os" => "linux",   "go_arch" => "amd64", "go_version" => "go{{version}}"}}
-      :linux_arm64   -> {:ok, %{"go_os" => "linux",   "go_arch" => "arm64", "go_version" => "go{{version}}"}}
-      :darwin_amd64  -> {:ok, %{"go_os" => "darwin",  "go_arch" => "amd64", "go_version" => "go{{version}}"}}
-      :darwin_arm64  -> {:ok, %{"go_os" => "darwin",  "go_arch" => "arm64", "go_version" => "go{{version}}"}}
-      :windows_amd64 -> {:ok, %{"go_os" => "windows", "go_arch" => "amd64", "go_version" => "go{{version}}"}}
-      _ -> {:error, :unsupported_platform}
+      :linux_amd64 ->
+        {:ok, %{"go_os" => "linux", "go_arch" => "amd64", "go_version" => "go{{version}}"}}
+
+      :linux_arm64 ->
+        {:ok, %{"go_os" => "linux", "go_arch" => "arm64", "go_version" => "go{{version}}"}}
+
+      :darwin_amd64 ->
+        {:ok, %{"go_os" => "darwin", "go_arch" => "amd64", "go_version" => "go{{version}}"}}
+
+      :darwin_arm64 ->
+        {:ok, %{"go_os" => "darwin", "go_arch" => "arm64", "go_version" => "go{{version}}"}}
+
+      :windows_amd64 ->
+        {:ok, %{"go_os" => "windows", "go_arch" => "amd64", "go_version" => "go{{version}}"}}
+
+      _ ->
+        {:error, :unsupported_platform}
     end
   end
 
   defp platform_vars("nodejs", platform) do
     case platform do
-      :linux_amd64   -> {:ok, %{"node_os" => "linux",   "node_arch" => "x64"}}
-      :linux_arm64   -> {:ok, %{"node_os" => "linux",   "node_arch" => "arm64"}}
-      :darwin_amd64  -> {:ok, %{"node_os" => "darwin",  "node_arch" => "x64"}}
-      :darwin_arm64  -> {:ok, %{"node_os" => "darwin",  "node_arch" => "arm64"}}
-      :windows_amd64 -> {:ok, %{"node_os" => "win",     "node_arch" => "x64"}}
+      :linux_amd64 -> {:ok, %{"node_os" => "linux", "node_arch" => "x64"}}
+      :linux_arm64 -> {:ok, %{"node_os" => "linux", "node_arch" => "arm64"}}
+      :darwin_amd64 -> {:ok, %{"node_os" => "darwin", "node_arch" => "x64"}}
+      :darwin_arm64 -> {:ok, %{"node_os" => "darwin", "node_arch" => "arm64"}}
+      :windows_amd64 -> {:ok, %{"node_os" => "win", "node_arch" => "x64"}}
       _ -> {:error, :unsupported_platform}
     end
   end
 
   defp platform_vars("dart", platform) do
     case platform do
-      :linux_amd64   -> {:ok, %{"dart_os" => "linux",   "dart_arch" => "x64"}}
-      :linux_arm64   -> {:ok, %{"dart_os" => "linux",   "dart_arch" => "arm64"}}
-      :darwin_amd64  -> {:ok, %{"dart_os" => "macos",   "dart_arch" => "x64"}}
-      :darwin_arm64  -> {:ok, %{"dart_os" => "macos",   "dart_arch" => "arm64"}}
+      :linux_amd64 -> {:ok, %{"dart_os" => "linux", "dart_arch" => "x64"}}
+      :linux_arm64 -> {:ok, %{"dart_os" => "linux", "dart_arch" => "arm64"}}
+      :darwin_amd64 -> {:ok, %{"dart_os" => "macos", "dart_arch" => "x64"}}
+      :darwin_arm64 -> {:ok, %{"dart_os" => "macos", "dart_arch" => "arm64"}}
       :windows_amd64 -> {:ok, %{"dart_os" => "windows", "dart_arch" => "x64"}}
       _ -> {:error, :unsupported_platform}
     end
@@ -213,10 +257,10 @@ defmodule Opsm.Runtime.UrlHandler do
   defp platform_vars("nim", platform) do
     # Nim archives: nim-2.0.2_linux_x64.tar.xz or nim-2.0.2_macos_arm64.tar.xz
     case platform do
-      :linux_amd64  -> {:ok, %{"nim_os" => "linux",  "nim_arch" => "x64"}}
-      :linux_arm64  -> {:ok, %{"nim_os" => "linux",  "nim_arch" => "arm64"}}
-      :darwin_amd64 -> {:ok, %{"nim_os" => "macos",  "nim_arch" => "x64"}}
-      :darwin_arm64 -> {:ok, %{"nim_os" => "macos",  "nim_arch" => "arm64"}}
+      :linux_amd64 -> {:ok, %{"nim_os" => "linux", "nim_arch" => "x64"}}
+      :linux_arm64 -> {:ok, %{"nim_os" => "linux", "nim_arch" => "arm64"}}
+      :darwin_amd64 -> {:ok, %{"nim_os" => "macos", "nim_arch" => "x64"}}
+      :darwin_arm64 -> {:ok, %{"nim_os" => "macos", "nim_arch" => "arm64"}}
       _ -> {:error, :unsupported_platform}
     end
   end
@@ -224,10 +268,10 @@ defmodule Opsm.Runtime.UrlHandler do
   defp platform_vars("kubectl", platform) do
     # kubectl binary at: dl.k8s.io/release/v{{version}}/bin/linux/amd64/kubectl
     case platform do
-      :linux_amd64   -> {:ok, %{"kubectl_os" => "linux",   "kubectl_arch" => "amd64"}}
-      :linux_arm64   -> {:ok, %{"kubectl_os" => "linux",   "kubectl_arch" => "arm64"}}
-      :darwin_amd64  -> {:ok, %{"kubectl_os" => "darwin",  "kubectl_arch" => "amd64"}}
-      :darwin_arm64  -> {:ok, %{"kubectl_os" => "darwin",  "kubectl_arch" => "arm64"}}
+      :linux_amd64 -> {:ok, %{"kubectl_os" => "linux", "kubectl_arch" => "amd64"}}
+      :linux_arm64 -> {:ok, %{"kubectl_os" => "linux", "kubectl_arch" => "arm64"}}
+      :darwin_amd64 -> {:ok, %{"kubectl_os" => "darwin", "kubectl_arch" => "amd64"}}
+      :darwin_arm64 -> {:ok, %{"kubectl_os" => "darwin", "kubectl_arch" => "arm64"}}
       :windows_amd64 -> {:ok, %{"kubectl_os" => "windows", "kubectl_arch" => "amd64"}}
       _ -> {:error, :unsupported_platform}
     end

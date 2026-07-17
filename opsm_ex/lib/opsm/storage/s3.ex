@@ -37,10 +37,10 @@ defmodule Opsm.Storage.S3 do
       date = String.slice(now, 0, 8)
 
       headers = [
-        {"host",                  URI.parse(url).host},
+        {"host", URI.parse(url).host},
         {"x-amz-content-sha256", content_sha},
-        {"x-amz-date",           now},
-        {"content-type",         "application/octet-stream"}
+        {"x-amz-date", now},
+        {"content-type", "application/octet-stream"}
       ]
 
       auth = sigv4_auth("PUT", URI.parse(url).path, "", headers, content_sha, now, date, cfg)
@@ -52,12 +52,12 @@ defmodule Opsm.Storage.S3 do
              receive_timeout: @timeout_ms
            ) do
         {:ok, %{status: s}} when s in 200..299 -> {:ok, key}
-        {:ok, %{status: s, body: b}}            -> {:error, "S3 PUT returned #{s}: #{inspect(b)}"}
-        {:error, reason}                        -> {:error, "S3 PUT failed: #{inspect(reason)}"}
+        {:ok, %{status: s, body: b}} -> {:error, "S3 PUT returned #{s}: #{inspect(b)}"}
+        {:error, reason} -> {:error, "S3 PUT failed: #{inspect(reason)}"}
       end
     else
       {:error, :not_configured} -> {:error, :not_configured}
-      {:error, reason}          -> {:error, "S3 PUT: #{inspect(reason)}"}
+      {:error, reason} -> {:error, "S3 PUT: #{inspect(reason)}"}
     end
   end
 
@@ -70,9 +70,9 @@ defmodule Opsm.Storage.S3 do
       empty_hash = sha256_hex("")
 
       headers = [
-        {"host",                  URI.parse(url).host},
+        {"host", URI.parse(url).host},
         {"x-amz-content-sha256", empty_hash},
-        {"x-amz-date",           now}
+        {"x-amz-date", now}
       ]
 
       auth = sigv4_auth("GET", URI.parse(url).path, "", headers, empty_hash, now, date, cfg)
@@ -85,10 +85,10 @@ defmodule Opsm.Storage.S3 do
              into: File.stream!(dest_path),
              receive_timeout: @timeout_ms
            ) do
-        {:ok, %{status: 200}}     -> {:ok, dest_path}
-        {:ok, %{status: 404}}     -> {:error, :not_found}
-        {:ok, %{status: s}}       -> {:error, "S3 GET returned #{s}"}
-        {:error, reason}          -> {:error, "S3 GET failed: #{inspect(reason)}"}
+        {:ok, %{status: 200}} -> {:ok, dest_path}
+        {:ok, %{status: 404}} -> {:error, :not_found}
+        {:ok, %{status: s}} -> {:error, "S3 GET returned #{s}"}
+        {:error, reason} -> {:error, "S3 GET failed: #{inspect(reason)}"}
       end
     else
       {:error, :not_configured} -> {:error, :not_configured}
@@ -98,7 +98,9 @@ defmodule Opsm.Storage.S3 do
   @impl true
   def exists?(key, _opts) do
     case config() do
-      {:error, :not_configured} -> false
+      {:error, :not_configured} ->
+        false
+
       {:ok, cfg} ->
         url = object_url(cfg, key)
         now = utc_now_iso()
@@ -106,9 +108,9 @@ defmodule Opsm.Storage.S3 do
         empty_hash = sha256_hex("")
 
         headers = [
-          {"host",                  URI.parse(url).host},
+          {"host", URI.parse(url).host},
           {"x-amz-content-sha256", empty_hash},
-          {"x-amz-date",           now}
+          {"x-amz-date", now}
         ]
 
         auth = sigv4_auth("HEAD", URI.parse(url).path, "", headers, empty_hash, now, date, cfg)
@@ -116,7 +118,7 @@ defmodule Opsm.Storage.S3 do
 
         case Req.head(url, headers: req_headers, receive_timeout: 5_000) do
           {:ok, %{status: 200}} -> true
-          _                     -> false
+          _ -> false
         end
     end
   end
@@ -125,7 +127,7 @@ defmodule Opsm.Storage.S3 do
   def url(key, _opts) do
     case config() do
       {:ok, cfg} -> object_url(cfg, key)
-      _          -> nil
+      _ -> nil
     end
   end
 
@@ -181,21 +183,23 @@ defmodule Opsm.Storage.S3 do
   # ---------------------------------------------------------------------------
 
   defp config do
-    bucket     = System.get_env("OPSM_S3_BUCKET")
-    region     = System.get_env("OPSM_S3_REGION", "us-east-1")
+    bucket = System.get_env("OPSM_S3_BUCKET")
+    region = System.get_env("OPSM_S3_REGION", "us-east-1")
     access_key = System.get_env("AWS_ACCESS_KEY_ID")
     secret_key = System.get_env("AWS_SECRET_ACCESS_KEY")
 
     if bucket && access_key && secret_key do
-      endpoint = System.get_env("OPSM_S3_ENDPOINT", "https://#{bucket}.s3.#{region}.amazonaws.com")
+      endpoint =
+        System.get_env("OPSM_S3_ENDPOINT", "https://#{bucket}.s3.#{region}.amazonaws.com")
 
-      {:ok, %{
-        bucket:     bucket,
-        region:     region,
-        access_key: access_key,
-        secret_key: secret_key,
-        endpoint:   endpoint
-      }}
+      {:ok,
+       %{
+         bucket: bucket,
+         region: region,
+         access_key: access_key,
+         secret_key: secret_key,
+         endpoint: endpoint
+       }}
     else
       {:error, :not_configured}
     end
@@ -207,6 +211,7 @@ defmodule Opsm.Storage.S3 do
 
   defp utc_now_iso do
     {{y, mo, d}, {h, mi, s}} = :calendar.universal_time()
+
     :io_lib.format("~4..0B~2..0B~2..0BT~2..0B~2..0B~2..0BZ", [y, mo, d, h, mi, s])
     |> IO.iodata_to_binary()
   end

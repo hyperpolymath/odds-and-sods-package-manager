@@ -68,6 +68,7 @@ defmodule Opsm.Config do
 
   defp load_from_local do
     path = "opsm.toml"
+
     if File.exists?(path) do
       load_config_from(path)
     else
@@ -77,9 +78,12 @@ defmodule Opsm.Config do
 
   defp load_from_user do
     case System.get_env("HOME") do
-      nil -> {:error, "HOME not set"}
+      nil ->
+        {:error, "HOME not set"}
+
       home ->
         path = Path.join([home, ".config", "opsm", "opsm.toml"])
+
         if File.exists?(path) do
           load_config_from(path)
         else
@@ -148,10 +152,11 @@ defmodule Opsm.Config do
 
   defp format_toml_error(path, message) do
     # Extract line number if present in message
-    line_info = case Regex.run(~r/line (\d+)/i, to_string(message)) do
-      [_, line] -> " at line #{line}"
-      _ -> ""
-    end
+    line_info =
+      case Regex.run(~r/line (\d+)/i, to_string(message)) do
+        [_, line] -> " at line #{line}"
+        _ -> ""
+      end
 
     """
     TOML syntax error in #{path}#{line_info}
@@ -173,18 +178,21 @@ defmodule Opsm.Config do
     http = parse_http_config(raw["http"])
 
     with {:ok, checky_monkey} <- parse_service_config(raw["checky_monkey"], :checky_monkey),
-         {:ok, palimpsest_license} <- parse_service_config(raw["palimpsest_license"], :palimpsest_license),
+         {:ok, palimpsest_license} <-
+           parse_service_config(raw["palimpsest_license"], :palimpsest_license),
          {:ok, oikos} <- parse_service_config(raw["oikos"], :oikos) do
-      {:ok, %OpsmConfig{
-        http: http,
-        checky_monkey: checky_monkey,
-        palimpsest_license: palimpsest_license,
-        oikos: oikos
-      }}
+      {:ok,
+       %OpsmConfig{
+         http: http,
+         checky_monkey: checky_monkey,
+         palimpsest_license: palimpsest_license,
+         oikos: oikos
+       }}
     end
   end
 
   defp parse_http_config(nil), do: @default_http_config
+
   defp parse_http_config(raw) do
     %HttpConfig{
       timeout_ms: Map.get(raw, "timeout_ms", @default_http_config.timeout_ms),
@@ -203,10 +211,12 @@ defmodule Opsm.Config do
 
     case validate_url(base_url) do
       :ok ->
-        {:ok, %ServiceConfig{
-          base_url: base_url,
-          token: Map.get(raw, "token")
-        }}
+        {:ok,
+         %ServiceConfig{
+           base_url: base_url,
+           token: Map.get(raw, "token")
+         }}
+
       {:error, reason} ->
         {:error, "Invalid URL for #{service_key}: #{reason}"}
     end
@@ -223,6 +233,7 @@ defmodule Opsm.Config do
     case URI.parse(url) do
       %URI{scheme: scheme, host: host} when scheme in ["http", "https"] and not is_nil(host) ->
         :ok
+
       _ ->
         {:error, "invalid URL format"}
     end

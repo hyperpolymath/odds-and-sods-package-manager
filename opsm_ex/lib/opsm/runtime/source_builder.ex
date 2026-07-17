@@ -98,8 +98,10 @@ defmodule Opsm.Runtime.SourceBuilder do
 
   defp delegate_install(plugin, version, _install_dir) do
     delegate = plugin["install"]["delegate_to"] || plugin[:install][:delegate_to]
-    cmd_template = plugin["install"]["delegate_install_command"] ||
-                   plugin[:install][:delegate_install_command]
+
+    cmd_template =
+      plugin["install"]["delegate_install_command"] ||
+        plugin[:install][:delegate_install_command]
 
     cmd = String.replace(cmd_template, "{{version}}", version)
 
@@ -160,6 +162,7 @@ defmodule Opsm.Runtime.SourceBuilder do
 
   defp resolve_source_url(_tool_name, version, url_handler) do
     template = url_handler["archive_url_template"] || url_handler[:archive_url_template]
+
     if template do
       String.replace(template, "{{version}}", version)
     else
@@ -189,6 +192,7 @@ defmodule Opsm.Runtime.SourceBuilder do
 
   defp verify_health_check(plugin) do
     check = plugin["health_check"] || plugin[:health_check]
+
     if check && command_succeeds?(check) do
       :ok
     else
@@ -219,8 +223,12 @@ defmodule Opsm.Runtime.SourceBuilder do
 
   defp extract_archive(archive_path, dest_dir) do
     File.mkdir_p!(dest_dir)
-    result = System.cmd("tar", ["-xzf", archive_path, "-C", dest_dir, "--strip-components=1"],
-                        stderr_to_stdout: true)
+
+    result =
+      System.cmd("tar", ["-xzf", archive_path, "-C", dest_dir, "--strip-components=1"],
+        stderr_to_stdout: true
+      )
+
     case result do
       {_, 0} -> :ok
       {output, code} -> {:error, {:tar_failed, code, output}}
@@ -239,6 +247,7 @@ defmodule Opsm.Runtime.SourceBuilder do
   end
 
   defp command_succeeds?(nil), do: true
+
   defp command_succeeds?(cmd) do
     case System.cmd("sh", ["-c", "#{cmd} >/dev/null 2>&1"], []) do
       {_, 0} -> true
@@ -260,13 +269,14 @@ defmodule Opsm.Runtime.SourceBuilder do
   defp github_repo(tool), do: tool
 
   defp get_strategy(plugin) do
-    strategy_str = get_in(plugin, ["install", "strategy"]) ||
-                   get_in(plugin, [:install, :strategy])
+    strategy_str =
+      get_in(plugin, ["install", "strategy"]) ||
+        get_in(plugin, [:install, :strategy])
 
     case strategy_str do
-      "PrebuiltBinary"    -> :prebuilt_binary
-      "BuildFromSource"   -> :build_from_source
-      "Both"              -> :both
+      "PrebuiltBinary" -> :prebuilt_binary
+      "BuildFromSource" -> :build_from_source
+      "Both" -> :both
       "DelegateToManager" -> :delegate_to_manager
       atom when is_atom(atom) -> atom
       _ -> :unknown

@@ -16,16 +16,18 @@ defmodule Opsm.Imp do
   @doc """
   Normalize a `ManifestFormat` into the IMP shape and validate required fields.
   """
-  @spec normalize(ManifestFormat.t(), String.t(), String.t()) :: {:ok, map()} | {:error, String.t()}
+  @spec normalize(ManifestFormat.t(), String.t(), String.t()) ::
+          {:ok, map()} | {:error, String.t()}
   def normalize(%ManifestFormat{} = manifest, manifest_path, digest) do
     with :ok <- ensure_required_fields(manifest) do
-      {:ok, %{
-        "name" => manifest.name,
-        "version" => manifest.version || "0.0.0",
-        "license" => manifest.license,
-        "dependencies" => format_dependencies(manifest.dependencies || %{}),
-        "provenance" => build_provenance(manifest, manifest_path, digest)
-      }}
+      {:ok,
+       %{
+         "name" => manifest.name,
+         "version" => manifest.version || "0.0.0",
+         "license" => manifest.license,
+         "dependencies" => format_dependencies(manifest.dependencies || %{}),
+         "provenance" => build_provenance(manifest, manifest_path, digest)
+       }}
     end
   end
 

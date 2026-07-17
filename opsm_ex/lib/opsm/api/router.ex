@@ -10,15 +10,16 @@ defmodule Opsm.Api.Router do
   alias Opsm.SmartInstall
   alias Opsm.Api.Nickel
 
-  plug Plug.Logger
+  plug(Plug.Logger)
 
-  plug Plug.Parsers,
+  plug(Plug.Parsers,
     parsers: [:json, :urlencoded],
     pass: ["application/nickel", "text/nickel"],
     json_decoder: Jason
+  )
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   get "/health" do
     send_json(conn, 200, %{status: "ok"})
@@ -79,8 +80,13 @@ defmodule Opsm.Api.Router do
 
   defp fetch_tokens(%{"tokens" => tokens}) when is_list(tokens), do: {:ok, tokens}
   defp fetch_tokens(%{tokens: tokens}) when is_list(tokens), do: {:ok, tokens}
-  defp fetch_tokens(%{"command" => command}) when is_binary(command), do: {:ok, command_to_tokens(command)}
-  defp fetch_tokens(%{command: command}) when is_binary(command), do: {:ok, command_to_tokens(command)}
+
+  defp fetch_tokens(%{"command" => command}) when is_binary(command),
+    do: {:ok, command_to_tokens(command)}
+
+  defp fetch_tokens(%{command: command}) when is_binary(command),
+    do: {:ok, command_to_tokens(command)}
+
   defp fetch_tokens(_), do: {:error, "payload must include tokens or command"}
 
   defp command_to_tokens(command) do
@@ -92,6 +98,7 @@ defmodule Opsm.Api.Router do
 
   defp send_json(conn, status, data) do
     body = Jason.encode!(data)
+
     conn
     |> Plug.Conn.put_resp_content_type("application/json")
     |> Plug.Conn.send_resp(status, body)

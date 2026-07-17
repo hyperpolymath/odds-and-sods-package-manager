@@ -18,8 +18,10 @@ defmodule Opsm.HarQueue do
   alias Opsm.Verified.Json
 
   @queue_dir "/tmp/opsm-har-ingest"
-  @default_poll_interval 1000  # 1 second
-  @cleanup_after 300_000  # 5 minutes
+  # 1 second
+  @default_poll_interval 1000
+  # 5 minutes
+  @cleanup_after 300_000
 
   @doc """
   Submit a task to the HAR queue.
@@ -79,7 +81,7 @@ defmodule Opsm.HarQueue do
       {:error, :timeout}
   """
   @spec await_result(String.t(), keyword()) ::
-    {:ok, map()} | {:error, :timeout | term()}
+          {:ok, map()} | {:error, :timeout | term()}
   def await_result(task_id, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, 300_000)
     poll_interval = Keyword.get(opts, :poll_interval, @default_poll_interval)
@@ -150,18 +152,19 @@ defmodule Opsm.HarQueue do
 
     files = Path.wildcard(Path.join(@queue_dir, "*"))
 
-    removed = Enum.count(files, fn file ->
-      stat = File.stat!(file)
-      gregorian = stat.mtime |> NaiveDateTime.to_gregorian_seconds()
-      file_time = elem(gregorian, 0) * 1000
+    removed =
+      Enum.count(files, fn file ->
+        stat = File.stat!(file)
+        gregorian = stat.mtime |> NaiveDateTime.to_gregorian_seconds()
+        file_time = elem(gregorian, 0) * 1000
 
-      if file_time < cutoff_time do
-        File.rm(file)
-        true
-      else
-        false
-      end
-    end)
+        if file_time < cutoff_time do
+          File.rm(file)
+          true
+        else
+          false
+        end
+      end)
 
     Logger.debug("Cleaned up #{removed} old HAR queue files")
     {:ok, removed}

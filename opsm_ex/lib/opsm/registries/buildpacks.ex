@@ -62,27 +62,31 @@ defmodule Opsm.Registries.Buildpacks do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"buildpacks" => buildpacks}} when is_list(buildpacks) ->
-        results = buildpacks
-        |> Enum.take(20)
-        |> Enum.map(fn bp ->
-          %{
-            name: bp["id"] || bp["name"],
-            version: get_in(bp, ["latest", "version"]),
-            description: bp["description"]
-          }
-        end)
+        results =
+          buildpacks
+          |> Enum.take(20)
+          |> Enum.map(fn bp ->
+            %{
+              name: bp["id"] || bp["name"],
+              version: get_in(bp, ["latest", "version"]),
+              description: bp["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, buildpacks} when is_list(buildpacks) ->
-        results = buildpacks
-        |> Enum.take(20)
-        |> Enum.map(fn bp ->
-          %{
-            name: bp["id"] || bp["name"],
-            version: get_in(bp, ["latest", "version"]),
-            description: bp["description"]
-          }
-        end)
+        results =
+          buildpacks
+          |> Enum.take(20)
+          |> Enum.map(fn bp ->
+            %{
+              name: bp["id"] || bp["name"],
+              version: get_in(bp, ["latest", "version"]),
+              description: bp["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -114,9 +118,11 @@ defmodule Opsm.Registries.Buildpacks do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions_list}} when is_list(versions_list) ->
-        version_strs = versions_list
-        |> Enum.map(fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        version_strs =
+          versions_list
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, version_strs}
 
       {:ok, _} ->
@@ -180,6 +186,7 @@ defmodule Opsm.Registries.Buildpacks do
   end
 
   defp extract_stacks(nil), do: []
+
   defp extract_stacks(data) do
     (data["stacks"] || [])
     |> Enum.map(fn
@@ -202,6 +209,7 @@ defmodule Opsm.Registries.Buildpacks do
   end
 
   defp extract_order_deps(nil), do: %{}
+
   defp extract_order_deps(data) do
     (data["order"] || [])
     |> List.flatten()

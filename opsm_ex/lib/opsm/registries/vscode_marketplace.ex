@@ -19,24 +19,34 @@ defmodule Opsm.Registries.VscodeMarketplace do
   """
   def fetch_package(name, version \\ "latest") do
     {publisher, ext_name} = split_extension_id(name)
-    url = "#{@api_url}/publishers/#{URI.encode(publisher)}/extensions/#{URI.encode(ext_name)}?api-version=#{@api_version}"
+
+    url =
+      "#{@api_url}/publishers/#{URI.encode(publisher)}/extensions/#{URI.encode(ext_name)}?api-version=#{@api_version}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          versions_list = body["versions"] || []
-          case versions_list do
-            [latest | _] -> latest["version"]
-            _ -> "0.0.0"
+        ver =
+          if version == "latest" do
+            versions_list = body["versions"] || []
+
+            case versions_list do
+              [latest | _] -> latest["version"]
+              _ -> "0.0.0"
+            end
+          else
+            version
           end
-        else
-          version
-        end
+
         {:ok, parse_extension(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -52,10 +62,11 @@ defmodule Opsm.Registries.VscodeMarketplace do
     display_name = body["displayName"] || ext_name
     description = body["shortDescription"] || body["description"]
 
-    latest_version_data = case body["versions"] do
-      [v | _] -> v
-      _ -> %{}
-    end
+    latest_version_data =
+      case body["versions"] do
+        [v | _] -> v
+        _ -> %{}
+      end
 
     properties = extract_properties(latest_version_data)
     deps = extract_extension_dependencies(properties)
@@ -79,7 +90,7 @@ defmodule Opsm.Registries.VscodeMarketplace do
       manifest: manifest,
       tarball_url: vsix_url,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -102,6 +113,7 @@ defmodule Opsm.Registries.VscodeMarketplace do
 
   defp find_asset_url(version_data, asset_type) do
     files = version_data["files"] || []
+
     case Enum.find(files, fn f -> f["assetType"] == asset_type end) do
       nil -> nil
       file -> file["source"]
@@ -113,16 +125,21 @@ defmodule Opsm.Registries.VscodeMarketplace do
   """
   def get_versions(name) do
     {publisher, ext_name} = split_extension_id(name)
-    url = "#{@api_url}/publishers/#{URI.encode(publisher)}/extensions/#{URI.encode(ext_name)}?api-version=#{@api_version}"
+
+    url =
+      "#{@api_url}/publishers/#{URI.encode(publisher)}/extensions/#{URI.encode(ext_name)}?api-version=#{@api_version}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        versions_list = (body["versions"] || [])
-                        |> Enum.map(fn v -> v["version"] end)
-                        |> Enum.reject(&is_nil/1)
+        versions_list =
+          (body["versions"] || [])
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, versions_list}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -134,7 +151,8 @@ defmodule Opsm.Registries.VscodeMarketplace do
     _url = "#{@api_url}/extensionquery?api-version=#{@api_version}"
 
     # The Marketplace uses POST for search queries; fall back to a GET-based search
-    search_url = "https://marketplace.visualstudio.com/search?term=#{URI.encode(query)}&target=VSCode&sortBy=Relevance"
+    search_url =
+      "https://marketplace.visualstudio.com/search?term=#{URI.encode(query)}&target=VSCode&sortBy=Relevance"
 
     case VerifiedHttp.get_json(search_url, receive_timeout: 10_000) do
       {:ok, body} ->
@@ -143,10 +161,13 @@ defmodule Opsm.Registries.VscodeMarketplace do
 
       {:error, _} ->
         # Fallback: direct query
-        fallback_url = "#{@api_url}/extensionquery/#{URI.encode(query)}?api-version=#{@api_version}"
+        fallback_url =
+          "#{@api_url}/extensionquery/#{URI.encode(query)}?api-version=#{@api_version}"
+
         case VerifiedHttp.get_json(fallback_url, receive_timeout: 10_000) do
           {:ok, body} ->
             {:ok, extract_search_results(body)}
+
           {:error, reason} ->
             {:error, reason}
         end
@@ -155,19 +176,23 @@ defmodule Opsm.Registries.VscodeMarketplace do
 
   defp extract_search_results(body) do
     results = body["results"] || [body]
-    extensions = results
-    |> Enum.flat_map(fn r -> r["extensions"] || [] end)
-    |> Enum.take(20)
-    |> Enum.map(fn ext ->
-      publisher_name = get_in(ext, ["publisher", "publisherName"]) || ""
-      ext_name = ext["extensionName"] || ext["name"] || ""
-      full_name = if publisher_name != "", do: "#{publisher_name}.#{ext_name}", else: ext_name
-      %{
-        name: full_name,
-        version: get_in(ext, ["versions", Access.at(0), "version"]),
-        description: ext["shortDescription"] || ext["displayName"]
-      }
-    end)
+
+    extensions =
+      results
+      |> Enum.flat_map(fn r -> r["extensions"] || [] end)
+      |> Enum.take(20)
+      |> Enum.map(fn ext ->
+        publisher_name = get_in(ext, ["publisher", "publisherName"]) || ""
+        ext_name = ext["extensionName"] || ext["name"] || ""
+        full_name = if publisher_name != "", do: "#{publisher_name}.#{ext_name}", else: ext_name
+
+        %{
+          name: full_name,
+          version: get_in(ext, ["versions", Access.at(0), "version"]),
+          description: ext["shortDescription"] || ext["displayName"]
+        }
+      end)
+
     extensions
   end
 

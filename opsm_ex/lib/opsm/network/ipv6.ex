@@ -219,9 +219,10 @@ defmodule Opsm.Network.Ipv6 do
       _ ->
         Logger.warning("IPv6 enforcement: #{host} has no AAAA records — connection blocked")
 
-        {:error, {:ipv6_required, host,
+        {:error,
+         {:ipv6_required, host,
           "Host #{host} has no IPv6 (AAAA) records. " <>
-          "Set OPSM_IPV6_MODE=prefer to allow IPv4 fallback."}}
+            "Set OPSM_IPV6_MODE=prefer to allow IPv4 fallback."}}
     end
   end
 

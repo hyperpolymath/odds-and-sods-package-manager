@@ -257,15 +257,16 @@ defmodule Opsm.Federation do
         # Simple YAML key-value parsing for pubspec
         fields = parse_yaml_simple(content)
 
-        {:ok, %ManifestFormat{
-          name: fields["name"] || "unknown",
-          version: fields["version"] || "0.0.0",
-          description: fields["description"],
-          homepage: fields["homepage"],
-          repository: fields["repository"],
-          source_forth: :pub,
-          raw_manifest: %{"raw" => content}
-        }}
+        {:ok,
+         %ManifestFormat{
+           name: fields["name"] || "unknown",
+           version: fields["version"] || "0.0.0",
+           description: fields["description"],
+           homepage: fields["homepage"],
+           repository: fields["repository"],
+           source_forth: :pub,
+           raw_manifest: %{"raw" => content}
+         }}
 
       {:error, reason} ->
         {:error, "Failed to read pubspec.yaml: #{reason}"}
@@ -307,13 +308,14 @@ defmodule Opsm.Federation do
               %{}
           end
 
-        {:ok, %ManifestFormat{
-          name: module_name,
-          version: go_version,
-          dependencies: deps,
-          source_forth: :go,
-          raw_manifest: %{"raw" => content}
-        }}
+        {:ok,
+         %ManifestFormat{
+           name: module_name,
+           version: go_version,
+           dependencies: deps,
+           source_forth: :go,
+           raw_manifest: %{"raw" => content}
+         }}
 
       {:error, reason} ->
         {:error, "Failed to read go.mod: #{reason}"}
@@ -332,13 +334,14 @@ defmodule Opsm.Federation do
           end)
           |> Map.new()
 
-        {:ok, %ManifestFormat{
-          name: Path.basename(Path.dirname(Path.expand(path))),
-          version: "0.0.0",
-          dependencies: deps,
-          source_forth: :gem,
-          raw_manifest: %{"raw" => content}
-        }}
+        {:ok,
+         %ManifestFormat{
+           name: Path.basename(Path.dirname(Path.expand(path))),
+           version: "0.0.0",
+           dependencies: deps,
+           source_forth: :gem,
+           raw_manifest: %{"raw" => content}
+         }}
 
       {:error, reason} ->
         {:error, "Failed to read Gemfile: #{reason}"}
@@ -375,19 +378,21 @@ defmodule Opsm.Federation do
         case Toml.decode(content) do
           {:ok, toml} ->
             pkg = toml["package"] || %{}
-            {:ok, %ManifestFormat{
-              name: pkg["name"] || "",
-              version: pkg["version"] || "0.0.0",
-              description: pkg["description"],
-              license: pkg["license"],
-              repository: pkg["repository"],
-              authors: pkg["authors"] || [],
-              keywords: pkg["keywords"] || [],
-              dependencies: toml["dependencies"] || %{},
-              dev_dependencies: toml["dev-dependencies"] || %{},
-              source_forth: :cargo,
-              raw_manifest: toml
-            }}
+
+            {:ok,
+             %ManifestFormat{
+               name: pkg["name"] || "",
+               version: pkg["version"] || "0.0.0",
+               description: pkg["description"],
+               license: pkg["license"],
+               repository: pkg["repository"],
+               authors: pkg["authors"] || [],
+               keywords: pkg["keywords"] || [],
+               dependencies: toml["dependencies"] || %{},
+               dev_dependencies: toml["dev-dependencies"] || %{},
+               source_forth: :cargo,
+               raw_manifest: toml
+             }}
 
           {:error, reason} ->
             {:error, "Failed to parse Cargo.toml: #{inspect(reason)}"}
@@ -410,15 +415,16 @@ defmodule Opsm.Federation do
         license = extract_mix_license(project_fields, content)
         deps = extract_mix_deps_ast(content)
 
-        {:ok, %ManifestFormat{
-          name: to_string(name),
-          version: version,
-          description: description,
-          license: license,
-          dependencies: deps,
-          source_forth: :hex,
-          raw_manifest: %{"raw" => content}
-        }}
+        {:ok,
+         %ManifestFormat{
+           name: to_string(name),
+           version: version,
+           description: description,
+           license: license,
+           dependencies: deps,
+           source_forth: :hex,
+           raw_manifest: %{"raw" => content}
+         }}
 
       {:error, reason} ->
         {:error, "Failed to read mix.exs: #{reason}"}
@@ -432,13 +438,21 @@ defmodule Opsm.Federation do
         # Extract simple keyword pairs: key: value
         Regex.scan(~r/(\w+):\s*(?::(\w+)|"([^"]*)"|(~\w\[.*?\]))/m, block)
         |> Enum.map(fn
-          [_, key, atom_val, "", ""] -> {String.to_existing_atom(key), String.to_existing_atom(atom_val)}
-          [_, key, "", str_val, ""] -> {String.to_existing_atom(key), str_val}
-          [_, key, "", "", sigil] -> {String.to_existing_atom(key), sigil}
-          _ -> nil
+          [_, key, atom_val, "", ""] ->
+            {String.to_existing_atom(key), String.to_existing_atom(atom_val)}
+
+          [_, key, "", str_val, ""] ->
+            {String.to_existing_atom(key), str_val}
+
+          [_, key, "", "", sigil] ->
+            {String.to_existing_atom(key), sigil}
+
+          _ ->
+            nil
         end)
         |> Enum.reject(&is_nil/1)
         |> Map.new()
+
       _ ->
         %{}
     end
@@ -452,6 +466,7 @@ defmodule Opsm.Federation do
         Regex.scan(~r/\{:(\w+),\s*"([^"]+)"/m, block)
         |> Enum.map(fn [_, name, version] -> {name, version} end)
         |> Map.new()
+
       _ ->
         %{}
     end
@@ -465,8 +480,12 @@ defmodule Opsm.Federation do
           [_, license] -> license
           _ -> extract_mix_field(content, "license")
         end
-      license when is_binary(license) -> license
-      _ -> nil
+
+      license when is_binary(license) ->
+        license
+
+      _ ->
+        nil
     end
   end
 
@@ -476,18 +495,21 @@ defmodule Opsm.Federation do
         case Toml.decode(content) do
           {:ok, toml} ->
             proj = toml["project"] || toml["tool"]["poetry"] || %{}
-            {:ok, %ManifestFormat{
-              name: proj["name"] || "",
-              version: proj["version"] || "0.0.0",
-              description: proj["description"],
-              license: extract_license(proj["license"]),
-              authors: extract_authors(proj["authors"]),
-              keywords: proj["keywords"] || [],
-              dependencies: extract_pypi_deps(proj["dependencies"]),
-              dev_dependencies: extract_pypi_deps(get_in(proj, ["optional-dependencies", "dev"]) || []),
-              source_forth: :pypi,
-              raw_manifest: toml
-            }}
+
+            {:ok,
+             %ManifestFormat{
+               name: proj["name"] || "",
+               version: proj["version"] || "0.0.0",
+               description: proj["description"],
+               license: extract_license(proj["license"]),
+               authors: extract_authors(proj["authors"]),
+               keywords: proj["keywords"] || [],
+               dependencies: extract_pypi_deps(proj["dependencies"]),
+               dev_dependencies:
+                 extract_pypi_deps(get_in(proj, ["optional-dependencies", "dev"]) || []),
+               source_forth: :pypi,
+               raw_manifest: toml
+             }}
 
           {:error, reason} ->
             {:error, "Failed to parse pyproject.toml: #{inspect(reason)}"}
@@ -514,45 +536,68 @@ defmodule Opsm.Federation do
   def agentic_resolve(query, opts \\ []) do
     alias Opsm.Registries.Registry
 
-    forths = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven])
+    forths =
+      Keyword.get(opts, :forths, [
+        :npm,
+        :cargo,
+        :hex,
+        :pypi,
+        :gem,
+        :go,
+        :pub,
+        :hackage,
+        :nuget,
+        :maven
+      ])
+
     timeout = Keyword.get(opts, :timeout, 15_000)
 
     # Search across all specified registries in parallel
-    tasks = Enum.map(forths, fn forth ->
-      Task.async(fn ->
-        try do
-          case Registry.search(forth, query, limit: 5) do
-            {:ok, results} ->
-              Enum.map(results, fn r -> Map.put(r, :forth, forth) end)
-            {:error, _} -> []
+    tasks =
+      Enum.map(forths, fn forth ->
+        Task.async(fn ->
+          try do
+            case Registry.search(forth, query, limit: 5) do
+              {:ok, results} ->
+                Enum.map(results, fn r -> Map.put(r, :forth, forth) end)
+
+              {:error, _} ->
+                []
+            end
+          rescue
+            _ -> []
           end
-        rescue
-          _ -> []
-        end
+        end)
       end)
-    end)
 
     results = Task.yield_many(tasks, timeout)
 
     candidates =
       results
       |> Enum.flat_map(fn
-        {_task, {:ok, items}} when is_list(items) -> items
-        {task, nil} -> Task.shutdown(task, :brutal_kill); []
-        _ -> []
+        {_task, {:ok, items}} when is_list(items) ->
+          items
+
+        {task, nil} ->
+          Task.shutdown(task, :brutal_kill)
+          []
+
+        _ ->
+          []
       end)
       |> Enum.sort_by(fn c ->
         # Exact name match scores highest
         if String.downcase(c[:name] || "") == String.downcase(query), do: 0, else: 1
       end)
 
-    {:ok, %{
-      query: query,
-      candidates: candidates,
-      forths_searched: forths,
-      status: :ok,
-      message: "Found #{length(candidates)} candidates across #{length(forths)} registries"
-    }}
+    {:ok,
+     %{
+       query: query,
+       candidates: candidates,
+       forths_searched: forths,
+       status: :ok,
+       message: "Found #{length(candidates)} candidates across #{length(forths)} registries"
+     }}
   end
 
   # =============================================================================
@@ -673,7 +718,14 @@ defmodule Opsm.Federation do
           {:ok, manifest_str} ->
             if System.find_executable("fpm") do
               IO.puts("Converting #{pkg.package}@#{pkg.version} to #{target} via fpm...")
-              {:ok, %{manifest: manifest_str, format: target, converter: script, mapped_deps: mapped_deps}}
+
+              {:ok,
+               %{
+                 manifest: manifest_str,
+                 format: target,
+                 converter: script,
+                 mapped_deps: mapped_deps
+               }}
             else
               IO.puts("fpm not found — generated manifest only (install fpm for full conversion)")
               {:ok, %{manifest: manifest_str, format: target, mapped_deps: mapped_deps}}
@@ -774,15 +826,19 @@ defmodule Opsm.Federation do
   """
   def check_toolchain(forth) when is_atom(forth) do
     case Map.get(@toolchains, forth) do
-      nil -> {:ok, :no_toolchain_required}
+      nil ->
+        {:ok, :no_toolchain_required}
+
       commands ->
         found = Enum.filter(commands, &System.find_executable/1)
+
         if Enum.empty?(found) do
-          {:error, %{
-            forth: forth,
-            required: commands,
-            message: "#{forth} toolchain not found. Install one of: #{Enum.join(commands, ", ")}"
-          }}
+          {:error,
+           %{
+             forth: forth,
+             required: commands,
+             message: "#{forth} toolchain not found. Install one of: #{Enum.join(commands, ", ")}"
+           }}
         else
           {:ok, %{forth: forth, available: found}}
         end
@@ -808,20 +864,22 @@ defmodule Opsm.Federation do
   Returns availability info for each registry.
   """
   def discover(package_name, opts \\ []) do
-    forths_to_search = Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :nuget, :maven, :pub, :go])
+    forths_to_search =
+      Keyword.get(opts, :forths, [:npm, :cargo, :hex, :pypi, :gem, :nuget, :maven, :pub, :go])
 
-    results = Enum.map(forths_to_search, fn forth ->
-      toolchain_status = check_toolchain(forth)
-      availability = check_registry_availability(forth, package_name)
+    results =
+      Enum.map(forths_to_search, fn forth ->
+        toolchain_status = check_toolchain(forth)
+        availability = check_registry_availability(forth, package_name)
 
-      %{
-        forth: forth,
-        available: match?({:ok, _}, availability),
-        availability_info: availability,
-        toolchain_installed: match?({:ok, _}, toolchain_status),
-        toolchain_info: toolchain_status
-      }
-    end)
+        %{
+          forth: forth,
+          available: match?({:ok, _}, availability),
+          availability_info: availability,
+          toolchain_installed: match?({:ok, _}, toolchain_status),
+          toolchain_info: toolchain_status
+        }
+      end)
 
     available = Enum.filter(results, & &1.available)
     missing_toolchain = Enum.filter(available, &(not &1.toolchain_installed))
@@ -844,6 +902,7 @@ defmodule Opsm.Federation do
           {:ok, pkg} -> {:ok, pkg}
           {:error, reason} -> {:error, reason}
         end
+
       false ->
         {:error, :not_found}
     end
@@ -852,25 +911,34 @@ defmodule Opsm.Federation do
   defp build_recommendations(package_name, available, missing_toolchain) do
     recs = []
 
-    recs = if Enum.empty?(available) do
-      recs ++ ["Package '#{package_name}' not found in any registry. Try 'opsm search #{package_name}'"]
-    else
-      recs ++ ["Package '#{package_name}' available from: #{Enum.map(available, & &1.forth) |> Enum.join(", ")}"]
-    end
+    recs =
+      if Enum.empty?(available) do
+        recs ++
+          [
+            "Package '#{package_name}' not found in any registry. Try 'opsm search #{package_name}'"
+          ]
+      else
+        recs ++
+          [
+            "Package '#{package_name}' available from: #{Enum.map(available, & &1.forth) |> Enum.join(", ")}"
+          ]
+      end
 
-    recs = if not Enum.empty?(missing_toolchain) do
-      missing = Enum.map(missing_toolchain, fn r ->
-        case r.toolchain_info do
-          {:error, info} -> "#{r.forth}: #{info.message}"
-          _ -> nil
-        end
-      end)
-      |> Enum.reject(&is_nil/1)
+    recs =
+      if not Enum.empty?(missing_toolchain) do
+        missing =
+          Enum.map(missing_toolchain, fn r ->
+            case r.toolchain_info do
+              {:error, info} -> "#{r.forth}: #{info.message}"
+              _ -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
 
-      recs ++ ["Missing toolchains for some registries:"] ++ Enum.map(missing, &("  - " <> &1))
-    else
-      recs
-    end
+        recs ++ ["Missing toolchains for some registries:"] ++ Enum.map(missing, &("  - " <> &1))
+      else
+        recs
+      end
 
     recs
   end
@@ -881,7 +949,11 @@ defmodule Opsm.Federation do
     known_alternatives = %{
       "axios" => %{npm: ["axios"], cargo: ["reqwest", "ureq"], hex: ["req", "httpoison"]},
       "lodash" => %{npm: ["lodash"], cargo: [], hex: [], pypi: ["toolz"]},
-      "express" => %{npm: ["express", "fastify", "koa"], cargo: ["actix-web", "axum"], hex: ["phoenix", "plug"]},
+      "express" => %{
+        npm: ["express", "fastify", "koa"],
+        cargo: ["actix-web", "axum"],
+        hex: ["phoenix", "plug"]
+      },
       "react" => %{npm: ["react"], cargo: ["dioxus", "yew", "leptos"]},
       "django" => %{pypi: ["django", "flask", "fastapi"]},
       "rails" => %{gem: ["rails", "sinatra", "hanami"]},
@@ -970,6 +1042,7 @@ defmodule Opsm.Federation do
 
   defp extract_authors(nil), do: []
   defp extract_authors(author) when is_binary(author), do: [author]
+
   defp extract_authors(authors) when is_list(authors) do
     Enum.map(authors, fn
       a when is_binary(a) -> a
@@ -978,6 +1051,7 @@ defmodule Opsm.Federation do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
   defp extract_authors(_), do: []
 
   defp extract_license(nil), do: nil
@@ -986,12 +1060,14 @@ defmodule Opsm.Federation do
   defp extract_license(_), do: nil
 
   defp extract_pypi_deps(nil), do: %{}
+
   defp extract_pypi_deps(deps) when is_list(deps) do
     deps
     |> Enum.map(&parse_pypi_dep/1)
     |> Enum.reject(&is_nil/1)
     |> Map.new()
   end
+
   defp extract_pypi_deps(deps) when is_map(deps), do: deps
 
   defp parse_pypi_dep(dep) when is_binary(dep) do
@@ -1000,18 +1076,22 @@ defmodule Opsm.Federation do
       _ -> nil
     end
   end
+
   defp parse_pypi_dep(_), do: nil
 
   defp parse_ipkg(content) do
     lines = String.split(content, "\n")
-    fields = Enum.reduce(lines, %{}, fn line, acc ->
-      case String.split(line, "=", parts: 2) do
-        [key, value] ->
-          Map.put(acc, String.trim(key), String.trim(value))
-        _ ->
-          acc
-      end
-    end)
+
+    fields =
+      Enum.reduce(lines, %{}, fn line, acc ->
+        case String.split(line, "=", parts: 2) do
+          [key, value] ->
+            Map.put(acc, String.trim(key), String.trim(value))
+
+          _ ->
+            acc
+        end
+      end)
 
     %ManifestFormat{
       name: fields["package"] || "unknown",
@@ -1024,6 +1104,7 @@ defmodule Opsm.Federation do
   end
 
   defp parse_authors_field(nil), do: []
+
   defp parse_authors_field(authors) do
     authors
     |> String.split(",")
@@ -1052,7 +1133,10 @@ defmodule Opsm.Federation do
   defp install_args(:guix, package, _opts), do: ["install", package]
   defp install_args(:flatpak, package, _opts), do: ["install", "-y", package]
   defp install_args(:snap, package, _opts), do: ["install", package]
-  defp install_args(:winget, package, _opts), do: ["install", "--accept-package-agreements", package]
+
+  defp install_args(:winget, package, _opts),
+    do: ["install", "--accept-package-agreements", package]
+
   defp install_args(:choco, package, _opts), do: ["install", "-y", package]
   defp install_args(:scoop, package, _opts), do: ["install", package]
   defp install_args(_, package, _opts), do: ["install", package]

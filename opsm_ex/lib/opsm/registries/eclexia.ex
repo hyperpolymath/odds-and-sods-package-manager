@@ -21,7 +21,8 @@ defmodule Opsm.Registries.Eclexia do
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.eclexia.org/api/v1"
-  @fallback_mode :git  # Until registry deployed
+  # Until registry deployed
+  @fallback_mode :git
 
   @doc """
   Fetch package metadata from eclexia registry.
@@ -99,6 +100,7 @@ defmodule Opsm.Registries.Eclexia do
 
   defp registry_exists?(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -164,11 +166,12 @@ defmodule Opsm.Registries.Eclexia do
   defp git_fetch(repo_url, version) do
     # Eclexia uses Cargo.toml (Rust workspace) for manifest
     # The [package] section contains name, version, description, etc.
-    manifest_url = case version do
-      "latest" -> "#{repo_url}/raw/main/Cargo.toml"
-      "main" -> "#{repo_url}/raw/main/Cargo.toml"
-      tag -> "#{repo_url}/raw/#{tag}/Cargo.toml"
-    end
+    manifest_url =
+      case version do
+        "latest" -> "#{repo_url}/raw/main/Cargo.toml"
+        "main" -> "#{repo_url}/raw/main/Cargo.toml"
+        tag -> "#{repo_url}/raw/#{tag}/Cargo.toml"
+      end
 
     case VerifiedHttp.get(manifest_url, receive_timeout: 10_000) do
       {:ok, %{body: body}} ->
@@ -206,7 +209,7 @@ defmodule Opsm.Registries.Eclexia do
           }
       end
 
-    pkg_name = manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim())
+    pkg_name = manifest.name || repo_url |> String.split("/") |> List.last() |> String.trim()
 
     pkg = %ResolvedPackage{
       package: pkg_name,
