@@ -23,18 +23,20 @@ defmodule Opsm.Registries.PuppetForge do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          get_in(body, ["current_release", "version"])
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            get_in(body, ["current_release", "version"])
+          else
+            version
+          end
 
         # Use current_release or fetch specific version
-        release_data = if version == "latest" do
-          body["current_release"] || %{}
-        else
-          fetch_release(slug, version)
-        end
+        release_data =
+          if version == "latest" do
+            body["current_release"] || %{}
+          else
+            fetch_release(slug, version)
+          end
 
         deps = extract_deps(release_data)
         {:ok, parse_package(name, body, release_data, target_version, deps)}
@@ -71,16 +73,18 @@ defmodule Opsm.Registries.PuppetForge do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        packages = results
-        |> Enum.take(limit)
-        |> Enum.map(fn mod ->
-          %{
-            name: mod["slug"] || mod["name"],
-            version: get_in(mod, ["current_release", "version"]),
-            description: get_in(mod, ["current_release", "metadata", "summary"]) || "",
-            downloads: mod["downloads"] || 0
-          }
-        end)
+        packages =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(fn mod ->
+            %{
+              name: mod["slug"] || mod["name"],
+              version: get_in(mod, ["current_release", "version"]),
+              description: get_in(mod, ["current_release", "metadata", "summary"]) || "",
+              downloads: mod["downloads"] || 0
+            }
+          end)
+
         {:ok, packages}
 
       {:ok, _} ->
@@ -116,9 +120,11 @@ defmodule Opsm.Registries.PuppetForge do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"releases" => releases}} when is_list(releases) ->
-        ver_list = releases
-        |> Enum.map(fn r -> r["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          releases
+          |> Enum.map(fn r -> r["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       {:ok, body} when is_map(body) ->
@@ -141,9 +147,11 @@ defmodule Opsm.Registries.PuppetForge do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => releases}} when is_list(releases) ->
-        ver_list = releases
-        |> Enum.map(fn r -> r["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_list =
+          releases
+          |> Enum.map(fn r -> r["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_list}
 
       _ ->
@@ -201,16 +209,18 @@ defmodule Opsm.Registries.PuppetForge do
     homepage = metadata["project_page"] || body["homepage_url"]
     repository = metadata["source"] || body["source_url"]
     authors = extract_authors(metadata)
-    keywords = metadata["tags"] || body["endorsement"] && [body["endorsement"]] || []
+    keywords = metadata["tags"] || (body["endorsement"] && [body["endorsement"]]) || []
 
     file_uri = release_data["file_uri"]
     download_url = if file_uri, do: "https://forgeapi.puppet.com#{file_uri}", else: nil
     checksum = release_data["file_md5"] || release_data["file_sha256"]
-    checksum_algo = cond do
-      release_data["file_sha256"] -> :sha256
-      release_data["file_md5"] -> :md5
-      true -> nil
-    end
+
+    checksum_algo =
+      cond do
+        release_data["file_sha256"] -> :sha256
+        release_data["file_md5"] -> :md5
+        true -> nil
+      end
 
     %ResolvedPackage{
       package: name,

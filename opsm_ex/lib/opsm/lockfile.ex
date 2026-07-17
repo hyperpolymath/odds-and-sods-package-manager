@@ -27,26 +27,27 @@ defmodule Opsm.Lockfile do
   alias Opsm.Crypto.Symmetric
 
   @lockfile_name "opsm.lock"
-  @lockfile_version "2"  # v2: Added crypto integration
+  # v2: Added crypto integration
+  @lockfile_version "2"
 
   @type package_entry :: %{
-    name: String.t(),
-    version: String.t(),
-    forth: atom(),
-    checksum: String.t() | nil,
-    checksum_algo: String.t() | nil,
-    source_url: String.t() | nil,
-    dependencies: [String.t()],
-    installed_at: String.t()
-  }
+          name: String.t(),
+          version: String.t(),
+          forth: atom(),
+          checksum: String.t() | nil,
+          checksum_algo: String.t() | nil,
+          source_url: String.t() | nil,
+          dependencies: [String.t()],
+          installed_at: String.t()
+        }
 
   @type lockfile :: %{
-    version: String.t(),
-    generated_at: String.t(),
-    packages: %{String.t() => package_entry()},
-    integrity_hash: String.t() | nil,
-    integrity_algo: String.t() | nil
-  }
+          version: String.t(),
+          generated_at: String.t(),
+          packages: %{String.t() => package_entry()},
+          integrity_hash: String.t() | nil,
+          integrity_algo: String.t() | nil
+        }
 
   @doc """
   Read the lock file from the current directory or specified path.
@@ -87,7 +88,8 @@ defmodule Opsm.Lockfile do
     if Keyword.get(opts, :verify_integrity, true) do
       case verify_integrity(lockfile) do
         :ok -> {:ok, lockfile}
-        {:ok, :no_integrity_hash} -> {:ok, lockfile}  # Allow old lockfiles without integrity
+        # Allow old lockfiles without integrity
+        {:ok, :no_integrity_hash} -> {:ok, lockfile}
         {:error, reason} -> {:error, reason}
       end
     else
@@ -105,26 +107,28 @@ defmodule Opsm.Lockfile do
   """
   def write(lockfile, path \\ @lockfile_name, opts \\ []) do
     # Compute integrity hash before writing (SHA3-512 for long-term security)
-    lockfile_with_integrity = if Keyword.get(opts, :compute_integrity, true) do
-      compute_integrity_hash(lockfile)
-    else
-      lockfile
-    end
+    lockfile_with_integrity =
+      if Keyword.get(opts, :compute_integrity, true) do
+        compute_integrity_hash(lockfile)
+      else
+        lockfile
+      end
 
     content = serialize_lockfile(lockfile_with_integrity)
 
     # Optionally encrypt the lockfile
-    final_content = if Keyword.get(opts, :encrypt, false) do
-      key = Keyword.fetch!(opts, :key)
-      context = "opsm-lockfile-v#{@lockfile_version}"
+    final_content =
+      if Keyword.get(opts, :encrypt, false) do
+        key = Keyword.fetch!(opts, :key)
+        context = "opsm-lockfile-v#{@lockfile_version}"
 
-      case Symmetric.encrypt(content, key, context) do
-        {:ok, encrypted} -> encrypted
-        {:error, reason} -> raise "Lockfile encryption failed: #{reason}"
+        case Symmetric.encrypt(content, key, context) do
+          {:ok, encrypted} -> encrypted
+          {:error, reason} -> raise "Lockfile encryption failed: #{reason}"
+        end
+      else
+        content
       end
-    else
-      content
-    end
 
     case File.write(path, final_content) do
       :ok ->
@@ -151,10 +155,7 @@ defmodule Opsm.Lockfile do
     json = Jason.encode!(data, pretty: true)
     hash = Hash.hash_provenance(json)
 
-    %{lockfile |
-      integrity_hash: hash,
-      integrity_algo: "sha3-512"
-    }
+    %{lockfile | integrity_hash: hash, integrity_algo: "sha3-512"}
   end
 
   @doc """
@@ -204,7 +205,8 @@ defmodule Opsm.Lockfile do
       version: package_info.version,
       forth: package_info.forth,
       checksum: Map.get(package_info, :checksum),
-      checksum_algo: Map.get(package_info, :checksum_algo, "blake2b"),  # v1.0.1: Default to BLAKE2b
+      # v1.0.1: Default to BLAKE2b
+      checksum_algo: Map.get(package_info, :checksum_algo, "blake2b"),
       source_url: Map.get(package_info, :source_url),
       dependencies: Map.get(package_info, :dependencies, []),
       slsa_level: Map.get(package_info, :slsa_level),
@@ -215,10 +217,12 @@ defmodule Opsm.Lockfile do
     key = "#{package_info.name}@#{package_info.forth}"
     packages = Map.put(lockfile.packages, key, entry)
 
-    %{lockfile |
-      packages: packages,
-      generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
-      integrity_hash: nil  # Will be computed on write
+    %{
+      lockfile
+      | packages: packages,
+        generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+        # Will be computed on write
+        integrity_hash: nil
     }
   end
 
@@ -229,10 +233,12 @@ defmodule Opsm.Lockfile do
     key = "#{name}@#{forth}"
     packages = Map.delete(lockfile.packages, key)
 
-    %{lockfile |
-      packages: packages,
-      generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
-      integrity_hash: nil  # Will be recomputed on write
+    %{
+      lockfile
+      | packages: packages,
+        generated_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+        # Will be recomputed on write
+        integrity_hash: nil
     }
   end
 
@@ -306,13 +312,15 @@ defmodule Opsm.Lockfile do
   Returns list of differences.
   """
   def check_sync(lockfile, installed_packages) do
-    locked_set = lockfile.packages
-    |> Map.keys()
-    |> MapSet.new()
+    locked_set =
+      lockfile.packages
+      |> Map.keys()
+      |> MapSet.new()
 
-    installed_set = installed_packages
-    |> Enum.map(fn p -> "#{p.name}@#{p.forth}" end)
-    |> MapSet.new()
+    installed_set =
+      installed_packages
+      |> Enum.map(fn p -> "#{p.name}@#{p.forth}" end)
+      |> MapSet.new()
 
     missing_from_lock = MapSet.difference(installed_set, locked_set)
     missing_from_install = MapSet.difference(locked_set, installed_set)
@@ -343,6 +351,7 @@ defmodule Opsm.Lockfile do
       {:ok, path}
     else
       parent = Path.dirname(dir)
+
       if parent == dir do
         {:error, :not_found}
       else
@@ -361,6 +370,7 @@ defmodule Opsm.Lockfile do
           integrity_hash: Map.get(data, "integrity_hash"),
           integrity_algo: Map.get(data, "integrity_algo", "sha3-512")
         }
+
         {:ok, lockfile}
 
       {:error, reason} ->
@@ -381,6 +391,7 @@ defmodule Opsm.Lockfile do
         dependencies: Map.get(value, "dependencies", []),
         installed_at: Map.get(value, "installed_at", "")
       }
+
       {key, entry}
     end)
     |> Map.new()
@@ -399,6 +410,7 @@ defmodule Opsm.Lockfile do
           dependencies: Map.get(value, "dependencies", []),
           installed_at: Map.get(value, "installed_at", "")
         }
+
         {key, entry}
       end)
       |> Map.new()
@@ -429,6 +441,7 @@ defmodule Opsm.Lockfile do
         "dependencies" => entry.dependencies,
         "installed_at" => entry.installed_at
       }
+
       {key, value}
     end)
     |> Map.new()

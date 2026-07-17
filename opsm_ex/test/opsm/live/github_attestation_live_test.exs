@@ -27,7 +27,9 @@ defmodule Opsm.Live.GithubAttestationLiveTest do
   defp attested_digest, do: System.get_env("OPSM_ATTESTED_DIGEST", @default_digest)
 
   test "attestations API returns records for an attested artifact digest" do
-    assert {:ok, records} = GithubAttestation.fetch_attestations(attested_repo(), attested_digest())
+    assert {:ok, records} =
+             GithubAttestation.fetch_attestations(attested_repo(), attested_digest())
+
     assert records != [], "expected at least one attestation record"
     assert Enum.all?(records, &is_map/1)
   end
@@ -41,7 +43,11 @@ defmodule Opsm.Live.GithubAttestationLiveTest do
   test "full chain: fetch, verify via gh, gate builder trust on verification" do
     # ~12MB download; needs `gh` on PATH with auth. Mirrors the manual
     # acceptance run for issue #56.
-    tmp = Path.join(System.tmp_dir!(), "opsm-attest-live-#{System.unique_integer([:positive])}.tar.gz")
+    tmp =
+      Path.join(
+        System.tmp_dir!(),
+        "opsm-attest-live-#{System.unique_integer([:positive])}.tar.gz"
+      )
 
     try do
       url = "https://github.com/cli/cli/releases/download/v2.92.0/gh_2.92.0_linux_amd64.tar.gz"

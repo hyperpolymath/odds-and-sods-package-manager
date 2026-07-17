@@ -138,20 +138,22 @@ defmodule Opsm.Integration.PipelineTest do
       lockfile = Lockfile.new()
 
       # Add packages
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "lodash",
-        version: "4.17.21",
-        forth: :npm,
-        checksum: "sha256:abc123",
-        source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "lodash",
+          version: "4.17.21",
+          forth: :npm,
+          checksum: "sha256:abc123",
+          source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+        })
 
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "serde",
-        version: "1.0.195",
-        forth: :cargo,
-        checksum: "sha256:def456"
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "serde",
+          version: "1.0.195",
+          forth: :cargo,
+          checksum: "sha256:def456"
+        })
 
       # Save
       {:ok, _} = Lockfile.write(lockfile, lock_path)
@@ -173,9 +175,10 @@ defmodule Opsm.Integration.PipelineTest do
     test "lockfile sync check", %{tmp_dir: tmp_dir} do
       lock_path = Path.join(tmp_dir, "opsm.lock")
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "pkg2", version: "1.0.0", forth: :npm})
 
       {:ok, _} = Lockfile.write(lockfile, lock_path)
       {:ok, loaded} = Lockfile.read(lock_path)
@@ -208,11 +211,12 @@ defmodule Opsm.Integration.PipelineTest do
 
     test "history recording" do
       # Record an operation
-      id = Maintenance.record_history("test_integration", %{
-        package: "test-pkg",
-        version: "1.0.0",
-        action: "install"
-      })
+      id =
+        Maintenance.record_history("test_integration", %{
+          package: "test-pkg",
+          version: "1.0.0",
+          action: "install"
+        })
 
       assert is_binary(id)
       assert String.length(id) == 16
@@ -271,13 +275,14 @@ defmodule Opsm.Integration.PipelineTest do
       _txn = Transaction.complete(txn)
 
       # Step 4: Update lockfile
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "fake-pkg",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "sha256:fakechecksum"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "fake-pkg",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "sha256:fakechecksum"
+        })
 
       {:ok, _} = Lockfile.write(lockfile, lock_path)
 

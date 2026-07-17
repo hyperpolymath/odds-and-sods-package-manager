@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
+let RuntimePlugin = import "../contract/runtime-plugin.ncl" in
 {
   name = "julia",
   description = "julia — High-performance dynamic programming language",

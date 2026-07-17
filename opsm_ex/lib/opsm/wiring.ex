@@ -9,6 +9,7 @@ defmodule Opsm.Wiring do
 
   alias Opsm.Clients.{CheckyMonkey, Oikos, Palimpsest}
   alias Opsm.{Errors, ManifestIngestion}
+
   alias Opsm.Types.{
     OpsmConfig,
     CheckyMonkeyRequest,
@@ -23,8 +24,10 @@ defmodule Opsm.Wiring do
   def run_status(%OpsmConfig{} = config) do
     clients = [
       {"oikos", Oikos.new(config.oikos, config.http), &Oikos.health/1},
-      {"checky-monkey", CheckyMonkey.new(config.checky_monkey, config.http), &CheckyMonkey.health/1},
-      {"palimpsest-license", Palimpsest.new(config.palimpsest_license, config.http), &Palimpsest.health/1}
+      {"checky-monkey", CheckyMonkey.new(config.checky_monkey, config.http),
+       &CheckyMonkey.health/1},
+      {"palimpsest-license", Palimpsest.new(config.palimpsest_license, config.http),
+       &Palimpsest.health/1}
     ]
 
     IO.puts("OPSM Service Status")
@@ -53,7 +56,8 @@ defmodule Opsm.Wiring do
     IO.puts("")
 
     with {:ok, ingestion} <- ManifestIngestion.ingest(path),
-         {:ok, _license_result} <- run_license_check(config, ingestion.manifest_path, ingestion.manifest),
+         {:ok, _license_result} <-
+           run_license_check(config, ingestion.manifest_path, ingestion.manifest),
          :ok <- run_sustainability_check(config, ingestion.manifest),
          :ok <- validate_publish_metadata(ingestion.manifest) do
       maybe_run_checky(config, ingestion.manifest_path)
@@ -76,13 +80,19 @@ defmodule Opsm.Wiring do
     IO.puts("")
 
     oikos_client = Oikos.new(config.oikos, config.http)
-    analysis_request = %OikosAnalysisRequest{repository_url: package, branch: nil, commit_sha: nil}
+
+    analysis_request = %OikosAnalysisRequest{
+      repository_url: package,
+      branch: nil,
+      commit_sha: nil
+    }
 
     case Oikos.analyze_repository(oikos_client, analysis_request) do
       {:ok, resp} ->
         IO.puts("Sustainability Analysis (oikos)")
         IO.puts("--------------------------------")
         print_oikos_summary(resp)
+
       {:error, reason} ->
         IO.puts("Sustainability Analysis (oikos)")
         IO.puts("--------------------------------")
@@ -95,7 +105,12 @@ defmodule Opsm.Wiring do
 
     artifact_path = if File.exists?(package), do: package, else: File.cwd!()
     palimpsest_client = Palimpsest.new(config.palimpsest_license, config.http)
-    request = %PalimpsestRequest{artifact_path: artifact_path, include_transitive: true, target_license: nil}
+
+    request = %PalimpsestRequest{
+      artifact_path: artifact_path,
+      include_transitive: true,
+      target_license: nil
+    }
 
     case Palimpsest.analyze(palimpsest_client, request) do
       {:ok, resp} ->
@@ -103,11 +118,13 @@ defmodule Opsm.Wiring do
         compat = resp.compatibility
         status = if compat.compatible, do: "compatible", else: "conflicts"
         IO.puts("  ✓ Compatibility: #{status}")
+
         if not compat.compatible do
           for conflict <- compat.conflicts || [] do
             IO.puts("    - #{conflict.license1} vs #{conflict.license2}: #{conflict.reason}")
           end
         end
+
       {:error, reason} ->
         IO.puts("  ⚠ License service unavailable: #{reason}")
     end
@@ -180,8 +197,8 @@ defmodule Opsm.Wiring do
         IO.puts("  ⚠ Low sustainability score: #{score}/100 — consider improving before publish")
         :ok
 
-      # No {:error, _} clause: analyze_package/4 is deliberately infallible —
-      # it falls back to heuristic scoring when the oikos service is unreachable.
+        # No {:error, _} clause: analyze_package/4 is deliberately infallible —
+        # it falls back to heuristic scoring when the oikos service is unreachable.
     end
   end
 
@@ -201,7 +218,9 @@ defmodule Opsm.Wiring do
         else: errors
 
     case errors do
-      [] -> :ok
+      [] ->
+        :ok
+
       _ ->
         combined = Enum.join(errors, "; ")
         {:error, "Publish metadata validation failed: #{combined}"}
@@ -284,6 +303,7 @@ defmodule Opsm.Wiring do
 
     if results[:property_tests] do
       IO.puts("    property tests: #{results.property_tests.status}")
+
       if results.property_tests.tests_passed do
         IO.puts("      passed: #{results.property_tests.tests_passed}")
       end
@@ -291,6 +311,7 @@ defmodule Opsm.Wiring do
 
     if results[:type_checking] do
       IO.puts("    type checking: #{results.type_checking.status}")
+
       if results.type_checking.errors do
         IO.puts("      errors: #{length(results.type_checking.errors)}")
       end
@@ -302,7 +323,9 @@ defmodule Opsm.Wiring do
   defp git_metadata(dir) do
     case Opsm.SafeExec.cmd("git", ["-C", dir, "rev-parse", "HEAD"], stderr_to_stdout: true) do
       {commit, 0} ->
-        case Opsm.SafeExec.cmd("git", ["-C", dir, "remote", "get-url", "origin"], stderr_to_stdout: true) do
+        case Opsm.SafeExec.cmd("git", ["-C", dir, "remote", "get-url", "origin"],
+               stderr_to_stdout: true
+             ) do
           {url, 0} ->
             {:ok, %{repo_url: String.trim(url), commit_sha: String.trim(commit)}}
 

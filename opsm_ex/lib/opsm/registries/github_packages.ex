@@ -20,7 +20,9 @@ defmodule Opsm.Registries.GithubPackages do
   """
   def fetch_package(name, version \\ "latest") do
     {owner, package_name, package_type} = parse_package_name(name)
-    url = "#{@api_url}/users/#{owner}/packages/#{package_type}/#{URI.encode(package_name)}/versions"
+
+    url =
+      "#{@api_url}/users/#{owner}/packages/#{package_type}/#{URI.encode(package_name)}/versions"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, versions_list} when is_list(versions_list) ->
@@ -69,17 +71,21 @@ defmodule Opsm.Registries.GithubPackages do
   """
   def search(query, opts \\ []) do
     per_page = Keyword.get(opts, :limit, 20)
-    url = "#{@api_url}/search/repositories?q=#{URI.encode_www_form(query)}+has:packages&per_page=#{per_page}"
+
+    url =
+      "#{@api_url}/search/repositories?q=#{URI.encode_www_form(query)}+has:packages&per_page=#{per_page}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"items" => items}} when is_list(items) ->
-        results = Enum.map(items, fn item ->
-          %{
-            name: item["full_name"],
-            version: nil,
-            description: item["description"]
-          }
-        end)
+        results =
+          Enum.map(items, fn item ->
+            %{
+              name: item["full_name"],
+              version: nil,
+              description: item["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -109,13 +115,17 @@ defmodule Opsm.Registries.GithubPackages do
   """
   def versions(name) do
     {owner, package_name, package_type} = parse_package_name(name)
-    url = "#{@api_url}/users/#{owner}/packages/#{package_type}/#{URI.encode(package_name)}/versions"
+
+    url =
+      "#{@api_url}/users/#{owner}/packages/#{package_type}/#{URI.encode(package_name)}/versions"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, versions_list} when is_list(versions_list) ->
-        version_names = Enum.map(versions_list, fn v ->
-          extract_version_tag(v)
-        end)
+        version_names =
+          Enum.map(versions_list, fn v ->
+            extract_version_tag(v)
+          end)
+
         {:ok, version_names}
 
       {:ok, _} ->
@@ -169,11 +179,12 @@ defmodule Opsm.Registries.GithubPackages do
   defp parse_github_package(owner, package_name, package_type, version_data, version) do
     full_name = "#{owner}/#{package_name}"
 
-    registry_base = case package_type do
-      "container" -> "https://ghcr.io/#{owner}/#{package_name}"
-      "npm" -> "https://npm.pkg.github.com/#{owner}/#{package_name}"
-      _ -> "https://github.com/#{owner}/#{package_name}/packages"
-    end
+    registry_base =
+      case package_type do
+        "container" -> "https://ghcr.io/#{owner}/#{package_name}"
+        "npm" -> "https://npm.pkg.github.com/#{owner}/#{package_name}"
+        _ -> "https://github.com/#{owner}/#{package_name}/packages"
+      end
 
     manifest = %ManifestFormat{
       name: full_name,

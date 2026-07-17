@@ -64,8 +64,10 @@ defmodule Opsm.ConfigTest do
 
       # Should return error (unless config exists in default locations)
       case result do
-        {:ok, _} -> assert true  # Config found in default location
-        {:error, _} -> assert true  # No config found (expected)
+        # Config found in default location
+        {:ok, _} -> assert true
+        # No config found (expected)
+        {:error, _} -> assert true
       end
     end
   end

@@ -33,18 +33,19 @@ defmodule Opsm.Manifest.Writer do
   """
   @spec to_package_json(ManifestFormat.t()) :: String.t()
   def to_package_json(%ManifestFormat{} = m) do
-    json = %{
-      "name" => m.name,
-      "version" => m.version || "0.0.0",
-      "description" => m.description,
-      "license" => m.license,
-      "homepage" => m.homepage,
-      "repository" => m.repository,
-      "keywords" => m.keywords || [],
-      "dependencies" => format_npm_deps(m.dependencies),
-      "devDependencies" => format_npm_deps(m.dev_dependencies)
-    }
-    |> reject_nil_values()
+    json =
+      %{
+        "name" => m.name,
+        "version" => m.version || "0.0.0",
+        "description" => m.description,
+        "license" => m.license,
+        "homepage" => m.homepage,
+        "repository" => m.repository,
+        "keywords" => m.keywords || [],
+        "dependencies" => format_npm_deps(m.dependencies),
+        "devDependencies" => format_npm_deps(m.dev_dependencies)
+      }
+      |> reject_nil_values()
 
     json =
       if m.authors != [] do
@@ -75,7 +76,11 @@ defmodule Opsm.Manifest.Writer do
       ~s(edition = "2021")
     ]
 
-    lines = if m.description, do: lines ++ [~s(description = "#{escape_toml(m.description)}")], else: lines
+    lines =
+      if m.description,
+        do: lines ++ [~s(description = "#{escape_toml(m.description)}")],
+        else: lines
+
     lines = if m.license, do: lines ++ [~s(license = "#{m.license}")], else: lines
     lines = if m.repository, do: lines ++ [~s(repository = "#{m.repository}")], else: lines
 
@@ -193,7 +198,11 @@ defmodule Opsm.Manifest.Writer do
       ~s(version = "#{m.version || "0.0.0"}")
     ]
 
-    lines = if m.description, do: lines ++ [~s(description = "#{escape_toml(m.description)}")], else: lines
+    lines =
+      if m.description,
+        do: lines ++ [~s(description = "#{escape_toml(m.description)}")],
+        else: lines
+
     lines = if m.license, do: lines ++ [~s(license = "#{m.license}")], else: lines
 
     lines =
@@ -229,7 +238,7 @@ defmodule Opsm.Manifest.Writer do
         lines
       end
 
-    lines ++ [""] |> Enum.join("\n")
+    (lines ++ [""]) |> Enum.join("\n")
   end
 
   @doc """
@@ -242,7 +251,11 @@ defmodule Opsm.Manifest.Writer do
       "version: #{m.version || "0.0.0"}"
     ]
 
-    lines = if m.description, do: lines ++ ["description: \"#{escape_yaml(m.description)}\""], else: lines
+    lines =
+      if m.description,
+        do: lines ++ ["description: \"#{escape_yaml(m.description)}\""],
+        else: lines
+
     lines = if m.homepage, do: lines ++ ["homepage: #{m.homepage}"], else: lines
     lines = if m.repository, do: lines ++ ["repository: #{m.repository}"], else: lines
 
@@ -320,7 +333,11 @@ defmodule Opsm.Manifest.Writer do
       ~s(version = "#{m.version || "0.0.0"}")
     ]
 
-    lines = if m.description, do: lines ++ [~s(description = "#{escape_toml(m.description)}")], else: lines
+    lines =
+      if m.description,
+        do: lines ++ [~s(description = "#{escape_toml(m.description)}")],
+        else: lines
+
     lines = if m.license, do: lines ++ [~s(license = "#{m.license}")], else: lines
     lines = if m.homepage, do: lines ++ [~s(homepage = "#{m.homepage}")], else: lines
     lines = if m.repository, do: lines ++ [~s(repository = "#{m.repository}")], else: lines
@@ -398,11 +415,16 @@ defmodule Opsm.Manifest.Writer do
   end
 
   defp format_npm_deps(nil), do: %{}
+
   defp format_npm_deps(deps) when is_map(deps) do
     Enum.map(deps, fn
       {name, version} when is_binary(version) ->
         # Ensure npm-style version prefix
-        {name, if(String.starts_with?(version, "^") or String.starts_with?(version, "~") or String.starts_with?(version, ">"), do: version, else: "^#{version}")}
+        {name,
+         if(
+           String.starts_with?(version, "^") or String.starts_with?(version, "~") or
+             String.starts_with?(version, ">"), do: version, else: "^#{version}")}
+
       {name, version} ->
         {name, "^#{version}"}
     end)

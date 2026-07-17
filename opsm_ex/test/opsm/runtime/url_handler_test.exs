@@ -52,8 +52,7 @@ defmodule Opsm.Runtime.UrlHandlerTest do
     @go_handler %{
       "versions_url" => "https://go.dev/dl/?mode=json&include=all",
       "version_key_pattern" => "^go[0-9]+\\.[0-9]+",
-      "archive_url_template" =>
-        "https://go.dev/dl/{{go_version}}.{{go_os}}-{{go_arch}}.tar.gz"
+      "archive_url_template" => "https://go.dev/dl/{{go_version}}.{{go_os}}-{{go_arch}}.tar.gz"
     }
 
     test "linux_amd64 builds correct URL" do
@@ -91,14 +90,17 @@ defmodule Opsm.Runtime.UrlHandlerTest do
     end
 
     test "windows_amd64 → win-x64" do
-      assert {:ok, url} = UrlHandler.archive_url("nodejs", "20.0.0", :windows_amd64, @node_handler)
+      assert {:ok, url} =
+               UrlHandler.archive_url("nodejs", "20.0.0", :windows_amd64, @node_handler)
+
       assert url == "https://nodejs.org/dist/v20.0.0/node-v20.0.0-win-x64.tar.gz"
     end
   end
 
   describe "archive_url/4 — dart" do
     @dart_handler %{
-      "versions_url" => "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION",
+      "versions_url" =>
+        "https://storage.googleapis.com/dart-archive/channels/stable/release/latest/VERSION",
       "archive_url_template" =>
         "https://storage.googleapis.com/dart-archive/channels/stable/release/{{version}}/sdk/dartsdk-{{dart_os}}-{{dart_arch}}-release.zip"
     }
@@ -142,12 +144,16 @@ defmodule Opsm.Runtime.UrlHandlerTest do
     }
 
     test "linux_amd64 builds dl.k8s.io URL" do
-      assert {:ok, url} = UrlHandler.archive_url("kubectl", "1.32.0", :linux_amd64, @kubectl_handler)
+      assert {:ok, url} =
+               UrlHandler.archive_url("kubectl", "1.32.0", :linux_amd64, @kubectl_handler)
+
       assert url == "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
     end
 
     test "darwin_arm64 builds dl.k8s.io URL" do
-      assert {:ok, url} = UrlHandler.archive_url("kubectl", "1.32.0", :darwin_arm64, @kubectl_handler)
+      assert {:ok, url} =
+               UrlHandler.archive_url("kubectl", "1.32.0", :darwin_arm64, @kubectl_handler)
+
       assert url == "https://dl.k8s.io/release/v1.32.0/bin/darwin/arm64/kubectl"
     end
   end
@@ -155,6 +161,7 @@ defmodule Opsm.Runtime.UrlHandlerTest do
   describe "archive_url/4 — unknown tool" do
     test "returns no_url_handler for unrecognised tool" do
       handler = %{"archive_url_template" => "https://example.com/{{version}}"}
+
       assert {:error, :no_url_handler} =
                UrlHandler.archive_url("unknowntool999", "1.0.0", :linux_amd64, handler)
     end
@@ -176,6 +183,7 @@ defmodule Opsm.Runtime.UrlHandlerTest do
         "0.11.0" => %{"x86_64-linux" => %{"tarball" => "..."}},
         "master" => %{"x86_64-linux" => %{"tarball" => "..."}}
       }
+
       pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
 
       result = UrlHandler.process_versions_body(body, pattern, "zig")
@@ -215,6 +223,7 @@ defmodule Opsm.Runtime.UrlHandlerTest do
         %{"version" => "v18.0.0", "lts" => "Hydrogen"},
         %{"version" => "v16.0.0", "lts" => "Gallium"}
       ]
+
       pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
 
       result = UrlHandler.process_versions_body(body, pattern, "nodejs")
@@ -273,6 +282,7 @@ defmodule Opsm.Runtime.UrlHandlerTest do
         "1.1.0-beta.1" => %{},
         "2.0.0" => %{}
       }
+
       pattern = "^[0-9]+\\.[0-9]+\\.[0-9]+$"
 
       result = UrlHandler.process_versions_body(body, pattern, "anytool")

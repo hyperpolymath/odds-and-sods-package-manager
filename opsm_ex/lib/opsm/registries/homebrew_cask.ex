@@ -22,14 +22,21 @@ defmodule Opsm.Registries.HomebrewCask do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"],
+            else: version
+
         {:ok, parse_cask(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -42,14 +49,16 @@ defmodule Opsm.Registries.HomebrewCask do
       description: build_description(body),
       license: nil,
       homepage: body["homepage"],
-      repository: "https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/#{cask_dir_prefix(name)}/#{name}.rb",
+      repository:
+        "https://github.com/Homebrew/homebrew-cask/blob/HEAD/Casks/#{cask_dir_prefix(name)}/#{name}.rb",
       dependencies: deps
     }
 
-    download_url = case body["url"] do
-      url when is_binary(url) -> url
-      _ -> nil
-    end
+    download_url =
+      case body["url"] do
+        url when is_binary(url) -> url
+        _ -> nil
+      end
 
     %ResolvedPackage{
       package: name,
@@ -59,19 +68,22 @@ defmodule Opsm.Registries.HomebrewCask do
       tarball_url: download_url,
       checksum: body["sha256"],
       checksum_algo: if(body["sha256"] && body["sha256"] != "no_check", do: :sha256),
-      attestations: [],
+      attestations: []
     }
   end
 
   defp build_description(body) do
     _name_parts = [body["name"] | List.wrap(nil)]
-    primary_name = case body["name"] do
-      names when is_list(names) -> List.first(names)
-      name when is_binary(name) -> name
-      _ -> nil
-    end
+
+    primary_name =
+      case body["name"] do
+        names when is_list(names) -> List.first(names)
+        name when is_binary(name) -> name
+        _ -> nil
+      end
 
     desc = body["desc"]
+
     case {primary_name, desc} do
       {nil, nil} -> nil
       {nil, d} -> d
@@ -87,11 +99,13 @@ defmodule Opsm.Registries.HomebrewCask do
   defp extract_cask_dependencies(body) do
     deps = body["depends_on"] || %{}
 
-    formula_deps = (deps["formula"] || [])
-                   |> Enum.map(fn d -> {d, "*"} end)
+    formula_deps =
+      (deps["formula"] || [])
+      |> Enum.map(fn d -> {d, "*"} end)
 
-    cask_deps = (deps["cask"] || [])
-                |> Enum.map(fn d -> {d, "*"} end)
+    cask_deps =
+      (deps["cask"] || [])
+      |> Enum.map(fn d -> {d, "*"} end)
 
     (formula_deps ++ cask_deps) |> Map.new()
   end
@@ -118,30 +132,34 @@ defmodule Opsm.Registries.HomebrewCask do
       {:ok, casks} when is_list(casks) ->
         query_down = String.downcase(query)
 
-        results = casks
-        |> Enum.filter(fn cask ->
-          token = String.downcase(cask["token"] || "")
-          desc = String.downcase(cask["desc"] || "")
-          names = (cask["name"] || [])
-                  |> List.wrap()
-                  |> Enum.map(&String.downcase/1)
+        results =
+          casks
+          |> Enum.filter(fn cask ->
+            token = String.downcase(cask["token"] || "")
+            desc = String.downcase(cask["desc"] || "")
 
-          String.contains?(token, query_down) or
-          String.contains?(desc, query_down) or
-          Enum.any?(names, &String.contains?(&1, query_down))
-        end)
-        |> Enum.take(20)
-        |> Enum.map(fn cask ->
-          %{
-            name: cask["token"],
-            version: cask["version"],
-            description: cask["desc"]
-          }
-        end)
+            names =
+              (cask["name"] || [])
+              |> List.wrap()
+              |> Enum.map(&String.downcase/1)
+
+            String.contains?(token, query_down) or
+              String.contains?(desc, query_down) or
+              Enum.any?(names, &String.contains?(&1, query_down))
+          end)
+          |> Enum.take(20)
+          |> Enum.map(fn cask ->
+            %{
+              name: cask["token"],
+              version: cask["version"],
+              description: cask["desc"]
+            }
+          end)
 
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

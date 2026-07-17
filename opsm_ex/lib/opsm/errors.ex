@@ -109,8 +109,7 @@ defmodule Opsm.Errors do
   """
   def missing_toolchain(forth, required_tools) do
     tools = Enum.join(required_tools, ", ")
-    {:toolchain, "Missing toolchain for @#{forth}",
-     "Install one of: #{tools}"}
+    {:toolchain, "Missing toolchain for @#{forth}", "Install one of: #{tools}"}
   end
 
   @doc """
@@ -141,6 +140,7 @@ defmodule Opsm.Errors do
   """
   def trust_failed(package, reasons) do
     reasons_str = Enum.join(reasons, "\n    - ")
+
     {:security, "Trust verification failed for '#{package}'",
      "Issues found:\n    - #{reasons_str}\n  Use --skip-trust to bypass (not recommended)"}
   end
@@ -226,8 +226,7 @@ defmodule Opsm.Errors do
   end
 
   def invalid_url(service, url) do
-    {:config, "Invalid URL for #{service}: #{url}",
-     "URLs must start with http:// or https://"}
+    {:config, "Invalid URL for #{service}: #{url}", "URLs must start with http:// or https://"}
   end
 
   @doc """
@@ -242,7 +241,6 @@ defmodule Opsm.Errors do
   Command not implemented.
   """
   def not_implemented(command) do
-    {:internal, "'#{command}' is not yet implemented",
-     "This feature is coming soon"}
+    {:internal, "'#{command}' is not yet implemented", "This feature is coming soon"}
   end
 end

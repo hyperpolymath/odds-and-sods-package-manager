@@ -41,9 +41,12 @@ defmodule Opsm.Registries.Grafana do
 
   defp resolve_version(body, "latest") do
     case body["version"] do
-      v when is_binary(v) -> v
+      v when is_binary(v) ->
+        v
+
       _ ->
         versions_list = body["versions"] || []
+
         case versions_list do
           [%{"version" => v} | _] -> v
           _ -> "0.0.0"
@@ -61,30 +64,35 @@ defmodule Opsm.Registries.Grafana do
     page_size = Keyword.get(opts, :limit, 20)
     type_filter = Keyword.get(opts, :type, nil)
 
-    url = "#{@api_url}?q=#{URI.encode_www_form(query)}&pageSize=#{page_size}" <>
-      if(type_filter, do: "&type=#{type_filter}", else: "")
+    url =
+      "#{@api_url}?q=#{URI.encode_www_form(query)}&pageSize=#{page_size}" <>
+        if(type_filter, do: "&type=#{type_filter}", else: "")
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"items" => plugins}} when is_list(plugins) ->
-        results = Enum.map(plugins, fn plugin ->
-          %{
-            name: plugin["slug"] || plugin["id"],
-            version: plugin["version"],
-            description: plugin["description"]
-          }
-        end)
+        results =
+          Enum.map(plugins, fn plugin ->
+            %{
+              name: plugin["slug"] || plugin["id"],
+              version: plugin["version"],
+              description: plugin["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, plugins} when is_list(plugins) ->
-        results = plugins
-        |> Enum.take(page_size)
-        |> Enum.map(fn plugin ->
-          %{
-            name: plugin["slug"] || plugin["id"],
-            version: plugin["version"],
-            description: plugin["description"]
-          }
-        end)
+        results =
+          plugins
+          |> Enum.take(page_size)
+          |> Enum.map(fn plugin ->
+            %{
+              name: plugin["slug"] || plugin["id"],
+              version: plugin["version"],
+              description: plugin["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -116,15 +124,19 @@ defmodule Opsm.Registries.Grafana do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"items" => versions_list}} when is_list(versions_list) ->
-        ver_strs = versions_list
-        |> Enum.map(fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          versions_list
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, versions_list} when is_list(versions_list) ->
-        ver_strs = versions_list
-        |> Enum.map(fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          versions_list
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, _} ->
@@ -147,9 +159,11 @@ defmodule Opsm.Registries.Grafana do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions_list}} when is_list(versions_list) ->
-        ver_strs = versions_list
-        |> Enum.map(fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          versions_list
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, body} ->
@@ -179,15 +193,16 @@ defmodule Opsm.Registries.Grafana do
       homepage: body["url"] || "https://grafana.com/grafana/plugins/#{name}",
       repository: body["links"]["source"] || body["sourceUrl"],
       authors: extract_authors(body),
-      keywords: [plugin_type | (body["keywords"] || [])],
+      keywords: [plugin_type | body["keywords"] || []],
       dependencies: deps,
       dev_dependencies: %{},
       source_forth: :grafana,
       raw_manifest: body
     }
 
-    download_url = body["downloadUrl"] ||
-      "https://grafana.com/api/plugins/#{name}/versions/#{version}/download"
+    download_url =
+      body["downloadUrl"] ||
+        "https://grafana.com/api/plugins/#{name}/versions/#{version}/download"
 
     %ResolvedPackage{
       package: name,
@@ -204,17 +219,19 @@ defmodule Opsm.Registries.Grafana do
   end
 
   defp extract_dependencies(body) do
-    grafana_dep = case body["grafanaDependency"] || body["grafanaVersion"] do
-      nil -> %{}
-      constraint -> %{"grafana" => constraint}
-    end
+    grafana_dep =
+      case body["grafanaDependency"] || body["grafanaVersion"] do
+        nil -> %{}
+        constraint -> %{"grafana" => constraint}
+      end
 
-    plugin_deps = (body["dependencies"] || body["pluginDependencies"] || [])
-    |> Enum.reduce(grafana_dep, fn
-      %{"id" => id, "version" => ver}, acc -> Map.put(acc, id, ver)
-      %{"id" => id}, acc -> Map.put(acc, id, "*")
-      _, acc -> acc
-    end)
+    plugin_deps =
+      (body["dependencies"] || body["pluginDependencies"] || [])
+      |> Enum.reduce(grafana_dep, fn
+        %{"id" => id, "version" => ver}, acc -> Map.put(acc, id, ver)
+        %{"id" => id}, acc -> Map.put(acc, id, "*")
+        _, acc -> acc
+      end)
 
     plugin_deps
   end

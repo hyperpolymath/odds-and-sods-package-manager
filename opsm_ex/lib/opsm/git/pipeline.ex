@@ -85,12 +85,13 @@ defmodule Opsm.Git.Pipeline do
          :ok <- log_detection(build_system, config_file),
          {:ok, _} <- maybe_install_deps(repo_path, build_system, opts),
          {:ok, output} <- do_build(repo_path, build_system, opts) do
-      {:ok, %{
-        path: repo_path,
-        build_system: build_system,
-        config_file: config_file,
-        output: output
-      }}
+      {:ok,
+       %{
+         path: repo_path,
+         build_system: build_system,
+         config_file: config_file,
+         output: output
+       }}
     end
   end
 

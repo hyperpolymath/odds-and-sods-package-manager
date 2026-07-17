@@ -32,16 +32,19 @@ defmodule Opsm.Registries.Hackage do
         # body is a map of version => {normal-version, ...}
         all_versions = Map.keys(body) |> Enum.sort(:desc)
 
-        target_version = if version == "latest" do
-          List.first(all_versions)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            List.first(all_versions)
+          else
+            version
+          end
 
         # Fetch cabal metadata for the specific version
-        {description, license, deps, homepage, authors} = fetch_cabal_metadata(name, target_version)
+        {description, license, deps, homepage, authors} =
+          fetch_cabal_metadata(name, target_version)
 
-        {:ok, parse_package(name, target_version, description, license, deps, homepage, authors, body)}
+        {:ok,
+         parse_package(name, target_version, description, license, deps, homepage, authors, body)}
 
       {:error, :not_found} ->
         {:error, :not_found}
@@ -63,8 +66,10 @@ defmodule Opsm.Registries.Hackage do
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         parse_cabal(body)
+
       {:ok, body} when is_binary(body) ->
         parse_cabal(body)
+
       _ ->
         {nil, nil, %{}, nil, []}
     end
@@ -91,6 +96,7 @@ defmodule Opsm.Registries.Hackage do
 
     Enum.find_value(lines, fn line ->
       lower = String.downcase(String.trim(line))
+
       if String.starts_with?(lower, pattern) do
         line
         |> String.trim()
@@ -147,22 +153,23 @@ defmodule Opsm.Registries.Hackage do
       dep = String.trim(dep)
 
       # Split on first space, or on first constraint operator character
-      {name, constraint} = cond do
-        String.contains?(dep, " ") ->
-          case String.split(dep, " ", parts: 2) do
-            [n, c] -> {String.trim(n), String.trim(c)}
-            [n] -> {String.trim(n), ">= 0"}
-          end
+      {name, constraint} =
+        cond do
+          String.contains?(dep, " ") ->
+            case String.split(dep, " ", parts: 2) do
+              [n, c] -> {String.trim(n), String.trim(c)}
+              [n] -> {String.trim(n), ">= 0"}
+            end
 
-        Regex.match?(~r/[><=]/, dep) ->
-          case Regex.split(~r/(?=[><=])/, dep, parts: 2) do
-            [n, c] -> {String.trim(n), String.trim(c)}
-            [n] -> {String.trim(n), ">= 0"}
-          end
+          Regex.match?(~r/[><=]/, dep) ->
+            case Regex.split(~r/(?=[><=])/, dep, parts: 2) do
+              [n, c] -> {String.trim(n), String.trim(c)}
+              [n] -> {String.trim(n), ">= 0"}
+            end
 
-        true ->
-          {dep, ">= 0"}
-      end
+          true ->
+            {dep, ">= 0"}
+        end
 
       {name, constraint}
     end)
@@ -179,7 +186,8 @@ defmodule Opsm.Registries.Hackage do
 
     case VerifiedHttp.get_json(url, headers: headers, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
+        results =
+          body
           |> Enum.take(limit)
           |> Enum.map(fn pkg ->
             %{
@@ -189,6 +197,7 @@ defmodule Opsm.Registries.Hackage do
               downloads: 0
             }
           end)
+
         {:ok, results}
 
       {:ok, _} ->

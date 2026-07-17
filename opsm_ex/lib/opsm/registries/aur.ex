@@ -22,11 +22,13 @@ defmodule Opsm.Registries.Aur do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => [pkg_data | _]}} ->
-        ver = if version == "latest" do
-          pkg_data["Version"] || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            pkg_data["Version"] || "0.0.0"
+          else
+            version
+          end
+
         {:ok, parse_aur_package(name, pkg_data, ver)}
 
       {:ok, %{"results" => []}} ->
@@ -59,15 +61,17 @@ defmodule Opsm.Registries.Aur do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        parsed = results
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["Name"],
-            version: pkg["Version"],
-            description: pkg["Description"]
-          }
-        end)
+        parsed =
+          results
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["Name"],
+              version: pkg["Version"],
+              description: pkg["Description"]
+            }
+          end)
+
         {:ok, parsed}
 
       {:ok, _} ->
@@ -143,10 +147,11 @@ defmodule Opsm.Registries.Aur do
       raw_manifest: data
     }
 
-    tarball_url = case data["URLPath"] do
-      nil -> nil
-      path -> "https://aur.archlinux.org#{path}"
-    end
+    tarball_url =
+      case data["URLPath"] do
+        nil -> nil
+        path -> "https://aur.archlinux.org#{path}"
+      end
 
     %ResolvedPackage{
       package: name,

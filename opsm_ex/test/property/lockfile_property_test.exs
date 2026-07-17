@@ -15,17 +15,21 @@ defmodule Opsm.Property.LockfilePropertyTest do
   end
 
   defp version_gen do
-    gen all major <- integer(0..10),
-           minor <- integer(0..20),
-           patch <- integer(0..50) do
+    gen all(
+          major <- integer(0..10),
+          minor <- integer(0..20),
+          patch <- integer(0..50)
+        ) do
       "#{major}.#{minor}.#{patch}"
     end
   end
 
   defp semver_version_gen do
-    gen all major <- integer(0..10),
-           minor <- integer(0..20),
-           patch <- integer(0..50) do
+    gen all(
+          major <- integer(0..10),
+          minor <- integer(0..20),
+          patch <- integer(0..50)
+        ) do
       "#{major}.#{minor}.#{patch}"
     end
   end
@@ -48,11 +52,13 @@ defmodule Opsm.Property.LockfilePropertyTest do
   end
 
   defp package_gen do
-    gen all name <- package_name_gen(),
-           version <- version_gen(),
-           forth <- forth_gen(),
-           checksum <- checksum_gen(),
-           algo <- one_of([constant("sha256"), constant("blake2b"), constant("sha3-512")]) do
+    gen all(
+          name <- package_name_gen(),
+          version <- version_gen(),
+          forth <- forth_gen(),
+          checksum <- checksum_gen(),
+          algo <- one_of([constant("sha256"), constant("blake2b"), constant("sha3-512")])
+        ) do
       %{
         name: name,
         version: version,
@@ -65,9 +71,10 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Lockfile Determinism" do
     property "package list is consistent after add/get operations" do
-      check all packages <- list_of(package_gen(), min_length: 1, max_length: 10) do
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+      check all(packages <- list_of(package_gen(), min_length: 1, max_length: 10)) do
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         # List packages and count
         listed = Lockfile.list_packages(lockfile)
@@ -82,9 +89,10 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "lockfile list count matches added package count" do
-      check all packages <- list_of(package_gen(), min_length: 1, max_length: 15) do
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+      check all(packages <- list_of(package_gen(), min_length: 1, max_length: 15)) do
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         listed = Lockfile.list_packages(lockfile)
 
@@ -94,25 +102,34 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "adding and removing same package returns to previous count" do
-      check all name <- package_name_gen(),
-            forth <- forth_gen(),
-            initial_count <- integer(0..5) do
+      check all(
+              name <- package_name_gen(),
+              forth <- forth_gen(),
+              initial_count <- integer(0..5)
+            ) do
         # Build initial lockfile
-        original = Enum.reduce(0..initial_count, Lockfile.new(), fn i, acc ->
-          Lockfile.add_package(acc, %{
-            name: "pkg-#{i}",
-            version: "1.0.0",
-            forth: forth,
-            checksum: "hash-#{i}"
-          })
-        end)
+        original =
+          Enum.reduce(0..initial_count, Lockfile.new(), fn i, acc ->
+            Lockfile.add_package(acc, %{
+              name: "pkg-#{i}",
+              version: "1.0.0",
+              forth: forth,
+              checksum: "hash-#{i}"
+            })
+          end)
 
         original_count = Lockfile.list_packages(original) |> length()
 
         # Add and remove new package
-        modified = original
-        |> Lockfile.add_package(%{name: name, version: "2.0.0", forth: forth, checksum: "new-hash"})
-        |> Lockfile.remove_package(name, forth)
+        modified =
+          original
+          |> Lockfile.add_package(%{
+            name: name,
+            version: "2.0.0",
+            forth: forth,
+            checksum: "new-hash"
+          })
+          |> Lockfile.remove_package(name, forth)
 
         # Should be back to original count
         modified_count = Lockfile.list_packages(modified) |> length()
@@ -123,24 +140,32 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Version Constraint Intersection" do
     property "intersection of compatible constraints is valid" do
-      check all constraint1 <- string(:alphanumeric, min_length: 1, max_length: 10),
-            constraint2 <- string(:alphanumeric, min_length: 1, max_length: 10) do
-        case {VersionConstraint.parse(constraint1, :semver), VersionConstraint.parse(constraint2, :semver)} do
+      check all(
+              constraint1 <- string(:alphanumeric, min_length: 1, max_length: 10),
+              constraint2 <- string(:alphanumeric, min_length: 1, max_length: 10)
+            ) do
+        case {VersionConstraint.parse(constraint1, :semver),
+              VersionConstraint.parse(constraint2, :semver)} do
           {{:ok, c1}, {:ok, c2}} ->
             # Both should parse successfully
             assert c1 != nil
             assert c2 != nil
 
           # Parsing failures are acceptable
-          {{:error, _}, _} -> :ok
-          {_, {:error, _}} -> :ok
+          {{:error, _}, _} ->
+            :ok
+
+          {_, {:error, _}} ->
+            :ok
         end
       end
     end
 
     property "version satisfying constraint satisfies intersection" do
-      check all version <- semver_version_gen(),
-            version_constraint <- string(:alphanumeric, min_length: 1, max_length: 20) do
+      check all(
+              version <- semver_version_gen(),
+              version_constraint <- string(:alphanumeric, min_length: 1, max_length: 20)
+            ) do
         case VersionConstraint.parse(version_constraint, :semver) do
           {:ok, constraint} ->
             # Either it satisfies or it doesn't - both are valid outcomes
@@ -157,9 +182,11 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Manifest Roundtrip" do
     property "parse -> serialize -> parse yields equivalent manifest" do
-      check all name <- package_name_gen(),
-            version <- version_gen(),
-            forth <- forth_gen() do
+      check all(
+              name <- package_name_gen(),
+              version <- version_gen(),
+              forth <- forth_gen()
+            ) do
         original = %{
           name: name,
           version: version,
@@ -172,7 +199,8 @@ defmodule Opsm.Property.LockfilePropertyTest do
         {:ok, deserialized} = Jason.decode(serialized)
 
         # Convert keys to atoms for comparison
-        deserialized_atoms = Map.new(deserialized, fn {k, v} -> {String.to_existing_atom(k), v} end)
+        deserialized_atoms =
+          Map.new(deserialized, fn {k, v} -> {String.to_existing_atom(k), v} end)
 
         # Core fields should match
         assert deserialized_atoms.name == original.name
@@ -182,9 +210,10 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "lockfile write -> read preserves package data" do
-      check all packages <- list_of(package_gen(), min_length: 1, max_length: 10) do
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+      check all(packages <- list_of(package_gen(), min_length: 1, max_length: 10)) do
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         # Verify all packages are present and unchanged
         written_packages = Lockfile.list_packages(lockfile)
@@ -203,10 +232,13 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Dependency Tree Consistency" do
     property "packages_for_forth returns only packages from specified forth" do
-      check all packages <- list_of(package_gen(), min_length: 1, max_length: 20),
-            target_forth <- forth_gen() do
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+      check all(
+              packages <- list_of(package_gen(), min_length: 1, max_length: 20),
+              target_forth <- forth_gen()
+            ) do
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         filtered = Lockfile.packages_for_forth(lockfile, target_forth)
 
@@ -220,9 +252,10 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "list_packages maintains consistent ordering" do
-      check all packages <- list_of(package_gen(), min_length: 1, max_length: 15) do
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+      check all(packages <- list_of(package_gen(), min_length: 1, max_length: 15)) do
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         listed1 = Lockfile.list_packages(lockfile)
         listed2 = Lockfile.list_packages(lockfile)
@@ -235,18 +268,21 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Checksum Consistency" do
     property "checksum mismatch is consistently detected" do
-      check all pkg_name <- package_name_gen(),
-            version <- version_gen(),
-            forth <- forth_gen(),
-            stored_checksum <- checksum_gen(),
-            actual_checksum <- checksum_gen() do
-        lockfile = Lockfile.new()
-        |> Lockfile.add_package(%{
-          name: pkg_name,
-          version: version,
-          forth: forth,
-          checksum: stored_checksum
-        })
+      check all(
+              pkg_name <- package_name_gen(),
+              version <- version_gen(),
+              forth <- forth_gen(),
+              stored_checksum <- checksum_gen(),
+              actual_checksum <- checksum_gen()
+            ) do
+        lockfile =
+          Lockfile.new()
+          |> Lockfile.add_package(%{
+            name: pkg_name,
+            version: version,
+            forth: forth,
+            checksum: stored_checksum
+          })
 
         result1 = Lockfile.verify_package(lockfile, pkg_name, forth, actual_checksum)
         result2 = Lockfile.verify_package(lockfile, pkg_name, forth, actual_checksum)
@@ -264,17 +300,20 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "package is retrievable after adding" do
-      check all pkg_name <- package_name_gen(),
-            version <- version_gen(),
-            forth <- forth_gen(),
-            checksum <- checksum_gen() do
-        lockfile = Lockfile.new()
-        |> Lockfile.add_package(%{
-          name: pkg_name,
-          version: version,
-          forth: forth,
-          checksum: checksum
-        })
+      check all(
+              pkg_name <- package_name_gen(),
+              version <- version_gen(),
+              forth <- forth_gen(),
+              checksum <- checksum_gen()
+            ) do
+        lockfile =
+          Lockfile.new()
+          |> Lockfile.add_package(%{
+            name: pkg_name,
+            version: version,
+            forth: forth,
+            checksum: checksum
+          })
 
         pkg = Lockfile.get_package(lockfile, pkg_name, forth)
 
@@ -288,19 +327,21 @@ defmodule Opsm.Property.LockfilePropertyTest do
 
   describe "Integrity Hash Properties" do
     property "integrity hash is recomputable for same packages" do
-      check all count <- integer(1..8) do
-        packages = Enum.map(0..count, fn i ->
-          %{
-            name: "pkg-#{i}",
-            version: "1.0.#{i}",
-            forth: :npm,
-            checksum: "hash-#{i}"
-          }
-        end)
+      check all(count <- integer(1..8)) do
+        packages =
+          Enum.map(0..count, fn i ->
+            %{
+              name: "pkg-#{i}",
+              version: "1.0.#{i}",
+              forth: :npm,
+              checksum: "hash-#{i}"
+            }
+          end)
 
         # Create lockfile
-        lockfile = packages
-        |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
+        lockfile =
+          packages
+          |> Enum.reduce(Lockfile.new(), &Lockfile.add_package(&2, &1))
 
         # Compute hash twice on same lockfile - should be identical
         with_hash1 = Lockfile.compute_integrity_hash(lockfile)
@@ -312,15 +353,16 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "integrity hash is never nil after computation" do
-      check all name <- package_name_gen() do
-        lockfile = Lockfile.new()
-        |> Lockfile.add_package(%{
-          name: name,
-          version: "1.0.0",
-          forth: :npm,
-          checksum: "test-hash"
-        })
-        |> Lockfile.compute_integrity_hash()
+      check all(name <- package_name_gen()) do
+        lockfile =
+          Lockfile.new()
+          |> Lockfile.add_package(%{
+            name: name,
+            version: "1.0.0",
+            forth: :npm,
+            checksum: "test-hash"
+          })
+          |> Lockfile.compute_integrity_hash()
 
         assert lockfile.integrity_hash != nil
         assert String.length(lockfile.integrity_hash) > 0
@@ -328,16 +370,17 @@ defmodule Opsm.Property.LockfilePropertyTest do
     end
 
     property "integrity hash uses correct algorithm" do
-      check all count <- integer(1..5) do
-        lockfile = Enum.reduce(0..count, Lockfile.new(), fn i, acc ->
-          Lockfile.add_package(acc, %{
-            name: "pkg-#{i}",
-            version: "1.0.0",
-            forth: :npm,
-            checksum: "hash-#{i}"
-          })
-        end)
-        |> Lockfile.compute_integrity_hash()
+      check all(count <- integer(1..5)) do
+        lockfile =
+          Enum.reduce(0..count, Lockfile.new(), fn i, acc ->
+            Lockfile.add_package(acc, %{
+              name: "pkg-#{i}",
+              version: "1.0.0",
+              forth: :npm,
+              checksum: "hash-#{i}"
+            })
+          end)
+          |> Lockfile.compute_integrity_hash()
 
         assert lockfile.integrity_algo == "sha3-512"
         assert String.length(lockfile.integrity_hash) == 128

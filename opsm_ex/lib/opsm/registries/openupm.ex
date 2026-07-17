@@ -23,11 +23,12 @@ defmodule Opsm.Registries.OpenUpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          get_in(body, ["dist-tags", "latest"])
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            get_in(body, ["dist-tags", "latest"])
+          else
+            version
+          end
 
         version_data = get_in(body, ["versions", target_version]) || %{}
         deps = extract_deps(version_data)
@@ -57,17 +58,20 @@ defmodule Opsm.Registries.OpenUpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"objects" => objects}} when is_list(objects) ->
-        results = objects
-        |> Enum.take(limit)
-        |> Enum.map(fn obj ->
-          pkg = obj["package"] || %{}
-          %{
-            name: pkg["name"],
-            version: pkg["version"],
-            description: pkg["description"] || "",
-            downloads: get_in(obj, ["score", "detail", "popularity"]) || 0
-          }
-        end)
+        results =
+          objects
+          |> Enum.take(limit)
+          |> Enum.map(fn obj ->
+            pkg = obj["package"] || %{}
+
+            %{
+              name: pkg["name"],
+              version: pkg["version"],
+              description: pkg["description"] || "",
+              downloads: get_in(obj, ["score", "detail", "popularity"]) || 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -87,16 +91,18 @@ defmodule Opsm.Registries.OpenUpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, packages} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["version"] || pkg["ver"],
-            description: pkg["description"] || pkg["displayName"] || "",
-            downloads: pkg["downloads"] || 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["version"] || pkg["ver"],
+              description: pkg["description"] || pkg["displayName"] || "",
+              downloads: pkg["downloads"] || 0
+            }
+          end)
+
         {:ok, results}
 
       _ ->
@@ -124,9 +130,11 @@ defmodule Opsm.Registries.OpenUpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions}} when is_map(versions) ->
-        ver_list = versions
-        |> Map.keys()
-        |> Enum.sort(:desc)
+        ver_list =
+          versions
+          |> Map.keys()
+          |> Enum.sort(:desc)
+
         {:ok, ver_list}
 
       {:error, :not_found} ->
@@ -210,6 +218,7 @@ defmodule Opsm.Registries.OpenUpm do
   defp extract_authors(nil), do: []
   defp extract_authors(author) when is_binary(author), do: [author]
   defp extract_authors(%{"name" => name}), do: [name]
+
   defp extract_authors(authors) when is_list(authors) do
     Enum.map(authors, fn
       a when is_binary(a) -> a
@@ -218,5 +227,6 @@ defmodule Opsm.Registries.OpenUpm do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
   defp extract_authors(_), do: []
 end

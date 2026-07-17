@@ -38,15 +38,17 @@ defmodule Opsm.TopoSort do
 
     # Build edges: for each package, add edges from its dependencies to itself
     {edges, in_degree} =
-      Enum.reduce(resolved_packages, {%{}, in_degree}, fn {name, {_ver, pkg}}, {edges_acc, deg_acc} ->
+      Enum.reduce(resolved_packages, {%{}, in_degree}, fn {name, {_ver, pkg}},
+                                                          {edges_acc, deg_acc} ->
         dep_names = extract_dep_names(pkg)
         # Only count edges to packages that are in our resolved set
         resolved_deps = Enum.filter(dep_names, fn d -> Map.has_key?(resolved_packages, d) end)
 
         # Each resolved dep has an edge to this package
-        new_edges = Enum.reduce(resolved_deps, edges_acc, fn dep, e_acc ->
-          Map.update(e_acc, dep, [name], fn existing -> [name | existing] end)
-        end)
+        new_edges =
+          Enum.reduce(resolved_deps, edges_acc, fn dep, e_acc ->
+            Map.update(e_acc, dep, [name], fn existing -> [name | existing] end)
+          end)
 
         new_deg = Map.update!(deg_acc, name, fn d -> d + length(resolved_deps) end)
 
@@ -59,7 +61,8 @@ defmodule Opsm.TopoSort do
       in_degree
       |> Enum.filter(fn {_name, deg} -> deg == 0 end)
       |> Enum.map(fn {name, _} -> name end)
-      |> Enum.sort()  # Deterministic order for same-level packages
+      # Deterministic order for same-level packages
+      |> Enum.sort()
 
     kahn(queue, edges, in_degree, [], resolved_packages)
   end

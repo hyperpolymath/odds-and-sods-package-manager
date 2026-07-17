@@ -20,11 +20,12 @@ defmodule Opsm.Registries.RubyGems do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        target_version = if version == "latest" do
-          body["version"]
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            body["version"]
+          else
+            version
+          end
 
         deps = fetch_release_deps(name, target_version)
         {:ok, parse_gem(body, target_version, deps)}
@@ -55,11 +56,13 @@ defmodule Opsm.Registries.RubyGems do
 
       {:ok, %{"dependencies" => deps}} when is_map(deps) ->
         runtime = deps["runtime"] || []
+
         runtime
         |> Enum.map(fn d -> {d["name"], d["requirements"] || ">= 0"} end)
         |> Map.new()
 
-      _ -> %{}
+      _ ->
+        %{}
     end
   end
 
@@ -72,9 +75,11 @@ defmodule Opsm.Registries.RubyGems do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
+        results =
+          body
           |> Enum.take(limit)
           |> Enum.map(&parse_search_result/1)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -108,9 +113,11 @@ defmodule Opsm.Registries.RubyGems do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        versions = body
+        versions =
+          body
           |> Enum.map(& &1["number"])
           |> Enum.reject(&is_nil/1)
+
         {:ok, versions}
 
       {:error, :not_found} ->
@@ -174,8 +181,10 @@ defmodule Opsm.Registries.RubyGems do
   end
 
   defp parse_authors(nil), do: []
+
   defp parse_authors(authors) when is_binary(authors) do
     String.split(authors, ",") |> Enum.map(&String.trim/1)
   end
+
   defp parse_authors(authors) when is_list(authors), do: authors
 end

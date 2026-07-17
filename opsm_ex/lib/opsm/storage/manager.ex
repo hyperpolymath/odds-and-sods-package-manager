@@ -61,14 +61,14 @@ defmodule Opsm.Storage.Manager do
     # Push to remote backends silently.
     if s3_configured?() do
       case S3.put(key, local_path, []) do
-        {:ok, _}     -> Logger.debug("Stored #{key} in S3")
+        {:ok, _} -> Logger.debug("Stored #{key} in S3")
         {:error, reason} -> Logger.warning("S3 store failed for #{key}: #{inspect(reason)}")
       end
     end
 
     if ipfs_active?() do
       case Ipfs.put(key, local_path, []) do
-        {:ok, _}     -> Logger.debug("Stored #{key} in IPFS")
+        {:ok, _} -> Logger.debug("Stored #{key} in IPFS")
         {:error, reason} -> Logger.warning("IPFS store failed for #{key}: #{inspect(reason)}")
       end
     end
@@ -82,9 +82,9 @@ defmodule Opsm.Storage.Manager do
   @spec public_url(String.t()) :: String.t() | nil
   def public_url(key) do
     cond do
-      s3_configured?()  -> S3.url(key, [])
-      ipfs_active?()    -> Ipfs.url(key, [])
-      true              -> nil
+      s3_configured?() -> S3.url(key, [])
+      ipfs_active?() -> Ipfs.url(key, [])
+      true -> nil
     end
   end
 
@@ -95,8 +95,8 @@ defmodule Opsm.Storage.Manager do
   def status do
     %{
       local: %{active: true, path: Local.cache_root()},
-      s3:    %{active: s3_configured?(), bucket: System.get_env("OPSM_S3_BUCKET")},
-      ipfs:  %{active: ipfs_active?(), api: System.get_env("OPSM_IPFS_API", "not set")}
+      s3: %{active: s3_configured?(), bucket: System.get_env("OPSM_S3_BUCKET")},
+      ipfs: %{active: ipfs_active?(), api: System.get_env("OPSM_IPFS_API", "not set")}
     }
   end
 
@@ -108,23 +108,31 @@ defmodule Opsm.Storage.Manager do
     cond do
       s3_configured?() ->
         case S3.get(key, dest_path, []) do
-          {:ok, _} = ok -> ok
-          {:error, :not_found} -> try_ipfs_fetch(key, dest_path)
+          {:ok, _} = ok ->
+            ok
+
+          {:error, :not_found} ->
+            try_ipfs_fetch(key, dest_path)
+
           {:error, reason} ->
             Logger.debug("S3 fetch miss for #{key}: #{inspect(reason)}")
             try_ipfs_fetch(key, dest_path)
         end
 
-      ipfs_active?() -> try_ipfs_fetch(key, dest_path)
+      ipfs_active?() ->
+        try_ipfs_fetch(key, dest_path)
 
-      true -> {:error, :not_found}
+      true ->
+        {:error, :not_found}
     end
   end
 
   defp try_ipfs_fetch(key, dest_path) do
     if ipfs_active?() do
       case Ipfs.get(key, dest_path, []) do
-        {:ok, _} = ok -> ok
+        {:ok, _} = ok ->
+          ok
+
         {:error, reason} ->
           Logger.debug("IPFS fetch miss for #{key}: #{inspect(reason)}")
           {:error, :not_found}

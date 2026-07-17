@@ -33,19 +33,19 @@ defmodule Opsm.Crypto.PostQuantumTest do
     end
 
     test "signature algorithms have correct key sizes" do
-      dilithium = Enum.find(PostQuantum.algorithms(), & &1.name == :dilithium5)
+      dilithium = Enum.find(PostQuantum.algorithms(), &(&1.name == :dilithium5))
       assert dilithium.pk_bytes == 2592
       assert dilithium.sk_bytes == 4896
       assert dilithium.sig_bytes == 4627
 
-      sphincs = Enum.find(PostQuantum.algorithms(), & &1.name == :sphincs_plus)
+      sphincs = Enum.find(PostQuantum.algorithms(), &(&1.name == :sphincs_plus))
       assert sphincs.pk_bytes == 64
       assert sphincs.sk_bytes == 128
       assert sphincs.sig_bytes == 49_856
     end
 
     test "KEM algorithm has correct sizes" do
-      kyber = Enum.find(PostQuantum.algorithms(), & &1.name == :kyber1024)
+      kyber = Enum.find(PostQuantum.algorithms(), &(&1.name == :kyber1024))
       assert kyber.pk_bytes == 1568
       assert kyber.sk_bytes == 3168
       assert kyber.ct_bytes == 1568

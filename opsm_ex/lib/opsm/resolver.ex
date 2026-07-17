@@ -102,14 +102,18 @@ defmodule Opsm.Resolver do
         resolution = final_state.resolved
 
         # Persist resolution event to VeriSimDB
-        root_name = case root_dependencies do
-          [first | _] -> first.name
-          _ -> "unknown"
-        end
-        root_constraint = case root_dependencies do
-          [first | _] -> first.constraint
-          _ -> "*"
-        end
+        root_name =
+          case root_dependencies do
+            [first | _] -> first.name
+            _ -> "unknown"
+          end
+
+        root_constraint =
+          case root_dependencies do
+            [first | _] -> first.constraint
+            _ -> "*"
+          end
+
         Opsm.VeriSimDB.record_resolution(%{
           root_package: root_name,
           root_constraint: root_constraint,
@@ -195,13 +199,14 @@ defmodule Opsm.Resolver do
         {:conflict, "Circular dependency detected: #{key}"}
 
       state.depth >= state.max_depth ->
-        {:conflict, "Dependency tree depth (#{state.max_depth}) exceeded at #{package_name}. Possible circular dependency."}
+        {:conflict,
+         "Dependency tree depth (#{state.max_depth}) exceeded at #{package_name}. Possible circular dependency."}
 
       true ->
         # Fetch package metadata (cached)
         case RegistryCache.fetch_or_compute({:fetch, forth, package_name, version}, fn ->
-          Registry.fetch(forth, package_name, version)
-        end) do
+               Registry.fetch(forth, package_name, version)
+             end) do
           {:ok, resolved_pkg} ->
             # Add to resolved set, remove from unresolved, increment tree depth
             new_state = %{
@@ -253,9 +258,10 @@ defmodule Opsm.Resolver do
         do: state.unresolved,
         else: MapSet.put(state.unresolved, package_name)
 
-    %{state |
-      constraints: Map.put(state.constraints, package_name, updated_constraints),
-      unresolved: unresolved
+    %{
+      state
+      | constraints: Map.put(state.constraints, package_name, updated_constraints),
+        unresolved: unresolved
     }
   end
 
@@ -283,9 +289,7 @@ defmodule Opsm.Resolver do
           if violating == [] do
             {:cont, :ok}
           else
-            {:halt,
-             {:conflict,
-              format_constraint_violation(pkg_name, version, violating)}}
+            {:halt, {:conflict, format_constraint_violation(pkg_name, version, violating)}}
           end
 
         :error ->
@@ -301,7 +305,9 @@ defmodule Opsm.Resolver do
   defp next_unresolved(state) do
     # Pick from tracked unresolved set (O(1) membership check, no full scan)
     case MapSet.size(state.unresolved) do
-      0 -> nil
+      0 ->
+        nil
+
       _ ->
         # Pick the package with the most constraints (most constrained first = fail fast)
         state.unresolved
@@ -363,39 +369,48 @@ defmodule Opsm.Resolver do
     # Fetch oikos sustainability scores for candidate versions.
     # Combines sustainability score (0-100) with version recency.
     # Falls back to version-only sorting if oikos is unavailable.
-    config = try do
-      Opsm.Config.load_config_or_example()
-    rescue
-      _ -> nil
-    end
-
-    oikos_scores = if config do
+    config =
       try do
-        client = Opsm.Clients.Oikos.new(config.oikos, config.http)
-        case Opsm.Clients.Oikos.health(client) do
-          {:ok, _} ->
-            # Oikos is up — score each version via package-level analysis
-            versions
-            |> Enum.map(fn ver ->
-              score = RegistryCache.fetch_or_compute({:oikos, ver}, fn ->
-                case Opsm.Clients.Oikos.analyze_package(client, "pkg", ver) do
-                  {:ok, s} when is_number(s) -> s
-                  _ -> 50
-                end
-              end, 60_000)
-              {ver, score}
-            end)
-            |> Map.new()
-
-          {:error, _} ->
-            nil
-        end
+        Opsm.Config.load_config_or_example()
       rescue
         _ -> nil
       end
-    else
-      nil
-    end
+
+    oikos_scores =
+      if config do
+        try do
+          client = Opsm.Clients.Oikos.new(config.oikos, config.http)
+
+          case Opsm.Clients.Oikos.health(client) do
+            {:ok, _} ->
+              # Oikos is up — score each version via package-level analysis
+              versions
+              |> Enum.map(fn ver ->
+                score =
+                  RegistryCache.fetch_or_compute(
+                    {:oikos, ver},
+                    fn ->
+                      case Opsm.Clients.Oikos.analyze_package(client, "pkg", ver) do
+                        {:ok, s} when is_number(s) -> s
+                        _ -> 50
+                      end
+                    end,
+                    60_000
+                  )
+
+                {ver, score}
+              end)
+              |> Map.new()
+
+            {:error, _} ->
+              nil
+          end
+        rescue
+          _ -> nil
+        end
+      else
+        nil
+      end
 
     case oikos_scores do
       nil ->
@@ -409,7 +424,9 @@ defmodule Opsm.Resolver do
           s2 = Map.get(scores, v2, 0)
 
           cond do
-            s1 != s2 -> s1 > s2
+            s1 != s2 ->
+              s1 > s2
+
             true ->
               case {parse_version_lenient(v1), parse_version_lenient(v2)} do
                 {{:ok, ver1}, {:ok, ver2}} -> Version.compare(ver1, ver2) == :gt
@@ -461,14 +478,18 @@ defmodule Opsm.Resolver do
 
   # Lenient version parsing for non-semver formats (Go v-prefix, Hackage 4-part)
   defp parse_version_lenient(version_string) do
-    normalized = version_string
+    normalized =
+      version_string
       |> String.trim_leading("v")
       |> String.trim_leading("V")
 
     case Version.parse(normalized) do
-      {:ok, version} -> {:ok, version}
+      {:ok, version} ->
+        {:ok, version}
+
       :error ->
         parts = String.split(normalized, ".")
+
         if length(parts) > 3 do
           truncated = parts |> Enum.take(3) |> Enum.join(".")
           Version.parse(truncated)

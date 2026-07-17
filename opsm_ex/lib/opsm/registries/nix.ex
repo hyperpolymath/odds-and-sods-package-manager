@@ -26,12 +26,16 @@ defmodule Opsm.Registries.Nix do
     case VerifiedHttp.post_json(@search_api, query, receive_timeout: 10_000) do
       {:ok, body} ->
         hits = get_in(body, ["hits", "hits"]) || []
+
         case hits do
           [hit | _] ->
             source = hit["_source"] || %{}
-            ver = if version == "latest",
-              do: source["package_version"],
-              else: version
+
+            ver =
+              if version == "latest",
+                do: source["package_version"],
+                else: version
+
             {:ok, parse_nix_package(name, source, ver)}
 
           [] ->
@@ -44,22 +48,24 @@ defmodule Opsm.Registries.Nix do
   end
 
   defp parse_nix_package(name, source, version) do
-    licenses = case source["package_license"] do
-      l when is_list(l) -> Enum.join(l, " AND ")
-      l when is_binary(l) -> l
-      _ -> nil
-    end
+    licenses =
+      case source["package_license"] do
+        l when is_list(l) -> Enum.join(l, " AND ")
+        l when is_binary(l) -> l
+        _ -> nil
+      end
 
     manifest = %ManifestFormat{
       name: name,
       version: version || "0.0.0",
       description: source["package_description"],
       license: licenses,
-      homepage: case source["package_homepage"] do
-        [url | _] -> url
-        url when is_binary(url) -> url
-        _ -> nil
-      end,
+      homepage:
+        case source["package_homepage"] do
+          [url | _] -> url
+          url when is_binary(url) -> url
+          _ -> nil
+        end,
       repository: nil,
       dependencies: %{}
     }
@@ -71,7 +77,7 @@ defmodule Opsm.Registries.Nix do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -93,14 +99,18 @@ defmodule Opsm.Registries.Nix do
     case VerifiedHttp.post_json(@search_api, search_query, receive_timeout: 10_000) do
       {:ok, body} ->
         hits = get_in(body, ["hits", "hits"]) || []
-        results = Enum.map(hits, fn hit ->
-          s = hit["_source"] || %{}
-          %{
-            name: s["package_attr_name"],
-            version: s["package_version"],
-            description: s["package_description"]
-          }
-        end)
+
+        results =
+          Enum.map(hits, fn hit ->
+            s = hit["_source"] || %{}
+
+            %{
+              name: s["package_attr_name"],
+              version: s["package_version"],
+              description: s["package_description"]
+            }
+          end)
+
         {:ok, results}
 
       {:error, reason} ->

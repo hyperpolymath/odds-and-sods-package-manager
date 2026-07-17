@@ -17,13 +17,13 @@ defmodule Opsm.Security.Scanner do
     defstruct [:package, :version, :forth, :vulnerabilities, :typosquat, :scanned_at]
 
     @type t :: %__MODULE__{
-      package:         String.t(),
-      version:         String.t() | nil,
-      forth:           atom(),
-      vulnerabilities: [Osv.Vulnerability.t()],
-      typosquat:       {:clean} | {:suspicious, [Typosquat.Match.t()]},
-      scanned_at:      DateTime.t()
-    }
+            package: String.t(),
+            version: String.t() | nil,
+            forth: atom(),
+            vulnerabilities: [Osv.Vulnerability.t()],
+            typosquat: {:clean} | {:suspicious, [Typosquat.Match.t()]},
+            scanned_at: DateTime.t()
+          }
 
     def critical_count(%__MODULE__{vulnerabilities: vulns}),
       do: Enum.count(vulns, &(&1.severity == :critical))
@@ -53,7 +53,9 @@ defmodule Opsm.Security.Scanner do
 
     vulns =
       case osv_query(package, version, forth) do
-        {:ok, list}     -> list
+        {:ok, list} ->
+          list
+
         {:error, reason} ->
           require Logger
           Logger.warning("OSV lookup failed for #{package}: #{inspect(reason)}")
@@ -63,12 +65,12 @@ defmodule Opsm.Security.Scanner do
     typosquat = Typosquat.check(package, forth)
 
     report = %Report{
-      package:         package,
-      version:         version,
-      forth:           forth,
+      package: package,
+      version: version,
+      forth: forth,
       vulnerabilities: vulns,
-      typosquat:       typosquat,
-      scanned_at:      DateTime.utc_now()
+      typosquat: typosquat,
+      scanned_at: DateTime.utc_now()
     }
 
     {:ok, report}
@@ -92,7 +94,11 @@ defmodule Opsm.Security.Scanner do
   @spec print_report(Report.t()) :: :ok
   def print_report(%Report{} = r) do
     IO.puts("")
-    IO.puts("Security scan: #{r.package}#{if r.version, do: "@#{r.version}", else: ""} (@#{r.forth})")
+
+    IO.puts(
+      "Security scan: #{r.package}#{if r.version, do: "@#{r.version}", else: ""} (@#{r.forth})"
+    )
+
     IO.puts(String.duplicate("─", 60))
 
     case r.typosquat do
@@ -101,12 +107,15 @@ defmodule Opsm.Security.Scanner do
 
       {:suspicious, matches} ->
         IO.puts("  Typosquat:  ⚠ SUSPICIOUS — name resembles known package(s):")
+
         for m <- matches do
-          tag = case m.similarity do
-            :edit_distance_1 -> "1 edit away from"
-            :edit_distance_2 -> "2 edits away from"
-            :homoglyph       -> "homoglyph of"
-          end
+          tag =
+            case m.similarity do
+              :edit_distance_1 -> "1 edit away from"
+              :edit_distance_2 -> "2 edits away from"
+              :homoglyph -> "homoglyph of"
+            end
+
           IO.puts("              #{tag} '#{m.package}'")
         end
     end
@@ -115,7 +124,9 @@ defmodule Opsm.Security.Scanner do
       IO.puts("  OSV vulns:  ✓ none found")
     else
       sev_order = [:critical, :high, :medium, :low, :none, :unknown]
-      sorted = Enum.sort_by(r.vulnerabilities, &Enum.find_index(sev_order, fn s -> s == &1.severity end))
+
+      sorted =
+        Enum.sort_by(r.vulnerabilities, &Enum.find_index(sev_order, fn s -> s == &1.severity end))
 
       IO.puts("  OSV vulns:  #{length(r.vulnerabilities)} advisory/ies")
       IO.puts("")
@@ -146,9 +157,9 @@ defmodule Opsm.Security.Scanner do
     do: Osv.query(package, version, forth)
 
   defp severity_label(:critical), do: "[CRIT]"
-  defp severity_label(:high),     do: "[HIGH]"
-  defp severity_label(:medium),   do: "[MED] "
-  defp severity_label(:low),      do: "[LOW] "
-  defp severity_label(:none),     do: "[NONE]"
-  defp severity_label(_),         do: "[?]   "
+  defp severity_label(:high), do: "[HIGH]"
+  defp severity_label(:medium), do: "[MED] "
+  defp severity_label(:low), do: "[LOW] "
+  defp severity_label(:none), do: "[NONE]"
+  defp severity_label(_), do: "[?]   "
 end

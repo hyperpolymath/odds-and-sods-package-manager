@@ -19,20 +19,23 @@ defmodule Opsm.Registries.Maven do
   """
   def fetch_package(name, version \\ "latest") do
     {group_id, artifact_id} = parse_coordinate(name)
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&core=gav&rows=200&wt=json"
+
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&core=gav&rows=200&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         docs = get_in(body, ["response", "docs"]) || []
 
-        target_version = if version == "latest" do
-          case docs do
-            [first | _] -> first["v"]
-            [] -> nil
+        target_version =
+          if version == "latest" do
+            case docs do
+              [first | _] -> first["v"]
+              [] -> nil
+            end
+          else
+            version
           end
-        else
-          version
-        end
 
         if target_version do
           doc = Enum.find(docs, fn d -> d["v"] == target_version end) || %{}
@@ -64,9 +67,12 @@ defmodule Opsm.Registries.Maven do
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         parse_pom_dependencies(body)
+
       {:ok, body} when is_binary(body) ->
         parse_pom_dependencies(body)
-      _ -> %{}
+
+      _ ->
+        %{}
     end
   end
 
@@ -100,14 +106,17 @@ defmodule Opsm.Registries.Maven do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         docs = get_in(body, ["response", "docs"]) || []
-        results = Enum.map(docs, fn doc ->
-          %{
-            name: "#{doc["g"]}:#{doc["a"]}",
-            version: doc["latestVersion"],
-            description: nil,
-            downloads: 0
-          }
-        end)
+
+        results =
+          Enum.map(docs, fn doc ->
+            %{
+              name: "#{doc["g"]}:#{doc["a"]}",
+              version: doc["latestVersion"],
+              description: nil,
+              downloads: 0
+            }
+          end)
+
         {:ok, results}
 
       {:error, %{status: status}} ->
@@ -123,13 +132,17 @@ defmodule Opsm.Registries.Maven do
   """
   def exists?(name) do
     {group_id, artifact_id} = parse_coordinate(name)
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
+
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&rows=1&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 5_000) do
       {:ok, body} ->
         num_found = get_in(body, ["response", "numFound"]) || 0
         num_found > 0
-      _ -> false
+
+      _ ->
+        false
     end
   end
 
@@ -138,7 +151,9 @@ defmodule Opsm.Registries.Maven do
   """
   def versions(name) do
     {group_id, artifact_id} = parse_coordinate(name)
-    url = "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&core=gav&rows=200&wt=json"
+
+    url =
+      "#{@search_url}?q=g:#{URI.encode(group_id)}+AND+a:#{URI.encode(artifact_id)}&core=gav&rows=200&wt=json"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
@@ -177,16 +192,21 @@ defmodule Opsm.Registries.Maven do
 
   defp fetch_jar_sha1(group_id, artifact_id, version) do
     group_path = String.replace(group_id, ".", "/")
-    url = "#{@repo_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar.sha1"
+
+    url =
+      "#{@repo_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar.sha1"
 
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         hash = body |> String.trim() |> String.split() |> List.first()
         if hash && Regex.match?(~r/^[0-9a-fA-F]{40}$/, hash), do: hash, else: nil
+
       {:ok, body} when is_binary(body) ->
         hash = body |> String.trim() |> String.split() |> List.first()
         if hash && Regex.match?(~r/^[0-9a-fA-F]{40}$/, hash), do: hash, else: nil
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -201,7 +221,8 @@ defmodule Opsm.Registries.Maven do
       version: version,
       forth: :maven,
       registry_url: "https://central.sonatype.com/artifact/#{group_id}/#{artifact_id}",
-      tarball_url: "#{@repo_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
+      tarball_url:
+        "#{@repo_url}/#{group_path}/#{artifact_id}/#{version}/#{artifact_id}-#{version}.jar",
       checksum: sha1,
       checksum_algo: if(sha1, do: :sha1, else: nil),
       manifest: %ManifestFormat{

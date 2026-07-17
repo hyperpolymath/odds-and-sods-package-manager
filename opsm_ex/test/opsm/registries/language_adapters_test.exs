@@ -12,14 +12,14 @@ defmodule Opsm.Registries.LanguageAdaptersTest do
 
   # All new adapters introduced in the first-class system sprint (2026-04-12)
   @adapters [
-    {Opsm.Registries.Betlang,    :betlang,    "betlang-rt"},
-    {Opsm.Registries.Ephapax,    :ephapax,    "ephapax-std"},
-    {Opsm.Registries.Phronesis,  :phronesis,  "phronesis-core"},
-    {Opsm.Registries.Tangle,     :tangle,     "tangle-std"},
-    {Opsm.Registries.Wokelang,   :wokelang,   "wokelang-std"},
+    {Opsm.Registries.Betlang, :betlang, "betlang-rt"},
+    {Opsm.Registries.Ephapax, :ephapax, "ephapax-std"},
+    {Opsm.Registries.Phronesis, :phronesis, "phronesis-core"},
+    {Opsm.Registries.Tangle, :tangle, "tangle-std"},
+    {Opsm.Registries.Wokelang, :wokelang, "wokelang-std"},
     {Opsm.Registries.Lithoglyph, :lithoglyph, "lithoglyph-core"},
-    {Opsm.Registries.QuandleDB,  :quandledb,  "quandledb-core"},
-    {Opsm.Registries.Nqc,        :nqc,        "nqc-core"},
+    {Opsm.Registries.QuandleDB, :quandledb, "quandledb-core"},
+    {Opsm.Registries.Nqc, :nqc, "nqc-core"}
   ]
 
   # ---------------------------------------------------------------------------
@@ -150,7 +150,10 @@ defmodule Opsm.Registries.LanguageAdaptersTest do
 
       @tag :external_api
       test "returns ok or error for a known package name" do
-        case unquote(mod).fetch_package(unquote(mod_name |> String.downcase() |> Kernel.<>("-core")), "latest") do
+        case unquote(mod).fetch_package(
+               unquote(mod_name |> String.downcase() |> Kernel.<>("-core")),
+               "latest"
+             ) do
           {:ok, pkg} -> assert is_map(pkg) or is_struct(pkg)
           {:error, _} -> :ok
         end
@@ -194,7 +197,9 @@ defmodule Opsm.Registries.LanguageAdaptersTest do
     # atom was in the list. search_all is async so we filter to just these.
     @tag :skip
     test "search_all includes betlang, ephapax, phronesis, tangle, wokelang" do
-      result = Registry.search_all("test", forths: [:betlang, :ephapax, :phronesis, :tangle, :wokelang])
+      result =
+        Registry.search_all("test", forths: [:betlang, :ephapax, :phronesis, :tangle, :wokelang])
+
       assert is_map(result)
       assert Map.has_key?(result, :betlang)
       assert Map.has_key?(result, :ephapax)

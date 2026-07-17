@@ -10,7 +10,8 @@ defmodule Opsm.Crypto.HashTest do
       hash = Hash.hash_hot(data)
 
       assert is_binary(hash)
-      assert String.length(hash) == 128  # 512 bits = 64 bytes = 128 hex chars
+      # 512 bits = 64 bytes = 128 hex chars
+      assert String.length(hash) == 128
     end
 
     test "produces deterministic hashes" do
@@ -47,7 +48,8 @@ defmodule Opsm.Crypto.HashTest do
       hash = Hash.hash_cold(data)
 
       assert is_binary(hash)
-      assert String.length(hash) == 128  # 512 bits = 64 bytes = 128 hex chars
+      # 512 bits = 64 bytes = 128 hex chars
+      assert String.length(hash) == 128
     end
 
     test "produces deterministic hashes" do
@@ -131,7 +133,8 @@ defmodule Opsm.Crypto.HashTest do
 
     test "avalanche effect (single bit change -> significant hash change)" do
       data1 = "test"
-      data2 = "tesa"  # Single character different
+      # Single character different
+      data2 = "tesa"
 
       hash1_hot = Hash.hash_hot(data1)
       hash2_hot = Hash.hash_hot(data2)

@@ -197,13 +197,13 @@ defmodule Opsm.Validation do
     case parse_ipv4(host) do
       {:ok, {a, b, _c, _d}} ->
         # Loopback: 127.0.0.0/8
-        a == 127 or
         # Private: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-        a == 10 or
-        (a == 172 and b >= 16 and b <= 31) or
-        (a == 192 and b == 168) or
         # Link-local: 169.254.0.0/16
-        (a == 169 and b == 254)
+        a == 127 or
+          a == 10 or
+          (a == 172 and b >= 16 and b <= 31) or
+          (a == 192 and b == 168) or
+          (a == 169 and b == 254)
 
       :error ->
         # Check for localhost or IPv6 loopback
@@ -279,26 +279,32 @@ defmodule Opsm.Validation do
   defp valid_for_registry?(name, forth) when forth in [:maven, :java, :kotlin] do
     Regex.match?(~r/^[a-zA-Z0-9._-]+(:[a-zA-Z0-9._-]+)?$/, name)
   end
+
   # Go: module paths (e.g., github.com/user/repo)
   defp valid_for_registry?(name, forth) when forth in [:go, :golang] do
     Regex.match?(~r|^[a-zA-Z0-9][a-zA-Z0-9._/-]*$|, name)
   end
+
   # RubyGems: alphanumeric with hyphens/underscores
   defp valid_for_registry?(name, forth) when forth in [:gem, :rubygems, :ruby] do
     Regex.match?(~r/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, name)
   end
+
   # Hackage: identifiers with hyphens
   defp valid_for_registry?(name, forth) when forth in [:hackage, :haskell] do
     Regex.match?(~r/^[a-zA-Z][a-zA-Z0-9-]*$/, name)
   end
+
   # NuGet: alphanumeric with dots/hyphens
   defp valid_for_registry?(name, forth) when forth in [:nuget, :dotnet] do
     Regex.match?(~r/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/, name)
   end
+
   # pub.dev: lowercase with underscores
   defp valid_for_registry?(name, forth) when forth in [:pub, :dart, :flutter] do
     Regex.match?(~r/^[a-z][a-z0-9_]*$/, name)
   end
+
   defp valid_for_registry?(name, _), do: Regex.match?(@generic_pattern, name)
 
   # ===========================================================================

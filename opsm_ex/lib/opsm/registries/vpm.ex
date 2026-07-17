@@ -21,11 +21,12 @@ defmodule Opsm.Registries.Vpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          body["version"] || body["latest_version"] || fetch_latest_version(name)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            body["version"] || body["latest_version"] || fetch_latest_version(name)
+          else
+            version
+          end
 
         deps = extract_deps(body)
         {:ok, parse_package(name, body, target_version, deps)}
@@ -60,15 +61,19 @@ defmodule Opsm.Registries.Vpm do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, results}
 
       {:ok, packages} when is_list(packages) ->
-        results = packages
-        |> Enum.take(limit)
-        |> Enum.map(&parse_search_result/1)
+        results =
+          packages
+          |> Enum.take(limit)
+          |> Enum.map(&parse_search_result/1)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -149,10 +154,13 @@ defmodule Opsm.Registries.Vpm do
           case dep do
             %{"name" => dep_name, "version" => ver} ->
               Map.put(acc, dep_name, ver)
+
             %{"name" => dep_name} ->
               Map.put(acc, dep_name, ">= 0.0.0")
+
             dep when is_binary(dep) ->
               Map.put(acc, dep, ">= 0.0.0")
+
             _ ->
               acc
           end
@@ -186,10 +194,11 @@ defmodule Opsm.Registries.Vpm do
       version: version,
       forth: :vpm,
       registry_url: "#{@web_url}/packages/#{name}",
-      tarball_url: case tarball_url(name, version) do
-        {:ok, url} -> url
-        _ -> nil
-      end,
+      tarball_url:
+        case tarball_url(name, version) do
+          {:ok, url} -> url
+          _ -> nil
+        end,
       checksum: body["checksum"],
       checksum_algo: if(body["checksum"], do: :sha256, else: nil),
       manifest: %ManifestFormat{

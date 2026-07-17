@@ -6,6 +6,7 @@ defmodule Opsm.Clients.CheckyMonkey do
   """
 
   alias Opsm.Http
+
   alias Opsm.Types.{
     ServiceConfig,
     HttpConfig,
@@ -39,14 +40,17 @@ defmodule Opsm.Clients.CheckyMonkey do
     case Http.post_json(client, "/verify/submit", body) do
       :ok ->
         # Return a queued response - actual status fetched via get_status
-        {:ok, %CheckyMonkeyResponse{
-          request_id: "pending",
-          status: :queued,
-          started_at: nil,
-          completed_at: nil,
-          results: nil
-        }}
-      {:error, reason} -> {:error, reason}
+        {:ok,
+         %CheckyMonkeyResponse{
+           request_id: "pending",
+           status: :queued,
+           started_at: nil,
+           completed_at: nil,
+           results: nil
+         }}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -121,12 +125,15 @@ defmodule Opsm.Clients.CheckyMonkey do
   def health(%__MODULE__{client: client}) do
     case Http.get_json(client, "/health") do
       {:ok, json} ->
-        {:ok, %OikosHealthResponse{
-          status: decode_status(json["status"]),
-          version: json["version"] || "unknown",
-          uptime: json["uptime"] || 0
-        }}
-      {:error, reason} -> {:error, reason}
+        {:ok,
+         %OikosHealthResponse{
+           status: decode_status(json["status"]),
+           version: json["version"] || "unknown",
+           uptime: json["uptime"] || 0
+         }}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -151,9 +158,11 @@ defmodule Opsm.Clients.CheckyMonkey do
   end
 
   defp decode_results(nil), do: nil
+
   defp decode_results(results) when is_list(results) do
     Enum.map(results, &decode_verification_result/1)
   end
+
   defp decode_results(_), do: nil
 
   defp decode_verification_result(json) when is_map(json) do
@@ -165,6 +174,7 @@ defmodule Opsm.Clients.CheckyMonkey do
       duration: json["duration"] || 0
     }
   end
+
   defp decode_verification_result(_), do: nil
 
   defp decode_verification_type("PropertyTests"), do: :property_tests

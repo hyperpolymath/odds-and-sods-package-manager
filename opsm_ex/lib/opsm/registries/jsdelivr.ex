@@ -22,11 +22,12 @@ defmodule Opsm.Registries.JsDelivr do
   def fetch_package(name, version \\ "latest") do
     {source, pkg_name} = parse_source(name)
 
-    target_version = if version == "latest" do
-      fetch_latest_version(source, pkg_name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(source, pkg_name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -74,7 +75,8 @@ defmodule Opsm.Registries.JsDelivr do
 
     # jsDelivr does not have a native search API; proxy through npm search
     # and augment with jsDelivr stats
-    url = "https://registry.npmjs.org/-/v1/search?text=#{URI.encode_www_form(query)}&size=#{limit}"
+    url =
+      "https://registry.npmjs.org/-/v1/search?text=#{URI.encode_www_form(query)}&size=#{limit}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"objects" => objects}} when is_list(objects) ->

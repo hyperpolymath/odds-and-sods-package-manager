@@ -11,34 +11,37 @@ defmodule Opsm.Aspect.SecurityTest do
 
   describe "Package Tampering Detection" do
     test "detects checksum mismatch when package is altered" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "critical-lib",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        checksum_algo: "sha256"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "critical-lib",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          checksum_algo: "sha256"
+        })
 
       # Tampered checksum should not match
-      {:mismatch, details} = Lockfile.verify_package(
-        lockfile,
-        "critical-lib",
-        :npm,
-        "sha256:0000000000000000000000000000000000000000000000000000000000000000"
-      )
+      {:mismatch, details} =
+        Lockfile.verify_package(
+          lockfile,
+          "critical-lib",
+          :npm,
+          "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        )
 
       assert details.expected =~ "e3b0c44"
       assert details.actual =~ "00000000"
     end
 
     test "rejects package with missing checksum" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "untrusted-lib",
-        version: "1.0.0",
-        forth: :npm
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "untrusted-lib",
+          version: "1.0.0",
+          forth: :npm
+        })
 
       result = Lockfile.verify_package(lockfile, "untrusted-lib", :npm, "any-checksum")
 
@@ -58,23 +61,26 @@ defmodule Opsm.Aspect.SecurityTest do
       # The resolver should check internal registries first
       assert :internal in registry_order
       assert :npm in registry_order
-      assert Enum.find_index(registry_order, &(&1 == :internal)) < Enum.find_index(registry_order, &(&1 == :npm))
+
+      assert Enum.find_index(registry_order, &(&1 == :internal)) <
+               Enum.find_index(registry_order, &(&1 == :npm))
     end
 
     test "validates registry source for each package" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "business-logic",
-        version: "2.5.3",
-        forth: :npm,
-        source_url: "https://trusted-registry.example.com/business-logic.tgz"
-      })
-      |> Lockfile.add_package(%{
-        name: "util-lib",
-        version: "1.0.0",
-        forth: :internal,
-        source_url: "https://internal.company.local/util-lib.tgz"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "business-logic",
+          version: "2.5.3",
+          forth: :npm,
+          source_url: "https://trusted-registry.example.com/business-logic.tgz"
+        })
+        |> Lockfile.add_package(%{
+          name: "util-lib",
+          version: "1.0.0",
+          forth: :internal,
+          source_url: "https://internal.company.local/util-lib.tgz"
+        })
 
       npm_pkg = Lockfile.get_package(lockfile, "business-logic", :npm)
       internal_pkg = Lockfile.get_package(lockfile, "util-lib", :internal)
@@ -89,24 +95,27 @@ defmodule Opsm.Aspect.SecurityTest do
 
   describe "Lockfile Poisoning Detection" do
     test "detects when lockfile has been modified after generation" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "pkg1",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "abc123"
-      })
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "pkg1",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "abc123"
+        })
+        |> Lockfile.compute_integrity_hash()
 
       original_hash = lockfile.integrity_hash
 
       # Simulate tampering: add a malicious package
-      tampered = Lockfile.add_package(lockfile, %{
-        name: "malware",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "evil"
-      })
+      tampered =
+        Lockfile.add_package(lockfile, %{
+          name: "malware",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "evil"
+        })
+
       tampered = %{tampered | integrity_hash: original_hash}
 
       # Integrity verification should fail
@@ -115,41 +124,46 @@ defmodule Opsm.Aspect.SecurityTest do
     end
 
     test "detects when dependency list is modified" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "app",
-        version: "1.0.0",
-        forth: :npm,
-        dependencies: ["safe-dep-1", "safe-dep-2"]
-      })
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "app",
+          version: "1.0.0",
+          forth: :npm,
+          dependencies: ["safe-dep-1", "safe-dep-2"]
+        })
+        |> Lockfile.compute_integrity_hash()
 
       original_hash = lockfile.integrity_hash
 
       # Tamper: modify dependencies
-      tampered = Lockfile.add_package(lockfile, %{
-        name: "app",
-        version: "1.0.0",
-        forth: :npm,
-        dependencies: ["safe-dep-1", "safe-dep-2", "malicious-dep"]
-      })
+      tampered =
+        Lockfile.add_package(lockfile, %{
+          name: "app",
+          version: "1.0.0",
+          forth: :npm,
+          dependencies: ["safe-dep-1", "safe-dep-2", "malicious-dep"]
+        })
+
       tampered = %{tampered | integrity_hash: original_hash}
 
       assert {:error, _} = Lockfile.verify_integrity(tampered)
     end
 
     test "lockfile integrity hash prevents silent corruption" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc"})
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "abc"})
+        |> Lockfile.compute_integrity_hash()
 
       # Compute new hash after modification
-      modified = Lockfile.add_package(lockfile, %{
-        name: "pkg",
-        version: "2.0.0",
-        forth: :npm,
-        checksum: "def"
-      })
+      modified =
+        Lockfile.add_package(lockfile, %{
+          name: "pkg",
+          version: "2.0.0",
+          forth: :npm,
+          checksum: "def"
+        })
 
       # Hash without recomputation should fail
       tampered = %{modified | integrity_hash: lockfile.integrity_hash}
@@ -194,7 +208,8 @@ defmodule Opsm.Aspect.SecurityTest do
       alias Opsm.Verified.Url
 
       # data: scheme should be rejected
-      assert {:error, {:invalid_scheme, "data"}} = Url.validate("data:text/html,<script>alert(1)</script>")
+      assert {:error, {:invalid_scheme, "data"}} =
+               Url.validate("data:text/html,<script>alert(1)</script>")
     end
   end
 
@@ -233,9 +248,12 @@ defmodule Opsm.Aspect.SecurityTest do
     test "path normalization prevents traversal attacks" do
       # When extracting a tarball, paths must be checked for traversal
       paths_to_check = [
-        {"package/lib/main.js", false},       # Safe
-        {"package/../../../etc/passwd", true},  # Dangerous
-        {"package/./lib/index.js", false},    # Safe
+        # Safe
+        {"package/lib/main.js", false},
+        # Dangerous
+        {"package/../../../etc/passwd", true},
+        # Safe
+        {"package/./lib/index.js", false}
       ]
 
       Enum.each(paths_to_check, fn {path, is_dangerous} ->
@@ -255,17 +273,25 @@ defmodule Opsm.Aspect.SecurityTest do
 
   describe "Cryptographic Verification" do
     test "uses SHA3-512 for lockfile integrity" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm})
+        |> Lockfile.compute_integrity_hash()
 
       assert lockfile.integrity_algo == "sha3-512"
-      assert String.length(lockfile.integrity_hash) == 128  # 512 bits = 128 hex
+      # 512 bits = 128 hex
+      assert String.length(lockfile.integrity_hash) == 128
     end
 
     test "packages default to BLAKE2b checksums" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg", version: "1.0.0", forth: :npm, checksum: "hash123"})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "pkg",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "hash123"
+        })
 
       pkg = Lockfile.get_package(lockfile, "pkg", :npm)
       assert pkg.checksum_algo == "blake2b"
@@ -274,29 +300,30 @@ defmodule Opsm.Aspect.SecurityTest do
 
   describe "Supply Chain Integrity" do
     test "lockfile records full dependency tree with integrity" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "root",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "root-hash",
-        dependencies: ["dep-a", "dep-b"]
-      })
-      |> Lockfile.add_package(%{
-        name: "dep-a",
-        version: "2.0.0",
-        forth: :npm,
-        checksum: "dep-a-hash",
-        dependencies: ["deep-dep"]
-      })
-      |> Lockfile.add_package(%{
-        name: "deep-dep",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "deep-hash",
-        dependencies: []
-      })
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "root",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "root-hash",
+          dependencies: ["dep-a", "dep-b"]
+        })
+        |> Lockfile.add_package(%{
+          name: "dep-a",
+          version: "2.0.0",
+          forth: :npm,
+          checksum: "dep-a-hash",
+          dependencies: ["deep-dep"]
+        })
+        |> Lockfile.add_package(%{
+          name: "deep-dep",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "deep-hash",
+          dependencies: []
+        })
+        |> Lockfile.compute_integrity_hash()
 
       # Every package in the chain has checksum
       root = Lockfile.get_package(lockfile, "root", :npm)
@@ -313,13 +340,14 @@ defmodule Opsm.Aspect.SecurityTest do
     end
 
     test "prevents version substitution attacks" do
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "pkg",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "checksum-for-1.0.0"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "pkg",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "checksum-for-1.0.0"
+        })
 
       # Cannot trick into accepting 2.0.0 with old checksum
       result = Lockfile.verify_package(lockfile, "pkg", :npm, "checksum-for-1.0.0")

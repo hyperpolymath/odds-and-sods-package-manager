@@ -20,11 +20,12 @@ defmodule Opsm.Registries.Packagist do
     # Packagist packages use vendor/package format like "symfony/console"
     case String.split(name, "/") do
       [vendor, package] ->
-        target_version = if version == "latest" do
-          fetch_latest_version(vendor, package)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            fetch_latest_version(vendor, package)
+          else
+            version
+          end
 
         case target_version do
           nil ->
@@ -33,6 +34,7 @@ defmodule Opsm.Registries.Packagist do
           ver ->
             # Fetch package metadata
             url = "#{@api_url}/p2/#{vendor}/#{package}.json"
+
             case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
               {:ok, body} ->
                 parse_package(name, body, ver)
@@ -59,6 +61,7 @@ defmodule Opsm.Registries.Packagist do
   defp fetch_latest_version(vendor, package) do
     full_name = "#{vendor}/#{package}"
     url = "#{@api_url}/p2/#{full_name}.json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => %{^full_name => versions}}} when is_list(versions) ->
         # Packagist v2 returns a list of version objects, newest first
@@ -89,9 +92,12 @@ defmodule Opsm.Registries.Packagist do
         |> Enum.map(& &1["version"])
         |> Enum.reject(&is_nil/1)
         |> Enum.reject(&String.contains?(&1, "dev"))
-      _ -> []
+
+      _ ->
+        []
     end
   end
+
   defp get_all_versions_from_body(_), do: []
 
   @doc """
@@ -104,14 +110,16 @@ defmodule Opsm.Registries.Packagist do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        packages = Enum.map(results, fn pkg ->
-          %{
-            name: Map.get(pkg, "name", ""),
-            version: Map.get(pkg, "version", "unknown"),
-            description: Map.get(pkg, "description", ""),
-            downloads: Map.get(pkg, "downloads", 0)
-          }
-        end)
+        packages =
+          Enum.map(results, fn pkg ->
+            %{
+              name: Map.get(pkg, "name", ""),
+              version: Map.get(pkg, "version", "unknown"),
+              description: Map.get(pkg, "description", ""),
+              downloads: Map.get(pkg, "downloads", 0)
+            }
+          end)
+
         {:ok, packages}
 
       {:ok, _} ->
@@ -151,6 +159,7 @@ defmodule Opsm.Registries.Packagist do
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             versions = get_all_versions_from_body(body)
+
             if versions == [] do
               {:error, :not_found}
             else
@@ -181,6 +190,7 @@ defmodule Opsm.Registries.Packagist do
     case String.split(name, "/") do
       [vendor, package] ->
         url = "#{@api_url}/p2/#{vendor}/#{package}.json"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             extract_dist_url(body, name, version)
@@ -201,9 +211,12 @@ defmodule Opsm.Registries.Packagist do
           %{"dist" => %{"url" => url}} -> {:ok, url}
           _ -> {:error, :not_found}
         end
-      _ -> {:error, :not_found}
+
+      _ ->
+        {:error, :not_found}
     end
   end
+
   defp extract_dist_url(_, _, _), do: {:error, :not_found}
 
   # Parsers
@@ -214,31 +227,32 @@ defmodule Opsm.Registries.Packagist do
         deps = parse_composer_deps(version_data)
         {dist_url, checksum} = extract_dist_info(version_data)
 
-        {:ok, %ResolvedPackage{
-          package: name,
-          version: version,
-          forth: :packagist,
-          registry_url: "#{@search_url}/packages/#{name}",
-          tarball_url: dist_url,
-          checksum: checksum,
-          checksum_algo: if(checksum, do: :sha256, else: nil),
-          manifest: %ManifestFormat{
-            name: name,
-            version: version,
-            description: Map.get(version_data, "description"),
-            license: parse_license(Map.get(version_data, "license")),
-            homepage: Map.get(version_data, "homepage"),
-            repository: extract_repo_url(version_data),
-            authors: parse_authors(Map.get(version_data, "authors", [])),
-            keywords: Map.get(version_data, "keywords", []),
-            dependencies: deps,
-            dev_dependencies: %{},
-            source_forth: :packagist,
-            raw_manifest: version_data
-          },
-          attestations: [],
-          resolved_deps: []
-        }}
+        {:ok,
+         %ResolvedPackage{
+           package: name,
+           version: version,
+           forth: :packagist,
+           registry_url: "#{@search_url}/packages/#{name}",
+           tarball_url: dist_url,
+           checksum: checksum,
+           checksum_algo: if(checksum, do: :sha256, else: nil),
+           manifest: %ManifestFormat{
+             name: name,
+             version: version,
+             description: Map.get(version_data, "description"),
+             license: parse_license(Map.get(version_data, "license")),
+             homepage: Map.get(version_data, "homepage"),
+             repository: extract_repo_url(version_data),
+             authors: parse_authors(Map.get(version_data, "authors", [])),
+             keywords: Map.get(version_data, "keywords", []),
+             dependencies: deps,
+             dev_dependencies: %{},
+             source_forth: :packagist,
+             raw_manifest: version_data
+           },
+           attestations: [],
+           resolved_deps: []
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -252,9 +266,12 @@ defmodule Opsm.Registries.Packagist do
           nil -> {:error, :version_not_found}
           version_data -> {:ok, version_data}
         end
-      _ -> {:error, :not_found}
+
+      _ ->
+        {:error, :not_found}
     end
   end
+
   defp extract_version_data(_, _, _), do: {:error, :invalid_response}
 
   defp parse_composer_deps(%{"require" => require}) when is_map(require) do
@@ -262,14 +279,17 @@ defmodule Opsm.Registries.Packagist do
     |> Enum.reject(fn {pkg, _} -> pkg == "php" or String.starts_with?(pkg, "ext-") end)
     |> Enum.into(%{})
   end
+
   defp parse_composer_deps(_), do: %{}
 
   defp extract_dist_info(%{"dist" => %{"url" => url, "shasum" => shasum}}) do
     {url, shasum}
   end
+
   defp extract_dist_info(%{"dist" => %{"url" => url}}) do
     {url, nil}
   end
+
   defp extract_dist_info(_), do: {nil, nil}
 
   defp parse_license(nil), do: nil
@@ -284,6 +304,7 @@ defmodule Opsm.Registries.Packagist do
       _ -> "Unknown"
     end)
   end
+
   defp parse_authors(_), do: []
 
   defp extract_repo_url(%{"source" => %{"url" => url}}), do: url

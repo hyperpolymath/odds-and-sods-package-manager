@@ -113,7 +113,13 @@ defmodule Opsm.Container do
           case Http.post_json(client, "/sign", body) do
             :ok ->
               Logger.info("Image signed successfully")
-              {:ok, %SignatureResult{signature: "signed", algorithm: "cosign", signed_at: DateTime.utc_now() |> DateTime.to_iso8601()}}
+
+              {:ok,
+               %SignatureResult{
+                 signature: "signed",
+                 algorithm: "cosign",
+                 signed_at: DateTime.utc_now() |> DateTime.to_iso8601()
+               }}
 
             {:error, reason} ->
               Logger.error("Signing failed: #{inspect(reason)}")

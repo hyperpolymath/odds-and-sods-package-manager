@@ -22,24 +22,34 @@ defmodule Opsm.Registries.Portage do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          versions_list = body["versions"] || []
-          case Enum.find(versions_list, fn v -> v["arch"] == "amd64" end) do
-            nil ->
-              case versions_list do
-                [latest | _] -> latest["version"]
-                _ -> "0.0.0"
-              end
-            stable -> stable["version"]
+        ver =
+          if version == "latest" do
+            versions_list = body["versions"] || []
+
+            case Enum.find(versions_list, fn v -> v["arch"] == "amd64" end) do
+              nil ->
+                case versions_list do
+                  [latest | _] -> latest["version"]
+                  _ -> "0.0.0"
+                end
+
+              stable ->
+                stable["version"]
+            end
+          else
+            version
           end
-        else
-          version
-        end
+
         {:ok, parse_portage_package(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -51,13 +61,14 @@ defmodule Opsm.Registries.Portage do
   end
 
   defp parse_portage_package(name, body, version) do
-    deps = (body["dependencies"] || [])
-           |> Enum.map(fn d ->
-             dep_atom = d["atom"] || d["name"] || ""
-             {dep_atom, d["condition"] || "*"}
-           end)
-           |> Enum.reject(fn {n, _} -> n == "" end)
-           |> Map.new()
+    deps =
+      (body["dependencies"] || [])
+      |> Enum.map(fn d ->
+        dep_atom = d["atom"] || d["name"] || ""
+        {dep_atom, d["condition"] || "*"}
+      end)
+      |> Enum.reject(fn {n, _} -> n == "" end)
+      |> Map.new()
 
     manifest = %ManifestFormat{
       name: name,
@@ -76,7 +87,7 @@ defmodule Opsm.Registries.Portage do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -89,13 +100,16 @@ defmodule Opsm.Registries.Portage do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        versions_list = (body["versions"] || [])
-                        |> Enum.map(fn v -> v["version"] end)
-                        |> Enum.reject(&is_nil/1)
-                        |> Enum.uniq()
+        versions_list =
+          (body["versions"] || [])
+          |> Enum.map(fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, versions_list}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -107,31 +121,38 @@ defmodule Opsm.Registries.Portage do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: "#{pkg["category"]}/#{pkg["name"]}",
-            version: get_in(pkg, ["versions", Access.at(0), "version"]),
-            description: pkg["description"]
-          }
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: "#{pkg["category"]}/#{pkg["name"]}",
+              version: get_in(pkg, ["versions", Access.at(0), "version"]),
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"results" => results}} when is_list(results) ->
-        hits = results
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: "#{pkg["category"]}/#{pkg["name"]}",
-            version: nil,
-            description: pkg["description"]
-          }
-        end)
+        hits =
+          results
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: "#{pkg["category"]}/#{pkg["name"]}",
+              version: nil,
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, hits}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

@@ -19,7 +19,9 @@ defmodule Opsm.Registries.GitlabPackages do
   """
   def fetch_package(name, version \\ "latest") do
     {project_id, package_name} = parse_package_ref(name)
-    url = "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&sort=desc"
+
+    url =
+      "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&sort=desc"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, packages} when is_list(packages) and length(packages) > 0 ->
@@ -67,17 +69,21 @@ defmodule Opsm.Registries.GitlabPackages do
   """
   def search(query, opts \\ []) do
     per_page = Keyword.get(opts, :limit, 20)
-    url = "#{@api_url}/projects?search=#{URI.encode_www_form(query)}&with_packages=true&per_page=#{per_page}"
+
+    url =
+      "#{@api_url}/projects?search=#{URI.encode_www_form(query)}&with_packages=true&per_page=#{per_page}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, projects} when is_list(projects) ->
-        results = Enum.map(projects, fn project ->
-          %{
-            name: project["path_with_namespace"],
-            version: nil,
-            description: project["description"]
-          }
-        end)
+        results =
+          Enum.map(projects, fn project ->
+            %{
+              name: project["path_with_namespace"],
+              version: nil,
+              description: project["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -93,7 +99,9 @@ defmodule Opsm.Registries.GitlabPackages do
   """
   def exists?(name) do
     {project_id, package_name} = parse_package_ref(name)
-    url = "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&per_page=1"
+
+    url =
+      "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&per_page=1"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, packages} when is_list(packages) and length(packages) > 0 -> true
@@ -108,14 +116,18 @@ defmodule Opsm.Registries.GitlabPackages do
   """
   def versions(name) do
     {project_id, package_name} = parse_package_ref(name)
-    url = "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&sort=desc&per_page=100"
+
+    url =
+      "#{@api_url}/projects/#{URI.encode(project_id, &URI.char_unreserved?/1)}/packages?package_name=#{URI.encode_www_form(package_name)}&sort=desc&per_page=100"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, packages} when is_list(packages) ->
-        version_list = packages
-        |> Enum.map(fn pkg -> pkg["version"] end)
-        |> Enum.reject(&is_nil/1)
-        |> Enum.uniq()
+        version_list =
+          packages
+          |> Enum.map(fn pkg -> pkg["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, version_list}
 
       {:ok, _} ->

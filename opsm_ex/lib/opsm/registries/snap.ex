@@ -17,6 +17,7 @@ defmodule Opsm.Registries.Snap do
   """
   def fetch_package(name, version \\ "latest") do
     url = "#{@api_url}/#{name}"
+
     headers = [
       {"Snap-Device-Series", "16"},
       {"Snap-Device-Architecture", "amd64"}
@@ -25,21 +26,29 @@ defmodule Opsm.Registries.Snap do
     case VerifiedHttp.get_json(url, headers: headers, receive_timeout: 10_000) do
       {:ok, body} ->
         channel_map = body["channel-map"] || []
-        stable = Enum.find(channel_map, fn c ->
-          get_in(c, ["channel", "name"]) == "stable"
-        end)
 
-        ver = if version == "latest" do
-          if stable, do: stable["version"], else: "0.0.0"
-        else
-          version
-        end
+        stable =
+          Enum.find(channel_map, fn c ->
+            get_in(c, ["channel", "name"]) == "stable"
+          end)
+
+        ver =
+          if version == "latest" do
+            if stable, do: stable["version"], else: "0.0.0"
+          else
+            version
+          end
 
         {:ok, parse_snap(name, body, ver, stable)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -56,13 +65,15 @@ defmodule Opsm.Registries.Snap do
       dependencies: %{}
     }
 
-    download_url = if stable_channel do
-      get_in(stable_channel, ["download", "url"])
-    end
+    download_url =
+      if stable_channel do
+        get_in(stable_channel, ["download", "url"])
+      end
 
-    download_sha = if stable_channel do
-      get_in(stable_channel, ["download", "sha3-384"])
-    end
+    download_sha =
+      if stable_channel do
+        get_in(stable_channel, ["download", "sha3-384"])
+      end
 
     %ResolvedPackage{
       package: name,
@@ -72,7 +83,7 @@ defmodule Opsm.Registries.Snap do
       tarball_url: download_url,
       checksum: download_sha,
       checksum_algo: if(download_sha, do: :"sha3-384"),
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -85,13 +96,16 @@ defmodule Opsm.Registries.Snap do
 
     case VerifiedHttp.get_json(url, headers: headers, receive_timeout: 10_000) do
       {:ok, body} ->
-        versions = (body["channel-map"] || [])
-                   |> Enum.map(fn c -> c["version"] end)
-                   |> Enum.reject(&is_nil/1)
-                   |> Enum.uniq()
+        versions =
+          (body["channel-map"] || [])
+          |> Enum.map(fn c -> c["version"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
+
         {:ok, versions}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -99,20 +113,25 @@ defmodule Opsm.Registries.Snap do
   Search for snaps in the Snap Store.
   """
   def search(query, _opts \\ []) do
-    url = "https://api.snapcraft.io/v2/snaps/find?q=#{URI.encode(query)}&fields=title,summary,version"
+    url =
+      "https://api.snapcraft.io/v2/snaps/find?q=#{URI.encode(query)}&fields=title,summary,version"
+
     headers = [{"Snap-Device-Series", "16"}]
 
     case VerifiedHttp.get_json(url, headers: headers, receive_timeout: 10_000) do
       {:ok, body} ->
-        results = (body["results"] || [])
-        |> Enum.take(20)
-        |> Enum.map(fn s ->
-          snap = s["snap"] || %{}
-          %{name: s["name"], version: s["version"], description: snap["summary"]}
-        end)
+        results =
+          (body["results"] || [])
+          |> Enum.take(20)
+          |> Enum.map(fn s ->
+            snap = s["snap"] || %{}
+            %{name: s["name"], version: s["version"], description: snap["summary"]}
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

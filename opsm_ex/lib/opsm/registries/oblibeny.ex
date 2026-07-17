@@ -17,7 +17,8 @@ defmodule Opsm.Registries.Oblibeny do
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://registry.oblibeny.org/api/v1"
-  @fallback_mode :git  # Until registry deployed
+  # Until registry deployed
+  @fallback_mode :git
 
   @doc """
   Fetch package metadata from oblibeny registry.
@@ -93,6 +94,7 @@ defmodule Opsm.Registries.Oblibeny do
 
   defp registry_exists?(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -151,17 +153,19 @@ defmodule Opsm.Registries.Oblibeny do
   defp git_versions(_name) do
     # For git mode, versions are git tags
     # This requires git ls-remote or GitHub API
-    {:ok, ["main", "master"]}  # Minimal fallback
+    # Minimal fallback
+    {:ok, ["main", "master"]}
   end
 
   defp git_fetch(repo_url, version) do
     # Construct oblibeny.toml URL
-    manifest_url = case version do
-      "latest" -> "#{repo_url}/raw/main/oblibeny.toml"
-      "main" -> "#{repo_url}/raw/main/oblibeny.toml"
-      "master" -> "#{repo_url}/raw/master/oblibeny.toml"
-      tag -> "#{repo_url}/raw/#{tag}/oblibeny.toml"
-    end
+    manifest_url =
+      case version do
+        "latest" -> "#{repo_url}/raw/main/oblibeny.toml"
+        "main" -> "#{repo_url}/raw/main/oblibeny.toml"
+        "master" -> "#{repo_url}/raw/master/oblibeny.toml"
+        tag -> "#{repo_url}/raw/#{tag}/oblibeny.toml"
+      end
 
     case VerifiedHttp.get(manifest_url, receive_timeout: 10_000) do
       {:ok, %{body: body}} ->
@@ -200,7 +204,7 @@ defmodule Opsm.Registries.Oblibeny do
       end
 
     pkg = %ResolvedPackage{
-      package: manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim()),
+      package: manifest.name || repo_url |> String.split("/") |> List.last() |> String.trim(),
       version: manifest.version || version,
       forth: :oblibeny,
       registry_url: repo_url,
@@ -225,7 +229,8 @@ defmodule Opsm.Registries.Oblibeny do
       registry_url: @base_url,
       tarball_url: "#{@base_url}/packages/#{pkg_data["name"]}/#{version}/download",
       checksum: pkg_data["checksum"],
-      checksum_algo: :sha3_512,  # Oblibeny uses SHA3-512
+      # Oblibeny uses SHA3-512
+      checksum_algo: :sha3_512,
       manifest: %ManifestFormat{
         name: pkg_data["name"],
         version: version,

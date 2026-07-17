@@ -240,6 +240,7 @@ defmodule Opsm.SmartInstall do
   defp execute_non_port_backend("container", pkgs, dry_run, _scope, _native, _global, _dev) do
     image = System.get_env("OPSM_CONTAINER_IMAGE")
     base_cmd = System.get_env("OPSM_CONTAINER_CMD", "dnf install -y")
+
     runtime =
       cond do
         System.find_executable("podman") -> "podman"
@@ -252,25 +253,25 @@ defmodule Opsm.SmartInstall do
         {:error, pkg, "podman or docker is required to use container backend"}
       end)
     else
-    if is_nil(image) or image == "" do
-      Enum.map(pkgs, fn pkg ->
-        {:error, pkg, "OPSM_CONTAINER_IMAGE is required to use container backend"}
-      end)
-    else
-      Enum.map(pkgs, fn pkg ->
-        cmd = runtime
-        args = ["run", "--rm", image, "sh", "-lc", "#{base_cmd} #{pkg}"]
+      if is_nil(image) or image == "" do
+        Enum.map(pkgs, fn pkg ->
+          {:error, pkg, "OPSM_CONTAINER_IMAGE is required to use container backend"}
+        end)
+      else
+        Enum.map(pkgs, fn pkg ->
+          cmd = runtime
+          args = ["run", "--rm", image, "sh", "-lc", "#{base_cmd} #{pkg}"]
 
-        if dry_run do
-          {:dry_run, pkg, "#{cmd} #{Enum.join(args, " ")}"}
-        else
-          case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
-            {output, 0} -> {:ok, pkg, output}
-            {error, code} -> {:error, pkg, "#{cmd} failed (#{code}): #{error}"}
+          if dry_run do
+            {:dry_run, pkg, "#{cmd} #{Enum.join(args, " ")}"}
+          else
+            case Opsm.SafeExec.cmd(cmd, args, stderr_to_stdout: true) do
+              {output, 0} -> {:ok, pkg, output}
+              {error, code} -> {:error, pkg, "#{cmd} failed (#{code}): #{error}"}
+            end
           end
-        end
-      end)
-    end
+        end)
+      end
     end
   end
 
@@ -317,7 +318,18 @@ defmodule Opsm.SmartInstall do
   end
 
   defp pick_auto_port do
-    candidates = [:rpm_ostree, :rpm, :deb, :pacman, :homebrew, :nix, :guix, :winget, :choco, :scoop]
+    candidates = [
+      :rpm_ostree,
+      :rpm,
+      :deb,
+      :pacman,
+      :homebrew,
+      :nix,
+      :guix,
+      :winget,
+      :choco,
+      :scoop
+    ]
 
     Enum.reduce_while(candidates, {:error, "no suitable backend available"}, fn port, _acc ->
       case Federation.check_connection_port(port) do

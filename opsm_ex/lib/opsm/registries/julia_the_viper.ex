@@ -17,7 +17,8 @@ defmodule Opsm.Registries.JuliaTheViper do
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @base_url "https://packages.julia-the-viper.dev/api/v1"
-  @fallback_mode :git  # Until registry deployed
+  # Until registry deployed
+  @fallback_mode :git
 
   @doc """
   Fetch package metadata from julia-the-viper registry.
@@ -93,6 +94,7 @@ defmodule Opsm.Registries.JuliaTheViper do
 
   defp registry_exists?(name) do
     url = "#{@base_url}/packages/#{URI.encode(name)}"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -150,17 +152,19 @@ defmodule Opsm.Registries.JuliaTheViper do
 
   defp git_versions(_name) do
     # For git mode, versions are git tags
-    {:ok, ["main", "master"]}  # Minimal fallback
+    # Minimal fallback
+    {:ok, ["main", "master"]}
   end
 
   defp git_fetch(repo_url, version) do
     # julia-the-viper uses Viper.toml for manifest
-    manifest_url = case version do
-      "latest" -> "#{repo_url}/raw/main/Viper.toml"
-      "main" -> "#{repo_url}/raw/main/Viper.toml"
-      "master" -> "#{repo_url}/raw/master/Viper.toml"
-      tag -> "#{repo_url}/raw/#{tag}/Viper.toml"
-    end
+    manifest_url =
+      case version do
+        "latest" -> "#{repo_url}/raw/main/Viper.toml"
+        "main" -> "#{repo_url}/raw/main/Viper.toml"
+        "master" -> "#{repo_url}/raw/master/Viper.toml"
+        tag -> "#{repo_url}/raw/#{tag}/Viper.toml"
+      end
 
     case VerifiedHttp.get(manifest_url, receive_timeout: 10_000) do
       {:ok, %{body: body}} ->
@@ -199,7 +203,7 @@ defmodule Opsm.Registries.JuliaTheViper do
       end
 
     pkg = %ResolvedPackage{
-      package: manifest.name || (repo_url |> String.split("/") |> List.last() |> String.trim()),
+      package: manifest.name || repo_url |> String.split("/") |> List.last() |> String.trim(),
       version: manifest.version || version,
       forth: :julia_the_viper,
       registry_url: repo_url,

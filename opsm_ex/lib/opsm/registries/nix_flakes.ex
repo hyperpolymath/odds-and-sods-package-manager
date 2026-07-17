@@ -24,20 +24,26 @@ defmodule Opsm.Registries.NixFlakes do
       {:ok, body} ->
         releases = body["releases"] || body["versions"] || []
 
-        ver = if version == "latest" do
-          case releases do
-            [latest | _] -> latest["version"] || latest["ref"] || "0.0.0"
-            _ -> body["version"] || "0.0.0"
+        ver =
+          if version == "latest" do
+            case releases do
+              [latest | _] -> latest["version"] || latest["ref"] || "0.0.0"
+              _ -> body["version"] || "0.0.0"
+            end
+          else
+            version
           end
-        else
-          version
-        end
 
         {:ok, parse_flake(name, body, ver, releases)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -47,12 +53,14 @@ defmodule Opsm.Registries.NixFlakes do
 
     # Extract flake inputs as dependencies
     inputs = body["inputs"] || %{}
-    deps = inputs
-           |> Enum.map(fn {k, v} ->
-             ref = if is_map(v), do: v["url"] || v["ref"] || "*", else: "*"
-             {k, ref}
-           end)
-           |> Map.new()
+
+    deps =
+      inputs
+      |> Enum.map(fn {k, v} ->
+        ref = if is_map(v), do: v["url"] || v["ref"] || "*", else: "*"
+        {k, ref}
+      end)
+      |> Map.new()
 
     manifest = %ManifestFormat{
       name: name,
@@ -67,15 +75,17 @@ defmodule Opsm.Registries.NixFlakes do
       raw_manifest: body
     }
 
-    tarball = case releases do
-      [latest | _] -> latest["tarball_url"] || latest["archive_url"]
-      _ -> nil
-    end
+    tarball =
+      case releases do
+        [latest | _] -> latest["tarball_url"] || latest["archive_url"]
+        _ -> nil
+      end
 
-    checksum = case releases do
-      [latest | _] -> latest["hash"] || latest["narHash"]
-      _ -> nil
-    end
+    checksum =
+      case releases do
+        [latest | _] -> latest["hash"] || latest["narHash"]
+        _ -> nil
+      end
 
     %ResolvedPackage{
       package: name,
@@ -99,30 +109,35 @@ defmodule Opsm.Registries.NixFlakes do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, items} when is_list(items) ->
-        results = items
-        |> Enum.take(20)
-        |> Enum.map(fn flake ->
-          %{
-            name: flake["name"] || flake["full_name"],
-            version: flake["version"],
-            description: flake["description"]
-          }
-        end)
+        results =
+          items
+          |> Enum.take(20)
+          |> Enum.map(fn flake ->
+            %{
+              name: flake["name"] || flake["full_name"],
+              version: flake["version"],
+              description: flake["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, body} ->
-        results = (body["results"] || body["flakes"] || [])
-        |> Enum.take(20)
-        |> Enum.map(fn flake ->
-          %{
-            name: flake["name"] || flake["full_name"],
-            version: flake["version"] || flake["ref"],
-            description: flake["description"]
-          }
-        end)
+        results =
+          (body["results"] || body["flakes"] || [])
+          |> Enum.take(20)
+          |> Enum.map(fn flake ->
+            %{
+              name: flake["name"] || flake["full_name"],
+              version: flake["version"] || flake["ref"],
+              description: flake["description"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -145,12 +160,16 @@ defmodule Opsm.Registries.NixFlakes do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         releases = body["releases"] || body["versions"] || []
-        vers = releases
-               |> Enum.map(fn r -> r["version"] || r["ref"] end)
-               |> Enum.reject(&is_nil/1)
+
+        vers =
+          releases
+          |> Enum.map(fn r -> r["version"] || r["ref"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, vers}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 end

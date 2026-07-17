@@ -40,7 +40,8 @@ defmodule Opsm.Crypto.RNG do
       32
   """
   def generate_key_256bit do
-    generate_bytes(32)  # 256 bits
+    # 256 bits
+    generate_bytes(32)
   end
 
   @doc """
@@ -53,7 +54,8 @@ defmodule Opsm.Crypto.RNG do
       24
   """
   def generate_nonce_192bit do
-    generate_bytes(24)  # 192 bits (XChaCha20)
+    # 192 bits (XChaCha20)
+    generate_bytes(24)
   end
 
   @doc """
@@ -66,6 +68,7 @@ defmodule Opsm.Crypto.RNG do
       32
   """
   def generate_salt do
-    generate_bytes(32)  # 256 bits
+    # 256 bits
+    generate_bytes(32)
   end
 end

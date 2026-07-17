@@ -20,15 +20,17 @@ defmodule Opsm.Registries.Godot do
   def fetch_package(name, version \\ "latest") do
     case fetch_by_id_or_search(name) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          body["version_string"] || body["version"] || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            body["version_string"] || body["version"] || "0.0.0"
+          else
+            version
+          end
 
         {:ok, parse_godot_asset(name, body, ver)}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -57,16 +59,19 @@ defmodule Opsm.Registries.Godot do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         results = body["result"] || []
+
         case results do
           [asset | _] ->
             # Fetch full asset details by ID
             asset_id = asset["asset_id"]
             if asset_id, do: fetch_by_id(asset_id), else: {:ok, asset}
 
-          [] -> {:error, :not_found}
+          [] ->
+            {:error, :not_found}
         end
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -86,11 +91,13 @@ defmodule Opsm.Registries.Godot do
       homepage: body["browse_url"],
       repository: body["browse_url"],
       authors: if(body["author"], do: [body["author"]], else: []),
-      keywords: [
-        "godot",
-        "godot-#{body["godot_version"] || "unknown"}",
-        category_label(category)
-      ] |> Enum.reject(&is_nil/1),
+      keywords:
+        [
+          "godot",
+          "godot-#{body["godot_version"] || "unknown"}",
+          category_label(category)
+        ]
+        |> Enum.reject(&is_nil/1),
       dependencies: %{},
       source_forth: :godot,
       raw_manifest: body
@@ -144,17 +151,20 @@ defmodule Opsm.Registries.Godot do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        results = (body["result"] || [])
-        |> Enum.map(fn asset ->
-          %{
-            name: asset["title"],
-            version: asset["version_string"] || asset["version"],
-            description: asset["description"] || asset["blurb"]
-          }
-        end)
+        results =
+          (body["result"] || [])
+          |> Enum.map(fn asset ->
+            %{
+              name: asset["title"],
+              version: asset["version_string"] || asset["version"],
+              description: asset["description"] || asset["blurb"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

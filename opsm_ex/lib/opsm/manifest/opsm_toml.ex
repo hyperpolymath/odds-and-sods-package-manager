@@ -100,7 +100,9 @@ defmodule Opsm.Manifest.OpsmToml do
   @spec build_config(ManifestFormat.t()) :: map() | nil
   def build_config(%ManifestFormat{raw_manifest: raw}) when is_map(raw) do
     case raw["build"] do
-      nil -> nil
+      nil ->
+        nil
+
       build ->
         %{
           system: safe_to_build_system(build["system"]),
@@ -143,6 +145,7 @@ defmodule Opsm.Manifest.OpsmToml do
   @known_build_systems ~w(just make cargo mix npm python go zig bundler pub gradle maven cabal stack dune)a
 
   defp safe_to_build_system(nil), do: nil
+
   defp safe_to_build_system(s) when is_binary(s) do
     atom = String.to_existing_atom(s)
     if atom in @known_build_systems, do: atom, else: nil

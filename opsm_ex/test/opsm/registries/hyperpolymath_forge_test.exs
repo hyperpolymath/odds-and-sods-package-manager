@@ -90,7 +90,9 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
 
   describe "fetch_package/2" do
     test "returns error tuple for non-existent package" do
-      result = HyperpPolymathForge.fetch_package("xyz-definitely-not-a-hp-package-abc-999", "latest")
+      result =
+        HyperpPolymathForge.fetch_package("xyz-definitely-not-a-hp-package-abc-999", "latest")
+
       assert match?({:error, _}, result)
     end
 
@@ -100,9 +102,11 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
         {:ok, pkg} ->
           assert is_map(pkg)
           assert pkg.forth == :hf
+
         {:error, :not_found} ->
           # Acceptable if GitHub API unavailable in CI or cache miss
           :ok
+
         {:error, _} ->
           :ok
       end
@@ -137,48 +141,51 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       expiry = now + 60_000
 
       entries = [
-        {"opsm", %{
-          type: :package,
-          pkg_name: "opsm",
-          repo_name: "odds-and-sods-package-manager",
-          default_branch: "main",
-          version: "2.0.0",
-          description: "Universal package manager",
-          license: "MPL-2.0",
-          authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
-          keywords: ["package", "manager"],
-          forth: :hyperpolymath,
-          repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
-          raw_toml: %{}
-        }, expiry},
-        {"affinescript-vite", %{
-          type: :package,
-          pkg_name: "affinescript-vite",
-          repo_name: "affinescript-vite",
-          default_branch: "main",
-          version: "0.1.0",
-          description: "Vite plugin for AffineScript",
-          license: "MPL-2.0",
-          authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
-          keywords: ["vite", "affinescript", "bundler"],
-          forth: :affinescript,
-          repo_url: "https://github.com/hyperpolymath/affinescript-vite",
-          raw_toml: %{}
-        }, expiry},
-        {"ephapax-core", %{
-          type: :package,
-          pkg_name: "ephapax-core",
-          repo_name: "ephapax",
-          default_branch: "main",
-          version: "0.3.0",
-          description: "Linear type system for Elixir",
-          license: "MPL-2.0",
-          authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
-          keywords: ["types", "linear", "ephapax"],
-          forth: :ephapax,
-          repo_url: "https://github.com/hyperpolymath/ephapax",
-          raw_toml: %{}
-        }, expiry}
+        {"opsm",
+         %{
+           type: :package,
+           pkg_name: "opsm",
+           repo_name: "odds-and-sods-package-manager",
+           default_branch: "main",
+           version: "2.0.0",
+           description: "Universal package manager",
+           license: "MPL-2.0",
+           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
+           keywords: ["package", "manager"],
+           forth: :hyperpolymath,
+           repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
+           raw_toml: %{}
+         }, expiry},
+        {"affinescript-vite",
+         %{
+           type: :package,
+           pkg_name: "affinescript-vite",
+           repo_name: "affinescript-vite",
+           default_branch: "main",
+           version: "0.1.0",
+           description: "Vite plugin for AffineScript",
+           license: "MPL-2.0",
+           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
+           keywords: ["vite", "affinescript", "bundler"],
+           forth: :affinescript,
+           repo_url: "https://github.com/hyperpolymath/affinescript-vite",
+           raw_toml: %{}
+         }, expiry},
+        {"ephapax-core",
+         %{
+           type: :package,
+           pkg_name: "ephapax-core",
+           repo_name: "ephapax",
+           default_branch: "main",
+           version: "0.3.0",
+           description: "Linear type system for Elixir",
+           license: "MPL-2.0",
+           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
+           keywords: ["types", "linear", "ephapax"],
+           forth: :ephapax,
+           repo_url: "https://github.com/hyperpolymath/ephapax",
+           raw_toml: %{}
+         }, expiry}
       ]
 
       Enum.each(entries, fn {name, entry, exp} ->
@@ -244,6 +251,7 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
 
     test "each result has required ResolvedPackage fields" do
       {:ok, results} = HyperpPolymathForge.search("", [])
+
       for pkg <- results do
         assert is_binary(pkg.package)
         assert is_binary(pkg.version)
@@ -260,13 +268,24 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       now = System.monotonic_time(:millisecond)
       expiry = now + 60_000
 
-      :ets.insert(:hfr_cache, {"seed-pkg", %{
-        type: :package, pkg_name: "seed-pkg", repo_name: "seed-repo",
-        default_branch: "main", version: "1.0.0", description: "seeded",
-        license: "MPL-2.0", authors: [], keywords: [],
-        forth: :hyperpolymath, repo_url: "https://github.com/hyperpolymath/seed-repo",
-        raw_toml: %{}
-      }, expiry})
+      :ets.insert(
+        :hfr_cache,
+        {"seed-pkg",
+         %{
+           type: :package,
+           pkg_name: "seed-pkg",
+           repo_name: "seed-repo",
+           default_branch: "main",
+           version: "1.0.0",
+           description: "seeded",
+           license: "MPL-2.0",
+           authors: [],
+           keywords: [],
+           forth: :hyperpolymath,
+           repo_url: "https://github.com/hyperpolymath/seed-repo",
+           raw_toml: %{}
+         }, expiry}
+      )
 
       on_exit(fn ->
         if :ets.info(:hfr_cache) != :undefined do
@@ -292,15 +311,24 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
       now = System.monotonic_time(:millisecond)
       expiry = now + 60_000
 
-      :ets.insert(:hfr_cache, {"my-seeded-pkg", %{
-        type: :package, pkg_name: "my-seeded-pkg", repo_name: "my-seeded-repo",
-        default_branch: "main", version: "1.2.3", description: "a test package",
-        license: "MPL-2.0",
-        authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
-        keywords: ["test"], forth: :hyperpolymath,
-        repo_url: "https://github.com/hyperpolymath/my-seeded-repo",
-        raw_toml: %{"dependencies" => %{}, "dev-dependencies" => %{}}
-      }, expiry})
+      :ets.insert(
+        :hfr_cache,
+        {"my-seeded-pkg",
+         %{
+           type: :package,
+           pkg_name: "my-seeded-pkg",
+           repo_name: "my-seeded-repo",
+           default_branch: "main",
+           version: "1.2.3",
+           description: "a test package",
+           license: "MPL-2.0",
+           authors: ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"],
+           keywords: ["test"],
+           forth: :hyperpolymath,
+           repo_url: "https://github.com/hyperpolymath/my-seeded-repo",
+           raw_toml: %{"dependencies" => %{}, "dev-dependencies" => %{}}
+         }, expiry}
+      )
 
       on_exit(fn ->
         if :ets.info(:hfr_cache) != :undefined do
@@ -320,7 +348,8 @@ defmodule Opsm.Registries.HyperpPolymathForgeTest do
 
     test "returns {:error, :not_found} for absent package (no network fallback)" do
       # Cache is non-empty (seed-pkg is there), so refresh_index won't fire
-      assert {:error, :not_found} = HyperpPolymathForge.fetch_package("xyz-not-seeded-abc-999", "latest")
+      assert {:error, :not_found} =
+               HyperpPolymathForge.fetch_package("xyz-not-seeded-abc-999", "latest")
     end
 
     test "resolved manifest has correct fields" do

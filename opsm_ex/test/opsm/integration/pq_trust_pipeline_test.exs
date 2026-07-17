@@ -188,11 +188,12 @@ defmodule Opsm.Integration.PqTrustPipelineTest do
         {:ok, sign_result} ->
           {:ok, decoded_pks} = HybridSignatures.decode_public_keys(sign_result.public_keys)
 
-          result = PqTrust.verify_package_signature(
-            "verify me",
-            sign_result.signature,
-            decoded_pks
-          )
+          result =
+            PqTrust.verify_package_signature(
+              "verify me",
+              sign_result.signature,
+              decoded_pks
+            )
 
           assert match?({:ok, %{status: status}} when status in [:verified, :partial], result)
 

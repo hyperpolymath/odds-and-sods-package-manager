@@ -25,14 +25,14 @@ defmodule Opsm.Package.Transaction do
   ]
 
   @type t :: %__MODULE__{
-    package_name: String.t(),
-    started_at: DateTime.t(),
-    directories: [String.t()],
-    files: [String.t()],
-    symlinks: [String.t()],
-    db_entries: [String.t()],
-    completed: boolean()
-  }
+          package_name: String.t(),
+          started_at: DateTime.t(),
+          directories: [String.t()],
+          files: [String.t()],
+          symlinks: [String.t()],
+          db_entries: [String.t()],
+          completed: boolean()
+        }
 
   @doc """
   Start a new transaction for package installation.
@@ -129,6 +129,7 @@ defmodule Opsm.Package.Transaction do
     case File.mkdir_p(path) do
       :ok ->
         {:ok, record_directory(txn, path)}
+
       {:error, reason} ->
         {:error, "Failed to create directory #{path}: #{reason}"}
     end
@@ -147,8 +148,10 @@ defmodule Opsm.Package.Transaction do
           {:ok, ^source} ->
             # Already points to correct location, just record it
             {:ok, record_symlink(txn, target)}
+
           {:ok, other} ->
             {:error, "Target #{target} is a symlink to #{other}, not #{source}"}
+
           {:error, reason} ->
             {:error, "Cannot read symlink #{target}: #{reason}"}
         end
@@ -162,6 +165,7 @@ defmodule Opsm.Package.Transaction do
         case File.ln_s(source, target) do
           :ok ->
             {:ok, record_symlink(txn, target)}
+
           {:error, reason} ->
             {:error, "Failed to create symlink #{target}: #{reason}"}
         end
@@ -179,15 +183,18 @@ defmodule Opsm.Package.Transaction do
     case File.rename(source, dest) do
       :ok ->
         {:ok, record_file(txn, dest)}
+
       {:error, :exdev} ->
         # Cross-device move - need to copy and delete
         case File.cp(source, dest) do
           :ok ->
             File.rm(source)
             {:ok, record_file(txn, dest)}
+
           {:error, reason} ->
             {:error, "Failed to copy #{source} to #{dest}: #{reason}"}
         end
+
       {:error, reason} ->
         {:error, "Failed to move #{source} to #{dest}: #{reason}"}
     end
@@ -201,9 +208,11 @@ defmodule Opsm.Package.Transaction do
         :ok ->
           IO.puts("    ✓ Removed symlink: #{Path.basename(path)}")
           []
+
         {:error, :enoent} ->
           # Already gone
           []
+
         {:error, reason} ->
           IO.puts("    ⚠ Failed to remove symlink #{path}: #{reason}")
           [{path, reason}]
@@ -217,8 +226,10 @@ defmodule Opsm.Package.Transaction do
         :ok ->
           IO.puts("    ✓ Removed file: #{Path.basename(path)}")
           []
+
         {:error, :enoent} ->
           []
+
         {:error, reason} ->
           IO.puts("    ⚠ Failed to remove file #{path}: #{reason}")
           [{path, reason}]
@@ -233,14 +244,18 @@ defmodule Opsm.Package.Transaction do
         :ok ->
           IO.puts("    ✓ Removed directory: #{path}")
           []
+
         {:error, :enoent} ->
           []
+
         {:error, :enotempty} ->
           # Directory not empty - that's fine, leave it
           []
+
         {:error, :eexist} ->
           # Same as enotempty on some systems
           []
+
         {:error, reason} ->
           IO.puts("    ⚠ Failed to remove directory #{path}: #{reason}")
           [{path, reason}]

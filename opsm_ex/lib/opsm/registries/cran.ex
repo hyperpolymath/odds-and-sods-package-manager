@@ -17,11 +17,12 @@ defmodule Opsm.Registries.Cran do
   Fetch package metadata from CRAN.
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -30,6 +31,7 @@ defmodule Opsm.Registries.Cran do
       ver ->
         # Fetch version-specific metadata
         url = "#{@crandb_url}/#{name}/#{ver}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             {:ok, parse_package(name, body, ver)}
@@ -51,8 +53,11 @@ defmodule Opsm.Registries.Cran do
 
   defp fetch_latest_version(name) do
     url = "#{@crandb_url}/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, %{"Version" => version}} -> version
+      {:ok, %{"Version" => version}} ->
+        version
+
       _ ->
         # Fallback: get version list
         case versions_internal(name) do
@@ -69,16 +74,19 @@ defmodule Opsm.Registries.Cran do
     limit = Keyword.get(opts, :limit, 20)
 
     url = "#{@crandb_url}/-/search?q=#{URI.encode(query)}&size=#{limit}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"rows" => rows}} when is_list(rows) ->
-        results = Enum.map(rows, fn row ->
-          %{
-            name: Map.get(row, "Package") || Map.get(row, "name"),
-            version: Map.get(row, "Version") || Map.get(row, "version"),
-            description: Map.get(row, "Title") || Map.get(row, "description", ""),
-            downloads: 0
-          }
-        end)
+        results =
+          Enum.map(rows, fn row ->
+            %{
+              name: Map.get(row, "Package") || Map.get(row, "name"),
+              version: Map.get(row, "Version") || Map.get(row, "version"),
+              description: Map.get(row, "Title") || Map.get(row, "description", ""),
+              downloads: 0
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -114,9 +122,11 @@ defmodule Opsm.Registries.Cran do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions_map}} when is_map(versions_map) ->
         # Extract version strings and sort (newest first)
-        version_list = versions_map
-        |> Map.keys()
-        |> Enum.sort(:desc)
+        version_list =
+          versions_map
+          |> Map.keys()
+          |> Enum.sort(:desc)
+
         {:ok, version_list}
 
       {:ok, _} ->
@@ -209,6 +219,7 @@ defmodule Opsm.Registries.Cran do
       end
     end)
   end
+
   defp parse_dep_field(_), do: %{}
 
   # Parse single dependency: "pkg (>= 1.0)" -> {"pkg", ">= 1.0"}
@@ -227,6 +238,7 @@ defmodule Opsm.Registries.Cran do
 
   # Parse R author field - can be complex, extract names
   defp parse_authors(nil), do: []
+
   defp parse_authors(author) when is_binary(author) do
     # Simple extraction - R author fields can be very complex
     # Format examples: "John Doe <john@example.com>", "John Doe [aut, cre]"
@@ -240,5 +252,6 @@ defmodule Opsm.Registries.Cran do
     end)
     |> Enum.reject(&(&1 == ""))
   end
+
   defp parse_authors(_), do: []
 end

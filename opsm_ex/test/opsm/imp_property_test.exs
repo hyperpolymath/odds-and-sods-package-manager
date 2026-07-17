@@ -8,7 +8,7 @@ defmodule Opsm.ImpPropertyTest do
   alias Opsm.Types.ManifestFormat
 
   property "IMP normalization succeeds for manifests with required fields" do
-    check all manifest <- manifest_with_dependencies() do
+    check all(manifest <- manifest_with_dependencies()) do
       digest = "sha256:" <> Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
 
       assert {:ok, normalized} =
@@ -20,7 +20,7 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   property "IMP normalization rejects missing required fields" do
-    check all manifest <- manifest_missing_license() do
+    check all(manifest <- manifest_missing_license()) do
       digest = "sha256:" <> Base.encode16(:crypto.strong_rand_bytes(8), case: :lower)
 
       assert {:error, message} = Imp.normalize(manifest, "/tmp/missing.json", digest)
@@ -29,7 +29,7 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   property "IMP normalization rejects manifests with zero dependencies" do
-    check all manifest <- manifest_without_dependencies() do
+    check all(manifest <- manifest_without_dependencies()) do
       digest = "sha256:" <> Base.encode16(:crypto.strong_rand_bytes(8), case: :lower)
 
       assert {:error, message} = Imp.normalize(manifest, "/tmp/nop.json", digest)
@@ -38,10 +38,12 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   defp manifest_with_dependencies do
-    gen all name <- string(:alphanumeric, min_length: 1),
-            version <- string(:alphanumeric, min_length: 1),
-            license <- string(:alphanumeric, min_length: 1),
-            dependency <- dependency_pair() do
+    gen all(
+          name <- string(:alphanumeric, min_length: 1),
+          version <- string(:alphanumeric, min_length: 1),
+          license <- string(:alphanumeric, min_length: 1),
+          dependency <- dependency_pair()
+        ) do
       %ManifestFormat{
         name: name,
         version: version,
@@ -52,8 +54,10 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   defp manifest_missing_license do
-    gen all name <- string(:alphanumeric, min_length: 1),
-            version <- string(:alphanumeric, min_length: 1) do
+    gen all(
+          name <- string(:alphanumeric, min_length: 1),
+          version <- string(:alphanumeric, min_length: 1)
+        ) do
       %ManifestFormat{
         name: name,
         version: version,
@@ -64,9 +68,11 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   defp manifest_without_dependencies do
-    gen all name <- string(:alphanumeric, min_length: 1),
-            version <- string(:alphanumeric, min_length: 1),
-            license <- string(:alphanumeric, min_length: 1) do
+    gen all(
+          name <- string(:alphanumeric, min_length: 1),
+          version <- string(:alphanumeric, min_length: 1),
+          license <- string(:alphanumeric, min_length: 1)
+        ) do
       %ManifestFormat{
         name: name,
         version: version,
@@ -77,8 +83,10 @@ defmodule Opsm.ImpPropertyTest do
   end
 
   defp dependency_pair do
-    gen all name <- string(:alphanumeric, min_length: 1),
-            version <- string(:alphanumeric, min_length: 1) do
+    gen all(
+          name <- string(:alphanumeric, min_length: 1),
+          version <- string(:alphanumeric, min_length: 1)
+        ) do
       %{name: name, version: version}
     end
   end

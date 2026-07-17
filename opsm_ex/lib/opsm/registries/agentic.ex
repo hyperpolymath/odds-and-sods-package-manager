@@ -50,10 +50,11 @@ defmodule Opsm.Registries.Agentic do
 
   """
   @spec fetch_package(String.t(), map()) ::
-    {:ok, ResolvedPackage.t()} | {:error, term()}
+          {:ok, ResolvedPackage.t()} | {:error, term()}
   def fetch_package(name, hints \\ %{}) do
     task_id = generate_task_id()
-    timeout = Map.get(hints, :timeout, 300_000)  # 5 minutes default
+    # 5 minutes default
+    timeout = Map.get(hints, :timeout, 300_000)
 
     Logger.info("Submitting agentic fetch task for #{name} (task_id: #{task_id})")
 
@@ -143,15 +144,18 @@ defmodule Opsm.Registries.Agentic do
         language: Map.get(hints, :language, "unknown")
       },
       strategy: "agentic",
-      hints: %{
-        search_terms: Map.get(hints, :search_hints, [name]),
-        common_domains: Map.get(hints, :common_domains, []),
-        file_patterns: Map.get(hints, :file_patterns, []),
-        maintainer: Map.get(hints, :maintainer),
-        last_known_url: Map.get(hints, :last_known_url),
-        build_commands: Map.get(hints, :build_commands, []),
-        ecosystem: Map.get(hints, :ecosystem)
-      } |> Enum.reject(fn {_, v} -> is_nil(v) end) |> Map.new(),
+      hints:
+        %{
+          search_terms: Map.get(hints, :search_hints, [name]),
+          common_domains: Map.get(hints, :common_domains, []),
+          file_patterns: Map.get(hints, :file_patterns, []),
+          maintainer: Map.get(hints, :maintainer),
+          last_known_url: Map.get(hints, :last_known_url),
+          build_commands: Map.get(hints, :build_commands, []),
+          ecosystem: Map.get(hints, :ecosystem)
+        }
+        |> Enum.reject(fn {_, v} -> is_nil(v) end)
+        |> Map.new(),
       callback: %{
         url: callback_url(task_id),
         method: "POST",
@@ -214,8 +218,10 @@ defmodule Opsm.Registries.Agentic do
       resolved_deps: []
     }
 
-    Logger.info("Agentic fetch succeeded: #{package.package}@#{package.version} " <>
-                "(method: #{disc["method"]}, confidence: #{disc["confidence"]})")
+    Logger.info(
+      "Agentic fetch succeeded: #{package.package}@#{package.version} " <>
+        "(method: #{disc["method"]}, confidence: #{disc["confidence"]})"
+    )
 
     {:ok, package}
   end
@@ -227,8 +233,9 @@ defmodule Opsm.Registries.Agentic do
     Logger.warning("Agentic fetch failed (task: #{task_id}): #{error["message"]}")
     Logger.debug("Attempts: #{inspect(error["attempts"])}")
 
-    message = "#{error["message"]}\n\nSuggestions:\n" <>
-              Enum.join(result["suggestions"] || [], "\n")
+    message =
+      "#{error["message"]}\n\nSuggestions:\n" <>
+        Enum.join(result["suggestions"] || [], "\n")
 
     {:error, message}
   end

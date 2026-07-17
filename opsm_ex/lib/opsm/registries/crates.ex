@@ -26,11 +26,12 @@ defmodule Opsm.Registries.Crates do
         crate = body["crate"]
         versions = body["versions"] || []
 
-        target_version = if version == "latest" do
-          crate["newest_version"] || crate["max_version"]
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            crate["newest_version"] || crate["max_version"]
+          else
+            version
+          end
 
         version_info = Enum.find(versions, fn v -> v["num"] == target_version end)
 
@@ -209,9 +210,11 @@ defmodule Opsm.Registries.Crates do
     deps
     |> Enum.group_by(& &1["kind"])
     |> Enum.map(fn {kind, deps_list} ->
-      dep_map = deps_list
+      dep_map =
+        deps_list
         |> Enum.map(fn d -> {d["crate_id"], d["req"]} end)
         |> Map.new()
+
       {kind, dep_map}
     end)
     |> Map.new()

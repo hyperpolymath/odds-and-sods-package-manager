@@ -18,22 +18,31 @@ defmodule Opsm.Registries.Flatpak do
   """
   def fetch_package(name, version \\ "latest") do
     url = "#{@api_url}/appstream/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          releases = get_in(body, ["releases"]) || []
-          case releases do
-            [latest | _] -> latest["version"]
-            _ -> "0.0.0"
+        ver =
+          if version == "latest" do
+            releases = get_in(body, ["releases"]) || []
+
+            case releases do
+              [latest | _] -> latest["version"]
+              _ -> "0.0.0"
+            end
+          else
+            version
           end
-        else
-          version
-        end
+
         {:ok, parse_flatpak(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -55,7 +64,7 @@ defmodule Opsm.Registries.Flatpak do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -64,14 +73,18 @@ defmodule Opsm.Registries.Flatpak do
   """
   def get_versions(name) do
     url = "#{@api_url}/appstream/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        versions = (body["releases"] || [])
-                   |> Enum.map(fn r -> r["version"] end)
-                   |> Enum.reject(&is_nil/1)
+        versions =
+          (body["releases"] || [])
+          |> Enum.map(fn r -> r["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, versions}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -80,25 +93,33 @@ defmodule Opsm.Registries.Flatpak do
   """
   def search(query, _opts \\ []) do
     url = "#{@api_url}/search?q=#{URI.encode(query)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn app ->
-          %{name: app["id"], version: nil, description: app["summary"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn app ->
+            %{name: app["id"], version: nil, description: app["summary"]}
+          end)
+
         {:ok, results}
 
       {:ok, %{"hits" => hits}} when is_list(hits) ->
-        results = hits
-        |> Enum.take(20)
-        |> Enum.map(fn app ->
-          %{name: app["app_id"] || app["id"], version: nil, description: app["summary"]}
-        end)
+        results =
+          hits
+          |> Enum.take(20)
+          |> Enum.map(fn app ->
+            %{name: app["app_id"] || app["id"], version: nil, description: app["summary"]}
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

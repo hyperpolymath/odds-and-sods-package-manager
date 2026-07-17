@@ -4,7 +4,7 @@
 # OPSM Runtime Plugin: just
 # A command runner — handy way to save and run project-specific commands.
 
-let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
+let RuntimePlugin = import "../contract/runtime-plugin.ncl" in
 
 {
   name = "just",

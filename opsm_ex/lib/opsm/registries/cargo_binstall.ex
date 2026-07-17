@@ -30,11 +30,12 @@ defmodule Opsm.Registries.CargoBinstall do
         crate = body["crate"] || %{}
         versions_list = body["versions"] || []
 
-        ver = if version == "latest" do
-          crate["newest_version"] || crate["max_version"] || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            crate["newest_version"] || crate["max_version"] || "0.0.0"
+          else
+            version
+          end
 
         version_info = Enum.find(versions_list, fn v -> v["num"] == ver end)
 
@@ -43,9 +44,14 @@ defmodule Opsm.Registries.CargoBinstall do
 
         {:ok, parse_binstall(name, crate, version_info, ver, binary_info)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -57,9 +63,12 @@ defmodule Opsm.Registries.CargoBinstall do
     case VerifiedHttp.get_json(url, receive_timeout: 5_000) do
       {:ok, body} ->
         targets = body["targets"] || []
-        matching = Enum.find(targets, fn t ->
-          t["target"] == target || String.contains?(t["target"] || "", target)
-        end)
+
+        matching =
+          Enum.find(targets, fn t ->
+            t["target"] == target || String.contains?(t["target"] || "", target)
+          end)
+
         if matching do
           %{
             binary_url: matching["url"] || build_quickinstall_url(name, version, target),
@@ -91,17 +100,19 @@ defmodule Opsm.Registries.CargoBinstall do
   end
 
   defp parse_binstall(name, crate, version_info, version, binary_info) do
-    checksum = if binary_info[:prebuilt] do
-      binary_info[:binary_hash]
-    else
-      if version_info, do: version_info["checksum"], else: nil
-    end
+    checksum =
+      if binary_info[:prebuilt] do
+        binary_info[:binary_hash]
+      else
+        if version_info, do: version_info["checksum"], else: nil
+      end
 
-    tarball = if binary_info[:prebuilt] do
-      binary_info[:binary_url]
-    else
-      "#{@crates_dl}/#{name}/#{name}-#{version}.crate"
-    end
+    tarball =
+      if binary_info[:prebuilt] do
+        binary_info[:binary_url]
+      else
+        "#{@crates_dl}/#{name}/#{name}-#{version}.crate"
+      end
 
     # Fetch dependencies from the version-specific endpoint
     deps = fetch_deps(name, version)
@@ -147,7 +158,8 @@ defmodule Opsm.Registries.CargoBinstall do
         |> Enum.map(fn d -> {d["crate_id"], d["req"]} end)
         |> Map.new()
 
-      _ -> %{}
+      _ ->
+        %{}
     end
   end
 
@@ -160,17 +172,20 @@ defmodule Opsm.Registries.CargoBinstall do
 
     case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
       {:ok, body} ->
-        results = (body["crates"] || [])
-        |> Enum.map(fn crate ->
-          %{
-            name: crate["id"] || crate["name"],
-            version: crate["newest_version"] || crate["max_version"],
-            description: crate["description"]
-          }
-        end)
+        results =
+          (body["crates"] || [])
+          |> Enum.map(fn crate ->
+            %{
+              name: crate["id"] || crate["name"],
+              version: crate["newest_version"] || crate["max_version"],
+              description: crate["description"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -194,14 +209,21 @@ defmodule Opsm.Registries.CargoBinstall do
 
     case VerifiedHttp.get_json(url, headers: @headers, receive_timeout: 10_000) do
       {:ok, body} ->
-        vers = (body["versions"] || [])
-               |> Enum.map(& &1["num"])
-               |> Enum.reject(&is_nil/1)
+        vers =
+          (body["versions"] || [])
+          |> Enum.map(& &1["num"])
+          |> Enum.reject(&is_nil/1)
+
         {:ok, vers}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 end

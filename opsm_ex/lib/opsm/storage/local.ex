@@ -17,7 +17,7 @@ defmodule Opsm.Storage.Local do
     dest |> Path.dirname() |> File.mkdir_p!()
 
     case File.cp(local_path, dest) do
-      :ok             -> {:ok, key}
+      :ok -> {:ok, key}
       {:error, reason} -> {:error, "Local put failed: #{reason}"}
     end
   end
@@ -30,7 +30,7 @@ defmodule Opsm.Storage.Local do
       dest_path |> Path.dirname() |> File.mkdir_p!()
 
       case File.cp(src, dest_path) do
-        :ok             -> {:ok, dest_path}
+        :ok -> {:ok, dest_path}
         {:error, reason} -> {:error, "Local copy failed: #{reason}"}
       end
     else

@@ -28,8 +28,11 @@ defmodule Opsm.Registries.Xbps do
           pkg_data -> parse_xbps_entry(name, pkg_data, version)
         end
 
-      {:ok, _} -> fetch_from_api(name, version)
-      {:error, _} -> fetch_from_api(name, version)
+      {:ok, _} ->
+        fetch_from_api(name, version)
+
+      {:error, _} ->
+        fetch_from_api(name, version)
     end
   end
 
@@ -38,31 +41,41 @@ defmodule Opsm.Registries.Xbps do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: body["version"] || body["pkgver"],
-          else: version
+        ver =
+          if version == "latest",
+            do: body["version"] || body["pkgver"],
+            else: version
+
         {:ok, build_resolved_package(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp parse_xbps_entry(name, data, version) do
-    ver = if version == "latest",
-      do: data["pkgver"] || data["version"] || "0.0.0",
-      else: version
+    ver =
+      if version == "latest",
+        do: data["pkgver"] || data["version"] || "0.0.0",
+        else: version
+
     {:ok, build_resolved_package(name, data, ver)}
   end
 
   defp build_resolved_package(name, body, version) do
-    deps = (body["run_depends"] || body["dependencies"] || [])
-           |> Enum.map(fn d ->
-             dep_name = String.replace(d, ~r/[><=].*/, "")
-             {dep_name, "*"}
-           end)
-           |> Map.new()
+    deps =
+      (body["run_depends"] || body["dependencies"] || [])
+      |> Enum.map(fn d ->
+        dep_name = String.replace(d, ~r/[><=].*/, "")
+        {dep_name, "*"}
+      end)
+      |> Map.new()
 
     manifest = %ManifestFormat{
       name: name,
@@ -82,7 +95,7 @@ defmodule Opsm.Registries.Xbps do
       tarball_url: build_tarball_url(name, version),
       checksum: body["filename-sha256"],
       checksum_algo: if(body["filename-sha256"], do: :sha256),
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -109,15 +122,24 @@ defmodule Opsm.Registries.Xbps do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{name: pkg["pkgname"] || pkg["name"], version: pkg["version"], description: pkg["short_desc"]}
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["pkgname"] || pkg["name"],
+              version: pkg["version"],
+              description: pkg["short_desc"]
+            }
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

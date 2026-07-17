@@ -125,6 +125,7 @@ defmodule Opsm.Security.SecurityTest do
         url: "https://osv.dev/vulnerability/GHSA-abc-123",
         published: "2024-01-01T00:00:00Z"
       }
+
       assert v.id == "GHSA-abc-123"
       assert v.severity == :high
       assert v.aliases == ["CVE-2024-0001"]
@@ -146,6 +147,7 @@ defmodule Opsm.Security.SecurityTest do
         typosquat: {:clean},
         scanned_at: DateTime.utc_now()
       }
+
       assert Scanner.Report.clean?(report)
     end
 
@@ -159,6 +161,7 @@ defmodule Opsm.Security.SecurityTest do
         url: "https://osv.dev/vulnerability/GHSA-test",
         published: nil
       }
+
       report = %Scanner.Report{
         package: "test-pkg",
         version: "1.0.0",
@@ -167,6 +170,7 @@ defmodule Opsm.Security.SecurityTest do
         typosquat: {:clean},
         scanned_at: DateTime.utc_now()
       }
+
       refute Scanner.Report.clean?(report)
     end
 
@@ -176,19 +180,55 @@ defmodule Opsm.Security.SecurityTest do
         version: nil,
         forth: :npm,
         vulnerabilities: [],
-        typosquat: {:suspicious, [%Typosquat.Match{package: "lodash", similarity: :edit_distance_1, flags: []}]},
+        typosquat:
+          {:suspicious,
+           [%Typosquat.Match{package: "lodash", similarity: :edit_distance_1, flags: []}]},
         scanned_at: DateTime.utc_now()
       }
+
       refute Scanner.Report.clean?(report)
     end
 
     test "critical_count and high_count aggregate correctly" do
       vulns = [
-        %Osv.Vulnerability{id: "A", summary: nil, severity: :critical, aliases: [], fixed_in: nil, url: "", published: nil},
-        %Osv.Vulnerability{id: "B", summary: nil, severity: :high, aliases: [], fixed_in: nil, url: "", published: nil},
-        %Osv.Vulnerability{id: "C", summary: nil, severity: :medium, aliases: [], fixed_in: nil, url: "", published: nil},
-        %Osv.Vulnerability{id: "D", summary: nil, severity: :critical, aliases: [], fixed_in: nil, url: "", published: nil}
+        %Osv.Vulnerability{
+          id: "A",
+          summary: nil,
+          severity: :critical,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        },
+        %Osv.Vulnerability{
+          id: "B",
+          summary: nil,
+          severity: :high,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        },
+        %Osv.Vulnerability{
+          id: "C",
+          summary: nil,
+          severity: :medium,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        },
+        %Osv.Vulnerability{
+          id: "D",
+          summary: nil,
+          severity: :critical,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        }
       ]
+
       report = %Scanner.Report{
         package: "pkg",
         version: "1.0.0",
@@ -197,6 +237,7 @@ defmodule Opsm.Security.SecurityTest do
         typosquat: {:clean},
         scanned_at: DateTime.utc_now()
       }
+
       assert Scanner.Report.critical_count(report) == 2
       assert Scanner.Report.high_count(report) == 1
       assert Scanner.Report.has_critical_or_high?(report)
@@ -204,9 +245,26 @@ defmodule Opsm.Security.SecurityTest do
 
     test "has_critical_or_high? is false for only medium/low vulns" do
       vulns = [
-        %Osv.Vulnerability{id: "A", summary: nil, severity: :medium, aliases: [], fixed_in: nil, url: "", published: nil},
-        %Osv.Vulnerability{id: "B", summary: nil, severity: :low, aliases: [], fixed_in: nil, url: "", published: nil}
+        %Osv.Vulnerability{
+          id: "A",
+          summary: nil,
+          severity: :medium,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        },
+        %Osv.Vulnerability{
+          id: "B",
+          summary: nil,
+          severity: :low,
+          aliases: [],
+          fixed_in: nil,
+          url: "",
+          published: nil
+        }
       ]
+
       report = %Scanner.Report{
         package: "pkg",
         version: "1.0.0",
@@ -215,6 +273,7 @@ defmodule Opsm.Security.SecurityTest do
         typosquat: {:clean},
         scanned_at: DateTime.utc_now()
       }
+
       refute Scanner.Report.has_critical_or_high?(report)
     end
   end
@@ -259,6 +318,7 @@ defmodule Opsm.Security.SecurityTest do
         typosquat: {:clean},
         scanned_at: DateTime.utc_now()
       }
+
       assert :ok = Scanner.print_report(report)
     end
   end

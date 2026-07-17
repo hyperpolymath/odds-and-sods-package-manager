@@ -89,11 +89,12 @@ defmodule Opsm.Slsa do
   def sign_provenance(statement, keypair) do
     case HybridSignatures.sign_payload(statement, keypair) do
       {:ok, sig_info} ->
-        {:ok, %{
-          statement: statement,
-          signature: HybridSignatures.encode_signature(sig_info),
-          signed_at: DateTime.utc_now() |> DateTime.to_iso8601()
-        }}
+        {:ok,
+         %{
+           statement: statement,
+           signature: HybridSignatures.encode_signature(sig_info),
+           signed_at: DateTime.utc_now() |> DateTime.to_iso8601()
+         }}
 
       {:error, reason} ->
         {:error, "Provenance signing failed: #{reason}"}
@@ -128,14 +129,17 @@ defmodule Opsm.Slsa do
 
   defp verify_signature(bundle, public_keys) do
     sig_hex = bundle.signature["signature"]
-    algo = case bundle.signature["algorithm"] do
-      "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
-      _ -> :ed25519_only
-    end
+
+    algo =
+      case bundle.signature["algorithm"] do
+        "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
+        _ -> :ed25519_only
+      end
 
     case Base.decode16(sig_hex, case: :mixed) do
       {:ok, sig_bytes} ->
         sig_info = %{signature: sig_bytes, algorithm: algo}
+
         case HybridSignatures.verify_payload(bundle.statement, sig_info, public_keys) do
           :ok -> :ok
           {:ok, _mode} -> :ok
@@ -187,7 +191,7 @@ defmodule Opsm.Slsa do
       # L3: Hardened build with isolated builder and no external parameters beyond package spec
       builder["id"] != nil and
         map_size(build_def["internalParameters"] || %{}) > 0 and
-        build_def["buildType"] == @slsa_predicate_type ->
+          build_def["buildType"] == @slsa_predicate_type ->
         3
 
       # L2: Hosted build platform with builder ID
@@ -219,11 +223,16 @@ defmodule Opsm.Slsa do
 
       case action do
         :block ->
-          {:error, "Package #{package_info[:name]} has SLSA level #{actual_level}, requires #{required_level}"}
+          {:error,
+           "Package #{package_info[:name]} has SLSA level #{actual_level}, requires #{required_level}"}
 
         :warn ->
           require Logger
-          Logger.warning("Package #{package_info[:name]} has SLSA level #{actual_level}, expected #{required_level}")
+
+          Logger.warning(
+            "Package #{package_info[:name]} has SLSA level #{actual_level}, expected #{required_level}"
+          )
+
           :ok
 
         :ignore ->
@@ -239,6 +248,7 @@ defmodule Opsm.Slsa do
   """
   def lockfile_metadata(provenance_bundle) when is_map(provenance_bundle) do
     level = determine_level(provenance_bundle[:statement] || provenance_bundle.statement)
+
     %{
       slsa_level: level,
       slsa_provenance_uri: provenance_bundle[:uri] || nil
@@ -252,12 +262,16 @@ defmodule Opsm.Slsa do
   # ==========================================================================
 
   defp compute_digest(package_info) do
-    data = "#{package_info[:name] || package_info.name}@#{package_info[:version] || package_info.version}"
+    data =
+      "#{package_info[:name] || package_info.name}@#{package_info[:version] || package_info.version}"
+
     Hash.hash_hot(data)
   end
 
   defp compute_digest_sha3(package_info) do
-    data = "#{package_info[:name] || package_info.name}@#{package_info[:version] || package_info.version}"
+    data =
+      "#{package_info[:name] || package_info.name}@#{package_info[:version] || package_info.version}"
+
     Hash.hash_cold(data)
   end
 

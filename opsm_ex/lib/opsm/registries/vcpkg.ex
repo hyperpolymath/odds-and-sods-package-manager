@@ -15,45 +15,53 @@ defmodule Opsm.Registries.Vcpkg do
 
   def fetch_package(name, version \\ "latest") do
     url = "#{@api_url}/#{URI.encode(name)}.json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          body["Version"] || body["Version-semver"] || body["Version-string"] || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            body["Version"] || body["Version-semver"] || body["Version-string"] || "0.0.0"
+          else
+            version
+          end
 
         deps = extract_deps(body)
 
-        {:ok, %ResolvedPackage{
-          package: name,
-          version: ver,
-          forth: :vcpkg,
-          registry_url: "#{@web_url}/#{name}",
-          tarball_url: nil,
-          checksum: nil,
-          checksum_algo: nil,
-          manifest: %ManifestFormat{
-            name: name,
-            version: ver,
-            description: body["Description"],
-            license: body["License"],
-            homepage: body["Homepage"],
-            repository: nil,
-            authors: [],
-            keywords: [],
-            dependencies: deps,
-            dev_dependencies: %{},
-            source_forth: :vcpkg,
-            raw_manifest: body
-          },
-          attestations: [],
-          resolved_deps: []
-        }}
+        {:ok,
+         %ResolvedPackage{
+           package: name,
+           version: ver,
+           forth: :vcpkg,
+           registry_url: "#{@web_url}/#{name}",
+           tarball_url: nil,
+           checksum: nil,
+           checksum_algo: nil,
+           manifest: %ManifestFormat{
+             name: name,
+             version: ver,
+             description: body["Description"],
+             license: body["License"],
+             homepage: body["Homepage"],
+             repository: nil,
+             authors: [],
+             keywords: [],
+             dependencies: deps,
+             dev_dependencies: %{},
+             source_forth: :vcpkg,
+             raw_manifest: body
+           },
+           attestations: [],
+           resolved_deps: []
+         }}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -62,12 +70,15 @@ defmodule Opsm.Registries.Vcpkg do
     case fetch_package(query) do
       {:ok, pkg} ->
         {:ok, [%{name: pkg.package, version: pkg.version, description: nil, downloads: 0}]}
-      _ -> {:ok, []}
+
+      _ ->
+        {:ok, []}
     end
   end
 
   def exists?(name) do
     url = "#{@api_url}/#{URI.encode(name)}.json"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -86,6 +97,7 @@ defmodule Opsm.Registries.Vcpkg do
 
   defp extract_deps(body) do
     deps = body["Dependencies"] || []
+
     Enum.into(deps, %{}, fn
       dep when is_binary(dep) -> {dep, "*"}
       dep when is_map(dep) -> {dep["name"] || "", dep["version>="] || "*"}

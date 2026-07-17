@@ -452,6 +452,7 @@ defmodule Opsm.Registries.RattleScript do
   end
 
   defp parse_toml_array(nil), do: nil
+
   defp parse_toml_array(str) when is_binary(str) do
     str
     |> String.trim("[")

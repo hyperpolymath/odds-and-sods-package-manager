@@ -16,11 +16,12 @@ defmodule Opsm.Registries.CocoaPods do
   Fetch pod metadata from the CocoaPods Trunk API.
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -29,6 +30,7 @@ defmodule Opsm.Registries.CocoaPods do
       ver ->
         # Fetch pod info
         url = "#{@api_url}/pods/#{name}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             deps = fetch_podspec_deps(name, ver)
@@ -51,6 +53,7 @@ defmodule Opsm.Registries.CocoaPods do
 
   defp fetch_latest_version(name) do
     url = "#{@api_url}/pods/#{name}/specs"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, specs} when is_list(specs) ->
         # Specs are typically returned in reverse chronological order
@@ -75,15 +78,19 @@ defmodule Opsm.Registries.CocoaPods do
   defp fetch_podspec_deps(name, version) do
     # Try to get the specific version's podspec
     url = "#{@api_url}/pods/#{name}/specs/#{version}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, spec} when is_map(spec) ->
         parse_podspec_dependencies(spec)
+
       _ ->
         # Fallback: try to get from main pod endpoint
         case VerifiedHttp.get_json("#{@api_url}/pods/#{name}", receive_timeout: 10_000) do
           {:ok, pod_info} when is_map(pod_info) ->
             parse_podspec_dependencies(pod_info)
-          _ -> %{}
+
+          _ ->
+            %{}
         end
     end
   end
@@ -96,16 +103,19 @@ defmodule Opsm.Registries.CocoaPods do
     case spec do
       %{"dependencies" => deps} when is_map(deps) ->
         Enum.reduce(deps, %{}, fn {name, constraint}, acc ->
-          version_str = case constraint do
-            [ver | _] when is_binary(ver) -> ver
-            ver when is_binary(ver) -> ver
-            [] -> ">= 0.0.0"
-            _ -> ">= 0.0.0"
-          end
+          version_str =
+            case constraint do
+              [ver | _] when is_binary(ver) -> ver
+              ver when is_binary(ver) -> ver
+              [] -> ">= 0.0.0"
+              _ -> ">= 0.0.0"
+            end
+
           Map.put(acc, name, version_str)
         end)
 
-      _ -> %{}
+      _ ->
+        %{}
     end
   end
 
@@ -117,31 +127,36 @@ defmodule Opsm.Registries.CocoaPods do
     limit = Keyword.get(opts, :limit, 20)
 
     url = "#{@api_url}/pods/search?query=#{URI.encode_www_form(query)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, results} when is_list(results) ->
-        pods = results
-        |> Enum.take(limit)
-        |> Enum.map(fn pod ->
-          %{
-            name: pod["name"] || pod["pod"],
-            version: pod["version"] || pod["latest_version"],
-            description: pod["summary"] || pod["description"],
-            downloads: pod["stats"]["download_total"] || 0
-          }
-        end)
+        pods =
+          results
+          |> Enum.take(limit)
+          |> Enum.map(fn pod ->
+            %{
+              name: pod["name"] || pod["pod"],
+              version: pod["version"] || pod["latest_version"],
+              description: pod["summary"] || pod["description"],
+              downloads: pod["stats"]["download_total"] || 0
+            }
+          end)
+
         {:ok, pods}
 
       {:ok, %{"pods" => pods}} when is_list(pods) ->
-        results = pods
-        |> Enum.take(limit)
-        |> Enum.map(fn pod ->
-          %{
-            name: pod["name"] || pod["pod"],
-            version: pod["version"] || pod["latest_version"],
-            description: pod["summary"] || pod["description"],
-            downloads: pod["stats"]["download_total"] || 0
-          }
-        end)
+        results =
+          pods
+          |> Enum.take(limit)
+          |> Enum.map(fn pod ->
+            %{
+              name: pod["name"] || pod["pod"],
+              version: pod["version"] || pod["latest_version"],
+              description: pod["summary"] || pod["description"],
+              downloads: pod["stats"]["download_total"] || 0
+            }
+          end)
+
         {:ok, results}
 
       _ ->
@@ -173,12 +188,13 @@ defmodule Opsm.Registries.CocoaPods do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, specs} when is_list(specs) ->
-        versions = specs
-        |> Enum.map(fn spec ->
-          spec["version"] || spec["name"]
-        end)
-        |> Enum.filter(&(&1 != nil))
-        |> Enum.reverse()
+        versions =
+          specs
+          |> Enum.map(fn spec ->
+            spec["version"] || spec["name"]
+          end)
+          |> Enum.filter(&(&1 != nil))
+          |> Enum.reverse()
 
         if versions == [] do
           # Fallback: try to get from main pod endpoint
@@ -228,6 +244,7 @@ defmodule Opsm.Registries.CocoaPods do
   """
   def tarball_url(name, version) do
     url = "#{@api_url}/pods/#{name}/specs/#{version}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"source" => %{"http" => http_url}}} ->
         {:ok, http_url}
@@ -240,7 +257,8 @@ defmodule Opsm.Registries.CocoaPods do
 
       _ ->
         # Generic fallback (may not work for all pods)
-        {:ok, "https://github.com/CocoaPods/Specs/raw/master/Specs/#{name}/#{version}/#{name}.podspec.json"}
+        {:ok,
+         "https://github.com/CocoaPods/Specs/raw/master/Specs/#{name}/#{version}/#{name}.podspec.json"}
     end
   end
 
@@ -248,20 +266,23 @@ defmodule Opsm.Registries.CocoaPods do
 
   defp parse_pod(name, info, version, deps) do
     homepage = info["homepage"] || info["url"]
-    repo = case info["source"] do
-      %{"git" => git_url} -> git_url
-      _ -> nil
-    end
+
+    repo =
+      case info["source"] do
+        %{"git" => git_url} -> git_url
+        _ -> nil
+      end
 
     %ResolvedPackage{
       package: name,
       version: version,
       forth: :cocoapods,
       registry_url: "https://cocoapods.org/pods/#{name}",
-      tarball_url: case tarball_url(name, version) do
-        {:ok, url} -> url
-        _ -> nil
-      end,
+      tarball_url:
+        case tarball_url(name, version) do
+          {:ok, url} -> url
+          _ -> nil
+        end,
       checksum: nil,
       checksum_algo: nil,
       manifest: %ManifestFormat{
@@ -290,9 +311,11 @@ defmodule Opsm.Registries.CocoaPods do
 
   defp extract_authors(nil), do: []
   defp extract_authors(authors) when is_binary(authors), do: [authors]
+
   defp extract_authors(authors) when is_map(authors) do
     Enum.map(authors, fn {name, email} -> "#{name} <#{email}>" end)
   end
+
   defp extract_authors(authors) when is_list(authors), do: authors
   defp extract_authors(_), do: []
 end

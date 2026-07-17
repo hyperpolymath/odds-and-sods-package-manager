@@ -23,14 +23,21 @@ defmodule Opsm.Registries.Zypper do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest",
-          do: extract_version(body),
-          else: version
+        ver =
+          if version == "latest",
+            do: extract_version(body),
+            else: version
+
         {:ok, build_resolved_package(name, body, ver)}
 
-      {:error, :not_found} -> fetch_from_factory(name, version)
-      {:error, %{status: 404}} -> fetch_from_factory(name, version)
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        fetch_from_factory(name, version)
+
+      {:error, %{status: 404}} ->
+        fetch_from_factory(name, version)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -40,18 +47,28 @@ defmodule Opsm.Registries.Zypper do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         binaries = body["binary"] || body["collection"] || []
+
         case extract_binary_info(binaries, name) do
-          nil -> {:error, :not_found}
+          nil ->
+            {:error, :not_found}
+
           info ->
-            ver = if version == "latest",
-              do: info["version"] || "0.0.0",
-              else: version
+            ver =
+              if version == "latest",
+                do: info["version"] || "0.0.0",
+                else: version
+
             {:ok, build_resolved_from_binary(name, info, ver)}
         end
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -86,7 +103,7 @@ defmodule Opsm.Registries.Zypper do
       manifest: manifest,
       tarball_url: nil,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -108,13 +125,17 @@ defmodule Opsm.Registries.Zypper do
       manifest: manifest,
       tarball_url: info["filepath"],
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
   defp extract_dependencies(body) do
     (body["requires"] || body["buildrequires"] || [])
-    |> Enum.map(fn d when is_binary(d) -> {d, "*"}; d when is_map(d) -> {d["name"] || "", "*"}; _ -> nil end)
+    |> Enum.map(fn
+      d when is_binary(d) -> {d, "*"}
+      d when is_map(d) -> {d["name"] || "", "*"}
+      _ -> nil
+    end)
     |> Enum.reject(&is_nil/1)
     |> Enum.reject(fn {n, _} -> n == "" end)
     |> Map.new()
@@ -132,7 +153,8 @@ defmodule Opsm.Registries.Zypper do
         ver = extract_version(body)
         {:ok, [ver]}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -145,19 +167,23 @@ defmodule Opsm.Registries.Zypper do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         binaries = body["binary"] || body["collection"] || []
-        results = binaries
-        |> List.wrap()
-        |> Enum.take(20)
-        |> Enum.map(fn b ->
-          %{
-            name: b["name"] || b["@name"],
-            version: b["version"],
-            description: b["description"] || b["summary"]
-          }
-        end)
+
+        results =
+          binaries
+          |> List.wrap()
+          |> Enum.take(20)
+          |> Enum.map(fn b ->
+            %{
+              name: b["name"] || b["@name"],
+              version: b["version"],
+              description: b["description"] || b["summary"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

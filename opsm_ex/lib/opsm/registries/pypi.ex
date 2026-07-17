@@ -15,11 +15,12 @@ defmodule Opsm.Registries.Pypi do
   Fetch package metadata from PyPI.
   """
   def fetch_package(name, version \\ "latest") do
-    url = if version == "latest" do
-      "#{@base_url}/#{URI.encode(name)}/json"
-    else
-      "#{@base_url}/#{URI.encode(name)}/#{version}/json"
-    end
+    url =
+      if version == "latest" do
+        "#{@base_url}/#{URI.encode(name)}/json"
+      else
+        "#{@base_url}/#{URI.encode(name)}/#{version}/json"
+      end
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
@@ -52,11 +53,14 @@ defmodule Opsm.Registries.Pypi do
     url = "https://pypi.org/search/?q=#{URI.encode(query)}"
 
     # For now, return a message - in production would scrape or use alternative
-    {:ok, [%{
-      name: query,
-      description: "Search PyPI directly at #{url}",
-      note: "PyPI search API deprecated - use 'pip search' or visit pypi.org"
-    }]}
+    {:ok,
+     [
+       %{
+         name: query,
+         description: "Search PyPI directly at #{url}",
+         note: "PyPI search API deprecated - use 'pip search' or visit pypi.org"
+       }
+     ]}
   end
 
   @doc """
@@ -112,9 +116,10 @@ defmodule Opsm.Registries.Pypi do
     version = info["version"]
 
     # Prefer wheel, fall back to sdist
-    dist = Enum.find(urls, fn u -> u["packagetype"] == "bdist_wheel" end) ||
-           Enum.find(urls, fn u -> u["packagetype"] == "sdist" end) ||
-           List.first(urls)
+    dist =
+      Enum.find(urls, fn u -> u["packagetype"] == "bdist_wheel" end) ||
+        Enum.find(urls, fn u -> u["packagetype"] == "sdist" end) ||
+        List.first(urls)
 
     tarball = if dist, do: dist["url"], else: nil
     checksum = if dist, do: dist["digests"]["sha256"], else: nil
@@ -147,10 +152,12 @@ defmodule Opsm.Registries.Pypi do
   end
 
   defp extract_repo_url(nil), do: nil
+
   defp extract_repo_url(urls) when is_map(urls) do
     urls["Source"] || urls["Repository"] || urls["GitHub"] ||
-    urls["source"] || urls["repository"] || urls["github"]
+      urls["source"] || urls["repository"] || urls["github"]
   end
+
   defp extract_repo_url(_), do: nil
 
   defp extract_author(nil, nil), do: []
@@ -159,15 +166,18 @@ defmodule Opsm.Registries.Pypi do
   defp extract_author(name, email), do: ["#{name} <#{email}>"]
 
   defp parse_keywords(nil), do: []
+
   defp parse_keywords(keywords) when is_binary(keywords) do
     keywords
     |> String.split(~r/[,\s]+/)
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
   end
+
   defp parse_keywords(keywords) when is_list(keywords), do: keywords
 
   defp parse_requires(nil), do: %{}
+
   defp parse_requires(requires) when is_list(requires) do
     requires
     |> Enum.map(&parse_requirement/1)
@@ -185,6 +195,7 @@ defmodule Opsm.Registries.Pypi do
         else
           {name, String.trim(version_spec)}
         end
+
       _ ->
         nil
     end
@@ -199,7 +210,8 @@ defmodule Opsm.Registries.Pypi do
 
   defp normalize_version(v) do
     v
-    |> String.replace(~r/[a-zA-Z].*$/, "")  # Remove alpha/beta/rc suffixes
+    # Remove alpha/beta/rc suffixes
+    |> String.replace(~r/[a-zA-Z].*$/, "")
     |> String.split(".")
     |> Enum.take(3)
     |> Enum.map(fn part ->

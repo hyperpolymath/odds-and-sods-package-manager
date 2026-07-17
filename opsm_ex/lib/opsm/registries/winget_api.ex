@@ -27,22 +27,29 @@ defmodule Opsm.Registries.WingetApi do
         pkg = body["package"] || body
         versions_list = pkg["versions"] || body["versions"] || []
 
-        ver = if version == "latest" do
-          case versions_list do
-            [latest | _] ->
-              if is_map(latest), do: latest["version"], else: latest
-            _ ->
-              pkg["version"] || pkg["latestVersion"] || "0.0.0"
+        ver =
+          if version == "latest" do
+            case versions_list do
+              [latest | _] ->
+                if is_map(latest), do: latest["version"], else: latest
+
+              _ ->
+                pkg["version"] || pkg["latestVersion"] || "0.0.0"
+            end
+          else
+            version
           end
-        else
-          version
-        end
 
         {:ok, parse_winget(name, pkg, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -51,13 +58,15 @@ defmodule Opsm.Registries.WingetApi do
     installers = pkg["installers"] || []
     primary_installer = List.first(installers)
 
-    installer_url = if primary_installer do
-      primary_installer["url"] || primary_installer["installerUrl"]
-    end
+    installer_url =
+      if primary_installer do
+        primary_installer["url"] || primary_installer["installerUrl"]
+      end
 
-    installer_hash = if primary_installer do
-      primary_installer["sha256"] || primary_installer["installerSha256"]
-    end
+    installer_hash =
+      if primary_installer do
+        primary_installer["sha256"] || primary_installer["installerSha256"]
+      end
 
     manifest = %ManifestFormat{
       name: name,
@@ -95,6 +104,7 @@ defmodule Opsm.Registries.WingetApi do
   end
 
   defp parse_dependencies(nil), do: %{}
+
   defp parse_dependencies(deps) when is_list(deps) do
     deps
     |> Enum.map(fn
@@ -103,6 +113,7 @@ defmodule Opsm.Registries.WingetApi do
     end)
     |> Map.new()
   end
+
   defp parse_dependencies(deps) when is_map(deps), do: deps
   defp parse_dependencies(_), do: %{}
 
@@ -114,31 +125,37 @@ defmodule Opsm.Registries.WingetApi do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, items} when is_list(items) ->
-        results = items
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["id"] || pkg["packageIdentifier"],
-            version: pkg["version"],
-            description: pkg["description"]
-          }
-        end)
+        results =
+          items
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["id"] || pkg["packageIdentifier"],
+              version: pkg["version"],
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, body} ->
         packages = body["packages"] || body["results"] || []
-        results = packages
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["id"] || pkg["packageIdentifier"] || pkg["name"],
-            version: pkg["version"] || pkg["latestVersion"],
-            description: pkg["description"] || pkg["shortDescription"]
-          }
-        end)
+
+        results =
+          packages
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["id"] || pkg["packageIdentifier"] || pkg["name"],
+              version: pkg["version"] || pkg["latestVersion"],
+              description: pkg["description"] || pkg["shortDescription"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -162,16 +179,20 @@ defmodule Opsm.Registries.WingetApi do
       {:ok, body} ->
         pkg = body["package"] || body
         versions_list = pkg["versions"] || body["versions"] || []
-        vers = versions_list
-               |> Enum.map(fn
-                 v when is_map(v) -> v["version"]
-                 v when is_binary(v) -> v
-                 _ -> nil
-               end)
-               |> Enum.reject(&is_nil/1)
+
+        vers =
+          versions_list
+          |> Enum.map(fn
+            v when is_map(v) -> v["version"]
+            v when is_binary(v) -> v
+            _ -> nil
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, vers}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 end

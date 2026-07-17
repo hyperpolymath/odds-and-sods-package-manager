@@ -17,11 +17,12 @@ defmodule Opsm.Registries.ChefSupermarket do
   Returns the specified version or the latest if version is "latest".
   """
   def fetch_package(name, version \\ "latest") do
-    url = if version == "latest" do
-      "#{@api_url}/cookbooks/#{URI.encode(name)}"
-    else
-      "#{@api_url}/cookbooks/#{URI.encode(name)}/versions/#{URI.encode(version)}"
-    end
+    url =
+      if version == "latest" do
+        "#{@api_url}/cookbooks/#{URI.encode(name)}"
+      else
+        "#{@api_url}/cookbooks/#{URI.encode(name)}/versions/#{URI.encode(version)}"
+      end
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
@@ -63,14 +64,17 @@ defmodule Opsm.Registries.ChefSupermarket do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"items" => items_list}} when is_list(items_list) ->
-        results = Enum.map(items_list, fn item ->
-          cookbook = item["cookbook"] || %{}
-          %{
-            name: cookbook["name"] || item["cookbook_name"],
-            version: cookbook["latest_version"] || item["cookbook_maintained_version"],
-            description: cookbook["description"] || item["cookbook_description"]
-          }
-        end)
+        results =
+          Enum.map(items_list, fn item ->
+            cookbook = item["cookbook"] || %{}
+
+            %{
+              name: cookbook["name"] || item["cookbook_name"],
+              version: cookbook["latest_version"] || item["cookbook_maintained_version"],
+              description: cookbook["description"] || item["cookbook_description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -104,13 +108,15 @@ defmodule Opsm.Registries.ChefSupermarket do
       {:ok, %{"versions" => version_urls}} when is_list(version_urls) ->
         # Chef Supermarket returns version URLs like
         # "https://supermarket.chef.io/api/v1/cookbooks/NAME/versions/1.0.0"
-        version_list = version_urls
-        |> Enum.map(fn url_str ->
-          url_str
-          |> String.split("/versions/")
-          |> List.last()
-          |> URI.decode()
-        end)
+        version_list =
+          version_urls
+          |> Enum.map(fn url_str ->
+            url_str
+            |> String.split("/versions/")
+            |> List.last()
+            |> URI.decode()
+          end)
+
         {:ok, version_list}
 
       {:ok, _} ->

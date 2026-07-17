@@ -54,12 +54,13 @@ defmodule Opsm.Crypto.PqTrust do
 
     case HybridSignatures.sign(package_data, kp) do
       {:ok, sig_info} ->
-        {:ok, %{
-          signature: sig_info,
-          public_keys: HybridSignatures.encode_public_keys(kp),
-          signed_at: DateTime.utc_now() |> DateTime.to_iso8601(),
-          mode: HybridSignatures.mode()
-        }}
+        {:ok,
+         %{
+           signature: sig_info,
+           public_keys: HybridSignatures.encode_public_keys(kp),
+           signed_at: DateTime.utc_now() |> DateTime.to_iso8601(),
+           mode: HybridSignatures.mode()
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -82,13 +83,14 @@ defmodule Opsm.Crypto.PqTrust do
 
     case HybridSignatures.sign(integrity_data, keypair) do
       {:ok, sig_info} ->
-        {:ok, %{
-          lockfile_hash: lockfile.integrity_hash,
-          signature: HybridSignatures.encode_signature(sig_info),
-          public_keys: HybridSignatures.encode_public_keys(keypair),
-          algorithm: sig_info.algorithm,
-          signed_at: DateTime.utc_now() |> DateTime.to_iso8601()
-        }}
+        {:ok,
+         %{
+           lockfile_hash: lockfile.integrity_hash,
+           signature: HybridSignatures.encode_signature(sig_info),
+           public_keys: HybridSignatures.encode_public_keys(keypair),
+           algorithm: sig_info.algorithm,
+           signed_at: DateTime.utc_now() |> DateTime.to_iso8601()
+         }}
 
       {:error, reason} ->
         {:error, reason}
@@ -103,14 +105,17 @@ defmodule Opsm.Crypto.PqTrust do
 
     with {:ok, public_keys} <- HybridSignatures.decode_public_keys(sig_bundle["public_keys"]) do
       sig_hex = sig_bundle["signature"]["signature"]
-      algo = case sig_bundle["signature"]["algorithm"] do
-        "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
-        _ -> :ed25519_only
-      end
+
+      algo =
+        case sig_bundle["signature"]["algorithm"] do
+          "hybrid_ed25519_dilithium5" -> :hybrid_ed25519_dilithium5
+          _ -> :ed25519_only
+        end
 
       case Base.decode16(sig_hex, case: :mixed) do
         {:ok, sig_bytes} ->
           sig_info = %{signature: sig_bytes, algorithm: algo}
+
           case HybridSignatures.verify(integrity_data, sig_info, public_keys) do
             :ok -> {:ok, :verified}
             {:ok, mode} -> {:ok, mode}
@@ -139,11 +144,12 @@ defmodule Opsm.Crypto.PqTrust do
       recipient_public_key != nil and PostQuantum.available?() ->
         case PostQuantum.kyber1024_encapsulate(recipient_public_key) do
           {:ok, %{ciphertext: ct, shared_secret: ss}} ->
-            {:ok, %{
-              shared_secret: ss,
-              ciphertext: ct,
-              method: :kyber1024_kem
-            }}
+            {:ok,
+             %{
+               shared_secret: ss,
+               ciphertext: ct,
+               method: :kyber1024_kem
+             }}
 
           {:error, reason} ->
             {:error, "Kyber encapsulation failed: #{reason}"}
@@ -155,13 +161,14 @@ defmodule Opsm.Crypto.PqTrust do
           {:ok, kp} ->
             case PostQuantum.kyber1024_encapsulate(kp.public_key) do
               {:ok, %{ciphertext: ct, shared_secret: ss}} ->
-                {:ok, %{
-                  shared_secret: ss,
-                  ciphertext: ct,
-                  secret_key: kp.secret_key,
-                  public_key: kp.public_key,
-                  method: :kyber1024_self
-                }}
+                {:ok,
+                 %{
+                   shared_secret: ss,
+                   ciphertext: ct,
+                   secret_key: kp.secret_key,
+                   public_key: kp.public_key,
+                   method: :kyber1024_self
+                 }}
 
               {:error, reason} ->
                 {:error, reason}
@@ -228,6 +235,7 @@ defmodule Opsm.Crypto.PqTrust do
     # If PQ available, sign the attestation itself
     if PostQuantum.available?() do
       {:ok, keypair} = HybridSignatures.generate_keypair()
+
       case HybridSignatures.sign_payload(attestation, keypair) do
         {:ok, sig} ->
           Map.merge(attestation, %{
@@ -255,8 +263,10 @@ defmodule Opsm.Crypto.PqTrust do
       pq_available: PostQuantum.available?(),
       signature_mode: HybridSignatures.mode(),
       algorithms: PostQuantum.algorithms(),
-      lockfile_encryption: if(PostQuantum.available?(), do: :kyber1024_kem, else: :classical_random),
-      package_signatures: if(PostQuantum.available?(), do: :hybrid_ed25519_dilithium5, else: :ed25519_only)
+      lockfile_encryption:
+        if(PostQuantum.available?(), do: :kyber1024_kem, else: :classical_random),
+      package_signatures:
+        if(PostQuantum.available?(), do: :hybrid_ed25519_dilithium5, else: :ed25519_only)
     }
   end
 end

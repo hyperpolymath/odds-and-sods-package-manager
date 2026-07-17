@@ -23,11 +23,12 @@ defmodule Opsm.Registries.DenoX do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        resolved_version = if version == "latest" do
-          body["latest_version"] || body["latestVersion"]
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            body["latest_version"] || body["latestVersion"]
+          else
+            version
+          end
 
         case resolved_version do
           nil -> {:error, :not_found}

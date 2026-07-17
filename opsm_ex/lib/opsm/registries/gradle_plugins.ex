@@ -25,11 +25,12 @@ defmodule Opsm.Registries.GradlePlugins do
     marker_artifact = "#{name}.gradle.plugin"
     marker_path = String.replace(marker_artifact, ".", "/")
 
-    target_version = if version == "latest" do
-      fetch_latest_version(group_path, marker_path)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(group_path, marker_path)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -227,6 +228,7 @@ defmodule Opsm.Registries.GradlePlugins do
   defp extract_scm(_), do: nil
 
   defp extract_developers(nil), do: []
+
   defp extract_developers(devs) when is_list(devs) do
     Enum.map(devs, fn
       %{"name" => name} -> name
@@ -235,14 +237,17 @@ defmodule Opsm.Registries.GradlePlugins do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
   defp extract_developers(_), do: []
 
   defp extract_gradle_deps(nil), do: %{}
+
   defp extract_gradle_deps(deps) when is_list(deps) do
     Enum.reduce(deps, %{}, fn dep, acc ->
       key = "#{dep["groupId"]}:#{dep["artifactId"]}"
       Map.put(acc, key, dep["version"] || "latest")
     end)
   end
+
   defp extract_gradle_deps(_), do: %{}
 end

@@ -16,11 +16,12 @@ defmodule Opsm.Registries.Opam do
   Fetch package metadata from the OPAM registry.
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -29,6 +30,7 @@ defmodule Opsm.Registries.Opam do
       ver ->
         # Fetch OPAM file for package metadata
         url = "#{@base_url}/packages/#{name}/#{name}.#{ver}/opam"
+
         case VerifiedHttp.get(url, receive_timeout: 10_000) do
           {:ok, %{body: body}} when is_binary(body) ->
             deps = parse_opam_deps(body)
@@ -68,10 +70,12 @@ defmodule Opsm.Registries.Opam do
     |> String.split("\n")
     |> Enum.reduce({false, %{}}, fn line, {in_depends, deps} ->
       trimmed = String.trim(line)
+
       cond do
         String.starts_with?(trimmed, "depends:") ->
           # Start of depends block
           rest = String.replace_prefix(trimmed, "depends:", "") |> String.trim()
+
           if String.starts_with?(rest, "[") do
             # Parse inline dependencies
             parse_depends_line(rest, deps)
@@ -137,6 +141,7 @@ defmodule Opsm.Registries.Opam do
         case versions_internal(query) do
           {:ok, [latest | _]} ->
             {:ok, [%{name: query, version: latest, description: "OCaml package", downloads: 0}]}
+
           _ ->
             {:ok, []}
         end
@@ -175,6 +180,7 @@ defmodule Opsm.Registries.Opam do
     case VerifiedHttp.get(url, receive_timeout: 10_000) do
       {:ok, %{body: body}} when is_binary(body) ->
         versions = parse_versions_from_html(body, name)
+
         if versions == [] do
           {:error, :not_found}
         else
@@ -183,6 +189,7 @@ defmodule Opsm.Registries.Opam do
 
       {:ok, body} when is_binary(body) ->
         versions = parse_versions_from_html(body, name)
+
         if versions == [] do
           {:error, :not_found}
         else
@@ -254,10 +261,12 @@ defmodule Opsm.Registries.Opam do
       trimmed = String.trim(line)
 
       if String.starts_with?(trimmed, "src:") do
-        url = trimmed
+        url =
+          trimmed
           |> String.replace_prefix("src:", "")
           |> String.trim()
           |> String.trim("\"")
+
         {:halt, url}
       else
         {:cont, nil}
@@ -312,17 +321,19 @@ defmodule Opsm.Registries.Opam do
       trimmed = String.trim(line)
 
       if String.starts_with?(trimmed, "checksum:") do
-        raw = trimmed
+        raw =
+          trimmed
           |> String.replace_prefix("checksum:", "")
           |> String.trim()
           |> String.trim("\"")
 
-        result = case String.split(raw, "=", parts: 2) do
-          ["sha256", value] -> {value, :sha256}
-          ["sha512", value] -> {value, :sha512}
-          ["md5", value] -> {value, :md5}
-          _ -> {nil, nil}
-        end
+        result =
+          case String.split(raw, "=", parts: 2) do
+            ["sha256", value] -> {value, :sha256}
+            ["sha512", value] -> {value, :sha512}
+            ["md5", value] -> {value, :md5}
+            _ -> {nil, nil}
+          end
 
         {:halt, result}
       else
@@ -349,9 +360,11 @@ defmodule Opsm.Registries.Opam do
     |> String.split("\n")
     |> Enum.reduce({false, []}, fn line, {in_authors, authors} ->
       trimmed = String.trim(line)
+
       cond do
         String.starts_with?(trimmed, "authors:") ->
           rest = String.replace_prefix(trimmed, "authors:", "") |> String.trim()
+
           if String.starts_with?(rest, "[") and String.contains?(rest, "]") do
             # Single line authors
             parsed = parse_authors_line(rest)

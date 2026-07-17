@@ -16,11 +16,12 @@ defmodule Opsm.Registries.LuaRocks do
   Fetch package metadata from LuaRocks.
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -29,6 +30,7 @@ defmodule Opsm.Registries.LuaRocks do
       ver ->
         # Try to fetch rockspec file
         rockspec_url = "#{@registry_url}/manifests/#{name}/#{name}-#{ver}.rockspec"
+
         case VerifiedHttp.get(rockspec_url, receive_timeout: 10_000) do
           {:ok, %{body: body}} when is_binary(body) ->
             parse_rockspec(name, ver, body)
@@ -55,6 +57,7 @@ defmodule Opsm.Registries.LuaRocks do
   defp fetch_latest_version(name) do
     # Use the modules API to get latest version
     url = "#{@registry_url}/modules/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
         # Extract latest version from module info
@@ -78,10 +81,14 @@ defmodule Opsm.Registries.LuaRocks do
 
       is_map(module_info) and Map.has_key?(module_info, "versions") ->
         case module_info["versions"] do
-          [latest | _] when is_binary(latest) -> latest
+          [latest | _] when is_binary(latest) ->
+            latest
+
           versions when is_map(versions) ->
             versions |> Map.keys() |> Enum.sort(:desc) |> List.first()
-          _ -> nil
+
+          _ ->
+            nil
         end
 
       true ->
@@ -91,6 +98,7 @@ defmodule Opsm.Registries.LuaRocks do
 
   defp fetch_from_module_info(name, version) do
     url = "#{@registry_url}/modules/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
         parse_module_info(name, version, body)
@@ -252,16 +260,19 @@ defmodule Opsm.Registries.LuaRocks do
     limit = Keyword.get(opts, :limit, 20)
 
     url = "#{@registry_url}/search?q=#{URI.encode(query)}&format=json"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
+        results =
+          body
           |> Enum.take(limit)
           |> Enum.map(&parse_search_result/1)
 
         {:ok, results}
 
       {:ok, %{"results" => results}} when is_list(results) ->
-        parsed = results
+        parsed =
+          results
           |> Enum.take(limit)
           |> Enum.map(&parse_search_result/1)
 
@@ -303,7 +314,8 @@ defmodule Opsm.Registries.LuaRocks do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions}} when is_map(versions) ->
-        version_list = versions
+        version_list =
+          versions
           |> Map.keys()
           |> Enum.sort(:desc)
 

@@ -22,11 +22,13 @@ defmodule Opsm.Registries.VimPlugins do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        resolved_version = if version == "latest" do
-          extract_version(body)
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            extract_version(body)
+          else
+            version
+          end
+
         {:ok, parse_plugin(body, resolved_version)}
 
       {:error, :not_found} ->

@@ -16,17 +16,17 @@ defmodule Opsm.Security.Osv do
 
   # Maps OPSM forth atoms to OSV ecosystem identifiers.
   @forth_to_ecosystem %{
-    npm:     "npm",
-    cargo:   "crates.io",
-    hex:     "Hex",
-    pypi:    "PyPI",
-    gem:     "RubyGems",
-    go:      "Go",
-    pub:     "Pub",
+    npm: "npm",
+    cargo: "crates.io",
+    hex: "Hex",
+    pypi: "PyPI",
+    gem: "RubyGems",
+    go: "Go",
+    pub: "Pub",
     hackage: "Hackage",
-    maven:   "Maven",
-    nuget:   "NuGet",
-    nimble:  "Nim"
+    maven: "Maven",
+    nuget: "NuGet",
+    nimble: "Nim"
   }
 
   defmodule Vulnerability do
@@ -35,14 +35,14 @@ defmodule Opsm.Security.Osv do
 
     @type severity :: :critical | :high | :medium | :low | :none | :unknown
     @type t :: %__MODULE__{
-      id:        String.t(),
-      summary:   String.t() | nil,
-      severity:  severity(),
-      aliases:   [String.t()],
-      fixed_in:  String.t() | nil,
-      url:       String.t(),
-      published: String.t() | nil
-    }
+            id: String.t(),
+            summary: String.t() | nil,
+            severity: severity(),
+            aliases: [String.t()],
+            fixed_in: String.t() | nil,
+            url: String.t(),
+            published: String.t() | nil
+          }
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule Opsm.Security.Osv do
       when is_binary(package_name) and is_binary(version) and is_atom(forth) do
     body = %{
       "package" => %{
-        "name"      => package_name,
+        "name" => package_name,
         "ecosystem" => ecosystem_for(forth)
       },
       "version" => version
@@ -76,7 +76,7 @@ defmodule Opsm.Security.Osv do
       when is_binary(package_name) and is_atom(forth) do
     body = %{
       "package" => %{
-        "name"      => package_name,
+        "name" => package_name,
         "ecosystem" => ecosystem_for(forth)
       }
     }
@@ -113,12 +113,12 @@ defmodule Opsm.Security.Osv do
 
   defp decode_vuln(json) do
     %Vulnerability{
-      id:        json["id"] || "unknown",
-      summary:   json["summary"],
-      severity:  extract_severity(json),
-      aliases:   json["aliases"] || [],
-      fixed_in:  extract_fixed_in(json),
-      url:       "https://osv.dev/vulnerability/#{json["id"] || "unknown"}",
+      id: json["id"] || "unknown",
+      summary: json["summary"],
+      severity: extract_severity(json),
+      aliases: json["aliases"] || [],
+      fixed_in: extract_fixed_in(json),
+      url: "https://osv.dev/vulnerability/#{json["id"] || "unknown"}",
       published: json["published"]
     }
   end
@@ -135,7 +135,7 @@ defmodule Opsm.Security.Osv do
 
   defp extract_severity(%{"affected" => [%{"ecosystem_specific" => %{"severity" => s}} | _]})
        when is_binary(s),
-    do: label_to_severity(s)
+       do: label_to_severity(s)
 
   defp extract_severity(_), do: :unknown
 
@@ -146,8 +146,8 @@ defmodule Opsm.Security.Osv do
       score >= 9.0 -> :critical
       score >= 7.0 -> :high
       score >= 4.0 -> :medium
-      score > 0.0  -> :low
-      true         -> :none
+      score > 0.0 -> :low
+      true -> :none
     end
   end
 
@@ -156,21 +156,21 @@ defmodule Opsm.Security.Osv do
     # The numeric score lives in database_specific, which we handle first.
     cond do
       String.contains?(score, "CRITICAL") -> :critical
-      String.contains?(score, "HIGH")     -> :high
-      String.contains?(score, "MEDIUM")   -> :medium
-      String.contains?(score, "LOW")      -> :low
-      true                                -> :unknown
+      String.contains?(score, "HIGH") -> :high
+      String.contains?(score, "MEDIUM") -> :medium
+      String.contains?(score, "LOW") -> :low
+      true -> :unknown
     end
   end
 
   defp cvss_score_to_severity(_), do: :unknown
 
   defp label_to_severity("CRITICAL"), do: :critical
-  defp label_to_severity("HIGH"),     do: :high
-  defp label_to_severity("MEDIUM"),   do: :medium
-  defp label_to_severity("LOW"),      do: :low
-  defp label_to_severity("NONE"),     do: :none
-  defp label_to_severity(_),          do: :unknown
+  defp label_to_severity("HIGH"), do: :high
+  defp label_to_severity("MEDIUM"), do: :medium
+  defp label_to_severity("LOW"), do: :low
+  defp label_to_severity("NONE"), do: :none
+  defp label_to_severity(_), do: :unknown
 
   # Extract the first "fixed" version from affected ranges.
   defp extract_fixed_in(%{"affected" => [%{"ranges" => ranges} | _]}) do
@@ -178,7 +178,7 @@ defmodule Opsm.Security.Osv do
     |> Enum.flat_map(fn r -> r["events"] || [] end)
     |> Enum.find_value(fn
       %{"fixed" => ver} -> ver
-      _                 -> nil
+      _ -> nil
     end)
   end
 

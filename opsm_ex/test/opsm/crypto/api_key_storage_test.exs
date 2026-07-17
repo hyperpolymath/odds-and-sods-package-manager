@@ -18,7 +18,8 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
   describe "generate_master_key/0" do
     test "generates 256-bit master key" do
       master_key = ApiKeyStorage.generate_master_key()
-      assert byte_size(master_key) == 32  # 256 bits
+      # 256 bits
+      assert byte_size(master_key) == 32
     end
 
     test "generates different keys each time" do
@@ -74,7 +75,8 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       {:ok, hash1} = ApiKeyStorage.hash_key(api_key)
       {:ok, hash2} = ApiKeyStorage.hash_key(api_key)
 
-      assert hash1 != hash2  # Different salts
+      # Different salts
+      assert hash1 != hash2
       assert :ok = ApiKeyStorage.verify_key(api_key, hash1)
       assert :ok = ApiKeyStorage.verify_key(api_key, hash2)
     end
@@ -85,14 +87,16 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       master_key = ApiKeyStorage.generate_master_key()
       api_key = "my-secret-api-key"
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        api_key,
-        master_key,
-        service: "github",
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          api_key,
+          master_key,
+          service: "github",
+          storage_path: storage_path
+        )
 
-      {:ok, retrieved} = ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
+      {:ok, retrieved} =
+        ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
 
       assert retrieved == api_key
     end
@@ -100,24 +104,29 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
     test "stores multiple API keys", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, key_id1} = ApiKeyStorage.store_key(
-        "github-key",
-        master_key,
-        service: "github",
-        storage_path: storage_path
-      )
+      {:ok, key_id1} =
+        ApiKeyStorage.store_key(
+          "github-key",
+          master_key,
+          service: "github",
+          storage_path: storage_path
+        )
 
-      {:ok, key_id2} = ApiKeyStorage.store_key(
-        "gitlab-key",
-        master_key,
-        service: "gitlab",
-        storage_path: storage_path
-      )
+      {:ok, key_id2} =
+        ApiKeyStorage.store_key(
+          "gitlab-key",
+          master_key,
+          service: "gitlab",
+          storage_path: storage_path
+        )
 
       assert key_id1 != key_id2
 
-      {:ok, retrieved1} = ApiKeyStorage.retrieve_key(key_id1, master_key, storage_path: storage_path)
-      {:ok, retrieved2} = ApiKeyStorage.retrieve_key(key_id2, master_key, storage_path: storage_path)
+      {:ok, retrieved1} =
+        ApiKeyStorage.retrieve_key(key_id1, master_key, storage_path: storage_path)
+
+      {:ok, retrieved2} =
+        ApiKeyStorage.retrieve_key(key_id2, master_key, storage_path: storage_path)
 
       assert retrieved1 == "github-key"
       assert retrieved2 == "gitlab-key"
@@ -127,23 +136,26 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       correct_key = ApiKeyStorage.generate_master_key()
       wrong_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        "secret",
-        correct_key,
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          "secret",
+          correct_key,
+          storage_path: storage_path
+        )
 
-      assert {:error, _} = ApiKeyStorage.retrieve_key(key_id, wrong_key, storage_path: storage_path)
+      assert {:error, _} =
+               ApiKeyStorage.retrieve_key(key_id, wrong_key, storage_path: storage_path)
     end
 
     test "fails to retrieve non-existent key", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      assert {:error, "API key not found"} = ApiKeyStorage.retrieve_key(
-        "nonexistent-id",
-        master_key,
-        storage_path: storage_path
-      )
+      assert {:error, "API key not found"} =
+               ApiKeyStorage.retrieve_key(
+                 "nonexistent-id",
+                 master_key,
+                 storage_path: storage_path
+               )
     end
   end
 
@@ -152,14 +164,17 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       master_key = ApiKeyStorage.generate_master_key()
       expires_at = DateTime.utc_now() |> DateTime.add(3600, :second)
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        "expiring-key",
-        master_key,
-        expires_at: expires_at,
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          "expiring-key",
+          master_key,
+          expires_at: expires_at,
+          storage_path: storage_path
+        )
 
-      {:ok, retrieved} = ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
+      {:ok, retrieved} =
+        ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
+
       assert retrieved == "expiring-key"
     end
 
@@ -168,30 +183,35 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       # Expire 1 hour ago
       expires_at = DateTime.utc_now() |> DateTime.add(-3600, :second)
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        "expired-key",
-        master_key,
-        expires_at: expires_at,
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          "expired-key",
+          master_key,
+          expires_at: expires_at,
+          storage_path: storage_path
+        )
 
-      assert {:error, "API key has expired"} = ApiKeyStorage.retrieve_key(
-        key_id,
-        master_key,
-        storage_path: storage_path
-      )
+      assert {:error, "API key has expired"} =
+               ApiKeyStorage.retrieve_key(
+                 key_id,
+                 master_key,
+                 storage_path: storage_path
+               )
     end
 
     test "allows keys without expiration", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        "no-expiry",
-        master_key,
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          "no-expiry",
+          master_key,
+          storage_path: storage_path
+        )
 
-      {:ok, retrieved} = ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
+      {:ok, retrieved} =
+        ApiKeyStorage.retrieve_key(key_id, master_key, storage_path: storage_path)
+
       assert retrieved == "no-expiry"
     end
   end
@@ -200,19 +220,21 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
     test "deletes API key", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, key_id} = ApiKeyStorage.store_key(
-        "to-delete",
-        master_key,
-        storage_path: storage_path
-      )
+      {:ok, key_id} =
+        ApiKeyStorage.store_key(
+          "to-delete",
+          master_key,
+          storage_path: storage_path
+        )
 
       assert :ok = ApiKeyStorage.delete_key(key_id, storage_path: storage_path)
 
-      assert {:error, "API key not found"} = ApiKeyStorage.retrieve_key(
-        key_id,
-        master_key,
-        storage_path: storage_path
-      )
+      assert {:error, "API key not found"} =
+               ApiKeyStorage.retrieve_key(
+                 key_id,
+                 master_key,
+                 storage_path: storage_path
+               )
     end
 
     test "deleting non-existent key succeeds", %{storage_path: storage_path} do
@@ -227,8 +249,11 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
 
       assert :ok = ApiKeyStorage.delete_key(key_id1, storage_path: storage_path)
 
-      assert {:error, _} = ApiKeyStorage.retrieve_key(key_id1, master_key, storage_path: storage_path)
-      assert {:ok, "key2"} = ApiKeyStorage.retrieve_key(key_id2, master_key, storage_path: storage_path)
+      assert {:error, _} =
+               ApiKeyStorage.retrieve_key(key_id1, master_key, storage_path: storage_path)
+
+      assert {:ok, "key2"} =
+               ApiKeyStorage.retrieve_key(key_id2, master_key, storage_path: storage_path)
     end
   end
 
@@ -236,19 +261,21 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
     test "lists all stored keys metadata", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, _} = ApiKeyStorage.store_key(
-        "github-key",
-        master_key,
-        service: "github",
-        storage_path: storage_path
-      )
+      {:ok, _} =
+        ApiKeyStorage.store_key(
+          "github-key",
+          master_key,
+          service: "github",
+          storage_path: storage_path
+        )
 
-      {:ok, _} = ApiKeyStorage.store_key(
-        "gitlab-key",
-        master_key,
-        service: "gitlab",
-        storage_path: storage_path
-      )
+      {:ok, _} =
+        ApiKeyStorage.store_key(
+          "gitlab-key",
+          master_key,
+          service: "gitlab",
+          storage_path: storage_path
+        )
 
       keys = ApiKeyStorage.list_keys(storage_path: storage_path)
 
@@ -274,12 +301,13 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       master_key = ApiKeyStorage.generate_master_key()
       expires_at = DateTime.utc_now() |> DateTime.add(-3600, :second)
 
-      {:ok, _} = ApiKeyStorage.store_key(
-        "expired",
-        master_key,
-        expires_at: expires_at,
-        storage_path: storage_path
-      )
+      {:ok, _} =
+        ApiKeyStorage.store_key(
+          "expired",
+          master_key,
+          expires_at: expires_at,
+          storage_path: storage_path
+        )
 
       keys = ApiKeyStorage.list_keys(storage_path: storage_path)
       assert length(keys) == 1
@@ -292,25 +320,28 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       master_key = ApiKeyStorage.generate_master_key()
       api_key = "super-secret-key"
 
-      {:ok, _key_id} = ApiKeyStorage.store_key(
-        api_key,
-        master_key,
-        storage_path: storage_path
-      )
+      {:ok, _key_id} =
+        ApiKeyStorage.store_key(
+          api_key,
+          master_key,
+          storage_path: storage_path
+        )
 
       # Read raw storage file
       {:ok, content} = File.read(storage_path)
-      refute String.contains?(content, api_key)  # Plaintext not exposed
+      # Plaintext not exposed
+      refute String.contains?(content, api_key)
     end
 
     test "storage file has restrictive permissions", %{storage_path: storage_path} do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, _} = ApiKeyStorage.store_key(
-        "test-key",
-        master_key,
-        storage_path: storage_path
-      )
+      {:ok, _} =
+        ApiKeyStorage.store_key(
+          "test-key",
+          master_key,
+          storage_path: storage_path
+        )
 
       # Check file permissions (0600 = owner read/write only)
       stat = File.stat!(storage_path)
@@ -321,22 +352,26 @@ defmodule Opsm.Crypto.ApiKeyStorageTest do
       assert perms == 0o600
     end
 
-    test "service context isolation (different encryption contexts)", %{storage_path: storage_path} do
+    test "service context isolation (different encryption contexts)", %{
+      storage_path: storage_path
+    } do
       master_key = ApiKeyStorage.generate_master_key()
 
-      {:ok, key_id1} = ApiKeyStorage.store_key(
-        "same-key",
-        master_key,
-        service: "service1",
-        storage_path: storage_path
-      )
+      {:ok, key_id1} =
+        ApiKeyStorage.store_key(
+          "same-key",
+          master_key,
+          service: "service1",
+          storage_path: storage_path
+        )
 
-      {:ok, key_id2} = ApiKeyStorage.store_key(
-        "same-key",
-        master_key,
-        service: "service2",
-        storage_path: storage_path
-      )
+      {:ok, key_id2} =
+        ApiKeyStorage.store_key(
+          "same-key",
+          master_key,
+          service: "service2",
+          storage_path: storage_path
+        )
 
       # Read raw storage
       {:ok, content} = File.read(storage_path)

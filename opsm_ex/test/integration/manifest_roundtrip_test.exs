@@ -93,11 +93,20 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
   describe "cross-format conversion" do
     @tag :integration
     test "all writer targets produce non-empty output" do
-      targets = [:package_json, :cargo_toml, :mix_exs, :pyproject_toml, :pubspec_yaml, :go_mod, :opsm_toml]
+      targets = [
+        :package_json,
+        :cargo_toml,
+        :mix_exs,
+        :pyproject_toml,
+        :pubspec_yaml,
+        :go_mod,
+        :opsm_toml
+      ]
 
       for target <- targets do
         assert {:ok, output} = Writer.convert(@base_manifest, target),
                "Failed for target: #{target}"
+
         assert byte_size(output) > 10,
                "Output too small for target: #{target}"
       end

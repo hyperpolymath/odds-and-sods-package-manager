@@ -103,11 +103,11 @@ defmodule Opsm.Verified.Url do
     case parse_ipv4(host) do
       {:ok, {a, b, _c, _d}} ->
         # Loopback: 127.0.0.0/8
-        a == 127 or
         # Private: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-        a == 10 or
-        (a == 172 and b >= 16 and b <= 31) or
-        (a == 192 and b == 168)
+        a == 127 or
+          a == 10 or
+          (a == 172 and b >= 16 and b <= 31) or
+          (a == 192 and b == 168)
 
       :error ->
         false
@@ -135,7 +135,6 @@ defmodule Opsm.Verified.Url do
         :error
     end
   end
-
 end
 
 defmodule Opsm.Verified.Json do
@@ -152,7 +151,8 @@ defmodule Opsm.Verified.Json do
   """
 
   @max_depth 20
-  @max_size 10_485_760  # 10 MB
+  # 10 MB
+  @max_size 10_485_760
 
   @doc """
   Decode JSON string safely.
@@ -208,14 +208,16 @@ defmodule Opsm.Verified.Json do
 
   # Check nesting depth recursively
   defp check_depth(_data, 0), do: false
+
   defp check_depth(data, depth) when is_map(data) do
     Enum.all?(data, fn {_k, v} -> check_depth(v, depth - 1) end)
   end
+
   defp check_depth(data, depth) when is_list(data) do
     Enum.all?(data, fn v -> check_depth(v, depth - 1) end)
   end
-  defp check_depth(_data, _depth), do: true
 
+  defp check_depth(_data, _depth), do: true
 end
 
 defmodule Opsm.Verified.Result do

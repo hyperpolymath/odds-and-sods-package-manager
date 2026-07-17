@@ -21,11 +21,12 @@ defmodule Opsm.Registries.TektonHub do
   def fetch_package(name, version \\ "latest") do
     {catalog, resource_name} = parse_resource_name(name)
 
-    url = if version == "latest" do
-      "#{@api_url}/resource/#{catalog}/#{resource_name}"
-    else
-      "#{@api_url}/resource/#{catalog}/#{resource_name}/#{version}"
-    end
+    url =
+      if version == "latest" do
+        "#{@api_url}/resource/#{catalog}/#{resource_name}"
+      else
+        "#{@api_url}/resource/#{catalog}/#{resource_name}/#{version}"
+      end
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"data" => data}} ->
@@ -54,10 +55,15 @@ defmodule Opsm.Registries.TektonHub do
     latest = data["latestVersion"] || get_in(data, ["latest", "version"])
 
     case latest do
-      %{"version" => v} -> v
-      v when is_binary(v) -> v
+      %{"version" => v} ->
+        v
+
+      v when is_binary(v) ->
+        v
+
       _ ->
         versions = data["versions"] || []
+
         case versions do
           [%{"version" => v} | _] -> v
           _ -> "0.1"
@@ -76,26 +82,31 @@ defmodule Opsm.Registries.TektonHub do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"data" => resources}} when is_list(resources) ->
-        results = Enum.map(resources, fn res ->
-          latest_ver = get_in(res, ["latestVersion", "version"]) ||
-            get_in(res, ["latest", "version"])
+        results =
+          Enum.map(resources, fn res ->
+            latest_ver =
+              get_in(res, ["latestVersion", "version"]) ||
+                get_in(res, ["latest", "version"])
 
-          %{
-            name: "#{res["catalog"]["name"]}/#{res["name"]}",
-            version: latest_ver,
-            description: res["description"] || res["summary"]
-          }
-        end)
+            %{
+              name: "#{res["catalog"]["name"]}/#{res["name"]}",
+              version: latest_ver,
+              description: res["description"] || res["summary"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, resources} when is_list(resources) ->
-        results = Enum.map(resources, fn res ->
-          %{
-            name: res["name"],
-            version: get_in(res, ["latestVersion", "version"]),
-            description: res["description"]
-          }
-        end)
+        results =
+          Enum.map(resources, fn res ->
+            %{
+              name: res["name"],
+              version: get_in(res, ["latestVersion", "version"]),
+              description: res["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -129,13 +140,17 @@ defmodule Opsm.Registries.TektonHub do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"data" => %{"versions" => versions_list}}} when is_list(versions_list) ->
-        ver_strs = Enum.map(versions_list, fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          Enum.map(versions_list, fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, %{"data" => versions_list}} when is_list(versions_list) ->
-        ver_strs = Enum.map(versions_list, fn v -> v["version"] end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          Enum.map(versions_list, fn v -> v["version"] end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, _} ->

@@ -20,11 +20,12 @@ defmodule Opsm.Registries.Conda do
   def fetch_package(name, version \\ "latest") do
     {owner, pkg_name} = parse_package_name(name)
 
-    target_version = if version == "latest" do
-      fetch_latest_version(owner, pkg_name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(owner, pkg_name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -33,6 +34,7 @@ defmodule Opsm.Registries.Conda do
       ver ->
         # Fetch package metadata
         url = "#{@api_url}/package/#{owner}/#{pkg_name}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             # Fetch file/version details
@@ -63,10 +65,14 @@ defmodule Opsm.Registries.Conda do
 
   defp fetch_latest_version(owner, pkg_name) do
     url = "#{@api_url}/package/#{owner}/#{pkg_name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, %{"latest_version" => version}} -> version
+      {:ok, %{"latest_version" => version}} ->
+        version
+
       {:ok, %{"versions" => versions}} when is_list(versions) and versions != [] ->
         List.last(versions)
+
       _ ->
         # Fallback: get version list from files
         case versions_internal(owner, pkg_name) do
@@ -78,6 +84,7 @@ defmodule Opsm.Registries.Conda do
 
   defp fetch_files(owner, pkg_name) do
     url = "#{@api_url}/package/#{owner}/#{pkg_name}/files"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, files} when is_list(files) -> files
       {:ok, %{"files" => files}} when is_list(files) -> files
@@ -92,6 +99,7 @@ defmodule Opsm.Registries.Conda do
     limit = Keyword.get(opts, :limit, 20)
 
     url = "#{@api_url}/search?name=#{URI.encode(query)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, results} when is_list(results) ->
         {:ok, parse_search_results(results, limit)}
@@ -147,6 +155,7 @@ defmodule Opsm.Registries.Conda do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, files} when is_list(files) ->
         versions = extract_versions_from_files(files)
+
         if versions == [] do
           {:error, :not_found}
         else
@@ -155,6 +164,7 @@ defmodule Opsm.Registries.Conda do
 
       {:ok, %{"files" => files}} when is_list(files) ->
         versions = extract_versions_from_files(files)
+
         if versions == [] do
           {:error, :not_found}
         else
@@ -194,6 +204,7 @@ defmodule Opsm.Registries.Conda do
           nil -> {:error, :not_found}
           url -> {:ok, url}
         end
+
       _ ->
         {:error, :not_found}
     end
@@ -253,8 +264,12 @@ defmodule Opsm.Registries.Conda do
     # Try to extract dependencies from package info
     # Conda dependencies can be in various places
     cond do
-      is_map(info["depends"]) -> info["depends"]
-      is_list(info["depends"]) -> parse_conda_depends_list(info["depends"])
+      is_map(info["depends"]) ->
+        info["depends"]
+
+      is_list(info["depends"]) ->
+        parse_conda_depends_list(info["depends"])
+
       true ->
         # Try to find dependencies in files metadata
         case Enum.find(files, fn f -> f["version"] == version end) do
@@ -273,6 +288,7 @@ defmodule Opsm.Registries.Conda do
       end
     end)
   end
+
   defp parse_conda_depends_list(_), do: %{}
 
   # Parse Conda dependency strings like "python >=3.8" or "numpy"
@@ -282,6 +298,7 @@ defmodule Opsm.Registries.Conda do
       [pkg] -> {String.trim(pkg), "*"}
     end
   end
+
   defp parse_conda_dependency(_), do: nil
 
   defp extract_checksum(files, version) do

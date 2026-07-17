@@ -65,12 +65,12 @@ defmodule Opsm.Crypto.ApiKeyStorage do
   @type api_key :: String.t()
 
   @type stored_key :: %{
-    encrypted_key: binary(),
-    key_id: key_id(),
-    service: String.t(),
-    created_at: DateTime.t(),
-    expires_at: DateTime.t() | nil
-  }
+          encrypted_key: binary(),
+          key_id: key_id(),
+          service: String.t(),
+          created_at: DateTime.t(),
+          expires_at: DateTime.t() | nil
+        }
 
   @doc """
   Generate a 256-bit master key for encrypting API keys.
@@ -171,6 +171,7 @@ defmodule Opsm.Crypto.ApiKeyStorage do
 
     # Encrypt the API key
     context = "opsm-api-key-#{service}"
+
     case Symmetric.encrypt(api_key, master_key, context) do
       {:ok, encrypted} ->
         stored_key = %{
@@ -239,7 +240,8 @@ defmodule Opsm.Crypto.ApiKeyStorage do
       updated_keys = Enum.reject(keys, fn key -> key["key_id"] == key_id end)
       write_storage_file(storage_path, updated_keys)
     else
-      {:error, :enoent} -> :ok  # Already deleted
+      # Already deleted
+      {:error, :enoent} -> :ok
       {:error, reason} -> {:error, reason}
     end
   end
@@ -351,7 +353,9 @@ defmodule Opsm.Crypto.ApiKeyStorage do
 
   defp check_expiration(stored_key) do
     case stored_key["expires_at"] do
-      nil -> :ok
+      nil ->
+        :ok
+
       expires_at_str ->
         case DateTime.from_iso8601(expires_at_str) do
           {:ok, expires_at, _offset} ->
@@ -369,7 +373,9 @@ defmodule Opsm.Crypto.ApiKeyStorage do
 
   defp is_expired?(stored_key) do
     case stored_key["expires_at"] do
-      nil -> false
+      nil ->
+        false
+
       expires_at_str ->
         case DateTime.from_iso8601(expires_at_str) do
           {:ok, expires_at, _offset} ->

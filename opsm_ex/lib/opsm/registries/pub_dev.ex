@@ -23,14 +23,17 @@ defmodule Opsm.Registries.PubDev do
         versions_list = body["versions"] || []
         latest_info = body["latest"] || %{}
 
-        target_version = if version == "latest" do
-          latest_info["version"]
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            latest_info["version"]
+          else
+            version
+          end
 
         version_info = Enum.find(versions_list, fn v -> v["version"] == target_version end)
-        pubspec = if version_info, do: version_info["pubspec"] || %{}, else: latest_info["pubspec"] || %{}
+
+        pubspec =
+          if version_info, do: version_info["pubspec"] || %{}, else: latest_info["pubspec"] || %{}
 
         deps = parse_pubspec_deps(pubspec["dependencies"])
         dev_deps = parse_pubspec_deps(pubspec["dev_dependencies"])
@@ -52,6 +55,7 @@ defmodule Opsm.Registries.PubDev do
   end
 
   defp parse_pubspec_deps(nil), do: %{}
+
   defp parse_pubspec_deps(deps) when is_map(deps) do
     deps
     |> Enum.reject(fn {_name, constraint} ->
@@ -75,7 +79,8 @@ defmodule Opsm.Registries.PubDev do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
+        results =
+          packages
           |> Enum.take(limit)
           |> Enum.map(fn pkg ->
             %{
@@ -85,6 +90,7 @@ defmodule Opsm.Registries.PubDev do
               downloads: 0
             }
           end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -121,10 +127,14 @@ defmodule Opsm.Registries.PubDev do
     case VerifiedHttp.get_json(url, headers: headers, receive_timeout: 10_000) do
       {:ok, body} ->
         versions_list = body["versions"] || []
-        versions = versions_list
+
+        versions =
+          versions_list
           |> Enum.map(& &1["version"])
           |> Enum.reject(&is_nil/1)
-          |> Enum.reverse()  # Newest first
+          # Newest first
+          |> Enum.reverse()
+
         {:ok, versions}
 
       {:error, :not_found} ->

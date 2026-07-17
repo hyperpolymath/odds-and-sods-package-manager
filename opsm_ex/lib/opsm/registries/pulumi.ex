@@ -66,6 +66,7 @@ defmodule Opsm.Registries.Pulumi do
   end
 
   defp find_github_release(releases, "latest"), do: List.first(releases)
+
   defp find_github_release(releases, target_version) do
     Enum.find(releases, List.first(releases), fn r ->
       tag = String.trim_leading(r["tag_name"] || "", "v")
@@ -90,27 +91,31 @@ defmodule Opsm.Registries.Pulumi do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["version"],
-            description: pkg["description"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["version"],
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, packages} when is_list(packages) ->
-        results = packages
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["version"],
-            description: pkg["description"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["version"],
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, _} ->
@@ -128,10 +133,13 @@ defmodule Opsm.Registries.Pulumi do
     url = "#{@api_url}/packages/#{URI.encode(name)}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, _} -> true
+      {:ok, _} ->
+        true
+
       {:error, _} ->
         # Fallback: check GitHub
         github_url = "#{@github_api}/repos/pulumi/pulumi-#{name}"
+
         case VerifiedHttp.get_json(github_url, receive_timeout: 10_000) do
           {:ok, _} -> true
           {:error, _} -> false
@@ -148,15 +156,17 @@ defmodule Opsm.Registries.Pulumi do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions_list}} when is_list(versions_list) ->
-        ver_strs = versions_list
-        |> Enum.map(fn v ->
-          cond do
-            is_binary(v) -> v
-            is_map(v) -> v["version"]
-            true -> nil
-          end
-        end)
-        |> Enum.reject(&is_nil/1)
+        ver_strs =
+          versions_list
+          |> Enum.map(fn v ->
+            cond do
+              is_binary(v) -> v
+              is_map(v) -> v["version"]
+              true -> nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+
         {:ok, ver_strs}
 
       {:ok, _} ->
@@ -179,9 +189,11 @@ defmodule Opsm.Registries.Pulumi do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, releases} when is_list(releases) ->
-        ver_strs = releases
-        |> Enum.map(fn r -> String.trim_leading(r["tag_name"] || "", "v") end)
-        |> Enum.reject(fn v -> v == "" end)
+        ver_strs =
+          releases
+          |> Enum.map(fn r -> String.trim_leading(r["tag_name"] || "", "v") end)
+          |> Enum.reject(fn v -> v == "" end)
+
         {:ok, ver_strs}
 
       {:error, _} ->
@@ -267,6 +279,7 @@ defmodule Opsm.Registries.Pulumi do
   end
 
   defp truncate_description(nil), do: nil
+
   defp truncate_description(text) do
     if String.length(text) > 200 do
       String.slice(text, 0, 197) <> "..."

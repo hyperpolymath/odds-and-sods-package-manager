@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-let { RuntimePlugin, .. } = import "../contract/runtime-plugin.ncl" in
+let RuntimePlugin = import "../contract/runtime-plugin.ncl" in
 {
   name = "typst",
   description = "typst — A new markup-based typesetting system",

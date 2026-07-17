@@ -28,21 +28,28 @@ defmodule Opsm.Registries.K8sOperators do
         spec = csv["spec"] || %{}
         _annotations = metadata["annotations"] || %{}
 
-        ver = if version == "latest" do
-          spec["version"] || metadata["name"] |> extract_version_from_name() || "0.0.0"
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            spec["version"] || metadata["name"] |> extract_version_from_name() || "0.0.0"
+          else
+            version
+          end
 
         {:ok, parse_operator(name, operator, csv, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp extract_version_from_name(nil), do: nil
+
   defp extract_version_from_name(name) do
     # OLM CSVs are named like "prometheus-operator.v0.65.1"
     case Regex.run(~r/\.v?(\d+\.\d+\.\d+.*)$/, name) do
@@ -60,18 +67,21 @@ defmodule Opsm.Registries.K8sOperators do
     _required_apis = spec["apiservicedefinitions"] || %{}
     required_crds = get_in(spec, ["customresourcedefinitions", "required"]) || []
 
-    deps = required_crds
-           |> Enum.map(fn crd ->
-             crd_name = crd["name"] || crd["kind"] || "unknown"
-             {crd_name, crd["version"] || "*"}
-           end)
-           |> Map.new()
+    deps =
+      required_crds
+      |> Enum.map(fn crd ->
+        crd_name = crd["name"] || crd["kind"] || "unknown"
+        {crd_name, crd["version"] || "*"}
+      end)
+      |> Map.new()
 
     # Extract container images as keywords
     related_images = operator["related_images"] || []
-    image_names = related_images
-                  |> Enum.map(fn img -> img["name"] end)
-                  |> Enum.reject(&is_nil/1)
+
+    image_names =
+      related_images
+      |> Enum.map(fn img -> img["name"] end)
+      |> Enum.reject(&is_nil/1)
 
     provider = get_in(spec, ["provider", "name"])
 
@@ -106,9 +116,11 @@ defmodule Opsm.Registries.K8sOperators do
   end
 
   defp truncate_description(nil), do: nil
+
   defp truncate_description(desc) when byte_size(desc) > 500 do
     String.slice(desc, 0, 497) <> "..."
   end
+
   defp truncate_description(desc), do: desc
 
   @doc """
@@ -120,32 +132,39 @@ defmodule Opsm.Registries.K8sOperators do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
         operators = body["operators"] || body["items"] || []
-        results = operators
-        |> Enum.take(20)
-        |> Enum.map(fn op ->
-          csv = op["csv"] || %{}
-          spec = csv["spec"] || %{}
-          %{
-            name: op["name"] || op["packageName"],
-            version: spec["version"] || op["version"],
-            description: op["description"] || spec["description"]
-          }
-        end)
+
+        results =
+          operators
+          |> Enum.take(20)
+          |> Enum.map(fn op ->
+            csv = op["csv"] || %{}
+            spec = csv["spec"] || %{}
+
+            %{
+              name: op["name"] || op["packageName"],
+              version: spec["version"] || op["version"],
+              description: op["description"] || spec["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, items} when is_list(items) ->
-        results = items
-        |> Enum.take(20)
-        |> Enum.map(fn op ->
-          %{
-            name: op["name"] || op["packageName"],
-            version: op["version"],
-            description: op["description"]
-          }
-        end)
+        results =
+          items
+          |> Enum.take(20)
+          |> Enum.map(fn op ->
+            %{
+              name: op["name"] || op["packageName"],
+              version: op["version"],
+              description: op["description"]
+            }
+          end)
+
         {:ok, results}
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -170,31 +189,35 @@ defmodule Opsm.Registries.K8sOperators do
         operator = body["operator"] || body
         channels = operator["channels"] || []
 
-        vers = channels
-               |> Enum.flat_map(fn ch ->
-                 entries = ch["entries"] || ch["versions"] || []
-                 Enum.map(entries, fn
-                   e when is_map(e) -> e["version"] || e["name"]
-                   e when is_binary(e) -> e
-                   _ -> nil
-                 end)
-               end)
-               |> Enum.reject(&is_nil/1)
-               |> Enum.uniq()
+        vers =
+          channels
+          |> Enum.flat_map(fn ch ->
+            entries = ch["entries"] || ch["versions"] || []
+
+            Enum.map(entries, fn
+              e when is_map(e) -> e["version"] || e["name"]
+              e when is_binary(e) -> e
+              _ -> nil
+            end)
+          end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
 
         # If no channel entries, fall back to single version
-        vers = if vers == [] do
-          case fetch_package(name) do
-            {:ok, pkg} -> [pkg.version]
-            _ -> []
+        vers =
+          if vers == [] do
+            case fetch_package(name) do
+              {:ok, pkg} -> [pkg.version]
+              _ -> []
+            end
+          else
+            vers
           end
-        else
-          vers
-        end
 
         {:ok, vers}
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 end

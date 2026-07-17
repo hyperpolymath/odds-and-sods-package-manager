@@ -16,11 +16,12 @@ defmodule Opsm.Registries.Cpan do
   Fetch distribution metadata from MetaCPAN.
   """
   def fetch_package(name, version \\ "latest") do
-    target_version = if version == "latest" do
-      fetch_latest_version(name)
-    else
-      version
-    end
+    target_version =
+      if version == "latest" do
+        fetch_latest_version(name)
+      else
+        version
+      end
 
     case target_version do
       nil ->
@@ -29,6 +30,7 @@ defmodule Opsm.Registries.Cpan do
       ver ->
         # Fetch release info
         url = "#{@api_url}/release/#{name}"
+
         case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
           {:ok, body} ->
             # Verify version matches if specific version requested
@@ -57,7 +59,9 @@ defmodule Opsm.Registries.Cpan do
 
   defp fetch_specific_version(name, version) do
     # Try searching for exact version
-    search_url = "#{@api_url}/release/_search?q=distribution:#{name}+AND+version:#{version}&size=1"
+    search_url =
+      "#{@api_url}/release/_search?q=distribution:#{name}+AND+version:#{version}&size=1"
+
     case VerifiedHttp.get_json(search_url, receive_timeout: 10_000) do
       {:ok, %{"hits" => %{"hits" => [%{"_source" => body} | _]}}} ->
         deps = extract_dependencies(body)
@@ -70,8 +74,11 @@ defmodule Opsm.Registries.Cpan do
 
   defp fetch_latest_version(name) do
     url = "#{@api_url}/release/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
-      {:ok, %{"version" => version}} -> version
+      {:ok, %{"version" => version}} ->
+        version
+
       _ ->
         # Fallback: get version list
         case versions_internal(name) do
@@ -89,11 +96,12 @@ defmodule Opsm.Registries.Cpan do
     |> Enum.filter(fn dep ->
       # Only runtime dependencies, not test/build/configure
       Map.get(dep, "phase") == "runtime" and
-      Map.get(dep, "relationship") == "requires"
+        Map.get(dep, "relationship") == "requires"
     end)
     |> Enum.reduce(%{}, fn dep, acc ->
       module = Map.get(dep, "module")
       version = Map.get(dep, "version", "0")
+
       if module do
         Map.put(acc, module, ">= #{version}")
       else
@@ -112,14 +120,16 @@ defmodule Opsm.Registries.Cpan do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"hits" => %{"hits" => hits}}} ->
-        results = Enum.map(hits, fn %{"_source" => release} ->
-          %{
-            name: Map.get(release, "distribution"),
-            version: Map.get(release, "version"),
-            description: Map.get(release, "abstract", ""),
-            downloads: 0
-          }
-        end)
+        results =
+          Enum.map(hits, fn %{"_source" => release} ->
+            %{
+              name: Map.get(release, "distribution"),
+              version: Map.get(release, "version"),
+              description: Map.get(release, "abstract", ""),
+              downloads: 0
+            }
+          end)
+
         {:ok, results}
 
       {:error, reason} ->
@@ -192,6 +202,7 @@ defmodule Opsm.Registries.Cpan do
   def tarball_url(name, _version) do
     # Fetch release info to get download URL
     url = "#{@api_url}/release/#{name}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         case Map.get(body, "download_url") do

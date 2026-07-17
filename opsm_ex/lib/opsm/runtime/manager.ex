@@ -25,8 +25,8 @@ defmodule Opsm.Runtime.Manager do
   alias Opsm.Verified.Http, as: VerifiedHttp
 
   @runtimes_dir Path.expand("~/.opsm/runtimes")
-  @active_file  Path.join(@runtimes_dir, ".active")
-  @plugins_dir  Path.join(@runtimes_dir, ".plugins")
+  @active_file Path.join(@runtimes_dir, ".active")
+  @plugins_dir Path.join(@runtimes_dir, ".plugins")
 
   # ---------------------------------------------------------------------------
   # Listing
@@ -46,18 +46,23 @@ defmodule Opsm.Runtime.Manager do
         |> Enum.reject(&String.starts_with?(&1, "."))
         |> Enum.flat_map(fn tool_dir ->
           tool_path = Path.join(@runtimes_dir, tool_dir)
+
           case File.ls(tool_path) do
             {:ok, versions} ->
               active_ver = Map.get(active, tool_dir)
+
               Enum.map(versions, fn ver ->
                 %{name: tool_dir, version: ver, active: ver == active_ver}
               end)
-            _ -> []
+
+            _ ->
+              []
           end
         end)
         |> Enum.sort_by(& &1.name)
 
-      _ -> []
+      _ ->
+        []
     end
   end
 
@@ -73,7 +78,9 @@ defmodule Opsm.Runtime.Manager do
       case File.ls(@runtimes_dir) do
         {:ok, entries} ->
           entries |> Enum.reject(&String.starts_with?(&1, ".")) |> MapSet.new()
-        _ -> MapSet.new()
+
+        _ ->
+          MapSet.new()
       end
 
     active
@@ -133,6 +140,7 @@ defmodule Opsm.Runtime.Manager do
         case latest_version(tool) do
           {:ok, latest} when latest != current ->
             [%{name: tool, current: current, latest: latest}]
+
           _ ->
             []
         end
@@ -162,13 +170,15 @@ defmodule Opsm.Runtime.Manager do
       :ok
     else
       with {:ok, plugin} <- load_plugin(tool) do
-        strategy = get_in(plugin, ["install", "strategy"]) ||
-                   get_in(plugin, [:install, :strategy])
+        strategy =
+          get_in(plugin, ["install", "strategy"]) ||
+            get_in(plugin, [:install, :strategy])
 
         result =
           case to_string(strategy) do
             s when s in ["BuildFromSource", "DelegateToManager", "Both"] ->
               SourceBuilder.install(plugin, version)
+
             _ ->
               install_prebuilt(tool, version, plugin, install_dir)
           end
@@ -177,6 +187,7 @@ defmodule Opsm.Runtime.Manager do
           :ok ->
             set_active(tool, version)
             :ok
+
           error ->
             error
         end
@@ -194,6 +205,7 @@ defmodule Opsm.Runtime.Manager do
       {:ok, content} ->
         pins = parse_runtime_section(content)
         {:ok, pins}
+
       {:error, reason} ->
         {:error, reason}
     end
@@ -217,6 +229,7 @@ defmodule Opsm.Runtime.Manager do
           active = load_active()
           write_active(Map.delete(active, tool))
           :ok
+
         {:error, reason, _} ->
           {:error, reason}
       end
@@ -234,7 +247,9 @@ defmodule Opsm.Runtime.Manager do
   """
   def which(tool) do
     case current_version(tool) do
-      "none" -> {:error, :not_installed}
+      "none" ->
+        {:error, :not_installed}
+
       version ->
         bin_dir = Path.join([@runtimes_dir, tool, version, "bin"])
         {:ok, Path.join(bin_dir, tool)}
@@ -257,16 +272,20 @@ defmodule Opsm.Runtime.Manager do
             _ -> acc
           end
         end)
-      _ -> %{}
+
+      _ ->
+        %{}
     end
   end
 
   defp write_active(active_map) do
     File.mkdir_p!(Path.dirname(@active_file))
+
     content =
       active_map
       |> Enum.map(fn {k, v} -> "#{k} = #{v}" end)
       |> Enum.join("\n")
+
     File.write!(@active_file, content <> "\n")
   end
 
@@ -288,14 +307,18 @@ defmodule Opsm.Runtime.Manager do
     else
       # Try evaluating the Nickel plugin directly
       plugin_ncl = find_plugin_ncl(tool)
+
       case plugin_ncl do
         nil ->
           {:error, {:no_plugin, tool}}
+
         path ->
           # System.cmd/3 raises ErlangError (:enoent) when the nickel binary
           # is not installed — surface that as a structured error instead.
           try do
-            case System.cmd("nickel", ["export", "--format", "json", path], stderr_to_stdout: true) do
+            case System.cmd("nickel", ["export", "--format", "json", path],
+                   stderr_to_stdout: true
+                 ) do
               {json_str, 0} ->
                 case Jason.decode(json_str) do
                   {:ok, plugin} ->
@@ -303,8 +326,11 @@ defmodule Opsm.Runtime.Manager do
                     File.mkdir_p!(@plugins_dir)
                     File.write!(cached, json_str)
                     {:ok, plugin}
-                  err -> {:error, {:json_decode, err}}
+
+                  err ->
+                    {:error, {:json_decode, err}}
                 end
+
               {err_str, _} ->
                 {:error, {:nickel_eval, err_str}}
             end
@@ -377,6 +403,7 @@ defmodule Opsm.Runtime.Manager do
           |> Enum.reject(&is_nil/1)
           |> Enum.map(&String.trim_leading(&1, "v"))
           |> Enum.sort(:desc)
+
         {:ok, versions}
 
       {:error, reason} ->
@@ -403,10 +430,10 @@ defmodule Opsm.Runtime.Manager do
     arch = uname_m |> String.trim()
 
     case {os, arch} do
-      {"linux", "x86_64"}  -> :linux_amd64
+      {"linux", "x86_64"} -> :linux_amd64
       {"linux", "aarch64"} -> :linux_arm64
       {"darwin", "x86_64"} -> :darwin_amd64
-      {"darwin", "arm64"}  -> :darwin_arm64
+      {"darwin", "arm64"} -> :darwin_arm64
       _other -> :linux_amd64
     end
   end
@@ -418,17 +445,22 @@ defmodule Opsm.Runtime.Manager do
 
   defp resolve_archive_url(_tool, version, platform, plugin, nil) do
     # Fall back to archive_name_template from the platforms list
-    platforms = get_in(plugin, ["install", "platforms"]) ||
-                get_in(plugin, [:install, :platforms]) || []
+    platforms =
+      get_in(plugin, ["install", "platforms"]) ||
+        get_in(plugin, [:install, :platforms]) || []
 
     platform_str = Atom.to_string(platform)
-    entry = Enum.find(platforms, fn p ->
-      p_str = to_string(p["platform"] || p[:platform] || "")
-      String.downcase(p_str) == String.downcase(platform_str)
-    end)
+
+    entry =
+      Enum.find(platforms, fn p ->
+        p_str = to_string(p["platform"] || p[:platform] || "")
+        String.downcase(p_str) == String.downcase(platform_str)
+      end)
 
     case entry do
-      nil -> {:error, {:unsupported_platform, platform}}
+      nil ->
+        {:error, {:unsupported_platform, platform}}
+
       e ->
         template = e["archive_name_template"] || e[:archive_name_template]
         repo = plugin["repository"] || plugin[:repository]
@@ -450,7 +482,9 @@ defmodule Opsm.Runtime.Manager do
       # Use Req (via VerifiedHttp.get/2) with streaming to avoid loading the
       # entire archive into memory.  Falls back to :httpc if Req is unavailable.
       case VerifiedHttp.get(url, receive_timeout: 120_000, into: File.stream!(dest)) do
-        {:ok, _} -> {:ok, dest}
+        {:ok, _} ->
+          {:ok, dest}
+
         {:error, reason} ->
           File.rm(dest)
           {:error, {:download_failed, reason}}
@@ -459,21 +493,41 @@ defmodule Opsm.Runtime.Manager do
   end
 
   defp extract_archive(archive_path, install_dir, plugin) do
-    strip = get_in(plugin, ["install", "strip_components"]) ||
-            get_in(plugin, [:install, :strip_components]) || 1
+    strip =
+      get_in(plugin, ["install", "strip_components"]) ||
+        get_in(plugin, [:install, :strip_components]) || 1
 
     File.mkdir_p!(install_dir)
 
     cond do
       String.ends_with?(archive_path, ".tar.xz") ->
-        {_, 0} = System.cmd("tar", ["-xJf", archive_path, "--strip-components=#{strip}", "-C", install_dir])
+        {_, 0} =
+          System.cmd("tar", [
+            "-xJf",
+            archive_path,
+            "--strip-components=#{strip}",
+            "-C",
+            install_dir
+          ])
+
         :ok
+
       String.ends_with?(archive_path, ".tar.gz") ->
-        {_, 0} = System.cmd("tar", ["-xzf", archive_path, "--strip-components=#{strip}", "-C", install_dir])
+        {_, 0} =
+          System.cmd("tar", [
+            "-xzf",
+            archive_path,
+            "--strip-components=#{strip}",
+            "-C",
+            install_dir
+          ])
+
         :ok
+
       String.ends_with?(archive_path, ".zip") ->
         {_, 0} = System.cmd("unzip", ["-q", archive_path, "-d", install_dir])
         :ok
+
       true ->
         # Raw binary — just make executable and put in bin/
         bin_dir = Path.join(install_dir, "bin")
@@ -492,22 +546,29 @@ defmodule Opsm.Runtime.Manager do
       |> String.split("\n")
       |> Enum.reduce({false, []}, fn line, {in_section, acc} ->
         stripped = String.trim(line)
+
         cond do
           stripped == "[runtime]" ->
             {true, acc}
+
           String.starts_with?(stripped, "#") ->
             {in_section, acc}
+
           String.starts_with?(stripped, "[") and in_section ->
             {false, acc}
+
           in_section and String.contains?(stripped, "=") ->
             [tool, version] = String.split(stripped, "=", parts: 2)
+
             version =
               version
               |> String.split("#", parts: 2)
               |> hd()
               |> String.trim()
               |> String.trim("\"")
+
             {true, [{String.trim(tool), version} | acc]}
+
           true ->
             {in_section, acc}
         end

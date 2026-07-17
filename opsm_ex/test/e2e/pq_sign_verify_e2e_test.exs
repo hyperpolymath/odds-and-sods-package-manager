@@ -34,11 +34,19 @@ defmodule Opsm.E2E.PqSignVerifyE2ETest do
 
         # Step 4: Verify that a tampered message is rejected
         tampered = original_message <> " TAMPERED"
-        assert {:error, _reason} = PostQuantum.dilithium5_verify(tampered, signed_blob, keys.public_key)
+
+        assert {:error, _reason} =
+                 PostQuantum.dilithium5_verify(tampered, signed_blob, keys.public_key)
 
         # Step 5: Verify that a different key is rejected
         {:ok, other_keys} = PostQuantum.dilithium5_keypair()
-        assert {:error, _reason} = PostQuantum.dilithium5_verify(original_message, signed_blob, other_keys.public_key)
+
+        assert {:error, _reason} =
+                 PostQuantum.dilithium5_verify(
+                   original_message,
+                   signed_blob,
+                   other_keys.public_key
+                 )
       else
         # NIF not loaded -- graceful degradation
         assert {:error, :pq_not_available} = PostQuantum.dilithium5_keypair()
@@ -56,10 +64,12 @@ defmodule Opsm.E2E.PqSignVerifyE2ETest do
         {:ok, signed_blob} = PostQuantum.sphincs_plus_sign(original_message, keys.secret_key)
 
         # Verify succeeds for correct message
-        assert :ok = PostQuantum.sphincs_plus_verify(original_message, signed_blob, keys.public_key)
+        assert :ok =
+                 PostQuantum.sphincs_plus_verify(original_message, signed_blob, keys.public_key)
 
         # Verify fails for tampered message
-        assert {:error, _} = PostQuantum.sphincs_plus_verify("TAMPERED", signed_blob, keys.public_key)
+        assert {:error, _} =
+                 PostQuantum.sphincs_plus_verify("TAMPERED", signed_blob, keys.public_key)
       else
         assert {:error, :pq_not_available} = PostQuantum.sphincs_plus_keypair()
       end
@@ -110,7 +120,10 @@ defmodule Opsm.E2E.PqSignVerifyE2ETest do
 
           # Verify fails with different payload
           tampered_payload = Map.put(payload, "checksum", "sha256:TAMPERED")
-          tampered_result = HybridSignatures.verify_payload(tampered_payload, sig_info, public_keys)
+
+          tampered_result =
+            HybridSignatures.verify_payload(tampered_payload, sig_info, public_keys)
+
           assert match?({:error, _}, tampered_result)
 
         {:error, _} ->

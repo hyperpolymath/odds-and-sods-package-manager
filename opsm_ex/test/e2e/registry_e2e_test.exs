@@ -65,7 +65,8 @@ defmodule Opsm.E2E.RegistryE2ETest do
 
     @tag :e2e
     test "exists?/1 returns false for non-existent package" do
-      assert Npm.exists?("this-package-does-not-exist-opsm-test-#{System.system_time(:second)}") == false
+      assert Npm.exists?("this-package-does-not-exist-opsm-test-#{System.system_time(:second)}") ==
+               false
     end
 
     @tag :e2e
@@ -319,7 +320,10 @@ defmodule Opsm.E2E.RegistryE2ETest do
 
             # Manifest should be consistent
             assert is_binary(pkg.manifest.name), "#{registry}: manifest.name should be binary"
-            assert is_binary(pkg.manifest.version), "#{registry}: manifest.version should be binary"
+
+            assert is_binary(pkg.manifest.version),
+                   "#{registry}: manifest.version should be binary"
+
             assert is_map(pkg.manifest.dependencies), "#{registry}: dependencies should be map"
             assert is_atom(pkg.manifest.source_forth), "#{registry}: source_forth should be atom"
 

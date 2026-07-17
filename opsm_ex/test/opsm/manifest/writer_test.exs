@@ -133,7 +133,15 @@ defmodule Opsm.Manifest.WriterTest do
 
   describe "convert/2" do
     test "supports all documented targets" do
-      targets = [:package_json, :cargo_toml, :mix_exs, :pyproject_toml, :pubspec_yaml, :go_mod, :opsm_toml]
+      targets = [
+        :package_json,
+        :cargo_toml,
+        :mix_exs,
+        :pyproject_toml,
+        :pubspec_yaml,
+        :go_mod,
+        :opsm_toml
+      ]
 
       for target <- targets do
         assert {:ok, result} = Writer.convert(@sample_manifest, target)

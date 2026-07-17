@@ -17,39 +17,149 @@ defmodule Opsm.Registries.Registry do
   """
 
   # Major ecosystems
-  alias Opsm.Registries.{Npm, Crates, Hex, Pypi, RubyGems, GoModules, PubDev,
-    Hackage, NuGet, Maven}
+  alias Opsm.Registries.{
+    Npm,
+    Crates,
+    Hex,
+    Pypi,
+    RubyGems,
+    GoModules,
+    PubDev,
+    Hackage,
+    NuGet,
+    Maven
+  }
 
   # Extended language ecosystems
-  alias Opsm.Registries.{Packagist, Cpan, Cran, Conda, CocoaPods, Opam, Clojars,
-    LuaRocks, Terraform, Jsr, Conan, SwiftPM, Elm, Vcpkg, JuliaGeneral,
-    Dub, Shard, Raku, Raco, Chicken, Alire, Stackage, Pear, Pecl,
-    SbtPlugins, GradlePlugins, DenoX, CargoBinstall, Bower}
+  alias Opsm.Registries.{
+    Packagist,
+    Cpan,
+    Cran,
+    Conda,
+    CocoaPods,
+    Opam,
+    Clojars,
+    LuaRocks,
+    Terraform,
+    Jsr,
+    Conan,
+    SwiftPM,
+    Elm,
+    Vcpkg,
+    JuliaGeneral,
+    Dub,
+    Shard,
+    Raku,
+    Raco,
+    Chicken,
+    Alire,
+    Stackage,
+    Pear,
+    Pecl,
+    SbtPlugins,
+    GradlePlugins,
+    DenoX,
+    CargoBinstall,
+    Bower
+  }
 
   # System package managers
-  alias Opsm.Registries.{Homebrew, HomebrewCask, Nix, NixFlakes, NixDarwin,
-    Apt, Rpm, Alpine, Flatpak, Snap, Guix, Macports, Portage, Xbps,
-    Zypper, Aur, Pacstall, Solus, Spack, Pkgsrc, Freebsd, FpmRegistry}
+  alias Opsm.Registries.{
+    Homebrew,
+    HomebrewCask,
+    Nix,
+    NixFlakes,
+    NixDarwin,
+    Apt,
+    Rpm,
+    Alpine,
+    Flatpak,
+    Snap,
+    Guix,
+    Macports,
+    Portage,
+    Xbps,
+    Zypper,
+    Aur,
+    Pacstall,
+    Solus,
+    Spack,
+    Pkgsrc,
+    Freebsd,
+    FpmRegistry
+  }
 
   # Container/cloud/infra registries
-  alias Opsm.Registries.{DockerHub, Helm, Buildpacks, K8sOperators, Pulumi,
-    TektonHub, AnsibleGalaxy, ChefSupermarket, PuppetForge, ScoopApi, WingetApi}
+  alias Opsm.Registries.{
+    DockerHub,
+    Helm,
+    Buildpacks,
+    K8sOperators,
+    Pulumi,
+    TektonHub,
+    AnsibleGalaxy,
+    ChefSupermarket,
+    PuppetForge,
+    ScoopApi,
+    WingetApi
+  }
 
   # IDE/editor/plugin registries
-  alias Opsm.Registries.{VscodeMarketplace, Jetbrains, Sublime, VimPlugins,
-    EclipseMarketplace, Melpa, Elpa, Grafana, OpenUpm, Godot}
+  alias Opsm.Registries.{
+    VscodeMarketplace,
+    Jetbrains,
+    Sublime,
+    VimPlugins,
+    EclipseMarketplace,
+    Melpa,
+    Elpa,
+    Grafana,
+    OpenUpm,
+    Godot
+  }
 
   # CDN/asset/meta registries
-  alias Opsm.Registries.{JsDelivr, Cdnjs, WebJars, GithubPackages, GitlabPackages,
-    WordPress, WordPressThemes, Wapm, Bioconductor, Astrolabe, Vpm}
+  alias Opsm.Registries.{
+    JsDelivr,
+    Cdnjs,
+    WebJars,
+    GithubPackages,
+    GitlabPackages,
+    WordPress,
+    WordPressThemes,
+    Wapm,
+    Bioconductor,
+    Astrolabe,
+    Vpm
+  }
 
   # Niche/custom ecosystems
-  alias Opsm.Registries.{Nimble, Idris2, Git, Agentic, Oblibeny, MyLang,
-    JuliaTheViper, ErrorLang, Eclexia, AffineScript, RattleScript}
+  alias Opsm.Registries.{
+    Nimble,
+    Idris2,
+    Git,
+    Agentic,
+    Oblibeny,
+    MyLang,
+    JuliaTheViper,
+    ErrorLang,
+    Eclexia,
+    AffineScript,
+    RattleScript
+  }
 
   # Hyperpolymath Forge Registry + new nextgen language/database adapters
-  alias Opsm.Registries.{HyperpPolymathForge, Betlang, Ephapax, Phronesis,
-    Tangle, Wokelang, Lithoglyph, Nqc, QuandleDB}
+  alias Opsm.Registries.{
+    HyperpPolymathForge,
+    Betlang,
+    Ephapax,
+    Phronesis,
+    Tangle,
+    Wokelang,
+    Lithoglyph,
+    Nqc,
+    QuandleDB
+  }
 
   alias Opsm.Cache
 
@@ -339,33 +449,122 @@ defmodule Opsm.Registries.Registry do
   # All primary forth names (for search_all / exists_all? defaults)
   @all_primary_forths [
     # Major
-    :npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven,
+    :npm,
+    :cargo,
+    :hex,
+    :pypi,
+    :gem,
+    :go,
+    :pub,
+    :hackage,
+    :nuget,
+    :maven,
     # Extended
-    :packagist, :cpan, :cran, :conda, :cocoapods, :opam, :clojars,
-    :luarocks, :terraform, :jsr, :conan, :swift, :elm, :vcpkg, :julia,
-    :dub, :shard, :raku, :raco, :chicken, :alire, :stackage, :pear, :pecl,
-    :sbt_plugins, :gradle_plugins, :deno_x, :cargo_binstall, :bower,
+    :packagist,
+    :cpan,
+    :cran,
+    :conda,
+    :cocoapods,
+    :opam,
+    :clojars,
+    :luarocks,
+    :terraform,
+    :jsr,
+    :conan,
+    :swift,
+    :elm,
+    :vcpkg,
+    :julia,
+    :dub,
+    :shard,
+    :raku,
+    :raco,
+    :chicken,
+    :alire,
+    :stackage,
+    :pear,
+    :pecl,
+    :sbt_plugins,
+    :gradle_plugins,
+    :deno_x,
+    :cargo_binstall,
+    :bower,
     # System
-    :homebrew, :homebrew_cask, :nix, :nix_flakes, :nix_darwin,
-    :apt, :rpm, :alpine, :flatpak, :snap, :guix, :macports, :portage,
-    :xbps, :zypper, :aur, :pacstall, :solus, :spack, :pkgsrc, :freebsd, :fpm,
+    :homebrew,
+    :homebrew_cask,
+    :nix,
+    :nix_flakes,
+    :nix_darwin,
+    :apt,
+    :rpm,
+    :alpine,
+    :flatpak,
+    :snap,
+    :guix,
+    :macports,
+    :portage,
+    :xbps,
+    :zypper,
+    :aur,
+    :pacstall,
+    :solus,
+    :spack,
+    :pkgsrc,
+    :freebsd,
+    :fpm,
     # Container/cloud
-    :docker, :helm, :buildpacks, :k8s_operators, :pulumi, :tekton,
-    :ansible, :chef, :puppet, :scoop, :winget,
+    :docker,
+    :helm,
+    :buildpacks,
+    :k8s_operators,
+    :pulumi,
+    :tekton,
+    :ansible,
+    :chef,
+    :puppet,
+    :scoop,
+    :winget,
     # IDE/editor
-    :vscode, :jetbrains, :sublime, :vim, :eclipse, :melpa, :elpa,
-    :grafana, :openupm, :godot,
+    :vscode,
+    :jetbrains,
+    :sublime,
+    :vim,
+    :eclipse,
+    :melpa,
+    :elpa,
+    :grafana,
+    :openupm,
+    :godot,
     # CDN/meta
-    :jsdelivr, :cdnjs, :webjars, :github_packages, :gitlab_packages,
-    :wordpress, :wordpress_themes, :wapm, :bioconductor, :astrolabe, :vpm,
+    :jsdelivr,
+    :cdnjs,
+    :webjars,
+    :github_packages,
+    :gitlab_packages,
+    :wordpress,
+    :wordpress_themes,
+    :wapm,
+    :bioconductor,
+    :astrolabe,
+    :vpm,
     # Niche / custom ecosystems
-    :nimble, :idris2, :eclexia, :affinescript, :rattlescript,
+    :nimble,
+    :idris2,
+    :eclexia,
+    :affinescript,
+    :rattlescript,
     # Hyperpolymath Forge Registry (primary for all HP packages)
     :hf,
     # nextgen-languages
-    :betlang, :ephapax, :phronesis, :tangle, :wokelang,
+    :betlang,
+    :ephapax,
+    :phronesis,
+    :tangle,
+    :wokelang,
     # nextgen-databases
-    :lithoglyph, :quandledb, :nqc
+    :lithoglyph,
+    :quandledb,
+    :nqc
   ]
 
   @doc """
@@ -432,18 +631,19 @@ defmodule Opsm.Registries.Registry do
     forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 15_000)
 
-    tasks = Enum.map(forths, fn forth ->
-      Task.async(fn ->
-        try do
-          result = search(forth, query, opts)
-          {forth, result}
-        rescue
-          e -> {forth, {:error, Exception.message(e)}}
-        catch
-          kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
-        end
+    tasks =
+      Enum.map(forths, fn forth ->
+        Task.async(fn ->
+          try do
+            result = search(forth, query, opts)
+            {forth, result}
+          rescue
+            e -> {forth, {:error, Exception.message(e)}}
+          catch
+            kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
+          end
+        end)
       end)
-    end)
 
     results = safe_await_many(tasks, timeout)
 
@@ -466,11 +666,12 @@ defmodule Opsm.Registries.Registry do
     forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 10_000)
 
-    tasks = Enum.map(forths, fn forth ->
-      Task.async(fn ->
-        {forth, exists?(forth, package)}
+    tasks =
+      Enum.map(forths, fn forth ->
+        Task.async(fn ->
+          {forth, exists?(forth, package)}
+        end)
       end)
-    end)
 
     results = safe_await_many(tasks, timeout)
 
@@ -490,18 +691,19 @@ defmodule Opsm.Registries.Registry do
     forths = Keyword.get(opts, :forths, @all_primary_forths)
     timeout = Keyword.get(opts, :timeout, 15_000)
 
-    tasks = Enum.map(forths, fn forth ->
-      Task.async(fn ->
-        try do
-          result = fetch(forth, package, version)
-          {forth, result}
-        rescue
-          e -> {forth, {:error, Exception.message(e)}}
-        catch
-          kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
-        end
+    tasks =
+      Enum.map(forths, fn forth ->
+        Task.async(fn ->
+          try do
+            result = fetch(forth, package, version)
+            {forth, result}
+          rescue
+            e -> {forth, {:error, Exception.message(e)}}
+          catch
+            kind, reason -> {forth, {:error, "#{kind}: #{inspect(reason)}"}}
+          end
+        end)
       end)
-    end)
 
     results = safe_await_many(tasks, timeout)
 
@@ -517,6 +719,7 @@ defmodule Opsm.Registries.Registry do
   Get the registry module for a forth.
   """
   def get_module(forth) when is_atom(forth), do: Map.get(@registry_modules, forth)
+
   def get_module(forth) when is_binary(forth) do
     case safe_to_atom(forth) do
       nil -> nil

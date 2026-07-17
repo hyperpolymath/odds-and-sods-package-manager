@@ -22,20 +22,21 @@ defmodule Opsm.Registries.Hex do
       {:ok, body} ->
         releases = body["releases"] || []
 
-        target_version = if version == "latest" do
-          case releases do
-            [latest | _] -> latest["version"]
-            [] -> nil
+        target_version =
+          if version == "latest" do
+            case releases do
+              [latest | _] -> latest["version"]
+              [] -> nil
+            end
+          else
+            version
           end
-        else
-          version
-        end
 
         # Fetch release-specific data to get dependencies and checksum
         {deps, release_checksum} = fetch_release_data(name, target_version)
         release = Enum.find(releases, fn r -> r["version"] == target_version end)
         # Prefer checksum from release-specific endpoint (outer_checksum/checksum)
-        checksum = release_checksum || (if release, do: release["checksum"], else: nil)
+        checksum = release_checksum || if release, do: release["checksum"], else: nil
         {:ok, parse_package(body, checksum, target_version, deps)}
 
       {:error, :not_found} ->
@@ -59,14 +60,17 @@ defmodule Opsm.Registries.Hex do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         requirements = body["requirements"] || %{}
-        deps = Enum.reduce(requirements, %{}, fn {dep_name, req}, acc ->
-          constraint = req["requirement"] || ">= 0.0.0"
-          if req["optional"] do
-            acc
-          else
-            Map.put(acc, dep_name, constraint)
-          end
-        end)
+
+        deps =
+          Enum.reduce(requirements, %{}, fn {dep_name, req}, acc ->
+            constraint = req["requirement"] || ">= 0.0.0"
+
+            if req["optional"] do
+              acc
+            else
+              Map.put(acc, dep_name, constraint)
+            end
+          end)
 
         # Extract checksum — Hex uses "checksum" (outer tarball checksum)
         checksum = body["checksum"]
@@ -159,7 +163,8 @@ defmodule Opsm.Registries.Hex do
         description: meta["description"],
         license: extract_licenses(meta["licenses"]),
         homepage: meta["links"]["Homepage"] || meta["links"]["homepage"],
-        repository: meta["links"]["GitHub"] || meta["links"]["github"] || meta["links"]["Repository"],
+        repository:
+          meta["links"]["GitHub"] || meta["links"]["github"] || meta["links"]["Repository"],
         authors: meta["maintainers"] || [],
         keywords: [],
         dependencies: deps,

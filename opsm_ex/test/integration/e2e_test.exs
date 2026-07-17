@@ -24,7 +24,8 @@ defmodule Opsm.Integration.E2ETest do
   end
 
   describe "Dependency Resolution - npm ecosystem" do
-    @tag :skip  # Skip by default, requires network
+    # Skip by default, requires network
+    @tag :skip
     test "resolves transitive dependencies for express", %{test_dir: _test_dir} do
       # express depends on: accepts, content-type, cookie, etc.
       # accepts depends on: mime-types, negotiator
@@ -603,7 +604,7 @@ defmodule Opsm.Integration.E2ETest do
     test "complete install: resolve -> verify -> lockfile update" do
       # Simulate full install flow
       deps = [
-        %{name: "express", constraint: "^4.18.0", forth: :npm},
+        %{name: "express", constraint: "^4.18.0", forth: :npm}
       ]
 
       # Step 1: Resolve dependencies (mocked - would query registry)
@@ -612,31 +613,32 @@ defmodule Opsm.Integration.E2ETest do
       # Step 4: Install
       # Step 5: Write lockfile
 
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "express",
-        version: "4.18.2",
-        forth: :npm,
-        checksum: "sha256:express4182hash",
-        checksum_algo: "sha256",
-        dependencies: ["accepts", "body-parser"]
-      })
-      |> Lockfile.add_package(%{
-        name: "accepts",
-        version: "1.3.8",
-        forth: :npm,
-        checksum: "sha256:acceptshash",
-        checksum_algo: "sha256",
-        dependencies: []
-      })
-      |> Lockfile.add_package(%{
-        name: "body-parser",
-        version: "1.20.0",
-        forth: :npm,
-        checksum: "sha256:bodyparserhash",
-        checksum_algo: "sha256",
-        dependencies: []
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "express",
+          version: "4.18.2",
+          forth: :npm,
+          checksum: "sha256:express4182hash",
+          checksum_algo: "sha256",
+          dependencies: ["accepts", "body-parser"]
+        })
+        |> Lockfile.add_package(%{
+          name: "accepts",
+          version: "1.3.8",
+          forth: :npm,
+          checksum: "sha256:acceptshash",
+          checksum_algo: "sha256",
+          dependencies: []
+        })
+        |> Lockfile.add_package(%{
+          name: "body-parser",
+          version: "1.20.0",
+          forth: :npm,
+          checksum: "sha256:bodyparserhash",
+          checksum_algo: "sha256",
+          dependencies: []
+        })
 
       # Verify installation recorded correctly
       assert Lockfile.has_package?(lockfile, "express", :npm)
@@ -655,39 +657,43 @@ defmodule Opsm.Integration.E2ETest do
       lockfile = Lockfile.new()
 
       # Root package
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "myapp",
-        version: "1.0.0",
-        forth: :npm,
-        checksum: "myapp-hash",
-        dependencies: ["react", "lodash"]
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "myapp",
+          version: "1.0.0",
+          forth: :npm,
+          checksum: "myapp-hash",
+          dependencies: ["react", "lodash"]
+        })
 
       # Level 1 dependencies
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "react",
-        version: "18.2.0",
-        forth: :npm,
-        checksum: "react-hash",
-        dependencies: ["scheduler"]
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "react",
+          version: "18.2.0",
+          forth: :npm,
+          checksum: "react-hash",
+          dependencies: ["scheduler"]
+        })
 
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "lodash",
-        version: "4.17.21",
-        forth: :npm,
-        checksum: "lodash-hash",
-        dependencies: []
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "lodash",
+          version: "4.17.21",
+          forth: :npm,
+          checksum: "lodash-hash",
+          dependencies: []
+        })
 
       # Level 2 dependencies
-      lockfile = Lockfile.add_package(lockfile, %{
-        name: "scheduler",
-        version: "0.23.0",
-        forth: :npm,
-        checksum: "scheduler-hash",
-        dependencies: []
-      })
+      lockfile =
+        Lockfile.add_package(lockfile, %{
+          name: "scheduler",
+          version: "0.23.0",
+          forth: :npm,
+          checksum: "scheduler-hash",
+          dependencies: []
+        })
 
       # Verify tree structure
       app = Lockfile.get_package(lockfile, "myapp", :npm)
@@ -705,10 +711,11 @@ defmodule Opsm.Integration.E2ETest do
   describe "Full Uninstall Flow" do
     test "uninstall: remove -> cleanup -> lockfile update" do
       # Build lockfile with packages
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm})
-      |> Lockfile.add_package(%{name: "pkg3", version: "3.0.0", forth: :npm})
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm})
+        |> Lockfile.add_package(%{name: "pkg3", version: "3.0.0", forth: :npm})
 
       # Uninstall pkg2
       updated = Lockfile.remove_package(lockfile, "pkg2", :npm)
@@ -726,25 +733,26 @@ defmodule Opsm.Integration.E2ETest do
 
     test "uninstall preserves orphan detection" do
       # Create dependency chain: app -> dep-a -> dep-b
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "app",
-        version: "1.0.0",
-        forth: :npm,
-        dependencies: ["dep-a"]
-      })
-      |> Lockfile.add_package(%{
-        name: "dep-a",
-        version: "1.0.0",
-        forth: :npm,
-        dependencies: ["dep-b"]
-      })
-      |> Lockfile.add_package(%{
-        name: "dep-b",
-        version: "1.0.0",
-        forth: :npm,
-        dependencies: []
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "app",
+          version: "1.0.0",
+          forth: :npm,
+          dependencies: ["dep-a"]
+        })
+        |> Lockfile.add_package(%{
+          name: "dep-a",
+          version: "1.0.0",
+          forth: :npm,
+          dependencies: ["dep-b"]
+        })
+        |> Lockfile.add_package(%{
+          name: "dep-b",
+          version: "1.0.0",
+          forth: :npm,
+          dependencies: []
+        })
 
       # Uninstall app
       after_remove = Lockfile.remove_package(lockfile, "app", :npm)
@@ -784,8 +792,10 @@ defmodule Opsm.Integration.E2ETest do
 
     test "compatible version constraints can be resolved" do
       # Both require overlapping versions
-      constraint1 = "^1.5.0"  # Allows 1.5.0 - 1.999.999
-      constraint2 = "^1.0.0"  # Allows 1.0.0 - 1.999.999
+      # Allows 1.5.0 - 1.999.999
+      constraint1 = "^1.5.0"
+      # Allows 1.0.0 - 1.999.999
+      constraint2 = "^1.0.0"
 
       {:ok, c1} = VersionConstraint.parse(constraint1, :semver)
       {:ok, c2} = VersionConstraint.parse(constraint2, :semver)
@@ -800,10 +810,11 @@ defmodule Opsm.Integration.E2ETest do
   describe "Lockfile Integrity in E2E Flow" do
     test "lockfile integrity is maintained through install cycle" do
       # Create initial lockfile
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm, checksum: "hash1"})
-      |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm, checksum: "hash2"})
-      |> Lockfile.compute_integrity_hash()
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{name: "pkg1", version: "1.0.0", forth: :npm, checksum: "hash1"})
+        |> Lockfile.add_package(%{name: "pkg2", version: "2.0.0", forth: :npm, checksum: "hash2"})
+        |> Lockfile.compute_integrity_hash()
 
       original_hash = lockfile.integrity_hash
 
@@ -811,13 +822,14 @@ defmodule Opsm.Integration.E2ETest do
       assert :ok = Lockfile.verify_integrity(lockfile)
 
       # Simulate: Add new package during install
-      modified = Lockfile.add_package(lockfile, %{
-        name: "pkg3",
-        version: "3.0.0",
-        forth: :npm,
-        checksum: "hash3"
-      })
-      |> Lockfile.compute_integrity_hash()
+      modified =
+        Lockfile.add_package(lockfile, %{
+          name: "pkg3",
+          version: "3.0.0",
+          forth: :npm,
+          checksum: "hash3"
+        })
+        |> Lockfile.compute_integrity_hash()
 
       # Hash should change (not equal to original)
       assert modified.integrity_hash != original_hash
@@ -831,21 +843,22 @@ defmodule Opsm.Integration.E2ETest do
 
       try do
         # Step 1: Create lockfile during install
-        original = Lockfile.new()
-        |> Lockfile.add_package(%{
-          name: "react",
-          version: "18.2.0",
-          forth: :npm,
-          checksum: "sha256:react-hash",
-          dependencies: ["scheduler"]
-        })
-        |> Lockfile.add_package(%{
-          name: "scheduler",
-          version: "0.23.0",
-          forth: :npm,
-          checksum: "sha256:scheduler-hash",
-          dependencies: []
-        })
+        original =
+          Lockfile.new()
+          |> Lockfile.add_package(%{
+            name: "react",
+            version: "18.2.0",
+            forth: :npm,
+            checksum: "sha256:react-hash",
+            dependencies: ["scheduler"]
+          })
+          |> Lockfile.add_package(%{
+            name: "scheduler",
+            version: "0.23.0",
+            forth: :npm,
+            checksum: "sha256:scheduler-hash",
+            dependencies: []
+          })
 
         # Step 2: Write to disk
         {:ok, _path} = Lockfile.write(original, path)
@@ -872,40 +885,44 @@ defmodule Opsm.Integration.E2ETest do
 
   describe "Multi-Registry E2E" do
     test "install from multiple registries simultaneously" do
-      lockfile = Lockfile.new()
+      lockfile =
+        Lockfile.new()
 
-      # NPM package
-      |> Lockfile.add_package(%{
-        name: "lodash",
-        version: "4.17.21",
-        forth: :npm,
-        checksum: "npm-hash"
-      })
-      |> Lockfile.add_package(%{
-        name: "serde",
-        version: "1.0.163",
-        forth: :cargo,
-        checksum: "cargo-hash"
-      })
-      |> Lockfile.add_package(%{
-        name: "poison",
-        version: "5.0.0",
-        forth: :hex,
-        checksum: "hex-hash"
-      })
+        # NPM package
+        |> Lockfile.add_package(%{
+          name: "lodash",
+          version: "4.17.21",
+          forth: :npm,
+          checksum: "npm-hash"
+        })
+        |> Lockfile.add_package(%{
+          name: "serde",
+          version: "1.0.163",
+          forth: :cargo,
+          checksum: "cargo-hash"
+        })
+        |> Lockfile.add_package(%{
+          name: "poison",
+          version: "5.0.0",
+          forth: :hex,
+          checksum: "hex-hash"
+        })
 
       # All should be present
-      npm_count = lockfile
-      |> Lockfile.packages_for_forth(:npm)
-      |> length()
+      npm_count =
+        lockfile
+        |> Lockfile.packages_for_forth(:npm)
+        |> length()
 
-      cargo_count = lockfile
-      |> Lockfile.packages_for_forth(:cargo)
-      |> length()
+      cargo_count =
+        lockfile
+        |> Lockfile.packages_for_forth(:cargo)
+        |> length()
 
-      hex_count = lockfile
-      |> Lockfile.packages_for_forth(:hex)
-      |> length()
+      hex_count =
+        lockfile
+        |> Lockfile.packages_for_forth(:hex)
+        |> length()
 
       assert npm_count == 1
       assert cargo_count == 1
@@ -953,13 +970,14 @@ defmodule Opsm.Integration.E2ETest do
   describe "Error Handling — manifest and lockfile robustness" do
     test "lockfile with unknown forth is readable without crash" do
       # Simulate a lockfile that includes a registry we don't know about
-      lockfile = Lockfile.new()
-      |> Lockfile.add_package(%{
-        name: "future-pkg",
-        version: "1.0.0",
-        forth: :future_unknown_registry,
-        checksum: "sha256:abc123"
-      })
+      lockfile =
+        Lockfile.new()
+        |> Lockfile.add_package(%{
+          name: "future-pkg",
+          version: "1.0.0",
+          forth: :future_unknown_registry,
+          checksum: "sha256:abc123"
+        })
 
       assert Lockfile.has_package?(lockfile, "future-pkg", :future_unknown_registry)
     end
@@ -994,7 +1012,9 @@ defmodule Opsm.Integration.E2ETest do
     test "version constraint parse rejects obviously invalid input" do
       for bad <- ["", "!@#$%", ">>>invalid<<<"] do
         result = VersionConstraint.parse(bad, :semver)
-        assert match?({:error, _}, result), "expected error for #{inspect(bad)}, got #{inspect(result)}"
+
+        assert match?({:error, _}, result),
+               "expected error for #{inspect(bad)}, got #{inspect(result)}"
       end
     end
   end
@@ -1035,6 +1055,7 @@ defmodule Opsm.Integration.E2ETest do
           capture_io(fn ->
             {member, Opsm.Wiring.run_audit(config, member)}
           end)
+
           {member, :checked}
         end)
 

@@ -16,7 +16,8 @@ defmodule Opsm.Crypto.PasswordTest do
       secret = "test-secret"
       {:ok, hash1} = Password.hash(secret)
       {:ok, hash2} = Password.hash(secret)
-      assert hash1 != hash2  # Different salts
+      # Different salts
+      assert hash1 != hash2
     end
 
     test "uses Argon2id with correct parameters" do
@@ -24,9 +25,12 @@ defmodule Opsm.Crypto.PasswordTest do
 
       # Verify hash format includes parameter info
       assert String.starts_with?(hash, "$argon2id$")
-      assert String.contains?(hash, "m=524288")  # 512 MiB
-      assert String.contains?(hash, "t=8")       # 8 iterations
-      assert String.contains?(hash, "p=4")       # 4 lanes
+      # 512 MiB
+      assert String.contains?(hash, "m=524288")
+      # 8 iterations
+      assert String.contains?(hash, "t=8")
+      # 4 lanes
+      assert String.contains?(hash, "p=4")
     end
   end
 

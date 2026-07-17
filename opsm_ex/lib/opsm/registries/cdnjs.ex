@@ -18,18 +18,21 @@ defmodule Opsm.Registries.Cdnjs do
   The `name` is the library name (e.g., "jquery", "lodash").
   """
   def fetch_package(name, version \\ "latest") do
-    url = "#{@api_url}/#{URI.encode(name)}?fields=name,version,description,homepage,repository,license,author,keywords,versions,filename,sri"
+    url =
+      "#{@api_url}/#{URI.encode(name)}?fields=name,version,description,homepage,repository,license,author,keywords,versions,filename,sri"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"error" => true}} ->
         {:error, :not_found}
 
       {:ok, %{"name" => _} = body} ->
-        resolved_version = if version == "latest" do
-          body["version"]
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            body["version"]
+          else
+            version
+          end
+
         {:ok, parse_library(body, resolved_version)}
 
       {:error, :not_found} ->
@@ -52,7 +55,8 @@ defmodule Opsm.Registries.Cdnjs do
   def search(query, opts \\ []) do
     limit = Keyword.get(opts, :limit, 20)
 
-    url = "#{@api_url}?search=#{URI.encode_www_form(query)}&fields=name,version,description&limit=#{limit}"
+    url =
+      "#{@api_url}?search=#{URI.encode_www_form(query)}&fields=name,version,description&limit=#{limit}"
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->

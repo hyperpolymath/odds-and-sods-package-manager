@@ -20,47 +20,59 @@ defmodule Opsm.Registries.Sublime do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        ver = if version == "latest" do
-          extract_latest_version(body)
-        else
-          version
-        end
+        ver =
+          if version == "latest" do
+            extract_latest_version(body)
+          else
+            version
+          end
+
         {:ok, parse_sublime_package(name, body, ver)}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp extract_latest_version(body) do
     releases = body["releases"] || body["versions"] || []
+
     case releases do
       [latest | _] ->
         latest["version"] || latest["date"] || "0.0.0"
+
       _ ->
         body["version"] || "0.0.0"
     end
   end
 
   defp parse_sublime_package(name, body, version) do
-    deps = (body["dependencies"] || [])
-           |> Enum.map(fn
-             d when is_binary(d) -> {d, "*"}
-             d when is_map(d) -> {d["name"] || "", "*"}
-             _ -> nil
-           end)
-           |> Enum.reject(&is_nil/1)
-           |> Enum.reject(fn {n, _} -> n == "" end)
-           |> Map.new()
+    deps =
+      (body["dependencies"] || [])
+      |> Enum.map(fn
+        d when is_binary(d) -> {d, "*"}
+        d when is_map(d) -> {d["name"] || "", "*"}
+        _ -> nil
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(fn {n, _} -> n == "" end)
+      |> Map.new()
 
     labels = (body["labels"] || []) |> Enum.join(", ")
     description = body["description"] || ""
-    full_description = if labels != "" do
-      "#{description} [#{labels}]"
-    else
-      description
-    end
+
+    full_description =
+      if labels != "" do
+        "#{description} [#{labels}]"
+      else
+        description
+      end
 
     homepage = body["homepage"] || "#{@api_url}/packages/#{URI.encode(name)}"
     repository = extract_repository(body)
@@ -84,7 +96,7 @@ defmodule Opsm.Registries.Sublime do
       manifest: manifest,
       tarball_url: tarball_url,
       checksum: nil,
-      attestations: [],
+      attestations: []
     }
   end
 
@@ -98,15 +110,19 @@ defmodule Opsm.Registries.Sublime do
 
   defp build_download_url(body, repository) do
     releases = body["releases"] || body["versions"] || []
+
     case releases do
       [latest | _] ->
         latest["url"] || latest["download_url"]
+
       _ ->
         # Attempt to build a GitHub archive URL from the repository
         case repository do
           "https://github.com/" <> _ = repo ->
             "#{repo}/archive/refs/heads/master.zip"
-          _ -> nil
+
+          _ ->
+            nil
         end
     end
   end
@@ -120,10 +136,12 @@ defmodule Opsm.Registries.Sublime do
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
         releases = body["releases"] || body["versions"] || []
-        versions_list = releases
-                        |> Enum.map(fn r -> r["version"] || r["date"] end)
-                        |> Enum.reject(&is_nil/1)
-                        |> Enum.uniq()
+
+        versions_list =
+          releases
+          |> Enum.map(fn r -> r["version"] || r["date"] end)
+          |> Enum.reject(&is_nil/1)
+          |> Enum.uniq()
 
         if versions_list == [] do
           case fetch_package(name) do
@@ -134,7 +152,8 @@ defmodule Opsm.Registries.Sublime do
           {:ok, versions_list}
         end
 
-      {:error, _} = err -> err
+      {:error, _} = err ->
+        err
     end
   end
 
@@ -146,31 +165,38 @@ defmodule Opsm.Registries.Sublime do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_list(body) ->
-        results = body
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: extract_latest_version(pkg),
-            description: pkg["description"]
-          }
-        end)
+        results =
+          body
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: extract_latest_version(pkg),
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
       {:ok, %{"packages" => packages}} when is_list(packages) ->
-        results = packages
-        |> Enum.take(20)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: nil,
-            description: pkg["description"]
-          }
-        end)
+        results =
+          packages
+          |> Enum.take(20)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: nil,
+              description: pkg["description"]
+            }
+          end)
+
         {:ok, results}
 
-      {:ok, _} -> {:ok, []}
-      {:error, reason} -> {:error, reason}
+      {:ok, _} ->
+        {:ok, []}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

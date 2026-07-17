@@ -23,11 +23,13 @@ defmodule Opsm.Registries.EclipseMarketplace do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        resolved_version = if version == "latest" do
-          extract_latest_version(body)
-        else
-          version
-        end
+        resolved_version =
+          if version == "latest" do
+            extract_latest_version(body)
+          else
+            version
+          end
+
         {:ok, parse_listing(body, resolved_version)}
 
       {:error, :not_found} ->

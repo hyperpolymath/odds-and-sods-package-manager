@@ -24,8 +24,8 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
   # ---------------------------------------------------------------------------
 
   @checky_monkey System.get_env("CHECKY_MONKEY_URL", "http://localhost:8081")
-  @palimpsest    System.get_env("PALIMPSEST_URL",    "http://localhost:8082")
-  @oikos         System.get_env("OIKOS_URL",          "http://localhost:8084")
+  @palimpsest System.get_env("PALIMPSEST_URL", "http://localhost:8082")
+  @oikos System.get_env("OIKOS_URL", "http://localhost:8084")
 
   @req_base [receive_timeout: 10_000, retry: false]
 
@@ -69,22 +69,26 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
     end
 
     test "POST /verify queues job and returns request_id" do
-      {:ok, resp} = rpost(@checky_monkey <> "/verify", %{
-        repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
-        commit_sha: "abc123def456",
-        verification_types: ["property-tests"]
-      })
+      {:ok, resp} =
+        rpost(@checky_monkey <> "/verify", %{
+          repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
+          commit_sha: "abc123def456",
+          verification_types: ["property-tests"]
+        })
+
       assert resp.status in [200, 201, 202]
       assert is_binary(resp.body["request_id"])
       assert resp.body["status"] in ["queued", "running"]
     end
 
     test "GET /verify/{request_id} returns job detail after submission" do
-      {:ok, sub} = rpost(@checky_monkey <> "/verify", %{
-        repo_url: "https://github.com/hyperpolymath/test-repo",
-        commit_sha: "cafebabe",
-        verification_types: ["type-checking"]
-      })
+      {:ok, sub} =
+        rpost(@checky_monkey <> "/verify", %{
+          repo_url: "https://github.com/hyperpolymath/test-repo",
+          commit_sha: "cafebabe",
+          verification_types: ["type-checking"]
+        })
+
       assert sub.status in [200, 201, 202]
       request_id = sub.body["request_id"]
 
@@ -149,13 +153,16 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
 
   describe "oikos sustainability" do
     test "POST /analysis/repository returns structured scores" do
-      {:ok, resp} = rpost(@oikos <> "/analysis/repository", %{
-        repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
-        include_dependencies: false
-      })
+      {:ok, resp} =
+        rpost(@oikos <> "/analysis/repository", %{
+          repo_url: "https://github.com/hyperpolymath/odds-and-sods-package-manager",
+          include_dependencies: false
+        })
+
       assert resp.status == 200
       scores = resp.body["scores"]
       assert is_map(scores)
+
       for {_key, val} <- scores do
         assert is_float(val) or is_integer(val)
         assert val >= 0 and val <= 100
@@ -163,10 +170,12 @@ defmodule Opsm.Integration.TrustPipelineLiveE2ETest do
     end
 
     test "POST /analysis/repository handles unknown repo gracefully" do
-      {:ok, resp} = rpost(@oikos <> "/analysis/repository", %{
-        repo_url: "https://github.com/unknown-org-xyz/nonexistent-repo-12345",
-        include_dependencies: false
-      })
+      {:ok, resp} =
+        rpost(@oikos <> "/analysis/repository", %{
+          repo_url: "https://github.com/unknown-org-xyz/nonexistent-repo-12345",
+          include_dependencies: false
+        })
+
       assert resp.status in [200, 404, 422]
     end
   end

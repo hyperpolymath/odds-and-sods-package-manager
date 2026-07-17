@@ -16,7 +16,6 @@ defmodule Opsm.CLI do
   alias Opsm.Maintenance
   alias Opsm.SmartInstall
 
-
   def main(args) do
     # Suppress noisy OTP/Bandit/Req retry logs in CLI mode — only show errors
     Logger.configure(level: :error)
@@ -27,123 +26,192 @@ defmodule Opsm.CLI do
   end
 
   defp parse_args(args) do
-    {opts, args, _invalid} = OptionParser.parse(args,
-      strict: [
-        help: :boolean,
-        version: :string,
-        allow: :string,
-        systemwide: :boolean,
-        user: :boolean,
-        global: :boolean,
-        yes: :boolean,
-        quiet: :boolean,
-        verbose: :boolean,
-        dry_run: :boolean,
-        refresh: :boolean,
-        downloadonly: :boolean,
-        installed: :boolean,
-        available: :boolean,
-        updates: :boolean,
-        obsoletes: :boolean,
-        all: :boolean,
-        recursive: :boolean,
-        reverse: :boolean,
-        json: :boolean,
-        limit: :integer,
-        native: :boolean,
-        dev: :boolean,
-        apply: :boolean,
-        port: :integer,
-        sustainability: :boolean,
-        from: :string,
-        workspace: :boolean,
-        registry: :string
-      ],
-      aliases: [
-        h: :help,
-        v: :version,
-        y: :yes,
-        q: :quiet,
-        n: :dry_run,
-        g: :global,
-        D: :dev,
-        s: :sustainability
-      ]
-    )
+    {opts, args, _invalid} =
+      OptionParser.parse(args,
+        strict: [
+          help: :boolean,
+          version: :string,
+          allow: :string,
+          systemwide: :boolean,
+          user: :boolean,
+          global: :boolean,
+          yes: :boolean,
+          quiet: :boolean,
+          verbose: :boolean,
+          dry_run: :boolean,
+          refresh: :boolean,
+          downloadonly: :boolean,
+          installed: :boolean,
+          available: :boolean,
+          updates: :boolean,
+          obsoletes: :boolean,
+          all: :boolean,
+          recursive: :boolean,
+          reverse: :boolean,
+          json: :boolean,
+          limit: :integer,
+          native: :boolean,
+          dev: :boolean,
+          apply: :boolean,
+          port: :integer,
+          sustainability: :boolean,
+          from: :string,
+          workspace: :boolean,
+          registry: :string
+        ],
+        aliases: [
+          h: :help,
+          v: :version,
+          y: :yes,
+          q: :quiet,
+          n: :dry_run,
+          g: :global,
+          D: :dev,
+          s: :sustainability
+        ]
+      )
 
     case args do
       # Help
-      ["help" | _] -> {:help, opts}
-      ["--help" | _] -> {:help, opts}
-      ["-h" | _] -> {:help, opts}
-      [] -> {:help, opts}
+      ["help" | _] ->
+        {:help, opts}
+
+      ["--help" | _] ->
+        {:help, opts}
+
+      ["-h" | _] ->
+        {:help, opts}
+
+      [] ->
+        {:help, opts}
 
       # Status & Info
-      ["status" | _] -> {:status, opts}
-      ["repolist" | _] -> {:repolist, opts}
-      ["api" | _] -> {:api, opts}
+      ["status" | _] ->
+        {:status, opts}
+
+      ["repolist" | _] ->
+        {:repolist, opts}
+
+      ["api" | _] ->
+        {:api, opts}
 
       # Install/Remove
-      ["install" | rest] -> parse_install_args(rest, opts)
+      ["install" | rest] ->
+        parse_install_args(rest, opts)
 
-      ["remove", package | _] -> {:remove, package, opts}
-      ["uninstall", package | _] -> {:remove, package, opts}
-      ["remove"] -> {:error, "remove requires a package argument"}
+      ["remove", package | _] ->
+        {:remove, package, opts}
 
-      ["reinstall", package | _] -> {:reinstall, package, opts}
+      ["uninstall", package | _] ->
+        {:remove, package, opts}
+
+      ["remove"] ->
+        {:error, "remove requires a package argument"}
+
+      ["reinstall", package | _] ->
+        {:reinstall, package, opts}
 
       # Update/Upgrade
-      ["update" | packages] -> {:update, packages, opts}
-      ["upgrade" | packages] -> {:update, packages, opts}
-      ["check-update" | _] -> {:check_update, opts}
+      ["update" | packages] ->
+        {:update, packages, opts}
+
+      ["upgrade" | packages] ->
+        {:update, packages, opts}
+
+      ["check-update" | _] ->
+        {:check_update, opts}
 
       # Search/Query
-      ["search", query | _] -> {:search, query, opts}
-      ["search"] -> {:error, "search requires a query"}
+      ["search", query | _] ->
+        {:search, query, opts}
 
-      ["info", package | _] -> {:info, package, opts}
-      ["show", package | _] -> {:info, package, opts}
-      ["info"] -> {:error, "info requires a package argument"}
+      ["search"] ->
+        {:error, "search requires a query"}
 
-      ["list" | rest] -> {:list, rest, opts}
+      ["info", package | _] ->
+        {:info, package, opts}
 
-      ["provides", file | _] -> {:provides, file, opts}
-      ["whatprovides", file | _] -> {:provides, file, opts}
+      ["show", package | _] ->
+        {:info, package, opts}
 
-      ["depends", package | _] -> {:depends, package, opts}
-      ["deplist", package | _] -> {:depends, package, opts}
+      ["info"] ->
+        {:error, "info requires a package argument"}
 
-      ["rdepends", package | _] -> {:rdepends, package, opts}
-      ["repoquery", "--whatrequires", package | _] -> {:rdepends, package, opts}
+      ["list" | rest] ->
+        {:list, rest, opts}
+
+      ["provides", file | _] ->
+        {:provides, file, opts}
+
+      ["whatprovides", file | _] ->
+        {:provides, file, opts}
+
+      ["depends", package | _] ->
+        {:depends, package, opts}
+
+      ["deplist", package | _] ->
+        {:depends, package, opts}
+
+      ["rdepends", package | _] ->
+        {:rdepends, package, opts}
+
+      ["repoquery", "--whatrequires", package | _] ->
+        {:rdepends, package, opts}
 
       # Pin/Hold
-      ["pin", package, version | _] -> {:pin, package, version, opts}
-      ["pin", package | _] -> {:pin, package, nil, opts}
-      ["hold", package | _] -> {:pin, package, nil, opts}
-      ["pin"] -> {:error, "pin requires a package argument"}
+      ["pin", package, version | _] ->
+        {:pin, package, version, opts}
 
-      ["unpin", package | _] -> {:unpin, package, opts}
-      ["unhold", package | _] -> {:unpin, package, opts}
+      ["pin", package | _] ->
+        {:pin, package, nil, opts}
+
+      ["hold", package | _] ->
+        {:pin, package, nil, opts}
+
+      ["pin"] ->
+        {:error, "pin requires a package argument"}
+
+      ["unpin", package | _] ->
+        {:unpin, package, opts}
+
+      ["unhold", package | _] ->
+        {:unpin, package, opts}
 
       # Maintenance
-      ["clean", what | _] -> {:clean, what, opts}
-      ["clean"] -> {:clean, "all", opts}
+      ["clean", what | _] ->
+        {:clean, what, opts}
 
-      ["autoremove" | _] -> {:autoremove, opts}
+      ["clean"] ->
+        {:clean, "all", opts}
 
-      ["history" | rest] -> {:history, rest, opts}
+      ["autoremove" | _] ->
+        {:autoremove, opts}
 
-      ["download", package | _] -> {:download, package, opts}
-      ["download"] -> {:error, "download requires a package argument"}
+      ["history" | rest] ->
+        {:history, rest, opts}
 
-      ["check" | _] -> {:check, opts}
-      ["verify" | _] -> {:check, opts}
+      ["download", package | _] ->
+        {:download, package, opts}
+
+      ["download"] ->
+        {:error, "download requires a package argument"}
+
+      ["check" | _] ->
+        {:check, opts}
+
+      ["verify" | _] ->
+        {:check, opts}
 
       # Publish/Audit (OPSM-specific)
-      ["publish", path | _] -> {:publish, path, opts}
-      ["publish"] -> {:error, "publish requires a path argument"}
+      ["publish", path | _] ->
+        {:publish, path, opts}
 
-      ["audit", package | _] -> {:audit, package, opts}
+      ["publish"] ->
+        {:error, "publish requires a path argument"}
+
+      ["audit", package | _] ->
+        {:audit, package, opts}
+
       ["audit"] ->
         if Keyword.get(opts, :workspace, false) do
           {:audit_workspace, opts}
@@ -152,37 +220,73 @@ defmodule Opsm.CLI do
         end
 
       # Federation
-      ["ports" | _] -> {:ports, opts}
-      ["convert", path | _] -> {:convert, path, opts}
-      ["export", package, target | _] -> {:export, package, target, opts}
+      ["ports" | _] ->
+        {:ports, opts}
+
+      ["convert", path | _] ->
+        {:convert, path, opts}
+
+      ["export", package, target | _] ->
+        {:export, package, target, opts}
 
       # Container commands
-      ["container", "build", path | _] -> {:container_build, path, opts}
-      ["container", "scan", image | _] -> {:container_scan, image, opts}
-      ["container", "sign", image | _] -> {:container_sign, image, opts}
-      ["container", "verify", image | _] -> {:container_verify, image, opts}
-      ["container", "push", image | _] -> {:container_push, image, opts}
-      ["container", "pipeline", path | _] -> {:container_pipeline, path, opts}
-      ["container"] -> {:error, "container requires a subcommand (build|scan|sign|verify|push|pipeline)"}
+      ["container", "build", path | _] ->
+        {:container_build, path, opts}
+
+      ["container", "scan", image | _] ->
+        {:container_scan, image, opts}
+
+      ["container", "sign", image | _] ->
+        {:container_sign, image, opts}
+
+      ["container", "verify", image | _] ->
+        {:container_verify, image, opts}
+
+      ["container", "push", image | _] ->
+        {:container_push, image, opts}
+
+      ["container", "pipeline", path | _] ->
+        {:container_pipeline, path, opts}
+
+      ["container"] ->
+        {:error, "container requires a subcommand (build|scan|sign|verify|push|pipeline)"}
 
       # Runtime management (asdf replacement)
-      ["runtime", "install" | tools] -> {:runtime_install, tools, opts}
-      ["runtime", "list" | _]        -> {:runtime_list, opts}
-      ["runtime", "update" | tools]  -> {:runtime_update, tools, opts}
-      ["runtime", "remove", tool | _] -> {:runtime_remove, tool, opts}
-      ["runtime", "which", tool | _]  -> {:runtime_which, tool, opts}
-      ["runtime", "current" | _]     -> {:runtime_current, opts}
-      ["runtime"]                    -> {:error, "runtime requires a subcommand (install|list|update|remove|which|current)"}
+      ["runtime", "install" | tools] ->
+        {:runtime_install, tools, opts}
+
+      ["runtime", "list" | _] ->
+        {:runtime_list, opts}
+
+      ["runtime", "update" | tools] ->
+        {:runtime_update, tools, opts}
+
+      ["runtime", "remove", tool | _] ->
+        {:runtime_remove, tool, opts}
+
+      ["runtime", "which", tool | _] ->
+        {:runtime_which, tool, opts}
+
+      ["runtime", "current" | _] ->
+        {:runtime_current, opts}
+
+      ["runtime"] ->
+        {:error, "runtime requires a subcommand (install|list|update|remove|which|current)"}
 
       # Security scanning
-      ["scan", package | _] -> {:scan, package, opts}
-      ["scan"] -> {:error, "scan requires a package argument"}
+      ["scan", package | _] ->
+        {:scan, package, opts}
+
+      ["scan"] ->
+        {:error, "scan requires a package argument"}
 
       # TUI
-      ["tui" | _] -> {:tui, opts}
+      ["tui" | _] ->
+        {:tui, opts}
 
       # Unknown
-      [cmd | _] -> {:error, "Unknown command: #{cmd}"}
+      [cmd | _] ->
+        {:error, "Unknown command: #{cmd}"}
     end
   end
 
@@ -198,7 +302,8 @@ defmodule Opsm.CLI do
   end
 
   defp parse_install_args([package], opts) do
-    if String.contains?(package, ":") or String.contains?(package, "[") or String.contains?(package, "]") do
+    if String.contains?(package, ":") or String.contains?(package, "[") or
+         String.contains?(package, "]") do
       {:smart_install, [package], opts}
     else
       {:install, nil, package, opts}
@@ -411,16 +516,18 @@ defmodule Opsm.CLI do
     else
       IO.puts("Configured Forths (Registries)")
       IO.puts("==============================")
+
       for f <- forths do
         IO.puts("  @#{f.name}\t#{f.url}\t[#{f.status}]")
       end
     end
+
     System.halt(0)
   end
 
   defp run({:install_workspace, opts}) do
     dry_run? = Keyword.get(opts, :dry_run, false)
-    registry  = Keyword.get(opts, :registry)
+    registry = Keyword.get(opts, :registry)
 
     IO.puts("Reading workspace from opsm.toml...")
 
@@ -435,15 +542,19 @@ defmodule Opsm.CLI do
 
           for member <- members do
             manifest = Path.join(member, "opsm.toml")
+
             if File.exists?(manifest) do
               IO.puts("\nInstalling dependencies for #{member}...")
+
               unless dry_run? do
                 config = Config.load_config_or_example()
                 forth = registry || "hf"
+
                 case Wiring.run_publish(config, member) do
                   {:ok, _} -> IO.puts("  ✓ #{member}")
                   {:error, reason} -> IO.puts(:stderr, "  ✗ #{member}: #{reason}")
                 end
+
                 _ = forth
               end
             else
@@ -468,32 +579,47 @@ defmodule Opsm.CLI do
 
     if workspace? do
       manifest = Path.join(path, "opsm.toml")
+
       case File.read(manifest) do
         {:ok, content} ->
           members = parse_workspace_members(content)
+
           if members == [] do
             IO.puts("No workspace members found in #{manifest}.")
           else
             IO.puts("Publishing workspace members to @#{registry || "hf"}...")
+
             for member <- members do
               member_path = Path.join(path, member)
               IO.puts("  Publishing #{member}...")
+
               case Wiring.run_publish(config, member_path) do
-                {:ok, _} -> IO.puts("  ✓ #{member}")
+                {:ok, _} ->
+                  IO.puts("  ✓ #{member}")
+
                 {:error, reason} ->
-                  Errors.print_error({:internal, "Publish failed for #{member}: #{reason}", "Check path and credentials"})
+                  Errors.print_error(
+                    {:internal, "Publish failed for #{member}: #{reason}",
+                     "Check path and credentials"}
+                  )
               end
             end
           end
+
         {:error, :enoent} ->
           IO.puts(:stderr, "No opsm.toml found at #{manifest}")
           System.halt(1)
       end
     else
       case Wiring.run_publish(config, path) do
-        {:ok, _} -> :ok
+        {:ok, _} ->
+          :ok
+
         {:error, reason} ->
-          Errors.print_error({:internal, "Publish failed: #{reason}", "Check path and credentials"})
+          Errors.print_error(
+            {:internal, "Publish failed: #{reason}", "Check path and credentials"}
+          )
+
           System.halt(1)
       end
     end
@@ -538,7 +664,9 @@ defmodule Opsm.CLI do
 
         failures = Enum.filter(results, fn {_, r} -> r != :ok end)
 
-        IO.puts("\nWorkspace audit complete: #{length(members) - length(failures)}/#{length(members)} passed.")
+        IO.puts(
+          "\nWorkspace audit complete: #{length(members) - length(failures)}/#{length(members)} passed."
+        )
 
         if failures != [] do
           IO.puts("Failed: #{Enum.map_join(failures, ", ", fn {m, _} -> m end)}")
@@ -558,17 +686,33 @@ defmodule Opsm.CLI do
     global? = Keyword.get(opts, :global, false)
     dev? = Keyword.get(opts, :dev, false)
     sustainability? = Keyword.get(opts, :sustainability, false)
-    scope = cond do
-      Keyword.get(opts, :systemwide) -> "systemwide"
-      true -> "user"
-    end
+
+    scope =
+      cond do
+        Keyword.get(opts, :systemwide) -> "systemwide"
+        true -> "user"
+      end
 
     if dry_run?, do: IO.puts("[DRY RUN]")
-    if sustainability?, do: IO.puts("[SUSTAINABILITY] Preferring packages with higher sustainability scores")
+
+    if sustainability?,
+      do: IO.puts("[SUSTAINABILITY] Preferring packages with higher sustainability scores")
 
     if forth do
       # Specific registry requested
-      do_install_from_forth(forth, package, version, allow, scope, dry_run?, json?, native?, global?, dev?, sustainability?)
+      do_install_from_forth(
+        forth,
+        package,
+        version,
+        allow,
+        scope,
+        dry_run?,
+        json?,
+        native?,
+        global?,
+        dev?,
+        sustainability?
+      )
     else
       # No registry specified - discover across all
       do_install_discover(package, version, allow, scope, dry_run?, json?, sustainability?)
@@ -608,8 +752,12 @@ defmodule Opsm.CLI do
     dry_run? = Keyword.get(opts, :dry_run, false)
 
     case Installer.remove(package, dry_run: dry_run?) do
-      :ok -> System.halt(0)
-      {:ok, :dry_run} -> System.halt(0)
+      :ok ->
+        System.halt(0)
+
+      {:ok, :dry_run} ->
+        System.halt(0)
+
       {:error, reason} ->
         IO.puts(:stderr, "Error: #{reason}")
         System.halt(1)
@@ -628,7 +776,8 @@ defmodule Opsm.CLI do
     case Lockfile.read() do
       {:ok, lockfile} ->
         # Find the package across any forth
-        entries = Lockfile.list_packages(lockfile)
+        entries =
+          Lockfile.list_packages(lockfile)
           |> Enum.filter(fn p -> p.name == package end)
 
         case entries do
@@ -649,10 +798,23 @@ defmodule Opsm.CLI do
               IO.puts("  Removing...")
               _ = Installer.remove(package, dry_run: false)
               IO.puts("  Installing #{package}@#{version}...")
-              case do_install_from_forth(forth, package, version, nil, "user", false, false, false, false, false) do
+
+              case do_install_from_forth(
+                     forth,
+                     package,
+                     version,
+                     nil,
+                     "user",
+                     false,
+                     false,
+                     false,
+                     false,
+                     false
+                   ) do
                 _ -> :ok
               end
             end
+
             System.halt(0)
         end
 
@@ -678,25 +840,29 @@ defmodule Opsm.CLI do
         entries = Lockfile.list_packages(lockfile)
 
         # Filter to requested packages or all
-        targets = if packages == [] do
-          IO.puts("Checking all #{length(entries)} installed packages for updates...")
-          entries
-        else
-          IO.puts("Checking: #{Enum.join(packages, ", ")}")
-          Enum.filter(entries, fn p -> p.name in packages end)
-        end
+        targets =
+          if packages == [] do
+            IO.puts("Checking all #{length(entries)} installed packages for updates...")
+            entries
+          else
+            IO.puts("Checking: #{Enum.join(packages, ", ")}")
+            Enum.filter(entries, fn p -> p.name in packages end)
+          end
 
-        updates = targets
+        updates =
+          targets
           |> Enum.map(fn entry ->
             # Skip packages pinned to a specific version
             if Maintenance.pinned?(entry.name) do
               pin = Maintenance.get_pin(entry.name)
               pinned_ver = pin && pin["version"]
+
               if pinned_ver do
                 IO.puts("  Skipping #{entry.name} (pinned to #{pinned_ver})")
               else
                 IO.puts("  Skipping #{entry.name} (pinned)")
               end
+
               nil
             else
               case Registry.fetch(entry.forth, entry.name) do
@@ -706,7 +872,9 @@ defmodule Opsm.CLI do
                   else
                     nil
                   end
-                _ -> nil
+
+                _ ->
+                  nil
               end
             end
           end)
@@ -716,19 +884,35 @@ defmodule Opsm.CLI do
           IO.puts("\n✓ All packages are up to date")
         else
           IO.puts("\n#{length(updates)} update(s) available:\n")
+
           for {entry, new_version} <- updates do
             IO.puts("  #{entry.name}: #{entry.version} → #{new_version} (@#{entry.forth})")
           end
 
           unless dry_run? do
             IO.puts("\nInstalling updates...")
+
             for {entry, new_version} <- updates do
               IO.puts("  Updating #{entry.name} to #{new_version}...")
-              do_install_from_forth(entry.forth, entry.name, new_version, nil, "user", false, false, false, false, false)
+
+              do_install_from_forth(
+                entry.forth,
+                entry.name,
+                new_version,
+                nil,
+                "user",
+                false,
+                false,
+                false,
+                false,
+                false
+              )
             end
+
             IO.puts("\n✓ #{length(updates)} package(s) updated")
           end
         end
+
         System.halt(0)
 
       {:error, :not_found} ->
@@ -752,16 +936,24 @@ defmodule Opsm.CLI do
         entries = Lockfile.list_packages(lockfile)
         IO.puts("Checking #{length(entries)} installed package(s) for updates...\n")
 
-        updates = entries
+        updates =
+          entries
           |> Enum.map(fn entry ->
             case Registry.fetch(entry.forth, entry.name) do
               {:ok, latest} ->
                 if latest.version != entry.version do
-                  %{name: entry.name, current: entry.version, latest: latest.version, forth: entry.forth}
+                  %{
+                    name: entry.name,
+                    current: entry.version,
+                    latest: latest.version,
+                    forth: entry.forth
+                  }
                 else
                   nil
                 end
-              _ -> nil
+
+              _ ->
+                nil
             end
           end)
           |> Enum.reject(&is_nil/1)
@@ -786,6 +978,7 @@ defmodule Opsm.CLI do
             IO.puts("\nRun `opsm update` to install all updates")
           end
         end
+
         System.halt(0)
 
       {:error, :not_found} ->
@@ -819,14 +1012,19 @@ defmodule Opsm.CLI do
       else
         for {forth, packages} <- results, packages != [] do
           IO.puts("@#{forth}:")
+
           for pkg <- Enum.take(packages, 5) do
             name = pkg[:name] || pkg["name"]
             version = pkg[:version] || pkg["version"] || ""
             desc = pkg[:description] || pkg["description"] || ""
-            desc_short = if String.length(desc) > 60, do: String.slice(desc, 0, 57) <> "...", else: desc
+
+            desc_short =
+              if String.length(desc) > 60, do: String.slice(desc, 0, 57) <> "...", else: desc
+
             IO.puts("  #{name}@#{version}")
             if desc_short != "", do: IO.puts("    #{desc_short}")
           end
+
           IO.puts("")
         end
       end
@@ -847,18 +1045,20 @@ defmodule Opsm.CLI do
     results = Registry.fetch_all(package)
 
     if json? do
-      data = Enum.map(results, fn {forth, pkg} ->
-        %{
-          forth: forth,
-          name: pkg.package,
-          version: pkg.version,
-          description: pkg.manifest.description,
-          license: pkg.manifest.license,
-          homepage: pkg.manifest.homepage,
-          repository: pkg.manifest.repository,
-          tarball_url: pkg.tarball_url
-        }
-      end)
+      data =
+        Enum.map(results, fn {forth, pkg} ->
+          %{
+            forth: forth,
+            name: pkg.package,
+            version: pkg.version,
+            description: pkg.manifest.description,
+            license: pkg.manifest.license,
+            homepage: pkg.manifest.homepage,
+            repository: pkg.manifest.repository,
+            tarball_url: pkg.tarball_url
+          }
+        end)
+
       IO.puts(Jason.encode!(data, pretty: true))
     else
       if map_size(results) == 0 do
@@ -877,6 +1077,7 @@ defmodule Opsm.CLI do
           # Show dependencies count
           deps_count = map_size(pkg.manifest.dependencies)
           dev_deps_count = map_size(pkg.manifest.dev_dependencies)
+
           if deps_count > 0 or dev_deps_count > 0 do
             IO.puts("  Dependencies: #{deps_count} (#{dev_deps_count} dev)")
           end
@@ -893,16 +1094,18 @@ defmodule Opsm.CLI do
     alias Opsm.Package.Installer
 
     json? = Keyword.get(opts, :json, false)
-    filter = cond do
-      Keyword.get(opts, :installed) -> :installed
-      Keyword.get(opts, :available) -> :available
-      Keyword.get(opts, :updates) -> :updates
-      Keyword.get(opts, :obsoletes) -> :obsoletes
-      "installed" in args -> :installed
-      "available" in args -> :available
-      "updates" in args -> :updates
-      true -> :installed
-    end
+
+    filter =
+      cond do
+        Keyword.get(opts, :installed) -> :installed
+        Keyword.get(opts, :available) -> :available
+        Keyword.get(opts, :updates) -> :updates
+        Keyword.get(opts, :obsoletes) -> :obsoletes
+        "installed" in args -> :installed
+        "available" in args -> :available
+        "updates" in args -> :updates
+        true -> :installed
+      end
 
     case filter do
       :installed ->
@@ -916,6 +1119,7 @@ defmodule Opsm.CLI do
           else
             IO.puts("Installed packages:")
             IO.puts("")
+
             for pkg <- installed do
               IO.puts("  #{pkg["name"]}@#{pkg["version"]} (@#{pkg["forth"]})")
               IO.puts("    Installed: #{pkg["installed_at"]}")
@@ -931,12 +1135,15 @@ defmodule Opsm.CLI do
 
         for pkg <- installed do
           forth = Opsm.Validation.safe_to_forth(pkg["forth"])
+
           case Opsm.Registries.Registry.fetch(forth, pkg["name"]) do
             {:ok, latest} ->
               if latest.version != pkg["version"] do
                 IO.puts("  #{pkg["name"]}: #{pkg["version"]} -> #{latest.version}")
               end
-            _ -> :ok
+
+            _ ->
+              :ok
           end
         end
 
@@ -944,9 +1151,11 @@ defmodule Opsm.CLI do
         IO.puts("Available package registries:")
         IO.puts("")
         forths = [:npm, :hex, :cargo, :pypi, :nimble, :idris2, :eclexia, :git, :agentic]
+
         for forth <- forths do
           IO.puts("  @#{forth}")
         end
+
         IO.puts("")
         IO.puts("Use `opsm search <query>` to find packages across all registries")
 
@@ -957,18 +1166,21 @@ defmodule Opsm.CLI do
         if installed == [] do
           IO.puts("No packages installed")
         else
-          obsolete = Enum.filter(installed, fn pkg ->
-            forth = Opsm.Validation.safe_to_forth(pkg["forth"])
-            case Opsm.Registries.Registry.exists?(forth, pkg["name"]) do
-              false -> true
-              _ -> false
-            end
-          end)
+          obsolete =
+            Enum.filter(installed, fn pkg ->
+              forth = Opsm.Validation.safe_to_forth(pkg["forth"])
+
+              case Opsm.Registries.Registry.exists?(forth, pkg["name"]) do
+                false -> true
+                _ -> false
+              end
+            end)
 
           if obsolete == [] do
             IO.puts("No obsolete packages found")
           else
             IO.puts("#{length(obsolete)} obsolete package(s) (no longer in registry):\n")
+
             for pkg <- obsolete do
               IO.puts("  #{pkg["name"]}@#{pkg["version"]} (@#{pkg["forth"]})")
             end
@@ -986,45 +1198,59 @@ defmodule Opsm.CLI do
     IO.puts("Finding package that provides: #{file}\n")
 
     # Check installed packages first
-    providers = case Lockfile.read() do
-      {:ok, lockfile} ->
-        install_dir = Path.expand("~/.local/share/opsm/packages")
-        Lockfile.list_packages(lockfile)
-        |> Enum.filter(fn entry ->
-          pkg_dir = Path.join(install_dir, "#{entry.name}-#{entry.version}")
-          if File.dir?(pkg_dir) do
-            # Search for matching file in installed package
-            case File.ls(pkg_dir) do
-              {:ok, files} ->
-                Enum.any?(files, fn f ->
-                  String.contains?(f, file) or f == file
-                end)
-              _ -> false
+    providers =
+      case Lockfile.read() do
+        {:ok, lockfile} ->
+          install_dir = Path.expand("~/.local/share/opsm/packages")
+
+          Lockfile.list_packages(lockfile)
+          |> Enum.filter(fn entry ->
+            pkg_dir = Path.join(install_dir, "#{entry.name}-#{entry.version}")
+
+            if File.dir?(pkg_dir) do
+              # Search for matching file in installed package
+              case File.ls(pkg_dir) do
+                {:ok, files} ->
+                  Enum.any?(files, fn f ->
+                    String.contains?(f, file) or f == file
+                  end)
+
+                _ ->
+                  false
+              end
+            else
+              false
             end
-          else
-            false
-          end
-        end)
-        |> Enum.map(fn entry ->
-          %{name: entry.name, version: entry.version, forth: entry.forth, source: "installed"}
-        end)
-      _ -> []
-    end
+          end)
+          |> Enum.map(fn entry ->
+            %{name: entry.name, version: entry.version, forth: entry.forth, source: "installed"}
+          end)
+
+        _ ->
+          []
+      end
 
     # Also search across registries by name (the file might be the package name)
-    registry_matches = case Opsm.Registries.Registry.search_all(file, limit: 5) do
-      results when is_map(results) ->
-        results
-        |> Enum.flat_map(fn {forth, pkgs} ->
-          case pkgs do
-            list when is_list(list) ->
-              Enum.map(list, fn p -> Map.put(p, :forth, forth) |> Map.put(:source, "registry") end)
-            _ -> []
-          end
-        end)
-        |> Enum.take(10)
-      _ -> []
-    end
+    registry_matches =
+      case Opsm.Registries.Registry.search_all(file, limit: 5) do
+        results when is_map(results) ->
+          results
+          |> Enum.flat_map(fn {forth, pkgs} ->
+            case pkgs do
+              list when is_list(list) ->
+                Enum.map(list, fn p ->
+                  Map.put(p, :forth, forth) |> Map.put(:source, "registry")
+                end)
+
+              _ ->
+                []
+            end
+          end)
+          |> Enum.take(10)
+
+        _ ->
+          []
+      end
 
     all_results = providers ++ registry_matches
 
@@ -1033,14 +1259,17 @@ defmodule Opsm.CLI do
     else
       if providers != [] do
         IO.puts("Installed packages providing '#{file}':")
+
         for p <- providers do
           IO.puts("  #{p.name}@#{p.version} (@#{p.forth})")
         end
+
         IO.puts("")
       end
 
       if registry_matches != [] do
         IO.puts("Registry packages matching '#{file}':")
+
         for p <- registry_matches do
           IO.puts("  #{p[:name]} #{p[:version] || ""} (@#{p[:forth]})")
         end
@@ -1050,6 +1279,7 @@ defmodule Opsm.CLI do
         IO.puts("No packages found providing '#{file}'")
       end
     end
+
     System.halt(0)
   end
 
@@ -1128,6 +1358,7 @@ defmodule Opsm.CLI do
             IO.puts("No packages depend on #{package}")
           else
             IO.puts("Packages that depend on #{Colour.cyan(package)}:")
+
             Enum.each(dependents, fn pkg ->
               IO.puts("  - #{Colour.cyan("#{pkg.name}")}@#{pkg.version}")
             end)
@@ -1153,7 +1384,9 @@ defmodule Opsm.CLI do
 
   defp run({:unpin, package, _opts}) do
     case Maintenance.unpin(package) do
-      :ok -> System.halt(0)
+      :ok ->
+        System.halt(0)
+
       {:error, reason} ->
         Errors.print_error({:error, reason})
         System.halt(1)
@@ -1164,7 +1397,9 @@ defmodule Opsm.CLI do
     dry_run = Keyword.get(opts, :dry_run, false)
 
     case Maintenance.clean(what, dry_run: dry_run) do
-      {:ok, _} -> System.halt(0)
+      {:ok, _} ->
+        System.halt(0)
+
       {:error, reason} ->
         Errors.print_error({:error, reason})
         System.halt(1)
@@ -1193,38 +1428,48 @@ defmodule Opsm.CLI do
           else
             IO.puts("Recent operations:")
             IO.puts("")
+
             history
             |> Enum.with_index(1)
             |> Enum.each(fn {entry, pos} ->
               IO.puts("  #{pos} | #{entry["id"]} | #{entry["timestamp"]} | #{entry["operation"]}")
+
               if entry["details"]["package"] do
                 IO.puts("      Package: #{entry["details"]["package"]}")
               end
             end)
+
             IO.puts("")
-            IO.puts("Use `opsm history undo <n>` or `opsm history undo <id>` to reverse an operation.")
+
+            IO.puts(
+              "Use `opsm history undo <n>` or `opsm history undo <id>` to reverse an operation."
+            )
           end
         end
+
         System.halt(0)
 
       "undo" ->
         # Support: `history undo` (last), `history undo 3` (by position), `history undo <hex-id>`
         target = Enum.at(args, 1)
 
-        result = cond do
-          is_nil(target) ->
-            Maintenance.undo_last()
+        result =
+          cond do
+            is_nil(target) ->
+              Maintenance.undo_last()
 
-          match?({n, ""} when n > 0, Integer.parse(target)) ->
-            {n, _} = Integer.parse(target)
-            Maintenance.undo_by_id(n)
+            match?({n, ""} when n > 0, Integer.parse(target)) ->
+              {n, _} = Integer.parse(target)
+              Maintenance.undo_by_id(n)
 
-          true ->
-            Maintenance.undo_by_id(target)
-        end
+            true ->
+              Maintenance.undo_by_id(target)
+          end
 
         case result do
-          {:ok, _, _} -> System.halt(0)
+          {:ok, _, _} ->
+            System.halt(0)
+
           {:error, reason} ->
             Errors.print_error({:error, reason})
             System.halt(1)
@@ -1232,11 +1477,13 @@ defmodule Opsm.CLI do
 
       "info" ->
         id = Enum.at(args, 1)
+
         if id do
           case Maintenance.get_history_entry(id) do
             nil ->
               IO.puts("History entry not found: #{id}")
               System.halt(1)
+
             entry ->
               IO.puts(Jason.encode!(entry, pretty: true))
               System.halt(0)
@@ -1254,7 +1501,9 @@ defmodule Opsm.CLI do
 
       "redo" ->
         case Maintenance.redo_last() do
-          {:ok, _, _} -> System.halt(0)
+          {:ok, _, _} ->
+            System.halt(0)
+
           {:error, reason} ->
             Errors.print_error({:error, reason})
             System.halt(1)
@@ -1312,11 +1561,14 @@ defmodule Opsm.CLI do
         case Lockfile.verify_integrity(lockfile) do
           :ok ->
             IO.puts("✓ Lockfile integrity: SHA3-512 hash verified")
+
           {:ok, :no_integrity_hash} ->
             IO.puts("⚠ Lockfile integrity: No integrity hash (legacy lockfile)")
+
           {:error, reason} ->
             IO.puts("✗ Lockfile integrity: #{reason}")
         end
+
       {:error, _} ->
         IO.puts("⚠ No lockfile found")
     end
@@ -1326,59 +1578,63 @@ defmodule Opsm.CLI do
     # 2. Verify installed packages against their recorded checksums
     installed = Installer.list_installed()
 
-    results = Enum.map(installed, fn pkg ->
-      name = pkg["name"]
-      version = pkg["version"]
-      forth = pkg["forth"]
-      path = pkg["path"]
-      recorded_checksum = pkg["checksum"]
+    results =
+      Enum.map(installed, fn pkg ->
+        name = pkg["name"]
+        version = pkg["version"]
+        forth = pkg["forth"]
+        path = pkg["path"]
+        recorded_checksum = pkg["checksum"]
 
-      dir_exists = File.dir?(path)
+        dir_exists = File.dir?(path)
 
-      # Try to recompute checksum from cached tarball
-      checksum_status = cond do
-        not dir_exists ->
-          :missing
+        # Try to recompute checksum from cached tarball
+        checksum_status =
+          cond do
+            not dir_exists ->
+              :missing
 
-        is_nil(recorded_checksum) or recorded_checksum == "" ->
-          :no_checksum
+            is_nil(recorded_checksum) or recorded_checksum == "" ->
+              :no_checksum
 
-        true ->
-          # Find cached tarball and recompute
-          cache_dir = Path.expand("~/.cache/opsm/packages")
-          cache_pattern = Path.join([cache_dir, forth, "#{name}-#{version}*"])
+            true ->
+              # Find cached tarball and recompute
+              cache_dir = Path.expand("~/.cache/opsm/packages")
+              cache_pattern = Path.join([cache_dir, forth, "#{name}-#{version}*"])
 
-          cached_files = Path.wildcard(cache_pattern)
-          case cached_files do
-            [cached_tarball | _] ->
-              recomputed = Downloader.compute_file_checksum(cached_tarball, :sha256)
-              # Check against SHA256 first, then SHA1 (npm uses SHA1)
-              if recomputed == recorded_checksum do
-                :verified
-              else
-                sha1 = Downloader.compute_file_checksum(cached_tarball, :sha1)
-                if sha1 == recorded_checksum do
-                  :verified
-                else
-                  :tampered
-                end
+              cached_files = Path.wildcard(cache_pattern)
+
+              case cached_files do
+                [cached_tarball | _] ->
+                  recomputed = Downloader.compute_file_checksum(cached_tarball, :sha256)
+                  # Check against SHA256 first, then SHA1 (npm uses SHA1)
+                  if recomputed == recorded_checksum do
+                    :verified
+                  else
+                    sha1 = Downloader.compute_file_checksum(cached_tarball, :sha1)
+
+                    if sha1 == recorded_checksum do
+                      :verified
+                    else
+                      :tampered
+                    end
+                  end
+
+                [] ->
+                  # No cached tarball — can't verify, but files exist
+                  :cache_missing
               end
-
-            [] ->
-              # No cached tarball — can't verify, but files exist
-              :cache_missing
           end
-      end
 
-      %{
-        name: name,
-        version: version,
-        forth: forth,
-        path: path,
-        installed: dir_exists,
-        checksum_status: checksum_status
-      }
-    end)
+        %{
+          name: name,
+          version: version,
+          forth: forth,
+          path: path,
+          installed: dir_exists,
+          checksum_status: checksum_status
+        }
+      end)
 
     if json? do
       IO.puts(Jason.encode!(results, pretty: true))
@@ -1397,6 +1653,7 @@ defmodule Opsm.CLI do
 
       if cache_missing != [] do
         IO.puts("  ⚠ #{length(cache_missing)} not verifiable (cached tarball cleaned):")
+
         for r <- cache_missing do
           IO.puts("    - #{r.name}@#{r.version}")
         end
@@ -1404,6 +1661,7 @@ defmodule Opsm.CLI do
 
       if no_checksum != [] do
         IO.puts("  ⚠ #{length(no_checksum)} without checksums:")
+
         for r <- no_checksum do
           IO.puts("    - #{r.name}@#{r.version}")
         end
@@ -1411,6 +1669,7 @@ defmodule Opsm.CLI do
 
       if tampered != [] do
         IO.puts("  ✗ #{length(tampered)} CHECKSUM MISMATCH:")
+
         for r <- tampered do
           IO.puts("    - #{r.name}@#{r.version} — REINSTALL RECOMMENDED")
         end
@@ -1418,6 +1677,7 @@ defmodule Opsm.CLI do
 
       if missing != [] do
         IO.puts("  ✗ #{length(missing)} missing from disk:")
+
         for r <- missing do
           IO.puts("    - #{r.name}@#{r.version}")
         end
@@ -1428,7 +1688,9 @@ defmodule Opsm.CLI do
       end
     end
 
-    System.halt(if(Enum.any?(results, fn r -> r.checksum_status == :tampered end), do: 1, else: 0))
+    System.halt(
+      if(Enum.any?(results, fn r -> r.checksum_status == :tampered end), do: 1, else: 0)
+    )
   end
 
   defp run({:ports, opts}) do
@@ -1436,13 +1698,16 @@ defmodule Opsm.CLI do
     available = Federation.available_connection_ports()
 
     if json? do
-      data = Enum.map(available, fn {name, info} ->
-        %{name: name, command: info.command, path: info.path}
-      end)
+      data =
+        Enum.map(available, fn {name, info} ->
+          %{name: name, command: info.command, path: info.path}
+        end)
+
       IO.puts(Jason.encode!(data, pretty: true))
     else
       IO.puts("Available Connection Ports (System Package Managers)")
       IO.puts("====================================================")
+
       if map_size(available) == 0 do
         IO.puts("  No system package managers detected")
       else
@@ -1450,9 +1715,11 @@ defmodule Opsm.CLI do
           IO.puts("  @#{name}\t#{info.command}\t(#{info.path})")
         end
       end
+
       IO.puts("")
       IO.puts("Use 'opsm install @<port> <package>' to install via system PM")
     end
+
     System.halt(0)
   end
 
@@ -1473,12 +1740,18 @@ defmodule Opsm.CLI do
           if manifest.description, do: IO.puts("Description: #{manifest.description}")
           if manifest.license, do: IO.puts("License:     #{manifest.license}")
           if manifest.repository, do: IO.puts("Repository:  #{manifest.repository}")
-          if manifest.authors != [], do: IO.puts("Authors:     #{Enum.join(manifest.authors, ", ")}")
-          if manifest.keywords != [], do: IO.puts("Keywords:    #{Enum.join(manifest.keywords, ", ")}")
+
+          if manifest.authors != [],
+            do: IO.puts("Authors:     #{Enum.join(manifest.authors, ", ")}")
+
+          if manifest.keywords != [],
+            do: IO.puts("Keywords:    #{Enum.join(manifest.keywords, ", ")}")
+
           IO.puts("")
           IO.puts("Dependencies: #{map_size(manifest.dependencies)}")
           IO.puts("Dev deps:     #{map_size(manifest.dev_dependencies)}")
         end
+
         System.halt(0)
 
       {:error, reason} ->
@@ -1498,20 +1771,27 @@ defmodule Opsm.CLI do
         IO.puts("  Target: #{info.command} (#{info.path})")
 
         # Try to find the package in lockfile first, then resolve it
-        pkg = case Opsm.Lockfile.read() do
-          {:ok, lockfile} ->
-            entries = Opsm.Lockfile.list_packages(lockfile)
-              |> Enum.filter(fn p -> p.name == package end)
-            case entries do
-              [entry | _] ->
-                case Opsm.Registries.Registry.fetch(entry.forth, entry.name, entry.version) do
-                  {:ok, resolved} -> resolved
-                  _ -> nil
-                end
-              _ -> nil
-            end
-          _ -> nil
-        end
+        pkg =
+          case Opsm.Lockfile.read() do
+            {:ok, lockfile} ->
+              entries =
+                Opsm.Lockfile.list_packages(lockfile)
+                |> Enum.filter(fn p -> p.name == package end)
+
+              case entries do
+                [entry | _] ->
+                  case Opsm.Registries.Registry.fetch(entry.forth, entry.name, entry.version) do
+                    {:ok, resolved} -> resolved
+                    _ -> nil
+                  end
+
+                _ ->
+                  nil
+              end
+
+            _ ->
+              nil
+          end
 
         if pkg do
           if dry_run? do
@@ -1519,10 +1799,12 @@ defmodule Opsm.CLI do
             IO.puts("  [DRY RUN] Would run: #{info.command} install #{package}")
           else
             IO.puts("  Installing #{package} via #{info.command}...")
+
             case Federation.install_via_port(package, target_atom) do
               {:ok, output} ->
                 IO.puts("  ✓ Exported and installed via #{info.command}")
                 if is_binary(output) and output != "", do: IO.puts("  #{output}")
+
               {:error, reason} ->
                 IO.puts(:stderr, "  Error: #{reason}")
                 System.halt(1)
@@ -1534,16 +1816,19 @@ defmodule Opsm.CLI do
             IO.puts("  [DRY RUN] Would install #{package} via #{info.command}")
           else
             IO.puts("  Installing #{package} via #{info.command}...")
+
             case Federation.install_via_port(package, target_atom) do
               {:ok, output} ->
                 IO.puts("  ✓ Installed via #{info.command}")
                 if is_binary(output) and output != "", do: IO.puts("  #{output}")
+
               {:error, reason} ->
                 IO.puts(:stderr, "  Error: #{reason}")
                 System.halt(1)
             end
           end
         end
+
         System.halt(0)
 
       {:error, _reason} ->
@@ -1689,7 +1974,8 @@ defmodule Opsm.CLI do
     forth = if forth_str, do: Opsm.Validation.safe_to_forth(forth_str), else: :npm
 
     # Resolve version from lockfile if available and no --version given
-    version = Keyword.get(opts, :version) || resolve_installed_version(package, lockfile: Lockfile)
+    version =
+      Keyword.get(opts, :version) || resolve_installed_version(package, lockfile: Lockfile)
 
     IO.puts("Scanning #{package}#{if version, do: "@#{version}", else: ""}...")
 
@@ -1747,7 +2033,9 @@ defmodule Opsm.CLI do
       else
         IO.puts("Installed runtime tools")
         IO.puts("=======================")
-        max_name = installed |> Enum.map(fn t -> String.length(t.name) end) |> Enum.max(fn -> 4 end)
+
+        max_name =
+          installed |> Enum.map(fn t -> String.length(t.name) end) |> Enum.max(fn -> 4 end)
 
         for tool <- installed do
           name_pad = String.pad_trailing(tool.name, max_name)
@@ -1777,21 +2065,25 @@ defmodule Opsm.CLI do
       {:ok, updates} ->
         IO.puts("#{length(updates)} update(s) available:\n")
         max_name = updates |> Enum.map(fn u -> String.length(u.name) end) |> Enum.max(fn -> 4 end)
-        max_cur = updates |> Enum.map(fn u -> String.length(u.current) end) |> Enum.max(fn -> 7 end)
+
+        max_cur =
+          updates |> Enum.map(fn u -> String.length(u.current) end) |> Enum.max(fn -> 7 end)
 
         for u <- updates do
           name_pad = String.pad_trailing(u.name, max_name)
-          cur_pad  = String.pad_trailing(u.current, max_cur)
+          cur_pad = String.pad_trailing(u.current, max_cur)
           IO.puts("  #{name_pad}  #{cur_pad} → #{u.latest}")
         end
 
         unless dry_run? do
           IO.puts("")
           IO.puts("Updating...")
+
           for u <- updates do
             case Manager.install(u.name, u.latest) do
               :ok ->
                 IO.puts("  ✓ #{u.name} #{u.current} → #{u.latest}")
+
               {:error, reason} ->
                 IO.puts(:stderr, "  ✗ #{u.name}: #{inspect(reason)}")
             end
@@ -1815,14 +2107,17 @@ defmodule Opsm.CLI do
       case Manager.latest_version(tool) do
         {:ok, latest} ->
           current = Manager.current_version(tool)
+
           if current == latest do
             IO.puts("  #{tool} is already at #{latest}")
           else
             IO.puts("  #{tool}: #{current} → #{latest}")
+
             unless dry_run? do
               case Manager.install(tool, latest) do
                 :ok ->
                   IO.puts("  ✓ Updated #{tool} to #{latest}")
+
                 {:error, reason} ->
                   IO.puts(:stderr, "  ✗ #{tool}: #{inspect(reason)}")
               end
@@ -1854,8 +2149,10 @@ defmodule Opsm.CLI do
 
       {:ok, tools} ->
         IO.puts("Installing #{length(tools)} pinned runtime tool(s)...")
+
         for {tool, version} <- tools do
           IO.puts("  #{tool}@#{version}")
+
           unless dry_run? do
             case Manager.install(tool, version) do
               :ok -> IO.puts("  ✓ #{tool}@#{version}")
@@ -1879,14 +2176,16 @@ defmodule Opsm.CLI do
 
     for spec <- tool_specs do
       {tool, version} = parse_tool_spec(spec)
-      resolved_version = if version == "latest" do
-        case Manager.latest_version(tool) do
-          {:ok, v} -> v
-          {:error, _} -> "latest"
+
+      resolved_version =
+        if version == "latest" do
+          case Manager.latest_version(tool) do
+            {:ok, v} -> v
+            {:error, _} -> "latest"
+          end
+        else
+          version
         end
-      else
-        version
-      end
 
       IO.puts("Installing #{tool}@#{resolved_version}...")
 
@@ -1895,9 +2194,11 @@ defmodule Opsm.CLI do
           :ok ->
             IO.puts("✓ Installed #{tool}@#{resolved_version}")
             IO.puts("  Run: opsm runtime which #{tool}")
+
           {:error, {:missing_system_dependencies, deps}} ->
             IO.puts(:stderr, "✗ #{tool}: missing system dependencies: #{Enum.join(deps, ", ")}")
             System.halt(1)
+
           {:error, reason} ->
             IO.puts(:stderr, "✗ #{tool}: #{inspect(reason)}")
             System.halt(1)
@@ -1916,8 +2217,10 @@ defmodule Opsm.CLI do
     case Manager.remove(tool) do
       :ok ->
         IO.puts("✓ Removed #{tool}")
+
       {:error, :not_installed} ->
         IO.puts("#{tool} is not installed")
+
       {:error, reason} ->
         IO.puts(:stderr, "Error removing #{tool}: #{inspect(reason)}")
         System.halt(1)
@@ -1932,6 +2235,7 @@ defmodule Opsm.CLI do
     case Manager.which(tool) do
       {:ok, path} ->
         IO.puts(path)
+
       {:error, :not_installed} ->
         IO.puts(:stderr, "#{tool} is not managed by OPSM runtime")
         System.halt(1)
@@ -1954,6 +2258,7 @@ defmodule Opsm.CLI do
       else
         IO.puts("Active runtime tools")
         IO.puts("====================")
+
         for {tool, version} <- current do
           IO.puts("  #{tool}  #{version}")
         end
@@ -1968,14 +2273,17 @@ defmodule Opsm.CLI do
       {:ok, lf} ->
         case lockfile_mod.packages_for_name(lf, package) do
           [entry | _] -> entry.version
-          []          -> nil
+          [] -> nil
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
   defp find_tui_binary do
     env_override = System.get_env("OPSM_TUI_BIN")
+
     cond do
       env_override != nil and File.exists?(env_override) -> env_override
       path = System.find_executable("opsm-tui") -> path
@@ -1999,6 +2307,7 @@ defmodule Opsm.CLI do
             IO.puts(Jason.encode!(MapSet.to_list(all_deps), pretty: true))
           else
             IO.puts("All dependencies (#{MapSet.size(all_deps)}):")
+
             all_deps
             |> MapSet.to_list()
             |> Enum.sort()
@@ -2042,6 +2351,7 @@ defmodule Opsm.CLI do
             IO.puts(Jason.encode!(all_packages, pretty: true))
           else
             IO.puts("All dependencies (#{length(all_packages)}):")
+
             Enum.each(all_packages, fn name ->
               {version, _} = Map.get(resolution, name)
               IO.puts("  - #{name}@#{version}")
@@ -2088,7 +2398,19 @@ defmodule Opsm.CLI do
 
   # Install helpers
 
-  defp do_install_from_forth(forth, package, version, _allow, scope, dry_run?, _json?, native?, global?, dev?, sustainability? \\ false) do
+  defp do_install_from_forth(
+         forth,
+         package,
+         version,
+         _allow,
+         scope,
+         dry_run?,
+         _json?,
+         native?,
+         global?,
+         dev?,
+         sustainability? \\ false
+       ) do
     alias Opsm.Package.Installer
     alias Opsm.Package.Native
 
@@ -2101,17 +2423,21 @@ defmodule Opsm.CLI do
       IO.puts("")
 
       if dry_run? do
-        {cmd, args} = Native.preview_command(forth_atom, package,
-          version: if(version == "latest", do: nil, else: version),
-          global: global?,
-          dev: dev?)
+        {cmd, args} =
+          Native.preview_command(forth_atom, package,
+            version: if(version == "latest", do: nil, else: version),
+            global: global?,
+            dev: dev?
+          )
+
         IO.puts("[DRY RUN] Would run: #{cmd} #{Enum.join(args, " ")}")
         System.halt(0)
       else
         case Native.install(forth_atom, package,
                version: if(version == "latest", do: nil, else: version),
                global: global?,
-               dev: dev?) do
+               dev: dev?
+             ) do
           {:ok, _} ->
             IO.puts("")
             IO.puts("✓ Installed #{package} via native toolchain")
@@ -2128,7 +2454,8 @@ defmodule Opsm.CLI do
              version: version,
              scope: scope_atom,
              dry_run: dry_run?,
-             sustainability_preference: sustainability?) do
+             sustainability_preference: sustainability?
+           ) do
         {:ok, _} ->
           System.halt(0)
 
@@ -2149,7 +2476,8 @@ defmodule Opsm.CLI do
     IO.puts("Checking registries...")
     existence = Registry.exists_all?(package)
 
-    found_in = existence
+    found_in =
+      existence
       |> Enum.filter(fn {_, exists} -> exists end)
       |> Enum.map(fn {forth, _} -> forth end)
 
@@ -2159,6 +2487,7 @@ defmodule Opsm.CLI do
         found_in: found_in,
         availability: existence
       }
+
       IO.puts(Jason.encode!(data, pretty: true))
       System.halt(0)
     end
@@ -2173,12 +2502,15 @@ defmodule Opsm.CLI do
 
         # Check for alternatives
         discovery = Federation.discover(package)
+
         if map_size(discovery.alternatives) > 0 do
           IO.puts("Related packages in other ecosystems:")
+
           for {forth, pkgs} <- discovery.alternatives, pkgs != [] do
             IO.puts("  @#{forth}: #{Enum.join(pkgs, ", ")}")
           end
         end
+
         System.halt(1)
 
       length(found_in) == 1 ->
@@ -2186,61 +2518,101 @@ defmodule Opsm.CLI do
         [forth] = found_in
         IO.puts("Found in @#{forth}")
         IO.puts("")
-        do_install_from_forth(to_string(forth), package, version, allow, scope, dry_run?, false, false, false, false, sustainability?)
+
+        do_install_from_forth(
+          to_string(forth),
+          package,
+          version,
+          allow,
+          scope,
+          dry_run?,
+          false,
+          false,
+          false,
+          false,
+          sustainability?
+        )
 
       true ->
         # Found in multiple registries — show options and auto-select best
         IO.puts("Package '#{package}' available from:")
-        registry_info = for forth <- found_in do
-          toolchain_ok = case Federation.check_toolchain(forth) do
-            {:ok, _} -> true
-            {:error, _} -> false
+
+        registry_info =
+          for forth <- found_in do
+            toolchain_ok =
+              case Federation.check_toolchain(forth) do
+                {:ok, _} -> true
+                {:error, _} -> false
+              end
+
+            pkg_version =
+              try do
+                case Registry.fetch(forth, package) do
+                  {:ok, pkg} -> pkg.version
+                  _ -> "unknown"
+                end
+              rescue
+                _ -> "unknown"
+              end
+
+            IO.puts(
+              "  @#{forth}  v#{pkg_version}  #{if toolchain_ok, do: "✓ toolchain ready", else: "✗ toolchain missing"}"
+            )
+
+            {forth, toolchain_ok, pkg_version}
           end
-          pkg_version = try do
-            case Registry.fetch(forth, package) do
-              {:ok, pkg} -> pkg.version
-              _ -> "unknown"
-            end
-          rescue
-            _ -> "unknown"
-          end
-          IO.puts("  @#{forth}  v#{pkg_version}  #{if toolchain_ok, do: "✓ toolchain ready", else: "✗ toolchain missing"}")
-          {forth, toolchain_ok, pkg_version}
-        end
 
         # Auto-select: prefer primary registries with toolchains, then by highest version
         # Primary registries are the canonical homes — npm for JS, cargo for Rust, etc.
         primary_forths = [:npm, :cargo, :hex, :pypi, :gem, :go, :pub, :hackage, :nuget, :maven]
 
-        selected = registry_info
-        |> Enum.filter(fn {_forth, toolchain_ok, _v} -> toolchain_ok end)
-        |> case do
-          [] -> registry_info
-          with_toolchain -> with_toolchain
-        end
-        |> Enum.sort_by(fn {forth, _ok, version} ->
-          primary_rank = case Enum.find_index(primary_forths, &(&1 == forth)) do
-            nil -> 100
-            idx -> idx
+        selected =
+          registry_info
+          |> Enum.filter(fn {_forth, toolchain_ok, _v} -> toolchain_ok end)
+          |> case do
+            [] -> registry_info
+            with_toolchain -> with_toolchain
           end
-          # Prefer primary registries, then highest version
-          {primary_rank, version}
-        end)
-        |> List.first()
+          |> Enum.sort_by(fn {forth, _ok, version} ->
+            primary_rank =
+              case Enum.find_index(primary_forths, &(&1 == forth)) do
+                nil -> 100
+                idx -> idx
+              end
+
+            # Prefer primary registries, then highest version
+            {primary_rank, version}
+          end)
+          |> List.first()
 
         case selected do
           {forth, _ok, _v} ->
             IO.puts("")
             IO.puts("Auto-selected: @#{forth}")
             IO.puts("")
-            do_install_from_forth(to_string(forth), package, version, allow, scope, dry_run?, false, false, false, false, sustainability?)
+
+            do_install_from_forth(
+              to_string(forth),
+              package,
+              version,
+              allow,
+              scope,
+              dry_run?,
+              false,
+              false,
+              false,
+              false,
+              sustainability?
+            )
 
           nil ->
             IO.puts("")
             IO.puts("Could not auto-select a registry. Specify one:")
+
             for forth <- found_in do
               IO.puts("  opsm install @#{forth} #{package}")
             end
+
             System.halt(1)
         end
     end
@@ -2258,12 +2630,13 @@ defmodule Opsm.CLI do
   defp parse_tool_spec(spec) do
     case String.split(spec, "@", parts: 2) do
       [tool, version] -> {tool, version}
-      [tool]          -> {tool, "latest"}
+      [tool] -> {tool, "latest"}
     end
   end
 
   defp print_smart_plan(plan) do
     IO.puts("Smart install plan (grouped by backend):")
+
     Enum.each(plan, fn {backend, pkgs} ->
       status =
         case SmartInstall.backend_availability(backend) do

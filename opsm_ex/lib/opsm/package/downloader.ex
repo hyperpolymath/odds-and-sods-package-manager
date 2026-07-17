@@ -39,8 +39,11 @@ defmodule Opsm.Package.Downloader do
       # Local hit: verify and return.
       if File.exists?(cache_path) and not force? do
         case verify_checksum(cache_path, checksum, algo) do
-          :ok          -> {:ok, cache_path}
-          {:error, _}  -> fresh_download(url, cache_path, storage_key, checksum, algo, StorageManager)
+          :ok ->
+            {:ok, cache_path}
+
+          {:error, _} ->
+            fresh_download(url, cache_path, storage_key, checksum, algo, StorageManager)
         end
       else
         # Try remote backends before hitting the registry.
@@ -71,7 +74,13 @@ defmodule Opsm.Package.Downloader do
   # Derive a content-addressed storage key that mirrors the local cache layout.
   defp storage_key_for(package) do
     forth = package.forth
-    name = package.package |> String.replace("/", "--") |> String.replace(":", "--") |> String.replace("@", "_at_")
+
+    name =
+      package.package
+      |> String.replace("/", "--")
+      |> String.replace(":", "--")
+      |> String.replace("@", "_at_")
+
     version = package.version
     ext = extension_for(forth)
     "#{forth}/#{name}-#{version}#{ext}"
@@ -102,7 +111,8 @@ defmodule Opsm.Package.Downloader do
     ext = extension_for(forth)
 
     # Sanitize package name for filesystem (Go paths contain slashes, Maven uses colons)
-    safe_name = name
+    safe_name =
+      name
       |> String.replace("/", "--")
       |> String.replace(":", "--")
       |> String.replace("@", "_at_")
@@ -124,6 +134,7 @@ defmodule Opsm.Package.Downloader do
 
       forth ->
         path = Path.join(@cache_dir, to_string(forth))
+
         case File.rm_rf(path) do
           {:ok, _} -> :ok
           {:error, reason, p} -> {:error, "Failed to clear cache at #{p}: #{reason}"}
@@ -145,7 +156,8 @@ defmodule Opsm.Package.Downloader do
               list_cache_dir(Path.join(@cache_dir, dir), dir)
             end)
 
-          {:error, _} -> []
+          {:error, _} ->
+            []
         end
 
       forth ->
@@ -162,7 +174,12 @@ defmodule Opsm.Package.Downloader do
     File.mkdir_p!(@temp_dir)
 
     # Download to temp file first (D3: atomic download)
-    temp_path = Path.join(@temp_dir, "download_#{:rand.uniform(1_000_000)}_#{System.system_time(:millisecond)}")
+    temp_path =
+      Path.join(
+        @temp_dir,
+        "download_#{:rand.uniform(1_000_000)}_#{System.system_time(:millisecond)}"
+      )
+
     started_at = System.monotonic_time(:millisecond)
 
     # Warn if no checksum provided (F3)
@@ -170,57 +187,70 @@ defmodule Opsm.Package.Downloader do
       IO.puts("  \e[33m⚠ No checksum provided — cannot verify download integrity\e[0m")
     end
 
-    result = case Req.get(url, into: File.stream!(temp_path), receive_timeout: 60_000) do
-      {:ok, %{status: 200}} ->
-        elapsed_ms = System.monotonic_time(:millisecond) - started_at
-        size = File.stat!(temp_path).size
-        speed = if elapsed_ms > 0, do: size / (elapsed_ms / 1000), else: 0
+    result =
+      case Req.get(url, into: File.stream!(temp_path), receive_timeout: 60_000) do
+        {:ok, %{status: 200}} ->
+          elapsed_ms = System.monotonic_time(:millisecond) - started_at
+          size = File.stat!(temp_path).size
+          speed = if elapsed_ms > 0, do: size / (elapsed_ms / 1000), else: 0
 
-        case verify_checksum(temp_path, checksum, algo) do
-          :ok ->
-            # Atomic move from temp to final destination
-            case File.rename(temp_path, dest_path) do
-              :ok ->
-                IO.puts("  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})")
-                {:ok, dest_path}
+          case verify_checksum(temp_path, checksum, algo) do
+            :ok ->
+              # Atomic move from temp to final destination
+              case File.rename(temp_path, dest_path) do
+                :ok ->
+                  IO.puts(
+                    "  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})"
+                  )
 
-              {:error, :exdev} ->
-                case File.cp(temp_path, dest_path) do
-                  :ok ->
-                    File.rm(temp_path)
-                    IO.puts("  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})")
-                    {:ok, dest_path}
-                  {:error, reason} ->
-                    {:error, "Failed to copy downloaded file: #{reason}"}
-                end
+                  {:ok, dest_path}
 
-              {:error, reason} ->
-                {:error, "Failed to move downloaded file: #{reason}"}
-            end
+                {:error, :exdev} ->
+                  case File.cp(temp_path, dest_path) do
+                    :ok ->
+                      File.rm(temp_path)
 
-          {:error, reason} ->
-            {:error, reason}
-        end
+                      IO.puts(
+                        "  \e[32m✓\e[0m #{format_size(size)} in #{format_duration_ms(elapsed_ms)} (#{format_speed(speed)})"
+                      )
 
-      {:ok, %{status: 302, headers: headers}} ->
-        File.rm(temp_path)
-        case List.keyfind(headers, "location", 0) do
-          {"location", redirect_url} ->
-            do_download(redirect_url, dest_path, checksum, algo)
-          _ ->
-            {:error, "Redirect without location header"}
-        end
+                      {:ok, dest_path}
 
-      {:ok, %{status: status}} ->
-        {:error, "Download failed with status #{status}"}
+                    {:error, reason} ->
+                      {:error, "Failed to copy downloaded file: #{reason}"}
+                  end
 
-      {:error, reason} ->
-        {:error, "Download failed: #{inspect(reason)}"}
-    end
+                {:error, reason} ->
+                  {:error, "Failed to move downloaded file: #{reason}"}
+              end
+
+            {:error, reason} ->
+              {:error, reason}
+          end
+
+        {:ok, %{status: 302, headers: headers}} ->
+          File.rm(temp_path)
+
+          case List.keyfind(headers, "location", 0) do
+            {"location", redirect_url} ->
+              do_download(redirect_url, dest_path, checksum, algo)
+
+            _ ->
+              {:error, "Redirect without location header"}
+          end
+
+        {:ok, %{status: status}} ->
+          {:error, "Download failed with status #{status}"}
+
+        {:error, reason} ->
+          {:error, "Download failed: #{inspect(reason)}"}
+      end
 
     # Clean up temp file on any error
     case result do
-      {:ok, _} -> result
+      {:ok, _} ->
+        result
+
       {:error, _} ->
         File.rm(temp_path)
         result
@@ -228,7 +258,10 @@ defmodule Opsm.Package.Downloader do
   end
 
   defp format_speed(bytes_per_sec) when bytes_per_sec < 1024, do: "#{round(bytes_per_sec)} B/s"
-  defp format_speed(bytes_per_sec) when bytes_per_sec < 1024 * 1024, do: "#{Float.round(bytes_per_sec / 1024, 1)} KB/s"
+
+  defp format_speed(bytes_per_sec) when bytes_per_sec < 1024 * 1024,
+    do: "#{Float.round(bytes_per_sec / 1024, 1)} KB/s"
+
   defp format_speed(bytes_per_sec), do: "#{Float.round(bytes_per_sec / (1024 * 1024), 2)} MB/s"
 
   defp format_duration_ms(ms) when ms < 1000, do: "#{ms}ms"
@@ -255,13 +288,14 @@ defmodule Opsm.Package.Downloader do
   end
 
   defp compute_checksum(path, algo) do
-    hash_algo = case algo do
-      :sha256 -> :sha256
-      :sha512 -> :sha512
-      :sha1 -> :sha
-      :md5 -> :md5
-      _ -> :sha256
-    end
+    hash_algo =
+      case algo do
+        :sha256 -> :sha256
+        :sha512 -> :sha512
+        :sha1 -> :sha
+        :md5 -> :md5
+        _ -> :sha256
+      end
 
     File.stream!(path, [], 65536)
     |> Enum.reduce(:crypto.hash_init(hash_algo), fn chunk, acc ->
@@ -293,6 +327,7 @@ defmodule Opsm.Package.Downloader do
         Enum.map(files, fn file ->
           path = Path.join(dir, file)
           stat = File.stat!(path)
+
           %{
             forth: forth_name,
             file: file,
@@ -302,7 +337,8 @@ defmodule Opsm.Package.Downloader do
           }
         end)
 
-      {:error, _} -> []
+      {:error, _} ->
+        []
     end
   end
 

@@ -21,11 +21,12 @@ defmodule Opsm.Registries.Elpa do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} when is_map(body) ->
-        target_version = if version == "latest" do
-          extract_latest_version(body)
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            extract_latest_version(body)
+          else
+            version
+          end
 
         deps = extract_deps(body)
         {:ok, parse_package(name, body, target_version, deps)}
@@ -56,45 +57,50 @@ defmodule Opsm.Registries.Elpa do
       {:ok, packages} when is_list(packages) ->
         downcased = String.downcase(query)
 
-        results = packages
-        |> Enum.filter(fn pkg ->
-          name = pkg["name"] || ""
-          desc = pkg["description"] || pkg["summary"] || ""
-          String.contains?(String.downcase(name), downcased) ||
-            String.contains?(String.downcase(desc), downcased)
-        end)
-        |> Enum.take(limit)
-        |> Enum.map(fn pkg ->
-          %{
-            name: pkg["name"],
-            version: pkg["version"],
-            description: pkg["description"] || pkg["summary"] || "",
-            downloads: 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.filter(fn pkg ->
+            name = pkg["name"] || ""
+            desc = pkg["description"] || pkg["summary"] || ""
+
+            String.contains?(String.downcase(name), downcased) ||
+              String.contains?(String.downcase(desc), downcased)
+          end)
+          |> Enum.take(limit)
+          |> Enum.map(fn pkg ->
+            %{
+              name: pkg["name"],
+              version: pkg["version"],
+              description: pkg["description"] || pkg["summary"] || "",
+              downloads: 0
+            }
+          end)
 
         {:ok, results}
 
       {:ok, packages} when is_map(packages) ->
         downcased = String.downcase(query)
 
-        results = packages
-        |> Enum.filter(fn {name, _data} ->
-          String.contains?(String.downcase(name), downcased)
-        end)
-        |> Enum.take(limit)
-        |> Enum.map(fn {name, data} ->
-          ver = case data do
-            %{"version" => v} -> v
-            _ -> nil
-          end
-          %{
-            name: name,
-            version: ver,
-            description: Map.get(data, "description", ""),
-            downloads: 0
-          }
-        end)
+        results =
+          packages
+          |> Enum.filter(fn {name, _data} ->
+            String.contains?(String.downcase(name), downcased)
+          end)
+          |> Enum.take(limit)
+          |> Enum.map(fn {name, data} ->
+            ver =
+              case data do
+                %{"version" => v} -> v
+                _ -> nil
+              end
+
+            %{
+              name: name,
+              version: ver,
+              description: Map.get(data, "description", ""),
+              downloads: 0
+            }
+          end)
 
         {:ok, results}
 
@@ -163,11 +169,13 @@ defmodule Opsm.Registries.Elpa do
     case Map.get(body, "dependencies") || Map.get(body, "requires") do
       deps when is_map(deps) ->
         Enum.reduce(deps, %{}, fn {dep_name, constraint}, acc ->
-          ver = case constraint do
-            c when is_binary(c) -> c
-            c when is_list(c) -> ">= #{Enum.join(c, ".")}"
-            _ -> ">= 0.0.0"
-          end
+          ver =
+            case constraint do
+              c when is_binary(c) -> c
+              c when is_list(c) -> ">= #{Enum.join(c, ".")}"
+              _ -> ">= 0.0.0"
+            end
+
           Map.put(acc, dep_name, ver)
         end)
 
@@ -176,8 +184,10 @@ defmodule Opsm.Registries.Elpa do
           case dep do
             [dep_name | ver_parts] ->
               Map.put(acc, to_string(dep_name), ">= #{Enum.join(ver_parts, ".")}")
+
             dep_name when is_binary(dep_name) ->
               Map.put(acc, dep_name, ">= 0.0.0")
+
             _ ->
               acc
           end

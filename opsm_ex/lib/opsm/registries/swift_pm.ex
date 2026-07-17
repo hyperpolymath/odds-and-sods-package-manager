@@ -20,42 +20,49 @@ defmodule Opsm.Registries.SwiftPM do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, body} ->
-        target_version = if version == "latest" do
-          get_in(body, ["releases", "stable", "reference", "version"]) ||
-          get_in(body, ["releases", "latest", "reference", "version"])
-        else
-          version
-        end
+        target_version =
+          if version == "latest" do
+            get_in(body, ["releases", "stable", "reference", "version"]) ||
+              get_in(body, ["releases", "latest", "reference", "version"])
+          else
+            version
+          end
 
-        {:ok, %ResolvedPackage{
-          package: name,
-          version: target_version || version,
-          forth: :swift,
-          registry_url: "#{@web_url}/#{owner}/#{repo}",
-          tarball_url: body["url"],
-          checksum: nil,
-          checksum_algo: nil,
-          manifest: %ManifestFormat{
-            name: repo,
-            version: target_version || version,
-            description: body["summary"],
-            license: nil,
-            homepage: "#{@web_url}/#{owner}/#{repo}",
-            repository: body["url"],
-            authors: [owner],
-            keywords: body["keywords"] || [],
-            dependencies: %{},
-            dev_dependencies: %{},
-            source_forth: :swift,
-            raw_manifest: body
-          },
-          attestations: [],
-          resolved_deps: []
-        }}
+        {:ok,
+         %ResolvedPackage{
+           package: name,
+           version: target_version || version,
+           forth: :swift,
+           registry_url: "#{@web_url}/#{owner}/#{repo}",
+           tarball_url: body["url"],
+           checksum: nil,
+           checksum_algo: nil,
+           manifest: %ManifestFormat{
+             name: repo,
+             version: target_version || version,
+             description: body["summary"],
+             license: nil,
+             homepage: "#{@web_url}/#{owner}/#{repo}",
+             repository: body["url"],
+             authors: [owner],
+             keywords: body["keywords"] || [],
+             dependencies: %{},
+             dev_dependencies: %{},
+             source_forth: :swift,
+             raw_manifest: body
+           },
+           attestations: [],
+           resolved_deps: []
+         }}
 
-      {:error, :not_found} -> {:error, :not_found}
-      {:error, %{status: 404}} -> {:error, :not_found}
-      {:error, reason} -> {:error, reason}
+      {:error, :not_found} ->
+        {:error, :not_found}
+
+      {:error, %{status: 404}} ->
+        {:error, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -65,7 +72,8 @@ defmodule Opsm.Registries.SwiftPM do
 
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"results" => results}} when is_list(results) ->
-        packages = results
+        packages =
+          results
           |> Enum.take(limit)
           |> Enum.map(fn r ->
             %{
@@ -75,14 +83,18 @@ defmodule Opsm.Registries.SwiftPM do
               downloads: 0
             }
           end)
+
         {:ok, packages}
-      _ -> {:ok, []}
+
+      _ ->
+        {:ok, []}
     end
   end
 
   def exists?(name) do
     {owner, repo} = parse_package_id(name)
     url = "#{@api_url}/packages/#{URI.encode(owner)}/#{URI.encode(repo)}"
+
     case VerifiedHttp.get(url, receive_timeout: 5_000) do
       {:ok, _} -> true
       _ -> false
@@ -92,12 +104,17 @@ defmodule Opsm.Registries.SwiftPM do
   def versions(name) do
     {owner, repo} = parse_package_id(name)
     url = "#{@api_url}/packages/#{URI.encode(owner)}/#{URI.encode(repo)}"
+
     case VerifiedHttp.get_json(url, receive_timeout: 10_000) do
       {:ok, %{"versions" => versions}} when is_list(versions) ->
-        vers = Enum.map(versions, fn v -> v["reference"]["version"] || v["version"] end)
+        vers =
+          Enum.map(versions, fn v -> v["reference"]["version"] || v["version"] end)
           |> Enum.reject(&is_nil/1)
+
         {:ok, vers}
-      _ -> {:ok, []}
+
+      _ ->
+        {:ok, []}
     end
   end
 

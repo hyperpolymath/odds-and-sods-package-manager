@@ -68,7 +68,8 @@ defmodule Opsm.Crypto.SymmetricTest do
   describe "generate_key/0" do
     test "generates 256-bit keys" do
       key = Symmetric.generate_key()
-      assert byte_size(key) == 32  # 256 bits
+      # 256 bits
+      assert byte_size(key) == 32
     end
 
     test "generates different keys each time" do
@@ -80,7 +81,8 @@ defmodule Opsm.Crypto.SymmetricTest do
 
   describe "validation" do
     test "rejects invalid key size for encryption" do
-      invalid_key = :crypto.strong_rand_bytes(16)  # 128 bits, too small
+      # 128 bits, too small
+      invalid_key = :crypto.strong_rand_bytes(16)
       plaintext = "data"
 
       assert {:error, "Key must be 256 bits (32 bytes)"} =

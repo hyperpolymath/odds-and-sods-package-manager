@@ -68,13 +68,16 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
       File.mkdir_p!(tmp)
       pkg_path = Path.join(tmp, "package.json")
 
-      File.write!(pkg_path, Jason.encode!(%{
-        "name" => "test-pkg",
-        "version" => "2.0.0",
-        "description" => "A test package",
-        "license" => "MIT",
-        "dependencies" => %{"lodash" => "^4.17.0"}
-      }))
+      File.write!(
+        pkg_path,
+        Jason.encode!(%{
+          "name" => "test-pkg",
+          "version" => "2.0.0",
+          "description" => "A test package",
+          "license" => "MIT",
+          "dependencies" => %{"lodash" => "^4.17.0"}
+        })
+      )
 
       result = Federation.convert_manifest(pkg_path)
       assert {:ok, manifest} = result
@@ -93,12 +96,15 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
       File.mkdir_p!(tmp)
       pkg_path = Path.join(tmp, "package.json")
 
-      File.write!(pkg_path, Jason.encode!(%{
-        "name" => "dev-dep-pkg",
-        "version" => "1.0.0",
-        "dependencies" => %{"express" => "^4.18.0"},
-        "devDependencies" => %{"jest" => "^29.0.0"}
-      }))
+      File.write!(
+        pkg_path,
+        Jason.encode!(%{
+          "name" => "dev-dep-pkg",
+          "version" => "1.0.0",
+          "dependencies" => %{"express" => "^4.18.0"},
+          "devDependencies" => %{"jest" => "^29.0.0"}
+        })
+      )
 
       result = Federation.convert_manifest(pkg_path)
       assert {:ok, manifest} = result
@@ -113,14 +119,17 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
       File.mkdir_p!(tmp)
       pkg_path = Path.join(tmp, "package.json")
 
-      File.write!(pkg_path, Jason.encode!(%{
-        "name" => "repo-pkg",
-        "version" => "1.0.0",
-        "repository" => %{
-          "type" => "git",
-          "url" => "https://github.com/example/repo-pkg.git"
-        }
-      }))
+      File.write!(
+        pkg_path,
+        Jason.encode!(%{
+          "name" => "repo-pkg",
+          "version" => "1.0.0",
+          "repository" => %{
+            "type" => "git",
+            "url" => "https://github.com/example/repo-pkg.git"
+          }
+        })
+      )
 
       result = Federation.convert_manifest(pkg_path)
       assert {:ok, manifest} = result
@@ -177,6 +186,7 @@ defmodule Opsm.Integration.ManifestRoundtripTest do
       disabled_names = [:deb, :rpm, :winget, :choco, :scoop, :pacman, :homebrew, :nix, :guix]
 
       enabled_names = Enum.map(enabled, & &1.name)
+
       Enum.each(disabled_names, fn name ->
         refute name in enabled_names, "#{name} should be disabled but was in enabled list"
       end)

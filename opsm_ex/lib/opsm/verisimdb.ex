@@ -193,7 +193,6 @@ defmodule Opsm.VeriSimDB do
     %{
       name: "opsm:install:#{event[:name]}@#{event[:version]}",
       description: "Package install: #{event[:name]}@#{event[:version]} from @#{event[:forth]}",
-
       document: %{
         title: "Install #{event[:name]}@#{event[:version]}",
         body: """
@@ -217,21 +216,18 @@ defmodule Opsm.VeriSimDB do
           tarball_url: event[:tarball_url]
         }
       },
-
       graph: %{
         relationships:
           [%{predicate: "installed_from", target: "registry:#{event[:forth]}"}] ++
-          Enum.map(event[:dependencies] || [], fn dep ->
-            %{predicate: "depends_on", target: "package:#{dep}"}
-          end)
+            Enum.map(event[:dependencies] || [], fn dep ->
+              %{predicate: "depends_on", target: "package:#{dep}"}
+            end)
       },
-
       temporal: %{
         timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
         version: 1,
         author: "opsm-installer"
       },
-
       provenance: %{
         origin: "opsm:installer",
         chain: [
@@ -241,7 +237,6 @@ defmodule Opsm.VeriSimDB do
         ],
         actors: ["opsm-cli"]
       },
-
       semantic: %{
         types: ["opsm:event:install", "opsm:package:#{event[:forth]}"],
         properties: %{
@@ -257,7 +252,6 @@ defmodule Opsm.VeriSimDB do
     %{
       name: "opsm:uninstall:#{event[:name]}@#{event[:version]}",
       description: "Package removal: #{event[:name]}@#{event[:version]}",
-
       document: %{
         title: "Uninstall #{event[:name]}@#{event[:version]}",
         body: """
@@ -274,19 +268,16 @@ defmodule Opsm.VeriSimDB do
           forth: to_string(event[:forth])
         }
       },
-
       temporal: %{
         timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
         version: 1,
         author: "opsm-installer"
       },
-
       provenance: %{
         origin: "opsm:installer",
         chain: ["uninstall:#{event[:name]}"],
         actors: ["opsm-cli"]
       },
-
       semantic: %{
         types: ["opsm:event:uninstall"],
         properties: %{}
@@ -300,7 +291,6 @@ defmodule Opsm.VeriSimDB do
     %{
       name: "opsm:resolve:#{event[:root_package]}",
       description: "Dependency resolution: #{event[:root_package]} → #{resolved_count} packages",
-
       document: %{
         title: "Resolve #{event[:root_package]}",
         body: """
@@ -318,26 +308,22 @@ defmodule Opsm.VeriSimDB do
           resolved_packages: Enum.join(event[:resolved] || [], ", ")
         }
       },
-
       graph: %{
         relationships:
           Enum.map(event[:resolved] || [], fn pkg_name ->
             %{predicate: "resolved", target: "package:#{pkg_name}"}
           end)
       },
-
       temporal: %{
         timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
         version: 1,
         author: "opsm-resolver"
       },
-
       provenance: %{
         origin: "opsm:resolver",
         chain: ["resolve:#{event[:root_package]}"],
         actors: ["opsm-cli"]
       },
-
       semantic: %{
         types: ["opsm:event:resolution"],
         properties: %{
@@ -351,7 +337,6 @@ defmodule Opsm.VeriSimDB do
     %{
       name: "opsm:trust:#{event[:name]}@#{event[:version]}",
       description: "Trust check: #{event[:name]}@#{event[:version]} → #{event[:overall]}",
-
       document: %{
         title: "Trust #{event[:overall]}: #{event[:name]}@#{event[:version]}",
         body: """
@@ -374,13 +359,11 @@ defmodule Opsm.VeriSimDB do
           pq_signed: event[:pq_signed] || false
         }
       },
-
       temporal: %{
         timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
         version: 1,
         author: "opsm-trust-pipeline"
       },
-
       provenance: %{
         origin: "opsm:trust-pipeline",
         chain: [
@@ -392,7 +375,6 @@ defmodule Opsm.VeriSimDB do
         ],
         actors: ["opsm-cli"]
       },
-
       semantic: %{
         types: ["opsm:event:trust_check", "opsm:trust:#{event[:overall]}"],
         properties: %{
@@ -411,10 +393,12 @@ defmodule Opsm.VeriSimDB do
     app_config = Application.get_env(:opsm, :verisimdb, [])
 
     %{
-      base_url: System.get_env("OPSM_VERISIMDB_URL") ||
-                Keyword.get(app_config, :base_url, "http://127.0.0.1:6077"),
-      enabled: (System.get_env("OPSM_VERISIMDB_ENABLED") || "true") != "false" &&
-               Keyword.get(app_config, :enabled, true),
+      base_url:
+        System.get_env("OPSM_VERISIMDB_URL") ||
+          Keyword.get(app_config, :base_url, "http://127.0.0.1:6077"),
+      enabled:
+        (System.get_env("OPSM_VERISIMDB_ENABLED") || "true") != "false" &&
+          Keyword.get(app_config, :enabled, true),
       timeout: Keyword.get(app_config, :timeout, 5_000)
     }
   end
