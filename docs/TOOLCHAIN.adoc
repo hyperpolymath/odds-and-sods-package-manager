@@ -78,8 +78,9 @@ versions. Any drift is a hard failure.
 
 |deno
 |2.6.10
-|The *sole* JS runtime: drives the ReScript CLI build (`deno.json` tasks),
- tests, lint, fmt
+|JS runtime for `opsm_mobile/` (its own `deno.json` + ReScript UI). The
+ root-tree ReScript CLI it used to build was removed — the Elixir escript
+ (`Opsm.CLI`) is now the CLI.
 |estate plugin: https://github.com/hyperpolymath/asdf-tool-plugins[`asdf-deno-plugin`]
 
 |nickel
@@ -98,12 +99,14 @@ versions. Any drift is a hard failure.
 
 Tools that need *no* separate pin:
 
-* *ReScript* — locked by `deno.lock` (`npm:rescript ^12.0.0` in `deno.json`).
-  Deno resolves it; there is no separate toolchain install.
+* *ReScript* — no root-tree pin. The estate-authored ReScript CLI (`cli/`,
+  `lib/ocaml/`) was removed in favour of the Elixir escript; the only
+  remaining ReScript lives under `opsm_mobile/`, resolved by that
+  subproject's own `deno.json`.
 * *Node.js* — *dropped, 2026-07-09.* The old `.tool-versions` pinned
-  `nodejs 25.6.1`, but nothing uses Node: there is no `package.json`, the
-  ReScript build runs through Deno's `npm:` specifiers, and no script or
-  workflow invokes `node`. Deno is the single JS runtime, per estate policy.
+  `nodejs 25.6.1`, but nothing uses Node: there is no `package.json` and no
+  script or workflow invokes `node`. Deno is the single JS runtime, per
+  estate policy.
 
 == The bootstrap story (read this before calling OPSM an "asdf replacement")
 
