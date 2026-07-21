@@ -223,12 +223,10 @@ async fn get_license(
     Path(spdx_id): Path<String>,
 ) -> Result<Json<LicenseInfo>, (StatusCode, String)> {
     let upper = spdx_id.to_uppercase();
-    state
-        .licenses
-        .get(&upper)
-        .cloned()
-        .map(Json)
-        .ok_or((StatusCode::NOT_FOUND, format!("License {} not found", spdx_id)))
+    state.licenses.get(&upper).cloned().map(Json).ok_or((
+        StatusCode::NOT_FOUND,
+        format!("License {} not found", spdx_id),
+    ))
 }
 
 async fn list_licenses(State(state): State<AppState>) -> Json<Vec<LicenseInfo>> {
@@ -269,20 +267,86 @@ fn build_license_db() -> HashMap<String, LicenseInfo> {
 
     let entries = vec![
         ("MIT", "MIT License", true, true, CopyleftType::None),
-        ("Apache-2.0", "Apache License 2.0", true, true, CopyleftType::None),
-        ("BSD-2-Clause", "BSD 2-Clause", true, true, CopyleftType::None),
-        ("BSD-3-Clause", "BSD 3-Clause", true, true, CopyleftType::None),
+        (
+            "Apache-2.0",
+            "Apache License 2.0",
+            true,
+            true,
+            CopyleftType::None,
+        ),
+        (
+            "BSD-2-Clause",
+            "BSD 2-Clause",
+            true,
+            true,
+            CopyleftType::None,
+        ),
+        (
+            "BSD-3-Clause",
+            "BSD 3-Clause",
+            true,
+            true,
+            CopyleftType::None,
+        ),
         ("ISC", "ISC License", true, true, CopyleftType::None),
-        ("MPL-2.0", "Mozilla Public License 2.0", true, true, CopyleftType::Weak),
-        ("LGPL-2.1-only", "GNU LGPL v2.1", true, true, CopyleftType::Weak),
-        ("LGPL-3.0-only", "GNU LGPL v3.0", true, true, CopyleftType::Weak),
-        ("GPL-2.0-only", "GNU GPL v2.0", true, true, CopyleftType::Strong),
-        ("GPL-3.0-only", "GNU GPL v3.0", true, true, CopyleftType::Strong),
-        ("MPL-2.0-only", "GNU AGPL v3.0", true, true, CopyleftType::Network),
+        (
+            "MPL-2.0",
+            "Mozilla Public License 2.0",
+            true,
+            true,
+            CopyleftType::Weak,
+        ),
+        (
+            "LGPL-2.1-only",
+            "GNU LGPL v2.1",
+            true,
+            true,
+            CopyleftType::Weak,
+        ),
+        (
+            "LGPL-3.0-only",
+            "GNU LGPL v3.0",
+            true,
+            true,
+            CopyleftType::Weak,
+        ),
+        (
+            "GPL-2.0-only",
+            "GNU GPL v2.0",
+            true,
+            true,
+            CopyleftType::Strong,
+        ),
+        (
+            "GPL-3.0-only",
+            "GNU GPL v3.0",
+            true,
+            true,
+            CopyleftType::Strong,
+        ),
+        (
+            "MPL-2.0-only",
+            "GNU AGPL v3.0",
+            true,
+            true,
+            CopyleftType::Network,
+        ),
         ("Unlicense", "The Unlicense", true, true, CopyleftType::None),
         ("0BSD", "Zero-Clause BSD", true, true, CopyleftType::None),
-        ("CC0-1.0", "CC0 1.0 Universal", false, false, CopyleftType::None),
-        ("MPL-2.0", "Palimpsest License", false, false, CopyleftType::Weak),
+        (
+            "CC0-1.0",
+            "CC0 1.0 Universal",
+            false,
+            false,
+            CopyleftType::None,
+        ),
+        (
+            "MPL-2.0",
+            "Palimpsest License",
+            false,
+            false,
+            CopyleftType::Weak,
+        ),
     ];
 
     for (spdx, name, osi, fsf, copyleft) in entries {
@@ -349,10 +413,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
-    info!(
-        "Starting Palimpsest License v{}",
-        env!("CARGO_PKG_VERSION")
-    );
+    info!("Starting Palimpsest License v{}", env!("CARGO_PKG_VERSION"));
 
     let state = AppState {
         licenses: Arc::new(build_license_db()),
@@ -372,8 +433,7 @@ async fn main() -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let port =
-        std::env::var("PALIMPSEST_LICENSE_PORT").unwrap_or_else(|_| "8082".to_string());
+    let port = std::env::var("PALIMPSEST_LICENSE_PORT").unwrap_or_else(|_| "8082".to_string());
     let addr = format!("0.0.0.0:{}", port);
 
     info!("Listening on {}", addr);

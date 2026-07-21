@@ -137,8 +137,14 @@ struct GithubAttestationResponse {
 
 async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
     let jobs = state.jobs.read().await;
-    let active = jobs.values().filter(|j| matches!(j.status, JobStatus::Running)).count();
-    let queued = jobs.values().filter(|j| matches!(j.status, JobStatus::Queued)).count();
+    let active = jobs
+        .values()
+        .filter(|j| matches!(j.status, JobStatus::Running))
+        .count();
+    let queued = jobs
+        .values()
+        .filter(|j| matches!(j.status, JobStatus::Queued))
+        .count();
 
     Json(HealthResponse {
         status: "healthy".to_string(),
@@ -210,7 +216,10 @@ async fn get_verification_status(
         .collect();
 
     if matching.is_empty() {
-        Err((StatusCode::NOT_FOUND, "No jobs found for commit".to_string()))
+        Err((
+            StatusCode::NOT_FOUND,
+            "No jobs found for commit".to_string(),
+        ))
     } else {
         Ok(Json(matching))
     }
@@ -375,36 +384,36 @@ async fn verify_github_attestation(
         // reap the child if the timeout below drops the future
         .kill_on_drop(true);
 
-    let output = match tokio::time::timeout(tokio::time::Duration::from_secs(120), command.output()).await {
-        Err(_elapsed) => {
-            return Err((
-                StatusCode::GATEWAY_TIMEOUT,
-                "gh attestation verify timed out".to_string(),
-            ))
-        }
-        Ok(Err(e)) if e.kind() == std::io::ErrorKind::NotFound => {
-            return Err((
-                StatusCode::SERVICE_UNAVAILABLE,
-                "gh CLI not available on this service".to_string(),
-            ))
-        }
-        Ok(Err(e)) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to run gh: {}", e),
-            ))
-        }
-        Ok(Ok(output)) => output,
-    };
+    let output =
+        match tokio::time::timeout(tokio::time::Duration::from_secs(120), command.output()).await {
+            Err(_elapsed) => {
+                return Err((
+                    StatusCode::GATEWAY_TIMEOUT,
+                    "gh attestation verify timed out".to_string(),
+                ))
+            }
+            Ok(Err(e)) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Err((
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "gh CLI not available on this service".to_string(),
+                ))
+            }
+            Ok(Err(e)) => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to run gh: {}", e),
+                ))
+            }
+            Ok(Ok(output)) => output,
+        };
 
     if output.status.success() {
-        let parsed: serde_json::Value = serde_json::from_slice(&output.stdout)
-            .map_err(|e| {
-                (
-                    StatusCode::BAD_GATEWAY,
-                    format!("gh produced unparseable JSON: {}", e),
-                )
-            })?;
+        let parsed: serde_json::Value = serde_json::from_slice(&output.stdout).map_err(|e| {
+            (
+                StatusCode::BAD_GATEWAY,
+                format!("gh produced unparseable JSON: {}", e),
+            )
+        })?;
 
         let statement = extract_statement(&parsed);
         let builder_id = statement
@@ -498,7 +507,10 @@ fn oci_registry_allowed(oci_uri: &str) -> bool {
         .next()
         .unwrap_or("")
         .to_lowercase();
-    !host.is_empty() && oci_registry_allowlist().iter().any(|allowed| allowed == &host)
+    !host.is_empty()
+        && oci_registry_allowlist()
+            .iter()
+            .any(|allowed| allowed == &host)
 }
 
 /// "owner/repo" with both segments limited to GitHub-legal name characters —
@@ -633,7 +645,10 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health", get(health))
         .route("/verify", post(submit_verification))
-        .route("/verify/github-attestation", post(verify_github_attestation))
+        .route(
+            "/verify/github-attestation",
+            post(verify_github_attestation),
+        )
         .route("/verify/status/{sha}", get(get_verification_status))
         .route("/verify/{request_id}", get(get_verification_detail))
         .route("/verify/{request_id}/cancel", post(cancel_verification))
@@ -691,7 +706,8 @@ mod tests {
 
     #[test]
     fn statement_extraction_flat_shape_and_miss() {
-        let flat = serde_json::json!([{"statement": {"predicateType": "https://slsa.dev/provenance/v1"}}]);
+        let flat =
+            serde_json::json!([{"statement": {"predicateType": "https://slsa.dev/provenance/v1"}}]);
         assert!(extract_statement(&flat).is_some());
         assert!(extract_statement(&serde_json::json!([])).is_none());
         assert!(extract_statement(&serde_json::json!({"not": "an array"})).is_none());
@@ -699,7 +715,9 @@ mod tests {
 
     #[test]
     fn oci_registry_guard() {
-        assert!(oci_registry_allowed("oci://ghcr.io/hyperpolymath/proven:latest"));
+        assert!(oci_registry_allowed(
+            "oci://ghcr.io/hyperpolymath/proven:latest"
+        ));
         assert!(oci_registry_allowed("oci://GHCR.IO/x/y@sha256:abc"));
         assert!(!oci_registry_allowed("oci://evil.example.com/x/y"));
         assert!(!oci_registry_allowed("oci://ghcr.io.evil.com/x"));

@@ -159,8 +159,7 @@ async fn analyze_repository(
         findings: vec![Finding {
             category: "meta".to_string(),
             severity: FindingSeverity::Info,
-            message: "Repository analysis is in stub mode — metrics not yet computed"
-                .to_string(),
+            message: "Repository analysis is in stub mode — metrics not yet computed".to_string(),
             file_path: None,
         }],
         recommendations: vec![
@@ -185,16 +184,13 @@ async fn get_repository_analysis(
 ) -> Result<Json<AnalysisResult>, (StatusCode, String)> {
     let analyses = state.analyses.read().await;
 
-    analyses
-        .get(&encoded_url)
-        .cloned()
-        .map(Json)
-        .ok_or((StatusCode::NOT_FOUND, "No cached analysis found".to_string()))
+    analyses.get(&encoded_url).cloned().map(Json).ok_or((
+        StatusCode::NOT_FOUND,
+        "No cached analysis found".to_string(),
+    ))
 }
 
-async fn analyze_diff(
-    Json(request): Json<DiffAnalysisRequest>,
-) -> Json<DiffAnalysisResponse> {
+async fn analyze_diff(Json(request): Json<DiffAnalysisRequest>) -> Json<DiffAnalysisResponse> {
     info!(
         "Analyzing diff for {} ({}..{})",
         request.repo_url, request.base_ref, request.head_ref

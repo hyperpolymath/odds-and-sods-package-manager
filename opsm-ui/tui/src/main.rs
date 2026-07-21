@@ -70,14 +70,17 @@ struct Cli {
 ///
 /// Layout: header(3) | content(min 5) | status(1) | footer(1)
 fn render(frame: &mut Frame, state: &AppState) {
-    debug_assert!(state.is_running(), "SPARK pre: Render requires State.Running");
+    debug_assert!(
+        state.is_running(),
+        "SPARK pre: Render requires State.Running"
+    );
 
     let area = frame.area();
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Header
+            Constraint::Length(3), // Header
             Constraint::Min(5),    // Content
             Constraint::Length(1), // Status bar
             Constraint::Length(2), // Footer / keybindings
@@ -102,14 +105,20 @@ fn render_header(frame: &mut Frame, state: &AppState, area: Rect) {
     let mut spans: Vec<Span> = vec![
         Span::styled(
             " OPSM ",
-            Style::default().fg(Color::White).bg(ACCENT).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::White)
+                .bg(ACCENT)
+                .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" "),
     ];
 
     for (label, filter) in &tabs {
         let style = if *filter == state.filter() {
-            Style::default().fg(BG).bg(ACCENT).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(BG)
+                .bg(ACCENT)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(SUBTEXT)
         };
@@ -122,8 +131,11 @@ fn render_header(frame: &mut Frame, state: &AppState, area: Rect) {
         Style::default().fg(YELLOW),
     ));
 
-    let header = Paragraph::new(Line::from(spans))
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(BORDER)));
+    let header = Paragraph::new(Line::from(spans)).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(BORDER)),
+    );
     frame.render_widget(header, area);
 }
 
@@ -170,7 +182,10 @@ fn render_package_list(frame: &mut Frame, state: &AppState, area: Rect) {
             };
 
             let name_style = if selected {
-                Style::default().fg(BG).bg(ACCENT).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(BG)
+                    .bg(ACCENT)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(TEXT)
             };
@@ -189,7 +204,10 @@ fn render_package_list(frame: &mut Frame, state: &AppState, area: Rect) {
             }
 
             if let Some(ref update) = pkg.update_available {
-                spans.push(Span::styled(format!(" -> {}", update), Style::default().fg(GREEN)));
+                spans.push(Span::styled(
+                    format!(" -> {}", update),
+                    Style::default().fg(GREEN),
+                ));
             }
 
             ListItem::new(Line::from(spans))
@@ -197,13 +215,12 @@ fn render_package_list(frame: &mut Frame, state: &AppState, area: Rect) {
         .collect();
 
     let title = format!(" Packages ({}) ", packages.len());
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .title(title)
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(BORDER)),
-        );
+    let list = List::new(items).block(
+        Block::default()
+            .title(title)
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(BORDER)),
+    );
 
     frame.render_widget(list, area);
 }
@@ -212,40 +229,69 @@ fn render_package_list(frame: &mut Frame, state: &AppState, area: Rect) {
 fn render_detail_panel(frame: &mut Frame, state: &AppState, area: Rect) {
     let content = if let Some(pkg) = state.selected_package() {
         let mut lines = vec![
-            Line::from(Span::styled(&pkg.name, Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))),
-            Line::from(Span::styled(format!("v{}", pkg.version), Style::default().fg(TEXT))),
-            Line::from(Span::styled(format!("@{}", pkg.forth), Style::default().fg(YELLOW))),
+            Line::from(Span::styled(
+                &pkg.name,
+                Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+            )),
+            Line::from(Span::styled(
+                format!("v{}", pkg.version),
+                Style::default().fg(TEXT),
+            )),
+            Line::from(Span::styled(
+                format!("@{}", pkg.forth),
+                Style::default().fg(YELLOW),
+            )),
             Line::from(""),
             Line::from(Span::styled(
-                if pkg.installed { "Status: Installed" } else { "Status: Available" },
+                if pkg.installed {
+                    "Status: Installed"
+                } else {
+                    "Status: Available"
+                },
                 Style::default().fg(if pkg.installed { GREEN } else { SUBTEXT }),
             )),
         ];
 
         if let Some(ref desc) = pkg.description {
             lines.push(Line::from(""));
-            lines.push(Line::from(Span::styled(desc.as_str(), Style::default().fg(SUBTEXT))));
+            lines.push(Line::from(Span::styled(
+                desc.as_str(),
+                Style::default().fg(SUBTEXT),
+            )));
         }
 
         if let Some(ref cs) = pkg.checksum_status {
             lines.push(Line::from(""));
-            lines.push(Line::from(Span::styled(format!("Checksum: {}", cs), Style::default().fg(SUBTEXT))));
+            lines.push(Line::from(Span::styled(
+                format!("Checksum: {}", cs),
+                Style::default().fg(SUBTEXT),
+            )));
         }
 
         lines.push(Line::from(""));
         lines.push(Line::from(""));
         if pkg.installed {
-            lines.push(Line::from(Span::styled("  [r] Remove  [R] Reinstall", Style::default().fg(RED))));
+            lines.push(Line::from(Span::styled(
+                "  [r] Remove  [R] Reinstall",
+                Style::default().fg(RED),
+            )));
         } else {
-            lines.push(Line::from(Span::styled("  [i] Install", Style::default().fg(GREEN))));
+            lines.push(Line::from(Span::styled(
+                "  [i] Install",
+                Style::default().fg(GREEN),
+            )));
         }
-        lines.push(Line::from(Span::styled("  [d] Deps  [Enter] Full detail", Style::default().fg(SUBTEXT))));
+        lines.push(Line::from(Span::styled(
+            "  [d] Deps  [Enter] Full detail",
+            Style::default().fg(SUBTEXT),
+        )));
 
         lines
     } else {
-        vec![
-            Line::from(Span::styled("No package selected", Style::default().fg(SUBTEXT))),
-        ]
+        vec![Line::from(Span::styled(
+            "No package selected",
+            Style::default().fg(SUBTEXT),
+        ))]
     };
 
     let detail = Paragraph::new(content)
@@ -262,30 +308,36 @@ fn render_detail_panel(frame: &mut Frame, state: &AppState, area: Rect) {
 
 /// History view.
 fn render_history_view(frame: &mut Frame, state: &AppState, area: Rect) {
-    let items: Vec<ListItem> = state.history().iter().map(|entry| {
-        let pkg_str = entry.package.as_deref().unwrap_or("");
-        let style = match entry.operation.as_str() {
-            op if op.contains("install") => Style::default().fg(GREEN),
-            op if op.contains("remove") => Style::default().fg(RED),
-            op if op.contains("undo") => Style::default().fg(YELLOW),
-            _ => Style::default().fg(TEXT),
-        };
-        ListItem::new(Line::from(vec![
-            Span::styled(&entry.timestamp[..19.min(entry.timestamp.len())], Style::default().fg(SUBTEXT)),
-            Span::raw("  "),
-            Span::styled(&entry.operation, style),
-            Span::raw("  "),
-            Span::styled(pkg_str, Style::default().fg(ACCENT)),
-        ]))
-    }).collect();
+    let items: Vec<ListItem> = state
+        .history()
+        .iter()
+        .map(|entry| {
+            let pkg_str = entry.package.as_deref().unwrap_or("");
+            let style = match entry.operation.as_str() {
+                op if op.contains("install") => Style::default().fg(GREEN),
+                op if op.contains("remove") => Style::default().fg(RED),
+                op if op.contains("undo") => Style::default().fg(YELLOW),
+                _ => Style::default().fg(TEXT),
+            };
+            ListItem::new(Line::from(vec![
+                Span::styled(
+                    &entry.timestamp[..19.min(entry.timestamp.len())],
+                    Style::default().fg(SUBTEXT),
+                ),
+                Span::raw("  "),
+                Span::styled(&entry.operation, style),
+                Span::raw("  "),
+                Span::styled(pkg_str, Style::default().fg(ACCENT)),
+            ]))
+        })
+        .collect();
 
-    let list = List::new(items)
-        .block(
-            Block::default()
-                .title(" History [u]ndo [r]edo ")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(BORDER)),
-        );
+    let list = List::new(items).block(
+        Block::default()
+            .title(" History [u]ndo [r]edo ")
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(BORDER)),
+    );
 
     frame.render_widget(list, area);
 }
@@ -293,7 +345,10 @@ fn render_history_view(frame: &mut Frame, state: &AppState, area: Rect) {
 /// Dependency tree view (placeholder — calls opsm depends).
 fn render_deps_view(frame: &mut Frame, state: &AppState, area: Rect) {
     let content = if let Some(pkg) = state.selected_package() {
-        format!("Dependencies for {}@{} (@{})\n\nPress 'd' in packages view to load.", pkg.name, pkg.version, pkg.forth)
+        format!(
+            "Dependencies for {}@{} (@{})\n\nPress 'd' in packages view to load.",
+            pkg.name, pkg.version, pkg.forth
+        )
     } else {
         "Select a package first".to_string()
     };
@@ -313,15 +368,16 @@ fn render_deps_view(frame: &mut Frame, state: &AppState, area: Rect) {
 
 /// Trust dashboard view.
 fn render_trust_view(frame: &mut Frame, _state: &AppState, area: Rect) {
-    let widget = Paragraph::new("Trust Pipeline Dashboard\n\nPress 'v' to run verification (opsm check)")
-        .style(Style::default().fg(TEXT))
-        .block(
-            Block::default()
-                .title(" Trust ")
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(BORDER)),
-        )
-        .wrap(Wrap { trim: true });
+    let widget =
+        Paragraph::new("Trust Pipeline Dashboard\n\nPress 'v' to run verification (opsm check)")
+            .style(Style::default().fg(TEXT))
+            .block(
+                Block::default()
+                    .title(" Trust ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(BORDER)),
+            )
+            .wrap(Wrap { trim: true });
 
     frame.render_widget(widget, area);
 }
@@ -361,7 +417,10 @@ fn render_status(frame: &mut Frame, state: &AppState, area: Rect) {
     // Search query display
     if state.input_mode() == InputMode::Search {
         spans.push(Span::styled(" /", Style::default().fg(ACCENT)));
-        spans.push(Span::styled(state.search_query(), Style::default().fg(TEXT)));
+        spans.push(Span::styled(
+            state.search_query(),
+            Style::default().fg(TEXT),
+        ));
         spans.push(Span::styled("█", Style::default().fg(ACCENT))); // cursor
     } else if state.input_mode() == InputMode::Confirm {
         spans.push(Span::styled(
@@ -375,8 +434,7 @@ fn render_status(frame: &mut Frame, state: &AppState, area: Rect) {
         ));
     }
 
-    let status = Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(SURFACE));
+    let status = Paragraph::new(Line::from(spans)).style(Style::default().bg(SURFACE));
     frame.render_widget(status, area);
 }
 
@@ -398,7 +456,8 @@ fn render_footer(frame: &mut Frame, state: &AppState, area: Rect) {
     let footer = Paragraph::new(Span::styled(
         format!(" {} ", keys),
         Style::default().fg(SUBTEXT),
-    )).style(Style::default().bg(SURFACE));
+    ))
+    .style(Style::default().bg(SURFACE));
 
     frame.render_widget(footer, area);
 }
@@ -467,17 +526,34 @@ fn handle_normal_input(state: &mut AppState, key: KeyEvent) {
         KeyCode::Char('/') => state.enter_search(),
 
         // Filter tabs
-        KeyCode::Char('1') => { state.set_filter(Filter::Installed); state.load_installed(); }
-        KeyCode::Char('2') => { state.set_filter(Filter::Updates); state.load_installed(); }
-        KeyCode::Char('3') => { state.set_filter(Filter::SearchResults); }
-        KeyCode::Char('4') => { state.set_filter(Filter::All); state.load_installed(); }
+        KeyCode::Char('1') => {
+            state.set_filter(Filter::Installed);
+            state.load_installed();
+        }
+        KeyCode::Char('2') => {
+            state.set_filter(Filter::Updates);
+            state.load_installed();
+        }
+        KeyCode::Char('3') => {
+            state.set_filter(Filter::SearchResults);
+        }
+        KeyCode::Char('4') => {
+            state.set_filter(Filter::All);
+            state.load_installed();
+        }
 
         // Views
-        KeyCode::Char('h') => { state.set_view(View::History); state.load_history(); }
+        KeyCode::Char('h') => {
+            state.set_view(View::History);
+            state.load_history();
+        }
         KeyCode::Char('t') => state.set_view(View::Trust),
         KeyCode::Char('d') => state.set_view(View::DepsTree),
         KeyCode::Enter => state.set_view(View::Detail),
-        KeyCode::Esc => { state.set_view(View::Packages); state.exit_input_mode(); }
+        KeyCode::Esc => {
+            state.set_view(View::Packages);
+            state.exit_input_mode();
+        }
 
         // Actions
         KeyCode::Char('i') => {

@@ -207,7 +207,10 @@ impl AppState {
 
         // SPARK post-condition
         debug_assert!(state.running, "SPARK post: Initialize sets Running = True");
-        debug_assert!(state.check_invariant(), "SPARK post: Initialize establishes invariant");
+        debug_assert!(
+            state.check_invariant(),
+            "SPARK post: Initialize establishes invariant"
+        );
 
         state
     }
@@ -235,20 +238,48 @@ impl AppState {
     // Accessors
     // =========================================================================
 
-    pub fn is_running(&self) -> bool { self.running }
-    pub fn width(&self) -> u16 { self.width }
-    pub fn height(&self) -> u16 { self.height }
-    pub fn cursor(&self) -> usize { self.cursor }
-    pub fn scroll_offset(&self) -> usize { self.scroll_offset }
-    pub fn view(&self) -> View { self.view }
-    pub fn filter(&self) -> Filter { self.filter }
-    pub fn input_mode(&self) -> InputMode { self.input_mode }
-    pub fn packages(&self) -> &[PackageEntry] { &self.packages }
-    pub fn history(&self) -> &[HistoryEntry] { &self.history }
-    pub fn search_query(&self) -> &str { &self.search_query }
-    pub fn status_message(&self) -> &str { &self.status_message }
-    pub fn confirm_action(&self) -> Option<&str> { self.confirm_action.as_deref() }
-    pub fn confirm_package(&self) -> Option<&str> { self.confirm_package.as_deref() }
+    pub fn is_running(&self) -> bool {
+        self.running
+    }
+    pub fn width(&self) -> u16 {
+        self.width
+    }
+    pub fn height(&self) -> u16 {
+        self.height
+    }
+    pub fn cursor(&self) -> usize {
+        self.cursor
+    }
+    pub fn scroll_offset(&self) -> usize {
+        self.scroll_offset
+    }
+    pub fn view(&self) -> View {
+        self.view
+    }
+    pub fn filter(&self) -> Filter {
+        self.filter
+    }
+    pub fn input_mode(&self) -> InputMode {
+        self.input_mode
+    }
+    pub fn packages(&self) -> &[PackageEntry] {
+        &self.packages
+    }
+    pub fn history(&self) -> &[HistoryEntry] {
+        &self.history
+    }
+    pub fn search_query(&self) -> &str {
+        &self.search_query
+    }
+    pub fn status_message(&self) -> &str {
+        &self.status_message
+    }
+    pub fn confirm_action(&self) -> Option<&str> {
+        self.confirm_action.as_deref()
+    }
+    pub fn confirm_package(&self) -> Option<&str> {
+        self.confirm_package.as_deref()
+    }
 
     /// Visible height for the package list (content area minus chrome).
     pub fn visible_height(&self) -> usize {
@@ -270,7 +301,10 @@ impl AppState {
         self.width = w.clamp(1, MAX_WIDTH);
         self.height = h.clamp(1, MAX_HEIGHT);
         self.clamp_cursor();
-        debug_assert!(self.check_invariant(), "SPARK post: resize maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: resize maintains invariant"
+        );
     }
 
     /// Move cursor up.
@@ -281,12 +315,19 @@ impl AppState {
                 self.scroll_offset = self.cursor;
             }
         }
-        debug_assert!(self.check_invariant(), "SPARK post: cursor_up maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: cursor_up maintains invariant"
+        );
     }
 
     /// Move cursor down.
     pub fn cursor_down(&mut self) {
-        let max = if self.packages.is_empty() { 0 } else { self.packages.len() - 1 };
+        let max = if self.packages.is_empty() {
+            0
+        } else {
+            self.packages.len() - 1
+        };
         if self.cursor < max {
             self.cursor += 1;
             let vis = self.visible_height();
@@ -294,7 +335,10 @@ impl AppState {
                 self.scroll_offset = self.cursor.saturating_sub(vis - 1);
             }
         }
-        debug_assert!(self.check_invariant(), "SPARK post: cursor_down maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: cursor_down maintains invariant"
+        );
     }
 
     /// Page up (move by visible_height).
@@ -302,23 +346,37 @@ impl AppState {
         let vis = self.visible_height();
         self.cursor = self.cursor.saturating_sub(vis);
         self.scroll_offset = self.scroll_offset.saturating_sub(vis);
-        debug_assert!(self.check_invariant(), "SPARK post: page_up maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: page_up maintains invariant"
+        );
     }
 
     /// Page down (move by visible_height).
     pub fn page_down(&mut self) {
         let vis = self.visible_height();
-        let max = if self.packages.is_empty() { 0 } else { self.packages.len() - 1 };
+        let max = if self.packages.is_empty() {
+            0
+        } else {
+            self.packages.len() - 1
+        };
         self.cursor = (self.cursor + vis).min(max);
-        self.scroll_offset = (self.scroll_offset + vis).min(self.packages.len().saturating_sub(vis));
-        debug_assert!(self.check_invariant(), "SPARK post: page_down maintains invariant");
+        self.scroll_offset =
+            (self.scroll_offset + vis).min(self.packages.len().saturating_sub(vis));
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: page_down maintains invariant"
+        );
     }
 
     /// Jump to top.
     pub fn jump_top(&mut self) {
         self.cursor = 0;
         self.scroll_offset = 0;
-        debug_assert!(self.check_invariant(), "SPARK post: jump_top maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: jump_top maintains invariant"
+        );
     }
 
     /// Jump to bottom.
@@ -328,7 +386,10 @@ impl AppState {
             let vis = self.visible_height();
             self.scroll_offset = self.packages.len().saturating_sub(vis);
         }
-        debug_assert!(self.check_invariant(), "SPARK post: jump_bottom maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: jump_bottom maintains invariant"
+        );
     }
 
     /// Switch view.
@@ -343,7 +404,10 @@ impl AppState {
         self.cursor = 0;
         self.scroll_offset = 0;
         self.status_message = format!("Filter: {}", filter);
-        debug_assert!(self.check_invariant(), "SPARK post: set_filter maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: set_filter maintains invariant"
+        );
     }
 
     /// Enter search mode.
@@ -366,7 +430,10 @@ impl AppState {
         if self.search_query.len() < MAX_SEARCH_LEN {
             self.search_query.push(c);
         }
-        debug_assert!(self.check_invariant(), "SPARK post: search_push maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: search_push maintains invariant"
+        );
     }
 
     /// Delete last character from search query.
@@ -414,7 +481,10 @@ impl AppState {
                 self.status_message = format!("Error: {}", e);
             }
         }
-        debug_assert!(self.check_invariant(), "SPARK post: load_installed maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: load_installed maintains invariant"
+        );
     }
 
     /// Load history from `opsm history list --json`.
@@ -433,7 +503,9 @@ impl AppState {
 
     /// Run search via `opsm search <query> --json`.
     pub fn run_search(&mut self) {
-        if self.search_query.is_empty() { return; }
+        if self.search_query.is_empty() {
+            return;
+        }
         self.status_message = format!("Searching: {}...", self.search_query);
         match run_opsm(&["search", &self.search_query, "--json"]) {
             Ok(output) => {
@@ -445,13 +517,20 @@ impl AppState {
                 self.cursor = 0;
                 self.scroll_offset = 0;
                 self.filter = Filter::SearchResults;
-                self.status_message = format!("{} results for '{}'", self.packages.len(), self.search_query);
+                self.status_message = format!(
+                    "{} results for '{}'",
+                    self.packages.len(),
+                    self.search_query
+                );
             }
             Err(e) => {
                 self.status_message = format!("Search error: {}", e);
             }
         }
-        debug_assert!(self.check_invariant(), "SPARK post: run_search maintains invariant");
+        debug_assert!(
+            self.check_invariant(),
+            "SPARK post: run_search maintains invariant"
+        );
     }
 
     /// Install selected package via `opsm install <name>`.
@@ -461,7 +540,11 @@ impl AppState {
             let args = if pkg.forth.is_empty() {
                 vec!["install".to_string(), pkg.name.clone()]
             } else {
-                vec!["install".to_string(), format!("@{}", pkg.forth), pkg.name.clone()]
+                vec![
+                    "install".to_string(),
+                    format!("@{}", pkg.forth),
+                    pkg.name.clone(),
+                ]
             };
             let ref_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
             match run_opsm(&ref_args) {
@@ -529,7 +612,11 @@ impl AppState {
         self.status_message = String::from("Verifying...");
         match run_opsm(&["check"]) {
             Ok(output) => {
-                self.status_message = output.lines().last().unwrap_or("Check complete").to_string();
+                self.status_message = output
+                    .lines()
+                    .last()
+                    .unwrap_or("Check complete")
+                    .to_string();
             }
             Err(e) => {
                 self.status_message = format!("Check failed: {}", e);
@@ -584,7 +671,12 @@ fn parse_list_output(output: &str) -> Vec<PackageEntry> {
                 Some(PackageEntry {
                     name: name_ver[0].to_string(),
                     version: name_ver.get(1).unwrap_or(&"?").to_string(),
-                    forth: parts.get(1).unwrap_or(&"").trim_start_matches('(').trim_end_matches(')').to_string(),
+                    forth: parts
+                        .get(1)
+                        .unwrap_or(&"")
+                        .trim_start_matches('(')
+                        .trim_end_matches(')')
+                        .to_string(),
                     installed: true,
                     description: parts.get(2).map(|s| s.to_string()),
                     update_available: None,
@@ -670,9 +762,33 @@ mod tests {
     fn test_cursor_with_packages() {
         let mut state = AppState::new(80, 24);
         state.packages = vec![
-            PackageEntry { name: "a".into(), version: "1".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
-            PackageEntry { name: "b".into(), version: "2".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
-            PackageEntry { name: "c".into(), version: "3".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
+            PackageEntry {
+                name: "a".into(),
+                version: "1".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            },
+            PackageEntry {
+                name: "b".into(),
+                version: "2".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            },
+            PackageEntry {
+                name: "c".into(),
+                version: "3".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            },
         ];
         state.cursor_down();
         assert_eq!(state.cursor(), 1);
@@ -688,9 +804,15 @@ mod tests {
     #[test]
     fn test_resize_preserves_invariant() {
         let mut state = AppState::new(80, 24);
-        state.packages = vec![
-            PackageEntry { name: "a".into(), version: "1".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
-        ];
+        state.packages = vec![PackageEntry {
+            name: "a".into(),
+            version: "1".into(),
+            forth: "npm".into(),
+            installed: true,
+            description: None,
+            update_available: None,
+            checksum_status: None,
+        }];
         state.cursor = 0;
         state.resize(40, 10);
         assert!(state.check_invariant());
@@ -723,8 +845,24 @@ mod tests {
     fn test_filter_resets_cursor() {
         let mut state = AppState::new(80, 24);
         state.packages = vec![
-            PackageEntry { name: "a".into(), version: "1".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
-            PackageEntry { name: "b".into(), version: "2".into(), forth: "npm".into(), installed: true, description: None, update_available: None, checksum_status: None },
+            PackageEntry {
+                name: "a".into(),
+                version: "1".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            },
+            PackageEntry {
+                name: "b".into(),
+                version: "2".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            },
         ];
         state.cursor = 1;
         state.set_filter(Filter::Installed);
@@ -735,15 +873,17 @@ mod tests {
     #[test]
     fn test_page_navigation() {
         let mut state = AppState::new(80, 30); // visible_height = 22
-        state.packages = (0..50).map(|i| PackageEntry {
-            name: format!("pkg-{}", i),
-            version: "1.0.0".into(),
-            forth: "npm".into(),
-            installed: true,
-            description: None,
-            update_available: None,
-            checksum_status: None,
-        }).collect();
+        state.packages = (0..50)
+            .map(|i| PackageEntry {
+                name: format!("pkg-{}", i),
+                version: "1.0.0".into(),
+                forth: "npm".into(),
+                installed: true,
+                description: None,
+                update_available: None,
+                checksum_status: None,
+            })
+            .collect();
         state.page_down();
         assert!(state.cursor() > 0);
         assert!(state.check_invariant());

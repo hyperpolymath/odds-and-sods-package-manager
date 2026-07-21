@@ -15,9 +15,7 @@ use pqcrypto_sphincsplus::sphincsshake256fsimple as sphincs;
 use pqcrypto_traits::kem::{
     Ciphertext as KemCiphertext, PublicKey as KemPk, SecretKey as KemSk, SharedSecret,
 };
-use pqcrypto_traits::sign::{
-    PublicKey as SignPk, SecretKey as SignSk, SignedMessage,
-};
+use pqcrypto_traits::sign::{PublicKey as SignPk, SecretKey as SignSk, SignedMessage};
 use rustler::{Binary, Encoder, Env, NewBinary, Term};
 
 mod atoms {
