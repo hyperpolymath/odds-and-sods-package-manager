@@ -245,7 +245,12 @@ async fn verify_with_opa(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn OPA: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to spawn OPA: {}", e),
+            )
+        })?;
 
     // Write input to stdin
     if let Some(mut stdin) = child.stdin.take() {
@@ -253,14 +258,21 @@ async fn verify_with_opa(
         stdin
             .write_all(input_json.to_string().as_bytes())
             .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to write input: {}", e)))?;
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to write input: {}", e),
+                )
+            })?;
         drop(stdin); // Close stdin
     }
 
-    let result = child
-        .wait_with_output()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("OPA execution failed: {}", e)))?;
+    let result = child.wait_with_output().await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("OPA execution failed: {}", e),
+        )
+    })?;
 
     if !result.status.success() {
         let stderr = String::from_utf8_lossy(&result.stderr);
@@ -278,8 +290,12 @@ async fn verify_with_opa(
 }
 
 fn parse_opa_output(output: &[u8]) -> Result<Vec<PolicyViolation>, (StatusCode, String)> {
-    let json: serde_json::Value = serde_json::from_slice(output)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to parse OPA output: {}", e)))?;
+    let json: serde_json::Value = serde_json::from_slice(output).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to parse OPA output: {}", e),
+        )
+    })?;
 
     let mut violations = Vec::new();
 
@@ -394,10 +410,7 @@ fn verify_builtin(
             violations.push(PolicyViolation {
                 rule: "no_writable_host_paths".to_string(),
                 severity: Severity::High,
-                message: format!(
-                    "Host path volume must be read-only: {}",
-                    volume.source
-                ),
+                message: format!("Host path volume must be read-only: {}", volume.source),
                 field: Some("volumes".to_string()),
             });
         }

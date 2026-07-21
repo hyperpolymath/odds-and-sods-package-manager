@@ -137,30 +137,26 @@ async fn scan_image(
 
     for scanner in scanners {
         match scanner {
-            Scanner::Trivy if state.trivy_enabled => {
-                match scan_with_trivy(&request.image).await {
-                    Ok(vulns) => {
-                        info!("Trivy found {} vulnerabilities", vulns.len());
-                        all_vulnerabilities.extend(vulns);
-                        scanners_used.push("trivy".to_string());
-                    }
-                    Err(e) => {
-                        warn!("Trivy scan failed: {}", e);
-                    }
+            Scanner::Trivy if state.trivy_enabled => match scan_with_trivy(&request.image).await {
+                Ok(vulns) => {
+                    info!("Trivy found {} vulnerabilities", vulns.len());
+                    all_vulnerabilities.extend(vulns);
+                    scanners_used.push("trivy".to_string());
                 }
-            }
-            Scanner::Grype if state.grype_enabled => {
-                match scan_with_grype(&request.image).await {
-                    Ok(vulns) => {
-                        info!("Grype found {} vulnerabilities", vulns.len());
-                        all_vulnerabilities.extend(vulns);
-                        scanners_used.push("grype".to_string());
-                    }
-                    Err(e) => {
-                        warn!("Grype scan failed: {}", e);
-                    }
+                Err(e) => {
+                    warn!("Trivy scan failed: {}", e);
                 }
-            }
+            },
+            Scanner::Grype if state.grype_enabled => match scan_with_grype(&request.image).await {
+                Ok(vulns) => {
+                    info!("Grype found {} vulnerabilities", vulns.len());
+                    all_vulnerabilities.extend(vulns);
+                    scanners_used.push("grype".to_string());
+                }
+                Err(e) => {
+                    warn!("Grype scan failed: {}", e);
+                }
+            },
             _ => {
                 warn!("Scanner {:?} not available or not enabled", scanner);
             }
@@ -244,32 +240,38 @@ fn parse_trivy_output(json: &str) -> anyhow::Result<Vec<Vulnerability>> {
         for result in results {
             if let Some(vulns) = result.get("Vulnerabilities").and_then(|v| v.as_array()) {
                 for vuln in vulns {
-                    let id = vuln.get("VulnerabilityID")
+                    let id = vuln
+                        .get("VulnerabilityID")
                         .and_then(|v| v.as_str())
                         .unwrap_or("UNKNOWN")
                         .to_string();
 
-                    let package = vuln.get("PkgName")
+                    let package = vuln
+                        .get("PkgName")
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown")
                         .to_string();
 
-                    let version = vuln.get("InstalledVersion")
+                    let version = vuln
+                        .get("InstalledVersion")
                         .and_then(|v| v.as_str())
                         .unwrap_or("unknown")
                         .to_string();
 
-                    let severity_str = vuln.get("Severity")
+                    let severity_str = vuln
+                        .get("Severity")
                         .and_then(|v| v.as_str())
                         .unwrap_or("UNKNOWN");
 
                     let severity = parse_severity(severity_str);
 
-                    let fixed_version = vuln.get("FixedVersion")
+                    let fixed_version = vuln
+                        .get("FixedVersion")
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string());
 
-                    let description = vuln.get("Title")
+                    let description = vuln
+                        .get("Title")
                         .or_else(|| vuln.get("Description"))
                         .and_then(|v| v.as_str())
                         .unwrap_or("")
@@ -302,35 +304,41 @@ fn parse_grype_output(json: &str) -> anyhow::Result<Vec<Vulnerability>> {
             let artifact = vuln_match.get("artifact");
 
             if let (Some(vuln), Some(art)) = (vuln_data, artifact) {
-                let id = vuln.get("id")
+                let id = vuln
+                    .get("id")
                     .and_then(|v| v.as_str())
                     .unwrap_or("UNKNOWN")
                     .to_string();
 
-                let package = art.get("name")
+                let package = art
+                    .get("name")
                     .and_then(|v| v.as_str())
                     .unwrap_or("unknown")
                     .to_string();
 
-                let version = art.get("version")
+                let version = art
+                    .get("version")
                     .and_then(|v| v.as_str())
                     .unwrap_or("unknown")
                     .to_string();
 
-                let severity_str = vuln.get("severity")
+                let severity_str = vuln
+                    .get("severity")
                     .and_then(|v| v.as_str())
                     .unwrap_or("Unknown");
 
                 let severity = parse_severity(severity_str);
 
-                let fixed_version = vuln.get("fix")
+                let fixed_version = vuln
+                    .get("fix")
                     .and_then(|f| f.get("versions"))
                     .and_then(|v| v.as_array())
                     .and_then(|arr| arr.first())
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string());
 
-                let description = vuln.get("description")
+                let description = vuln
+                    .get("description")
                     .and_then(|v| v.as_str())
                     .unwrap_or("")
                     .to_string();

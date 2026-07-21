@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::Stdio;
 use tokio::fs;
+use tokio::io::AsyncReadExt;
 use tokio::process::Command;
 use tower_http::trace::TraceLayer;
 use tracing::{error, info, warn};
@@ -156,7 +157,12 @@ async fn sign_image(
         .stderr(Stdio::piped())
         .output()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to execute cosign: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to execute cosign: {}", e),
+            )
+        })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -169,17 +175,28 @@ async fn sign_image(
 
     // Read public key (limit to 1MB)
     let pub_key_path = key_path.with_extension("pub");
-    let mut file = fs::File::open(&pub_key_path)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to open public key: {}", e)))?;
+    let file = fs::File::open(&pub_key_path).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to open public key: {}", e),
+        )
+    })?;
     let mut public_key = String::new();
-    use tokio::io::AsyncReadExt;
-    file.take(1024 * 1024).read_to_string(&mut public_key)
+    file.take(1024 * 1024)
+        .read_to_string(&mut public_key)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to read public key: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to read public key: {}", e),
+            )
+        })?;
 
     // Generate signature digest (simplified - in production would extract from cosign output)
-    let signature_digest = format!("sha256:{}", hex::encode(&output.stdout[..32.min(output.stdout.len())]));
+    let signature_digest = format!(
+        "sha256:{}",
+        hex::encode(&output.stdout[..32.min(output.stdout.len())])
+    );
 
     let response = SignResponse {
         image: request.image,
@@ -228,7 +245,12 @@ async fn verify_image(
         .stderr(Stdio::piped())
         .output()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to execute cosign: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to execute cosign: {}", e),
+            )
+        })?;
 
     let verified = output.status.success();
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -277,9 +299,12 @@ async fn generate_keypair(
     info!("Generating keypair: {}", key_name);
 
     // Ensure key directory exists
-    fs::create_dir_all(&state.key_dir)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to create key directory: {}", e)))?;
+    fs::create_dir_all(&state.key_dir).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to create key directory: {}", e),
+        )
+    })?;
 
     // Generate keypair with cosign
     let output = Command::new("cosign")
@@ -290,7 +315,12 @@ async fn generate_keypair(
         .stderr(Stdio::piped())
         .output()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to execute cosign: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to execute cosign: {}", e),
+            )
+        })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -305,20 +335,39 @@ async fn generate_keypair(
     if key_name != "cosign" {
         fs::rename(state.key_dir.join("cosign.key"), &private_key_path)
             .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to rename private key: {}", e)))?;
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to rename private key: {}", e),
+                )
+            })?;
         fs::rename(state.key_dir.join("cosign.pub"), &public_key_path)
             .await
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to rename public key: {}", e)))?;
+            .map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to rename public key: {}", e),
+                )
+            })?;
     }
 
     // Read public key (limit to 1MB)
-    let mut file = fs::File::open(&public_key_path)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to open public key: {}", e)))?;
+    let file = fs::File::open(&public_key_path).await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to open public key: {}", e),
+        )
+    })?;
     let mut public_key = String::new();
-    file.take(1024 * 1024).read_to_string(&mut public_key)
+    file.take(1024 * 1024)
+        .read_to_string(&mut public_key)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to read public key: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to read public key: {}", e),
+            )
+        })?;
 
     let response = KeyGenResponse {
         private_key_path: private_key_path.display().to_string(),
