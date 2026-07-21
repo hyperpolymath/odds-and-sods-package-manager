@@ -23,15 +23,7 @@ default:
 # BUILD
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Build ReScript CLI
-build-cli:
-    deno task build
-
-# Build ReScript CLI in watch mode
-build-cli-watch:
-    deno task build:watch
-
-# Build Elixir escript (standalone binary)
+# Build Elixir escript (standalone binary) — the OPSM CLI
 build-escript:
     cd opsm_ex && mix deps.get && mix escript.build
 
@@ -57,11 +49,10 @@ build-services:
     done
 
 # Build everything
-build: build-cli build-escript
+build: build-escript
 
 # Clean all build artifacts
 clean:
-    deno task clean
     cd opsm_ex && mix clean
     rm -rf opsm_ex/opsm
 
@@ -77,12 +68,8 @@ test *args:
 test-verbose:
     cd opsm_ex && mix test --trace
 
-# Run Deno tests
-test-cli:
-    deno task test
-
 # Run all tests
-test-all: test test-cli
+test-all: test
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LINT & FORMAT
@@ -92,20 +79,16 @@ test-all: test test-cli
 fmt-ex:
     cd opsm_ex && mix format
 
-# Format with Deno
-fmt-deno:
-    deno fmt
-
-# Lint ReScript output with Deno
+# Lint Elixir code (strict compile — warnings are errors)
 lint:
-    deno lint cli/*.res.js cli/clients/*.res.js
+    cd opsm_ex && mix deps.get && mix compile --warnings-as-errors
 
 # Check Elixir format
 fmt-check:
     cd opsm_ex && mix format --check-formatted
 
 # Format all code
-fmt: fmt-ex fmt-deno
+fmt: fmt-ex
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TOOLCHAIN (single source of truth: opsm.toml [runtime] — docs/TOOLCHAIN.adoc)
@@ -123,13 +106,9 @@ toolchain-check:
 # RUN
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Run OPSM via escript (primary CLI)
+# Run OPSM via escript (the CLI)
 opsm *args:
     cd opsm_ex && ./opsm {{args}}
-
-# Run OPSM via Deno (ReScript CLI — trust pipeline)
-opsm-cli *args:
-    deno task opsm -- {{args}}
 
 # Run OPSM Elixir in dev mode with IEx
 repl:
@@ -169,7 +148,6 @@ deps-ex:
 
 # Install all dependencies
 deps: deps-ex
-    @echo "Deno deps auto-resolved via import maps"
 
 # Audit Elixir dependencies
 deps-audit:
@@ -220,13 +198,11 @@ ci: deps build test lint fmt-check
 loc:
     @echo "=== OPSM Lines of Code ==="
     @echo -n "Elixir: " && find opsm_ex/lib -name "*.ex" | xargs wc -l 2>/dev/null | tail -1
-    @echo -n "ReScript: " && find cli -name "*.res" | xargs wc -l 2>/dev/null | tail -1
     @echo -n "Rust (services): " && find services -name "*.rs" | xargs wc -l 2>/dev/null | tail -1
-    @echo -n "Rust (mobile): " && find opsm_mobile -name "*.rs" | xargs wc -l 2>/dev/null | tail -1
 
 # Show TODO comments
 todos:
-    @grep -rn "TODO\|FIXME" --include="*.ex" --include="*.res" --include="*.rs" . 2>/dev/null | grep -v node_modules | grep -v _build | grep -v target || echo "No TODOs"
+    @grep -rn "TODO\|FIXME" --include="*.ex" --include="*.rs" . 2>/dev/null | grep -v node_modules | grep -v _build | grep -v target || echo "No TODOs"
 
 # Show git status
 status:
@@ -247,7 +223,7 @@ doctor:
     @command -v just >/dev/null 2>&1 && echo "  [OK] just" || echo "  [FAIL] just not found"
     @command -v git >/dev/null 2>&1 && echo "  [OK] git" || echo "  [FAIL] git not found"
     @echo "Checking for hardcoded paths..."
-    @grep -rn '$HOME\|$ECLIPSE_DIR' --include='*.rs' --include='*.ex' --include='*.res' --include='*.gleam' --include='*.sh' . 2>/dev/null | head -5 || echo "  [OK] No hardcoded paths"
+    @grep -rn '$HOME\|$ECLIPSE_DIR' --include='*.rs' --include='*.ex' --include='*.gleam' --include='*.sh' . 2>/dev/null | head -5 || echo "  [OK] No hardcoded paths"
     @echo "Diagnostics complete."
 
 # Auto-repair common issues

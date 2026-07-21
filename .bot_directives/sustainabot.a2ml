@@ -20,8 +20,6 @@ watch = [
   "Cargo.lock",
   "opsm_ex/mix.exs",
   "opsm_ex/mix.lock",
-  "deno.json",
-  "deno.lock",
   ".github/workflows/",
   "guix.scm",
   "flake.nix",

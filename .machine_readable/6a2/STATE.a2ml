@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 # STATE.a2ml — Project state checkpoint
-# Updated 2026-07-09: toolchain single source of truth (opsm.toml [runtime])
+# Updated 2026-07-21: ReScript CLI removed (Elixir escript is the sole CLI)
 
 [metadata]
 project = "odds-and-sods-package-manager"
 version = "2.0.0"
-last-updated = "2026-07-09"
+last-updated = "2026-07-21"
 status = "first-class system active"
 
 [project-context]
@@ -181,7 +181,23 @@ evidence-file = "READINESS.md"
   - [runtime] parser hardened: comment lines + inline comments (manager.ex)
   - Full story: docs/TOOLCHAIN.adoc (incl. bootstrap layering + Idris2/pack route)
 
+[completed-2026-07-21]
+- ReScript CLI removed: cli/ + lib/ocaml/ (byte-identical dead duplicate)
+  deleted, along with rescript.json / deno.json / deno.lock (their sole
+  purpose was building/running that CLI). The Elixir escript (Opsm.CLI,
+  mix escript.build) is the sole CLI; it already covered the same
+  trust-pipeline commands and clients, so no functionality was lost.
+- Justfile + contractiles/Justfile rewired off deno/rescript onto the
+  escript; docs/TOOLCHAIN.adoc updated (Deno's remaining consumer is
+  opsm_mobile, not the root CLI).
+- Scope was owner-approved as CLI-only; opsm_mobile ReScript deferred
+  (see next-actions). Governance ReScript check therefore stays red on
+  opsm_mobile/src/*.res until that follow-up lands.
+
 [next-actions]
+- NEXT VERSION (owner-marked): remove/migrate the remaining ReScript in
+  opsm_mobile/ (App/OpsmCommands/Route/RuntimeBridge/TauriFFI .res) — the
+  wider ReScript-elimination work. Clears the last governance red.
 - Grade A: requires external user confirmation outside hyperpolymath
 - guix.scm is a stub (source #f) — grow into real manifest (erlang, elixir,
   zig, just, nickel, idris2, chez-scheme, gmp) for reproducible bootstrap

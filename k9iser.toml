@@ -9,11 +9,6 @@ name = "odds-and-sods-package-manager"
 safety_tier = "yard"
 
 [[source]]
-path = "deno.json"
-type = "deno"
-output = "generated/k9iser/deno-manifest.k9"
-
-[[source]]
 path = "Justfile"
 type = "justfile"
 output = "generated/k9iser/justfile-recipes.k9"
@@ -22,10 +17,6 @@ output = "generated/k9iser/justfile-recipes.k9"
 path = ".github/workflows/hypatia-scan.yml"
 type = "workflow"
 output = "generated/k9iser/ci-security.k9"
-
-[[constraint]]
-rule = "deno.imports has no npm: specifiers"
-severity = "error"
 
 [[constraint]]
 rule = "workflows includes hypatia-scan"
