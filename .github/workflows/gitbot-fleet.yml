@@ -5,6 +5,7 @@ on:
   push:
   pull_request:
 permissions:
+  actions: read
   contents: read
 jobs:
   fleet-scan:

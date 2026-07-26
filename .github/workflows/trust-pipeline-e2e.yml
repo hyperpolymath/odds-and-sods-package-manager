@@ -23,6 +23,7 @@ on:
       - 'selur-compose.yml'
       - '.github/workflows/trust-pipeline-e2e.yml'
 permissions: read-all
+  actions: read
 concurrency:
   group: trust-pipeline-e2e-${{ github.ref }}
   cancel-in-progress: true
