@@ -15,6 +15,7 @@ on:
       - ".github/workflows/nif-build.yml"
   workflow_dispatch:
 permissions:
+  actions: read
   contents: read
 jobs:
   nif-build:
