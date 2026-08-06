@@ -26,7 +26,6 @@ on:
       - 'opsm_ex/**'
   workflow_dispatch:
 permissions: read-all
-  actions: read
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
