@@ -55,7 +55,7 @@ jobs:
           components: clippy
       - name: Cache Rust dependencies
         if: steps.detect.outputs.relevant == 'true'
-        uses: Swatinem/rust-cache@v2.9.1
+        uses: Swatinem/rust-cache@v2.9.2
       - name: Unsafe audit
         if: steps.detect.outputs.relevant == 'true'
         run: |
