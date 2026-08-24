@@ -1,0 +1,23 @@
+== Opsm
+
+*TODO: Add description*
+
+=== Installation
+
+If https://hex.pm/docs/publish[available in Hex], the package can be
+installed by adding `+opsm+` to your list of dependencies in
+`+mix.exs+`:
+
+[source,elixir]
+----
+def deps do
+  [
+    {:opsm, "~> 0.1.0"}
+  ]
+end
+----
+
+Documentation can be generated with
+https://github.com/elixir-lang/ex_doc[ExDoc] and published on
+https://hexdocs.pm[HexDocs]. Once published, the docs can be found at
+https://hexdocs.pm/opsm.

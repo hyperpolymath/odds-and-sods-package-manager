@@ -1,0 +1,72 @@
+== SPDX-License-Identifier: CC-BY-SA-4.0
+
+== Tauri 2.x Version Tracking
+
+Tracks Tauri 2.x versions used in OPSM Mobile
+(`+opsm_mobile/src-tauri/+`).
+
+Author: Jonathan D.A. Jewell Last updated: 2026-03-10
+
+=== Current Versions
+
+[cols=",,,",options="header",]
+|===
+|Component |Cargo.toml Pin |Lock Resolved |Notes
+|`+tauri+` |`+2.9.5+` |*2.10.3* |Runtime
+|`+tauri-build+` |`+2.5.3+` |*2.5.6* |Build tooling
+|`+tauri-plugin-log+` |`+2+` |latest 2.x |Logging plugin
+|`+tauri-cli+` (installed) |N/A |*2.10.0* |`+cargo tauri+` command
+|===
+
+=== Version Alignment
+
+The `+tauri-cli+` version (2.10.0) and `+tauri+` runtime (2.10.3) are
+from the same 2.10.x series. These should be kept in sync at the minor
+version level.
+
+The `+tauri-build+` version (2.5.6) has its own versioning cadence
+separate from the runtime.
+
+=== Tauri 2.x Breaking Changes to Watch
+
+==== Tauri 2.0 (already adopted)
+
+* Plugin system redesign (v1 plugins incompatible)
+* New permissions model replacing allowlist
+* Mobile (iOS/Android) support added
+* IPC redesign with new invoke handler
+
+==== Tauri 2.1+
+
+* Progressive enhancement of mobile APIs
+* New `+tauri-plugin-*+` ecosystem (check compatibility)
+* Potential Wry/Tao updates affecting WebView behavior
+
+==== Known Concerns
+
+* `+reqwest+` in Cargo.toml is pinned to `+0.11+` while `+0.12+` is
+current; the main services already use `+0.12+`. Consider aligning.
+* `+rust-version = "1.77.2"+` is conservative; Tauri 2.10 may require
+newer MSRV
+* 19 warnings from `+cargo audit+` on the Tauri dependency tree (mostly
+transitive GTK/WebKit dependencies on Linux)
+
+=== Cargo Audit Summary (2026-03-10)
+
+19 warnings found, all in transitive dependencies for Linux desktop
+(GTK, WebKit, GLib bindings). These are upstream issues in the
+`+gtk-rs+` ecosystem and do not affect mobile (iOS/Android) builds.
+
+=== Upgrade Checklist
+
+When upgrading Tauri versions:
+
+[arabic]
+. ☐ Update `+tauri+` version in `+Cargo.toml+`
+. ☐ Update `+tauri-build+` version in `+Cargo.toml+`
+. ☐ Run `+cargo update+` in `+src-tauri/+`
+. ☐ Update `+tauri-cli+`: `+cargo install tauri-cli+`
+. ☐ Run `+cargo check+` to verify compilation
+. ☐ Run `+cargo audit+` to check for new advisories
+. ☐ Test on desktop (Linux) and mobile (iOS/Android) targets
+. ☐ Check plugin compatibility (`+tauri-plugin-log+`, etc.)

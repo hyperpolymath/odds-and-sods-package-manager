@@ -1,0 +1,43 @@
+== Plugin, policy, and approval model
+
+=== Unified extension system
+
+One extension system with typed roles: - adapter - parser - backend - UI
+- policy - trust provider - inventory provider
+
+=== Plugin approval requirements
+
+==== Required
+
+* Haskell validation
+* licence checks
+* policy declaration
+* capability declaration
+
+==== Strongly preferred / moving toward required
+
+* reproducibility checks
+* signed source
+
+==== Required as system-generated
+
+* reversibility assessment
+
+==== Encouraged
+
+* maintainer-provided reversibility declaration
+
+=== Policy model
+
+Multiple policy input formats compile into one internal model.
+
+Policy inputs may include: - a2ml / k9 - Nickel - UI-generated policy -
+CLI flags - imported config formats where relevant
+
+=== Transitional compliance principle
+
+Do not exclude everything that lacks ideal metadata.
+
+Instead: - be honest about missingness - warn and explain - gate only
+where risk is too high - assist ecosystems upward with generated
+declarations and templates
