@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # This workflow is managed by gh actions-lock.
+# This workflow is managed by gh actions-lock.
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # Trust pipeline — live-service E2E tests.
@@ -23,7 +24,7 @@ on:
       - 'opsm_ex/test/integration/trust_pipeline_live_e2e_test.exs'
       - 'selur-compose.yml'
       - '.github/workflows/trust-pipeline-e2e.yml'
-permissions: read-all
+permissions:
   actions: read
 concurrency:
   group: trust-pipeline-e2e-${{ github.ref }}

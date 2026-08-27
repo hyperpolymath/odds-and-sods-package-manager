@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # This workflow is managed by gh actions-lock.
+# This workflow is managed by gh actions-lock.
 # // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 name: ECHIDNA Validation
 on:
@@ -48,7 +49,7 @@ jobs:
           fi
       - name: Install Rust toolchain
         if: steps.detect.outputs.relevant == 'true'
-        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        uses: dtolnay/rust-toolchain@v1
         with:
           # Pinned to the canonical rust version in opsm.toml [runtime]
           toolchain: '1.97.0'

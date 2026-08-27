@@ -3,6 +3,11 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.2'
 workflows:
+    '.github/workflows/governance.yml': []
+    '.github/workflows/hypatia-scan.yml': []
+    '.github/workflows/mirror.yml': []
+    '.github/workflows/scorecard.yml': []
+    '.github/workflows/secret-scanner.yml': []
     '.github/workflows/boj-build.yml':
         - 'actions/checkout@v7.0.1'
     '.github/workflows/casket-pages.yml':
@@ -11,21 +16,34 @@ workflows:
         - 'actions/configure-pages@v6.0.0'
         - 'actions/deploy-pages@v5.0.0'
         - 'actions/upload-pages-artifact@v5.0.0'
-        - 'haskell-actions/setup@v2.11.0'
+        - 'haskell-actions/setup@v2.12.0'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
-        - 'github/codeql-action@v4.37.3'
+        - 'github/codeql-action@v4.37.6'
     '.github/workflows/dogfood-gate.yml':
         - 'actions/checkout@v7.0.1'
         - 'hyperpolymath/a2ml-ecosystem@main'
         - 'hyperpolymath/k9-ecosystem@main'
-    '.github/workflows/e2e.yml': []
-    '.github/workflows/echidna-validation.yml': []
+    '.github/workflows/e2e.yml':
+        - 'actions/cache@v6.1.0'
+        - 'actions/checkout@v7.0.1'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'erlef/setup-beam@v1.24.1'
+        - 'swatinem/rust-cache@v2.9.2'
+    '.github/workflows/echidna-validation.yml':
+        - 'actions/checkout@v7.0.1'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'swatinem/rust-cache@v2.9.2'
     '.github/workflows/gitbot-fleet.yml':
         - 'actions/checkout@v7.0.1'
     '.github/workflows/instant-sync.yml':
         - 'peter-evans/repository-dispatch@v4.0.1'
-    '.github/workflows/nif-build.yml': []
+    '.github/workflows/nif-build.yml':
+        - 'actions/cache@v6.1.0'
+        - 'actions/checkout@v7.0.1'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'erlef/setup-beam@v1.24.1'
+        - 'swatinem/rust-cache@v2.9.2'
     '.github/workflows/push-email-notify.yml':
         - 'dawidd6/action-send-mail@v3.12.0'
     '.github/workflows/trust-pipeline-e2e.yml':
@@ -70,19 +88,24 @@ dependencies:
         commit: 'sha1-12335b969ae3fb71bee5f2c6b829744261aec34c'
         owner_id: 9713907
         repo_id: 222439721
+    'dtolnay/rust-toolchain@v1':
+        ref: 'v1'
+        commit: 'sha1-6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772'
+        owner_id: 1940490
+        repo_id: 260749683
     'erlef/setup-beam@v1.24.1':
         ref: 'v1.24.1'
         commit: 'sha1-54075bcc5e249e4758d363f27d099f55d843f124'
         owner_id: 47606891
         repo_id: 331103973
-    'github/codeql-action@v4.37.3':
-        ref: 'v4.37.3'
-        commit: 'sha1-e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81'
+    'github/codeql-action@v4.37.6':
+        ref: 'v4.37.6'
+        commit: 'sha1-5595ccaf912efad79be6eef63a5619ff05969be3'
         owner_id: 9919
         repo_id: 259445878
-    'haskell-actions/setup@v2.11.0':
-        ref: 'v2.11.0'
-        commit: 'sha1-cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553'
+    'haskell-actions/setup@v2.12.0':
+        ref: 'v2.12.0'
+        commit: 'sha1-6037f33647c3f17758a2356c80fc4a53d7e0685d'
         owner_id: 75048950
         repo_id: 623796603
     'hyperpolymath/a2ml-ecosystem@main':
@@ -100,3 +123,8 @@ dependencies:
         commit: 'sha1-28959ce8df70de7be546dd1250a005dd32156697'
         owner_id: 18365890
         repo_id: 220359305
+    'swatinem/rust-cache@v2.9.2':
+        ref: 'v2.9.2'
+        commit: 'sha1-6323deb102c322ba6fcbdcafc7e3dddab59af2b6'
+        owner_id: 580492
+        repo_id: 298565987
