@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 # This workflow is managed by gh actions-lock.
+# This workflow is managed by gh actions-lock.
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
 #
 # End-to-end and integration tests for OPSM (Odds & Sods Package Manager).
@@ -26,7 +27,7 @@ on:
     paths:
       - 'opsm_ex/**'
   workflow_dispatch:
-permissions: read-all
+permissions:
   actions: read
 concurrency:
   group: e2e-${{ github.ref }}
@@ -101,7 +102,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
       - name: Install Rust toolchain (to build nickel)
-        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: '1.97.0'
       - name: Cache cargo-installed tools
