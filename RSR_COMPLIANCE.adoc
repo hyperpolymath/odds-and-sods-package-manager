@@ -153,7 +153,7 @@
 |`.github/workflows/`
 |Estate CI standard
 |PRESENT
-|24 workflows: boj-build, casket-pages, codeql, dogfood-gate, e2e, echidna-validation, gitbot-fleet, guix-nix-policy, hypatia-scan, instant-sync, mirror, nif-build, npm-bun-blocker, quality, rsr-antipattern, scorecard-enforcer, scorecard, secret-scanner, security-policy, trust-pipeline-e2e, trust-pipeline-images, ts-blocker, wellknown-enforcement, workflow-linter.
+|24 workflows: boj-build, casket-pages, codeql, dogfood-gate, e2e, echidna-validation, gitbot-fleet, guix-nix-policy, hypatia-scan, instant-sync, mirror, nif-build, runtime-policy, quality, rsr-antipattern, scorecard-enforcer, scorecard, secret-scanner, security-policy, trust-pipeline-e2e, trust-pipeline-images, wellknown-enforcement, workflow-linter.
 
 |===
 

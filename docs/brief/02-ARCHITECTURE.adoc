@@ -1,0 +1,63 @@
+== Architecture summary
+
+=== Layered shape
+
+==== Public layer
+
+* package manager identity
+* dashboard with contextual wizards
+* CLI and later PanLL panel interface
+
+==== Planning layer
+
+* intent capture
+* source comparison
+* target selection
+* install profile selection
+* architecture selection
+* rollback/checkpoint strategy
+* config format recommendation
+
+==== Canonical model layer
+
+* a2ml / k9 canonical structured model
+* Nickel companion
+* normalized internal policy and planning model
+* VeriSim as system of record
+
+==== Federation layer
+
+* package-manager adapters
+* metadata/parser adapters
+* GitHub/GitLab/release adapters
+* README/web page parsers
+* artifact importers
+* live query wrappers and import pipelines
+
+==== State mutation layer
+
+* JanusKey reversible kernel
+* checkpointing
+* rollback
+* content-addressed artifact/state logic
+
+==== Analysis and trust layer
+
+* trust records
+* provenance/attestation
+* reputation/community signals
+* Panic Attack on-download and on-run assessment
+
+==== Feedback/uplift layer
+
+* Feedback-o-Tron
+* template generation
+* telemetry
+* upstream guidance and reviewed submissions
+
+=== Data flow
+
+External sources → federation/adapters/parsers → trust + provenance
+analysis → normalized records → VeriSim → planner / recommender /
+installer / configurator → JanusKey-backed mutations → history /
+reversibility / trust updates back into VeriSim
