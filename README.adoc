@@ -698,7 +698,7 @@ For detailed comparison with nala and aptitude, see link:docs/CLI-FEATURE-COMPAR
 
 == Contributing
 
-See link:CONTRIBUTING.md[CONTRIBUTING.md] for contribution guidelines.
+See link:.github/CONTRIBUTING.md[CONTRIBUTING.md] for contribution guidelines.
 
 **Quick Start:**
 1. Fork the repository
