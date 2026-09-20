@@ -87,7 +87,7 @@ dependencies:
             - 'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f'
     'dtolnay/rust-toolchain@v1':
         ref: 'v1'
-        commit: 'sha1-6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772'
+        commit: 'sha1-02cb101ec7c40f2c49e1d9714d64511d8e1b74de'
         owner_id: 1940490
         repo_id: 260749683
     'erlef/setup-beam@v1.24.1':
@@ -107,12 +107,12 @@ dependencies:
         repo_id: 623796603
     'hyperpolymath/a2ml-ecosystem@main':
         ref: 'main'
-        commit: 'sha1-aa4b836bd969df2bc58128cb8e3d20bbc88d5e79'
+        commit: 'sha1-ed83d6927e8fb21431e403dbf6d7a4af96772746'
         owner_id: 6759885
         repo_id: 1275649586
     'hyperpolymath/k9-ecosystem@main':
         ref: 'main'
-        commit: 'sha1-89f3c2702f4f650a92aa7411502f38da06abd562'
+        commit: 'sha1-c1a34884054fabf0e9de81dbf68f4ba7874e85f1'
         owner_id: 6759885
         repo_id: 1275650185
     'hyperpolymath/smtp-notify-action@v0.3.0':
