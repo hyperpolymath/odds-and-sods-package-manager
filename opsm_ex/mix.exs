@@ -50,7 +50,7 @@ defmodule Opsm.MixProject do
       {:proven, git: "https://github.com/hyperpolymath/proven.git", subdir: "bindings/elixir"},
       {:verisim_client,
        git: "https://github.com/hyperpolymath/verisimdb.git", sparse: "connectors/clients/elixir"},
-      {:stream_data, "~> 0.6", only: :test},
+      {:stream_data, "~> 1.4", only: :test},
       {:plug, "~> 1.15"},
       {:bandit, "~> 1.5"},
       # v1.0.1 Security primitives (SECURITY-STANDARDS.scm Phase 1)
