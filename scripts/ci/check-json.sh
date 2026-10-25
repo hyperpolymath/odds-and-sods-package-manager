@@ -86,6 +86,13 @@ while IFS= read -r -d '' file; do
                     note "NOT CANONICAL $file:$lineno"
                 fi
             done < "$file"
+            # A JSON Lines file is a sequence of lines, and the last one is only
+            # a line if it ends with a line feed. Without this, a file whose
+            # final record has no newline passes every per-line check above and
+            # then breaks any reader that splits on "\n" — including the
+            # per-line loop here, which silently accepts the same short input.
+            has_one_final_lf "$file" ||
+                note "NOT CANONICAL $file does not end with exactly one line feed"
             ;;
         *.json)
             rc=0
@@ -101,8 +108,23 @@ while IFS= read -r -d '' file; do
             esac
             ;;
     esac
-done < <(find "$@" \( -name .git -o -name node_modules -o -name _build -o -name target \) -prune \
-    -o -type f \( -name '*.json' -o -name '*.jsonl' \) -print0 | sort -z)
+done < <(json_files "$@")
+
+# json_files ROOT... — the files this gate is about.
+#
+# TRACKED files only, when inside a git work tree. `find` also returns ignored
+# and untracked files: a developer's local build output, an editor's `.cache/`,
+# a report a previous run dropped in the tree. Those are not the repository's
+# canonical JSON, and failing a pull request over them would be a gate that
+# punishes people for having run the tool.
+json_files() {
+    if git -C "${1:-.}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        git -C "${1:-.}" ls-files -z -- '*.json' '*.jsonl'
+    else
+        find "$@" \( -name .git -o -name node_modules -o -name _build -o -name target \) -prune \
+            -o -type f \( -name '*.json' -o -name '*.jsonl' \) -print0 | sort -z
+    fi
+}
 
 if [ "$bad" -gt 0 ]; then
     printf '\n%s of %s file(s) are not I-JSON + JCS canonical (JSON-POLICY J-1/J-2).\n' "$bad" "$total"

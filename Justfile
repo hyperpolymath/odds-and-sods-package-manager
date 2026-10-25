@@ -285,10 +285,12 @@ secret-scan-trufflehog:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Everything CI will check. Run this before you open a pull request.
-ci: toolchain-check fmt-check lint json-check yaml-check test proven-check
+ci: toolchain-check fmt-check lint json-enforce yaml-check test proven-check rust-check
 
-# Fast subset: nothing that compiles or fetches.
-ci-fast: toolchain-check fmt-check json-check yaml-check
+# Fast subset: nothing that compiles or fetches. `json-enforce`, not
+# `json-check`: CI blocks on non-canonical JSON, so a "fast" local run that
+# tolerated it would be advertising the wrong thing.
+ci-fast: toolchain-check fmt-check json-enforce yaml-check
 
 # JSON conformance, report-only (J-1/J-2). Needs ijson-jcs on PATH.
 json-check:
@@ -304,7 +306,7 @@ yaml-check:
 
 # Rewrite every JSON file into JCS form (needs ijson-jcs).
 json-fix:
-    @for f in $$(git ls-files '*.json'); do ijson-jcs fix "$$f" >/dev/null || exit 1; echo "fixed $$f"; done
+    @for f in $(git ls-files '*.json'); do ijson-jcs fix "$f" >/dev/null || exit 1; echo "fixed $f"; done
 
 # Validate test/proven_manifest.toml against the suite on disk.
 proven-check:
@@ -313,7 +315,11 @@ proven-check:
 # Run the suite with the Proven-Tests reporter and print the coverage summary.
 proven-report:
     cd opsm_ex && OPSM_PROVEN_REPORT=1 mix test
-    cd opsm_ex && mix run --no-start scripts/proven_summary.exs
+    # OPSM_PROVEN_REPORT again: each recipe line is its own shell, so the
+    # variable does not survive to the summary. Without it the summary takes its
+    # non-CI branch and exits 0 on a missing report — recreating exactly the
+    # false success the fail-closed branch exists to prevent.
+    cd opsm_ex && OPSM_PROVEN_REPORT=1 mix run --no-start scripts/proven_summary.exs
     @cat opsm_ex/proven-summary.md
 
 # Cross-repo CI dependency chains (read-only). Needs squabble on PATH:
@@ -329,6 +335,20 @@ squabble-fetch pr:
 # Full tool-install soak against ten registries (network, slow). Not part of CI.
 stress:
     cd opsm_ex && mix run scripts/stress_test.exs
+
+# Every crate in ci.yml's Rust matrix, built and tested with the lockfile.
+# `just ci` claims to run what CI runs; without this it did not run eight of the
+# nine gates that can fail a pull request.
+CRATES := "services/checky-monkey services/oikos services/palimpsest-license services/selur services/svalinn services/vordr opsm_ex/native/opsm_pq_nif opsm-ui/tui"
+
+rust-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for d in {{CRATES}}; do
+      [ -f "$d/Cargo.toml" ] || continue
+      echo "── $d"
+      ( cd "$d" && cargo build --locked && cargo test --locked )
+    done
 
 # Benchmarks (not part of the blocking gate).
 bench:

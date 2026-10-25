@@ -40,7 +40,11 @@ defmodule ProvenSummary do
     ]
 
     File.write!(@out, Enum.join(md, "\n") <> "\n")
-    IO.puts("proven-summary: wrote #{@out} (#{length(rows)} modules, #{MapSet.size(cells)}/238 cells)")
+
+    IO.puts(
+      "proven-summary: wrote #{@out} " <>
+        "(#{length(rows)} modules, #{MapSet.size(cells)}/#{lattice()} cells)"
+    )
   end
 
   # --- inputs ---------------------------------------------------------------
@@ -100,6 +104,22 @@ defmodule ProvenSummary do
     }
   end
 
+  # The lattice size is the manifest's own `[taxonomy]` cardinalities, not a
+  # literal. When the taxonomy is extended, the validator's enums, the manifest
+  # and this denominator have to move together; a hard-coded 238 would report
+  # coverage out of the wrong total and nobody would notice, because the number
+  # would still be plausible.
+  defp lattice do
+    case Toml.decode(File.read!(@manifest)) do
+      {:ok, %{"taxonomy" => %{"categories" => c, "aspects" => a}}} when is_integer(c) and is_integer(a) ->
+        c * a
+
+      _ ->
+        IO.puts(:stderr, "proven-summary: [taxonomy] missing from #{@manifest}; cannot size the lattice")
+        System.halt(1)
+    end
+  end
+
   # --- rendering ------------------------------------------------------------
 
   defp table(rows, _cells) do
@@ -136,7 +156,7 @@ defmodule ProvenSummary do
 
   defp coverage(rows, cells) do
     declared = rows |> Enum.map(&{&1.category, &1.aspect}) |> MapSet.new() |> MapSet.size()
-    lattice = 17 * 14
+    lattice = lattice()
 
     "### Lattice coverage\n\n" <>
       "- cells covered by executed, passing tests: **#{MapSet.size(cells)} / #{lattice}**\n" <>

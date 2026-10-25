@@ -50,16 +50,21 @@ updates:
       - "/services/svalinn"
       - "/services/vordr"
       - "/opsm-ui/tui"
+      # The PQ NIF is in ci.yml's Rust matrix and in .gitlab-ci.yml's
+      # RUST_CRATE_DIRS, so it is actively built; leaving it out of this list
+      # meant its Rustler and post-quantum dependencies were the only ones in
+      # the repository with no scheduled updates.
+      - "/opsm_ex/native/opsm_pq_nif"
     schedule:
       interval: "weekly"
     groups:
       cargo:
         patterns:
           - "*"
-    ignore:
-      # Patch bumps of transitive crates are noise; the lockfile already pins
-      # them and `cargo build --locked` in CI catches a broken resolution.
-      - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
+    # No blanket `semver-patch` ignore. It cannot tell a transitive crate from a
+    # direct one, so it suppressed security-relevant patch releases of the
+    # crates this repository actually depends on. Noise is the lesser problem;
+    # `groups:` above already collapses the batch into one pull request.
+    open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"

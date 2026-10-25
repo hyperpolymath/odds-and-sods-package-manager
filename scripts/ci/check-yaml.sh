@@ -45,6 +45,12 @@ fi
 kyaml_supported=0
 if printf 'a: 1\n' | yq -p yaml -o kyaml '.' >/dev/null 2>&1; then
     kyaml_supported=1
+elif [ "$enforce" -eq 1 ]; then
+    # An enforcing caller asked for a KYAML verdict. Returning 0 because the
+    # tool could not produce one would record "checked and clean" for files that
+    # were never checked — the one thing this script exists to prevent.
+    echo "check-yaml: --enforce requires a yq with the kyaml encoder (v4.45+)" >&2
+    exit 2
 else
     echo "check-yaml: this yq has no kyaml encoder (need v4.45+); KYAML drift not measured." >&2
 fi

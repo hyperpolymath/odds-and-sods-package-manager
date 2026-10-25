@@ -194,8 +194,12 @@ What to change:
   runs it (the cicd-squabbler action is a good model).
 * Add `--jsonl` to `check`, `fix` and `canon`.
 * Document exit codes: 0 canonical, 1 non-canonical (or fixed), 2 tool/usage
-  error, 3 input outside RFC 8785's domain (floats, integers not exactly
-  representable, lone surrogates, duplicate keys).
+  error, 3 input outside RFC 8785's domain (integers not exactly representable
+  as an IEEE 754 double, lone surrogates, duplicate keys).
+  **Finite floats are not an error**: RFC 8785 canonicalises them, and `4.5` is
+  valid input. Reserving 3 for floats would reject conforming data.
+  Non-finite values (`NaN`, `Infinity`) are a different matter and belong in 3 —
+  they have no JSON representation at all.
 * Ship a `json-policy.adoc` snippet that other repos can paste, including the
   rule that pretty-printing is a *rendering* and never the stored form.
 
@@ -283,10 +287,13 @@ non-canonical, which means every consumer that gates on canonical JSON has to
 special-case it.
 
 What to change:
-1. Write activity records in canonical JCS form, one value per line, and say so
-   in the file's own header comment or in a `docs/ACTIVITY-FORMAT.adoc`. State
-   whether key order is significant (it is not, under JCS) and whether the file
-   is append-only.
+1. Write activity records in canonical JCS form, one value per line. Document
+   the format in `docs/ACTIVITY-FORMAT.adoc` — **not** as a comment header in
+   the file. JSON Lines has no comment syntax, and a `#` or `//` line at the top
+   makes the first line not a JSON value, so every strict reader (including the
+   gate this prompt is asking to be able to run) rejects the file. State whether
+   key order is significant (it is not, under JCS) and whether the file is
+   append-only.
 2. Publish a JSON Schema for an activity record and for `last-visit.json`.
 3. Make the scan gate fail closed: if hypatia cannot inspect a repository, the
    check must not report success. A scanner that could not look has not looked.

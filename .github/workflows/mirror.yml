@@ -23,4 +23,16 @@ permissions:
 jobs:
   mirror:
     uses: metadatastician/standards/.github/workflows/mirror-reusable.yml@cf8f91219d80da55cf8cbbfcd587d00c2d8798ed
-    secrets: inherit
+    # Explicit mapping, not `secrets: inherit`. The reusable declares exactly
+    # these seven; `inherit` forwarded every repository and organisation secret
+    # this repository can see to a workflow that reads none of them (CWE-250).
+    # A missing secret here is `""`, and the reusable already skips a forge whose
+    # key is absent — so this narrows the grant without silently dropping a mirror.
+    secrets:
+      GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
+      BITBUCKET_SSH_KEY: ${{ secrets.BITBUCKET_SSH_KEY }}
+      CODEBERG_SSH_KEY: ${{ secrets.CODEBERG_SSH_KEY }}
+      SOURCEHUT_SSH_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
+      DISROOT_SSH_KEY: ${{ secrets.DISROOT_SSH_KEY }}
+      GITEA_SSH_KEY: ${{ secrets.GITEA_SSH_KEY }}
+      RADICLE_KEY: ${{ secrets.RADICLE_KEY }}

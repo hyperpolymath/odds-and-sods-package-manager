@@ -51,23 +51,30 @@ jobs:
           toolchain: '1.97.0'
 
       - name: Restore cargo cache
+        # Registry and git only — NEVER `~/.cargo/bin`. With `restore-keys`, an
+        # exact-key miss still restores the most recent prefix match, so a pin
+        # bump would bring back the previous revision's binary; the install step
+        # then sees an executable, skips, and this gate reports on code it was
+        # not pinned to. The compiled binary is cheap to rebuild; a silently
+        # stale conformance checker is not cheap at all.
         uses: actions/cache@v6.1.0
         with:
           path: |
-            ~/.cargo/bin
             ~/.cargo/registry
             ~/.cargo/git
           key: cargo-ijson-jcs-${{ runner.os }}-${{ env.IJSON_JCS_SHA }}
           restore-keys: cargo-ijson-jcs-${{ runner.os }}-
 
-      - name: Build ijson-jcs from the pinned commit
+      - name: Install ijson-jcs from the pinned commit
+        # No `if [ -x ]` guard. Always install, so the revision that runs is
+        # always the revision in IJSON_JCS_SHA; nothing on the runner can make
+        # that conditional.
         run: |
           set -euo pipefail
-          if [ ! -x "$HOME/.cargo/bin/ijson-jcs" ]; then
-            cargo install --git https://github.com/hyperpolymath/ijson-jcs \
-              --rev "$IJSON_JCS_SHA" --locked --root "$HOME/.cargo"
-          fi
-          "$HOME/.cargo/bin/ijson-jcs" --version
+          cargo install --git https://github.com/hyperpolymath/ijson-jcs \
+            --rev "$IJSON_JCS_SHA" --locked --root "$RUNNER_TEMP/ijson"
+          echo "$RUNNER_TEMP/ijson/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/ijson/bin/ijson-jcs" --version
 
       - name: Enforce J-1 / J-2
         run: |

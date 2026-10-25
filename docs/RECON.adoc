@@ -112,10 +112,14 @@ string*.
 
 * **`PanicPath` in the NIFs** — 11 `unwrap`/`expect` calls in
   `opsm_ex/native/opsm_pq_nif/src/lib.rs` and 12 in
-  `opsm_ex/native/quic_transport/src/lib.rs`. A panic inside a NIF is not a
-  Rust error, it is a VM abort. Tracked as a follow-up; both crates now have
-  committed `Cargo.lock` files, which is a prerequisite for touching them
-  safely.
+  `opsm_ex/native/quic_transport/src/lib.rs`. Both crates use Rustler, which
+  catches ordinary unwinding panics at the NIF boundary: the usual outcome is a
+  failed NIF call (an exception in the calling Elixir process), not a dead VM.
+  A VM abort is still reachable — from `panic = "abort"` profiles, from
+  `abort()`, from a double panic, or from UB in `unsafe` code — so the finding
+  stands as a robustness signal, not as an alarm. Tracked as a follow-up; both
+  crates now have committed `Cargo.lock` files, which is a prerequisite for
+  touching them safely.
 * **`HardcodedSecret`** — `opsm_ex/test/opsm/crypto/api_key_storage_test.exs`
   contains `"super-secret-key"` and friends. Synthetic, and GitGuardian agrees.
   No action.
@@ -134,19 +138,28 @@ string*.
 [source,sh]
 ----
 # pons-asinorum
-git clone --depth 1 https://github.com/hyperpolymath/pons-asinorum /tmp/pons-src
-git -C /tmp/pons-src rev-parse HEAD    # expect 51b8920f…
+git clone https://github.com/hyperpolymath/pons-asinorum /tmp/pons-src
+git -C /tmp/pons-src checkout 51b8920f541782ceb9465ea3f0d33c96104fc1fb
+git -C /tmp/pons-src rev-parse HEAD    # must print 51b8920f…
 cd /tmp/pons-src && cargo build --release --locked
 cd - && /tmp/pons-src/target/release/pons scan . --format json --no-speculative \
   > pons-scan.json 2> pons-scan.err
 
 # panic-attack
-git clone --depth 1 https://github.com/hyperpolymath/panic-attack /tmp/panic-src
-git -C /tmp/panic-src rev-parse HEAD   # expect b5530834…
+git clone https://github.com/hyperpolymath/panic-attack /tmp/panic-src
+git -C /tmp/panic-src checkout b5530834a839734d1d181bfe6edb0d43d4233cf4
+git -C /tmp/panic-src rev-parse HEAD   # must print b5530834…
 cd /tmp/panic-src && cargo build --release --locked
 cd - && /tmp/panic-src/target/release/panic-attack assail . \
   --output panic-assail.json --headless
 ----
+
+`--depth 1` was removed deliberately: it checks out the *default branch tip*,
+not the recorded commit, so the `rev-parse` line above would have printed the
+current tip and the build would have analysed different source from the one this
+document describes. Shallow-cloning a specific commit needs
+`git fetch --depth 1 origin <sha>`, and checking that out is one extra line that
+people forget; a full clone plus `checkout` is slower and unambiguous.
 
 Both builds take a few minutes each and need a Rust toolchain and crates.io;
 neither is available in every environment, which is precisely why the outputs

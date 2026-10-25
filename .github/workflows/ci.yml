@@ -14,7 +14,8 @@
 #   toolchain — the pins in opsm.toml [runtime] are the single source of truth
 #   lint      — formatter, strict compile
 #   test      — mix test, coverage, and the Proven-Tests report
-#   rust      — BUILD only, one job per crate (there are nine)
+#   conformance — I-JSON+JCS and YAML parse, so `CI / gate` covers them
+#   rust      — build AND test, one job per crate (there are nine)
 #   gate      — one required status to point a branch ruleset at
 #
 # Every action used here is already recorded in .github/workflows/actions.lock.
@@ -195,10 +196,89 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
+      # The pinned toolchain, not whatever the runner image shipped this week.
+      # Without this the matrix silently tests a different compiler from the one
+      # `opsm.toml [runtime]` names, and the pin is decorative.
+      - name: Install Rust (pinned)
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: '1.97.0'
+          components: rustfmt, clippy
+      - name: Restore cargo cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ matrix.crate }}/target
+          key: cargo-${{ runner.os }}-${{ matrix.crate }}-${{ hashFiles(format('{0}/Cargo.lock', matrix.crate)) }}
+          restore-keys: cargo-${{ runner.os }}-${{ matrix.crate }}-
+      # `env:` rather than direct interpolation: a matrix value pasted into
+      # `run:` is a shell-injection sink if the matrix is ever computed.
       - name: Build (locked)
-        run: cd ${{ matrix.crate }} && cargo build --locked
+        env:
+          CRATE: ${{ matrix.crate }}
+        run: cd "$CRATE" && cargo build --locked
       - name: Test (locked)
-        run: cd ${{ matrix.crate }} && cargo test --locked
+        env:
+          CRATE: ${{ matrix.crate }}
+        run: cd "$CRATE" && cargo test --locked
+
+  # ---------------------------------------------------------------------------
+  # Conformance, inside this workflow so that `CI / gate` actually covers it.
+  #
+  # `json-ijson-jcs.yml` and `yaml-kyaml.yml` are path-filtered, which is right
+  # for fast, targeted feedback — but a path-filtered workflow does not report
+  # on a pull request that touches nothing matching its filter. A ruleset that
+  # required those contexts would block every unrelated pull request, and a
+  # ruleset that required only `CI / gate` would not block a non-canonical JSON
+  # file. Running the same two scripts here, blocking, removes the dilemma:
+  # there is exactly one context to require, and it means what it says.
+  # ---------------------------------------------------------------------------
+  conformance:
+    name: Conformance (I-JSON + JCS, YAML)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      IJSON_JCS_SHA: 2c880594c8b1f823a7ab2a8a830c894975a1792e
+      YQ_VERSION: '4.53.3'
+      YQ_SHA256: 'fa52a4e758c63d38299163fbdd1edfb4c4963247918bf9c1c5d31d84789eded4'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Install Rust (pinned)
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: '1.97.0'
+      - name: Restore cargo cache
+        # Registry and git only. Caching ~/.cargo/bin is what lets a stale
+        # binary survive a pin bump and silently pass the gate it was meant to
+        # replace.
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-conformance-${{ runner.os }}-${{ env.IJSON_JCS_SHA }}
+          restore-keys: cargo-conformance-${{ runner.os }}-
+      - name: Install ijson-jcs (pinned)
+        run: |
+          set -euo pipefail
+          cargo install --git https://github.com/hyperpolymath/ijson-jcs \
+            --rev "$IJSON_JCS_SHA" --locked --root "$RUNNER_TEMP/ijson"
+          echo "$RUNNER_TEMP/ijson/bin" >> "$GITHUB_PATH"
+      - name: Install yq (pinned by sha256)
+        run: |
+          set -euo pipefail
+          base="https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}"
+          curl -fsSLo /tmp/yq "${base}/yq_linux_amd64"
+          printf '%s  %s\n' "${YQ_SHA256}" /tmp/yq | sha256sum --check --strict
+          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+          yq --version
+      - name: I-JSON + JCS (blocking)
+        run: bash scripts/ci/check-json.sh --enforce .
+      - name: YAML parses (blocking) + KYAML drift (advisory)
+        run: bash scripts/ci/check-yaml.sh .
 
   # ---------------------------------------------------------------------------
   # One status for a branch ruleset to require. `if: always()` plus an explicit
@@ -208,7 +288,7 @@ jobs:
     name: CI / gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [toolchain, lint, test, rust]
+    needs: [toolchain, lint, test, rust, conformance]
     if: always()
     steps:
       - name: Every job succeeded
@@ -217,8 +297,10 @@ jobs:
           echo "lint=${{ needs.lint.result }}"
           echo "test=${{ needs.test.result }}"
           echo "rust=${{ needs.rust.result }}"
+          echo "conformance=${{ needs.conformance.result }}"
           for r in "${{ needs.toolchain.result }}" "${{ needs.lint.result }}" \
-                   "${{ needs.test.result }}" "${{ needs.rust.result }}"; do
+                   "${{ needs.test.result }}" "${{ needs.rust.result }}" \
+                   "${{ needs.conformance.result }}"; do
             case "$r" in
               success) ;;
               *) echo "::error::ci gate: a required job did not succeed ($r)"; exit 1 ;;

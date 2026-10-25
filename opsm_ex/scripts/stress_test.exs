@@ -183,9 +183,12 @@ if errors != [] do
   end
 end
 
-# Exit with appropriate code
+# Exit with appropriate code. The comment was here before the exit code was:
+# `just stress` used to print the warning and return 0, so a total failure of
+# the network soak was indistinguishable from a clean run to any caller.
 if results.error > 0 do
-  IO.puts("\n⚠ #{results.error} package(s) failed to resolve")
+  IO.puts(:stderr, "\n⚠ #{results.error} package(s) failed to resolve")
+  System.halt(1)
 else
   IO.puts("\n✓ All #{results.total} packages resolved successfully!")
 end

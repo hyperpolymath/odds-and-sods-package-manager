@@ -260,7 +260,8 @@ just squabble-chains   # needs `squabble` on PATH
 Tools the gates expect: `ijson-jcs` (cargo install from
 hyperpolymath/ijson-jcs), `yq` 4.53.3 (mikefarah), `squabble` (the attested
 release from hyperpolymath/cicd-squabbler — `gh release download v0.1.0
---pattern squabble-x86_64-linux-musl`), `mix`/`elixir` per `.tool-versions`,
+-R hyperpolymath/cicd-squabbler --pattern squabble-x86_64-linux-musl`; without
+`-R` it looks for the asset in whatever repository you are standing in), `mix`/`elixir` per `.tool-versions`,
 `cargo` 1.97.0. CI installs each of these itself; nothing is assumed to be on
 the runner image.
 
@@ -278,6 +279,10 @@ the runner image.
   excluded from the Rust matrix and from `.gitlab-ci.yml`'s `RUST_CRATE_DIRS`,
   but *not* from the lockfile gate: its lock is committed, so the only thing
   standing between it and a green build is the h3/h3-quinn/quinn triple.
-* *Coverage percentage* — `mix test --cover` runs and reports, but no threshold
-  is enforced. A threshold on a suite that has never executed in CI would be a
-  guess, and a guess that fails is indistinguishable from a defect.
+* *Coverage percentage* — a floor of **17%** is enforced by
+  `opsm_ex/mix.exs` (`test_coverage: [summary: [threshold: 17]]`), which is
+  Mix's own `--cover` check. The number is the first CI measurement (17.34%)
+  rounded down, not a target. It is a ratchet: raise it when the measurement
+  rises, never lower it to make a build pass. What it does *not* do is say
+  anything about the kind of evidence behind a test — that is
+  `docs/PROVEN-TESTS.adoc`, and the two are deliberately separate instruments.
