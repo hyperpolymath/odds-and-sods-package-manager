@@ -89,7 +89,10 @@ defmodule Opsm.ProvenReporter do
     case Jason.encode(payload, pretty: true) do
       {:ok, json} ->
         File.write!(@report, json <> "\n")
-        IO.puts("proven-reporter: wrote #{@report} (#{map_size(modules)} modules, #{totals.total} tests)")
+
+        IO.puts(
+          "proven-reporter: wrote #{@report} (#{map_size(modules)} modules, #{totals.total} tests)"
+        )
 
       {:error, reason} ->
         # Loud, and with a non-zero exit at the end of the run: a report that
