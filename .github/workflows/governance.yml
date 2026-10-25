@@ -1,7 +1,24 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# This workflow is managed by gh actions-lock.
-# This workflow is managed by gh actions-lock.
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Governance wrapper — calls the estate reusable.
+#
+# PIN: metadatastician/standards@8e48b1c… (2026-10-25).
+#
+# The previous pin (84355587…, 2026-08-27) shipped a lockfile with version
+# v0.0.2 in which every dependency was keyed by a full-length commit SHA and
+# recorded *that same SHA* as its `ref`. GitHub's workflow-dependency-lockfile
+# enforcement (and `gh actions-lock` v0.0.3) rejects that shape as an
+# "invalid lockfile pin", so every job of the called workflow died at
+# "Set up job" before running a single step — the run reported `failure` with
+# no log, no check output and no annotation on the PR. A reusable workflow is
+# covered by the lockfile of the repository that DEFINES it, not by ours, so
+# the only fix available to a caller is to move to a standards commit whose
+# lockfile is valid. 8e48b1c records the human-readable tag in `ref` and is
+# accepted.
+#
+# Do not "fix" a future failure of this job by pinning back: run
+# `gh actions-lock --verify` in standards first.
 name: Governance
 
 on:
@@ -11,10 +28,20 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  # Read-only check workflow: cancelling a superseded run is always safe.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   actions: read
   contents: read
 
 jobs:
   governance:
-    uses: hyperpolymath/standards/.github/workflows/governance-reusable.yml@84355587cb2a1f86e6882de83514a32db2646e7a
+    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
+    # Fine-grained, read-only PAT. Optional: without it the workflow-staleness
+    # and baseline jobs fall back to the built-in token and degrade loudly
+    # rather than silently passing.
+    secrets:
+      HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}

@@ -34,7 +34,7 @@ jobs:
           # Pinned to the canonical rust version in opsm.toml [runtime]
           toolchain: '1.97.0'
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2.9.2
+        uses: Swatinem/rust-cache@v2.9.3
         with:
           workspaces: opsm_ex/native/opsm_pq_nif -> target
       - name: Setup Erlang/Elixir

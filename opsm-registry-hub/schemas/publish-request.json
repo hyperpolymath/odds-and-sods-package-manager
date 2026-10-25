@@ -1,10 +1,1 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OPSM Publish Request",
-  "type": "object",
-  "required": ["path"],
-  "properties": {
-    "path": { "type": "string" },
-    "manifest": { "type": "object" }
-  }
-}
+{"$schema":"https://json-schema.org/draft/2020-12/schema","properties":{"manifest":{"type":"object"},"path":{"type":"string"}},"required":["path"],"title":"OPSM Publish Request","type":"object"}

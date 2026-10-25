@@ -5,7 +5,7 @@
 # Validates round-trip conversion of various manifest formats
 # (mix.exs, package.json, Cargo.toml) through the Federation layer.
 
-defmodule Opsm.Integration.ManifestRoundtripTest do
+defmodule Opsm.Integration.FederationManifestRoundtripTest do
   use ExUnit.Case, async: true
 
   alias Opsm.Federation

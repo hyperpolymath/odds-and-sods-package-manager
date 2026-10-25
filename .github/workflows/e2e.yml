@@ -107,7 +107,7 @@ jobs:
         with:
           toolchain: '1.97.0'
       - name: Cache cargo-installed tools
-        uses: Swatinem/rust-cache@v2.9.2
+        uses: Swatinem/rust-cache@v2.9.3
         with:
           key: nickel-lang-cli-1.16.0
       - name: Install nickel

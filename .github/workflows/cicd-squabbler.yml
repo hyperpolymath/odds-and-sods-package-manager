@@ -1,0 +1,136 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# CI/CD dependency chains — hyperpolymath/cicd-squabbler.
+#
+# `squabble chains` answers a question no other gate here can: which other
+# repositories does this repository's CI depend on, at which pin, and is any of
+# them dead? A deleted or renamed action/reusable produces NO check run, so the
+# board reads green while the gate never ran.
+#
+# That is not hypothetical here. On 2026-10-25 every estate gate in this
+# repository died at "Set up job" with
+#
+#     Unable to resolve action `actions/checkout@3d3c42e5…`:
+#     invalid lockfile pin. Run `gh actions-lock` to update the lockfile
+#
+# because `metadatastician/standards` — renamed from `hyperpolymath/standards`
+# — was pinned at a commit whose own actions.lock (v0.0.2) recorded a bare SHA
+# as the `ref` of every dependency. `squabble chains` walks exactly those edges
+# (reusable workflow → actions → pins) and reports dead upstreams and pin skew
+# as blocking findings.
+#
+# Exit contract (upstream):
+#   0 clean · 2 usage/tool failure · 4 at least one BLOCKING finding
+#       (a dependency cycle, or a dead upstream)
+# Only a verdict fails this job. A tool or network failure is loud but not a
+# gate verdict, because a scanner that could not look has not looked — and must
+# not be recorded as either pass or fail.
+name: CI/CD Dependency Chains
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/**'
+      - 'opsm.toml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  schedule:
+    - cron: '0 5 * * 1'   # weekly, before the Monday review
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  SQUABBLE_SHA: 14f853fde902ab2d7631070d87a9dc9122e01013
+
+jobs:
+  chains:
+    name: squabble chains
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: '1.97.0'
+
+      - name: Restore cargo cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-squabble-${{ runner.os }}-${{ env.SQUABBLE_SHA }}
+          restore-keys: cargo-squabble-${{ runner.os }}-
+
+      - name: Build squabble from the pinned commit
+        run: |
+          set -euo pipefail
+          if [ ! -x "$HOME/.cargo/bin/squabble" ]; then
+            cargo install --git https://github.com/hyperpolymath/cicd-squabbler \
+              --rev "$SQUABBLE_SHA" --locked --root "$HOME/.cargo" squabble-cli
+          fi
+          "$HOME/.cargo/bin/squabble" --help | head -3
+
+      - name: Map the dependency chains
+        id: chains
+        env:
+          # GraphQL reads for `--follow`. Read-only.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          export PATH="$HOME/.cargo/bin:$PATH"
+          set +e
+          squabble chains . --follow 1 --json > squabble-chains.json 2> squabble-chains.err
+          rc=$?
+          set -e
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+          case "$rc" in
+            0) echo "squabble chains: no blocking finding" ;;
+            4) echo "::error::squabble chains: BLOCKING finding (cycle or dead upstream) — see summary" ;;
+            2) echo "::warning::squabble chains exited 2 (usage/tool/network). Not a gate verdict; not a pass either." ;;
+            *) echo "::warning::squabble chains exited $rc" ;;
+          esac
+
+          if [ -s squabble-chains.err ]; then
+            echo "--- stderr ---"; head -40 squabble-chains.err
+          fi
+
+      - name: Publish the summary
+        if: always()
+        run: |
+          {
+            echo "### CI/CD dependency chains (cicd-squabbler)"
+            echo ""
+            echo "Pinned tool commit: \`$SQUABBLE_SHA\`"
+            echo ""
+            if [ -s squabble-chains.json ]; then
+              echo '```json'
+              head -c 20000 squabble-chains.json
+              echo '```'
+            else
+              echo "_No report produced — see the step log._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail only on a blocking verdict
+        if: steps.chains.outputs.rc == '4'
+        run: |
+          echo "::error::squabble chains found a blocking dependency defect."
+          echo "A cycle or a dead upstream means a required gate may never run."
+          exit 4

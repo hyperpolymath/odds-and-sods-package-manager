@@ -34,3 +34,4 @@ deps/
 Thumbs.db
 build/
 dist/
+proven-report.json

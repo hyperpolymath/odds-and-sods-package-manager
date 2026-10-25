@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Stress test: fetch real packages from all 10 registries
-# Run: mix run test/stress_test.exs
+# Run: cd opsm_ex && mix run scripts/stress_test.exs
 
 alias Opsm.Registries.Registry
 

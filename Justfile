@@ -185,10 +185,8 @@ compose-down:
 # ═══════════════════════════════════════════════════════════════════════════════
 # CI & QUALITY
 # ═══════════════════════════════════════════════════════════════════════════════
-
-# Run full CI pipeline locally
-ci: deps build test lint fmt-check
-    @echo "CI pipeline complete!"
+# The CI entry points live in the CI section at the end of this file, so that
+# `just ci` is one definition with one meaning (docs/CI-CD.adoc).
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # UTILITIES
@@ -281,3 +279,57 @@ crg-badge:
 
 secret-scan-trufflehog:
     @command -v trufflehog >/dev/null && trufflehog filesystem . --only-verified || true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CI — the same gates CI runs, runnable on a laptop (docs/CI-CD.adoc)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Everything CI will check. Run this before you open a pull request.
+ci: toolchain-check fmt-check lint json-check yaml-check test proven-check
+
+# Fast subset: nothing that compiles or fetches.
+ci-fast: toolchain-check fmt-check json-check yaml-check
+
+# JSON conformance, report-only (J-1/J-2). Needs ijson-jcs on PATH.
+json-check:
+    bash scripts/ci/check-json.sh .
+
+# JSON conformance, blocking.
+json-enforce:
+    bash scripts/ci/check-json.sh --enforce .
+
+# YAML parse (blocking) + KYAML drift (report-only). Needs yq v4.45+.
+yaml-check:
+    bash scripts/ci/check-yaml.sh .
+
+# Rewrite every JSON file into JCS form (needs ijson-jcs).
+json-fix:
+    @for f in $$(git ls-files '*.json'); do ijson-jcs fix "$$f" >/dev/null || exit 1; echo "fixed $$f"; done
+
+# Validate test/proven_manifest.toml against the suite on disk.
+proven-check:
+    cd opsm_ex && mix run --no-start scripts/validate_proven.exs
+
+# Run the suite with the Proven-Tests reporter and print the coverage summary.
+proven-report:
+    cd opsm_ex && OPSM_PROVEN_REPORT=1 mix test
+    cd opsm_ex && mix run --no-start scripts/proven_summary.exs
+    @cat opsm_ex/proven-summary.md
+
+# Cross-repo CI dependency chains (read-only). Needs squabble on PATH:
+#   cargo install --git https://github.com/hyperpolymath/cicd-squabbler --locked squabble-cli
+squabble-chains:
+    squabble chains . --follow 1
+
+# The gate state of a pull request, with the moves open to it.
+#   just squabble-fetch 122
+squabble-fetch pr:
+    squabble fetch hyperpolymath/odds-and-sods-package-manager {{pr}}
+
+# Full tool-install soak against ten registries (network, slow). Not part of CI.
+stress:
+    cd opsm_ex && mix run scripts/stress_test.exs
+
+# Benchmarks (not part of the blocking gate).
+bench:
+    cd opsm_ex && mix run bench/opsm_bench.exs

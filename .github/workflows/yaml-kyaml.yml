@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# YAML policy — parse (blocking) and KYAML conformance (report-only).
+#
+# Policy: metadatastician/standards 3-practice/YAML-POLICY.adoc.
+#   Y-1  IN FORCE      gates read YAML with yq, never grep/sed/awk.
+#   Y-3  SEQUENCED     KYAML is the target authoring dialect; the scope of any
+#                      mandate is not yet decided, so this job reports drift and
+#                      only fails on it under --enforce.
+#
+# The blocking half is the parse check, and it has already earned its place:
+# twelve tracked YAML files in this repository carried a C-style `// Copyright`
+# line, which is not a YAML comment. They were unparseable and had been since
+# they were written — `deploy/k8s/*.yaml`, `selur-compose.yml`,
+# `docker-compose.dev.yml`, `opsm-ui/.gitlab-ci.yml`. A workflow file in that
+# state produces a run with no jobs and no log rather than an error.
+name: YAML — parse + KYAML
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '**/*.yml'
+      - '**/*.yaml'
+      - 'scripts/ci/check-yaml.sh'
+      - '.github/workflows/yaml-kyaml.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  # Pinned to the version named in YAML-POLICY.adoc §0 (the estate workstation
+  # build), so the report here matches the report there.
+  YQ_VERSION: '4.53.3'
+
+jobs:
+  parse:
+    name: YAML parse + KYAML report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Install yq (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          base="https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}"
+          curl -fsSLo /tmp/yq "${base}/yq_linux_amd64"
+          curl -fsSLo /tmp/yq.sha256 "${base}/checksums"
+          expected=$(grep -E '^[a-f0-9]{64}[[:space:]]+yq_linux_amd64$' /tmp/yq.sha256 | cut -d' ' -f1)
+          if [ -z "$expected" ]; then echo "::error::no checksum published for yq_linux_amd64"; exit 1; fi
+          echo "${expected}  /tmp/yq" | sha256sum --check --strict
+          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+          yq --version
+
+      - name: Parse every tracked YAML file
+        run: bash scripts/ci/check-yaml.sh .
+
+      - name: KYAML drift (report-only until Y-3 scope is decided)
+        # Same run, same tool; the advisory lane exists so the scope decision in
+        # Y-3 §3.3 can be made from measured data instead of a guess.
+        continue-on-error: true
+        run: |
+          bash scripts/ci/check-yaml.sh . | tail -5
+          {
+            echo "### KYAML drift (advisory)"
+            echo ""
+            echo "YAML-POLICY Y-3 is sequenced: this repository reports KYAML drift,"
+            echo "it does not fail on it. Workflows are excluded (bot-written)."
+          } >> "$GITHUB_STEP_SUMMARY"

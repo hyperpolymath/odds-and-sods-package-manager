@@ -1,7 +1,24 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# This workflow is managed by gh actions-lock.
-# This workflow is managed by gh actions-lock.
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Hypatia Neurosymbolic Security Scan — estate reusable wrapper.
+#
+# PIN: metadatastician/standards@8e48b1c… — see governance.yml for the
+# "invalid lockfile pin" / "Set up job" failure this replaces.
+#
+# The reusable builds three scanners from source at pinned commits and runs
+# them over the tree:
+#   * hypatia      — the estate's rule engine (SD/SG rules),
+#   * panic-attack — stress testing + logic-based bug-signature detection,
+#   * pons-asinorum— depth-first static scan for wasted work, self-contradiction
+#                    and missing escape hatches.
+# It uploads SARIF to code scanning, so `security-events: write` is required and
+# must be granted HERE: a called workflow cannot escalate past its caller.
+#
+# `block-on-high: false` keeps the lane advisory on high/critical findings until
+# a `.hypatia-baseline.json` exists in this repository (there is none yet). Flip
+# it to true in the same PR that lands the baseline; otherwise the gate is a
+# rubber stamp that also blocks unrelated work.
 name: Hypatia Security Scan
 
 on:
@@ -13,6 +30,10 @@ on:
     - cron: '0 0 * * 0'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   actions: read
   contents: read
@@ -20,4 +41,10 @@ permissions:
 
 jobs:
   hypatia:
-    uses: hyperpolymath/standards/.github/workflows/hypatia-scan-reusable.yml@84355587cb2a1f86e6882de83514a32db2646e7a
+    uses: metadatastician/standards/.github/workflows/hypatia-scan-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
+    with:
+      block-on-high: false
+    secrets:
+      # Read-only PAT for Dependabot / code-scanning alert reads. Optional: the
+      # reusable falls back to the built-in token and says so in its output.
+      HYPATIA_SCAN_PAT: ${{ secrets.HYPATIA_SCAN_PAT }}

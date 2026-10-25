@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# JSON conformance — I-JSON (RFC 7493) serialised by JCS (RFC 8785).
+#
+# Policy: metadatastician/standards 3-practice/JSON-POLICY.adoc (D306). This is
+# the repository's enforcement of J-1 (`*.json`) and J-2 (`*.jsonl`), run by
+# scripts/ci/check-json.sh.
+#
+# Why it matters here rather than as a style preference: OPSM is a package
+# manager. Registry manifests, advisories and audit requests are hashed and
+# signed. A byte-level difference in key order or number formatting changes the
+# digest, so "the same document" written twice must produce the same bytes or
+# signatures cannot be checked by a third party. JCS is what makes that true.
+#
+# Tool: hyperpolymath/ijson-jcs, built from a pinned commit. It is NOT vendored
+# and NOT a release binary, because there is no release to pin — building from
+# source at a commit is the reproducible option.
+name: JSON — I-JSON + JCS
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  IJSON_JCS_SHA: 2c880594c8b1f823a7ab2a8a830c894975a1792e
+
+jobs:
+  conformance:
+    name: I-JSON + JCS conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: '1.97.0'
+
+      - name: Restore cargo cache
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-ijson-jcs-${{ runner.os }}-${{ env.IJSON_JCS_SHA }}
+          restore-keys: cargo-ijson-jcs-${{ runner.os }}-
+
+      - name: Build ijson-jcs from the pinned commit
+        run: |
+          set -euo pipefail
+          if [ ! -x "$HOME/.cargo/bin/ijson-jcs" ]; then
+            cargo install --git https://github.com/hyperpolymath/ijson-jcs \
+              --rev "$IJSON_JCS_SHA" --locked --root "$HOME/.cargo"
+          fi
+          "$HOME/.cargo/bin/ijson-jcs" --version
+
+      - name: Enforce J-1 / J-2
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          bash scripts/ci/check-json.sh --enforce

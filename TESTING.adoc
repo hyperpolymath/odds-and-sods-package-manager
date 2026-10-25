@@ -31,6 +31,16 @@ opsm version
 
 === Automated Tests
 
+NOTE: The suite carries its own provenance. Every test module is declared in
+`opsm_ex/test/proven_manifest.toml` with a category (17), an aspect (14) and a
+warrant tier — `actually_proven`, `provisionally_proven` or `unproven` — per
+the Proven-Tests framework. `just proven-check` validates the manifest and
+`just proven-report` prints the coverage lattice derived from tests that
+actually ran and passed. See link:docs/PROVEN-TESTS.adoc[Proven-Tests].
+
+The pipeline that runs all of this, and what each gate decides, is described in
+link:docs/CI-CD.adoc[CI/CD Architecture]. `just ci` is the local equivalent.
+
 ==== Run All Tests
 
 [source,bash]

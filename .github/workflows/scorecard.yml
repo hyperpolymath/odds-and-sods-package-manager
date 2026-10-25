@@ -1,7 +1,15 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# This workflow is managed by gh actions-lock.
-# This workflow is managed by gh actions-lock.
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# OSSF Scorecard — estate reusable wrapper.
+#
+# PIN: metadatastician/standards@8e48b1c… — see governance.yml.
+#
+# Permissions must be granted at the caller. The reusable publishes SARIF to
+# code scanning and pushes results to the public OpenSSF API, which needs
+# `security-events: write` and `id-token: write`; a called workflow cannot
+# escalate past the caller's grant, so a missing grant is a 0-job startup
+# failure rather than a clear message.
 name: OSSF Scorecard
 
 on:
@@ -9,9 +17,6 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
-# The called reusable workflow needs security-events/id-token beyond the
-# default; a reusable job cannot escalate past the caller's grant, so the
-# run dies at startup ("startup_failure", 0 jobs) unless granted here.
 permissions:
   actions: read
   contents: read
@@ -20,4 +25,4 @@ permissions:
 
 jobs:
   scorecard:
-    uses: hyperpolymath/standards/.github/workflows/scorecard-reusable.yml@84355587cb2a1f86e6882de83514a32db2646e7a
+    uses: metadatastician/standards/.github/workflows/scorecard-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d

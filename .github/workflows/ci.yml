@@ -1,0 +1,202 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# ci.yml — the repository's own CI, in one place.
+#
+# Before this file existed the repository had no job that built the Elixir
+# application or ran its ~850 tests. `e2e.yml` looked like it did, but both of
+# its Elixir jobs died at step 3 "Setup Erlang/Elixir" because they read
+# `.tool-versions` with `version-type: strict` and that file was never
+# committed (it is generated: `just toolchain-sync`). The suite has therefore
+# not run in CI at all. See docs/CI-CD.adoc.
+#
+# Shape:
+#   toolchain — the pins in opsm.toml [runtime] are the single source of truth
+#   lint      — formatter, strict compile
+#   test      — mix test, coverage, and the Proven-Tests report
+#   rust      — BUILD only, one job per crate (there are nine)
+#   gate      — one required status to point a branch ruleset at
+#
+# Every action used here is already recorded in .github/workflows/actions.lock.
+# Do not add a new `uses:` without minting the lockfile entry (`gh actions-lock`);
+# GitHub fails the job at "Set up job" with "invalid lockfile pin" otherwise,
+# with no log and no annotation.
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Toolchain drift. Cheap, and it is the job that would have caught the
+  # missing .tool-versions that silently disabled every Elixir job.
+  # ---------------------------------------------------------------------------
+  toolchain:
+    name: Toolchain pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: opsm.toml [runtime] agrees with .tool-versions and .gitlab-ci.yml
+        run: sh scripts/toolchain.sh check
+      - name: Lockfiles are tracked
+        run: |
+          set -euo pipefail
+          fail=0
+          [ -f opsm_ex/mix.lock ] || { echo "::error::opsm_ex/mix.lock is missing"; fail=1; }
+          for d in services/*/ opsm_ex/native/opsm_pq_nif/ opsm-ui/tui/; do
+            [ -f "$d/Cargo.toml" ] || continue
+            git ls-files --error-unmatch "$d/Cargo.lock" >/dev/null 2>&1 \
+              || { echo "::error::$d has a Cargo.toml but no tracked Cargo.lock — reproducible builds need it"; fail=1; }
+          done
+          exit "$fail"
+
+  # ---------------------------------------------------------------------------
+  # Lint: the formatter and a strict compile. Separate from `test` so a
+  # formatting failure reports itself instead of masking 850 test results.
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Format + strict compile
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Setup Erlang/Elixir from .tool-versions
+        uses: erlef/setup-beam@v1.24.1
+        with:
+          version-file: '.tool-versions'
+          version-type: 'strict'
+      - name: Cache Mix
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            opsm_ex/deps
+            opsm_ex/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('opsm_ex/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+      - name: Install dependencies
+        run: cd opsm_ex && mix deps.get
+      - name: Formatter
+        run: cd opsm_ex && mix format --check-formatted
+      - name: Compile with warnings as errors
+        run: cd opsm_ex && mix compile --warnings-as-errors
+
+  # ---------------------------------------------------------------------------
+  # The suite. `OPSM_PROVEN_REPORT=1` turns on the Proven-Tests reporter
+  # (test/support/proven_reporter.ex); the manifest is validated afterwards so
+  # a test that exists but is undeclared fails the build rather than quietly
+  # inflating nothing.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Mix test + Proven-Tests report
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MIX_ENV: test
+      OPSM_PROVEN_REPORT: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Setup Erlang/Elixir from .tool-versions
+        uses: erlef/setup-beam@v1.24.1
+        with:
+          version-file: '.tool-versions'
+          version-type: 'strict'
+      - name: Cache Mix
+        uses: actions/cache@v6.1.0
+        with:
+          path: |
+            opsm_ex/deps
+            opsm_ex/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('opsm_ex/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+      - name: Install dependencies
+        run: cd opsm_ex && mix deps.get
+      - name: Run the suite with coverage
+        run: cd opsm_ex && mix test --cover
+      - name: Validate the Proven-Tests manifest
+        run: cd opsm_ex && mix run --no-start scripts/validate_proven.exs
+      - name: Publish the Proven-Tests summary
+        if: always()
+        run: cd opsm_ex && mix run --no-start scripts/proven_summary.exs
+      - name: Append summary
+        if: always()
+        run: |
+          if [ -s opsm_ex/proven-summary.md ]; then
+            cat opsm_ex/proven-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Rust services and NIFs. There are nine crates; a matrix keeps one broken
+  # service from hiding the other eight. `--locked` means a stale Cargo.lock is
+  # a failure here rather than a surprise in a release.
+  # ---------------------------------------------------------------------------
+  rust:
+    name: Rust ${{ matrix.crate }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - services/checky-monkey
+          - services/oikos
+          - services/palimpsest-license
+          - services/selur
+          - services/svalinn
+          - services/vordr
+          - opsm_ex/native/opsm_pq_nif
+          - opsm-ui/tui
+        # opsm_ex/native/quic_transport is QUARANTINED: it does not compile
+        # (its h3 0.0.6 / h3-quinn 0.0.7 predate quinn 0.11's private StreamId)
+        # and has no committed Cargo.lock. The Elixir side falls back to HTTP/2
+        # when the NIF is absent, so nothing depends on it. See the header of
+        # .gitlab-ci.yml; un-quarantine only after the dependency triple is
+        # migrated and a lock is committed.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+      - name: Build (locked)
+        run: cd ${{ matrix.crate }} && cargo build --locked
+      - name: Test (locked)
+        run: cd ${{ matrix.crate }} && cargo test --locked
+
+  # ---------------------------------------------------------------------------
+  # One status for a branch ruleset to require. `if: always()` plus an explicit
+  # check on `needs` means a skipped dependency cannot read as success.
+  # ---------------------------------------------------------------------------
+  gate:
+    name: CI / gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [toolchain, lint, test, rust]
+    if: always()
+    steps:
+      - name: Every job succeeded
+        run: |
+          echo "toolchain=${{ needs.toolchain.result }}"
+          echo "lint=${{ needs.lint.result }}"
+          echo "test=${{ needs.test.result }}"
+          echo "rust=${{ needs.rust.result }}"
+          for r in "${{ needs.toolchain.result }}" "${{ needs.lint.result }}" \
+                   "${{ needs.test.result }}" "${{ needs.rust.result }}"; do
+            case "$r" in
+              success) ;;
+              *) echo "::error::ci gate: a required job did not succeed ($r)"; exit 1 ;;
+            esac
+          done
+          echo "✅ ci gate green"
