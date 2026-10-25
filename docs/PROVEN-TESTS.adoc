@@ -108,6 +108,13 @@ each is a way this instrument can lie:
   printed "not found" and exited 0. It now announces the file it wrote.
 * It matched `{:suite_finished, run_us, load_us}`. ExUnit casts
   `{:suite_finished, times_us}`.
+* `init/1` matched `:ok`. ExUnit starts a formatter with the *low-level*
+  `GenServer.start_link(module, opts)`, which calls `init(opts)` directly and
+  never calls the module's own `start_link/1` — so every formatter start raised
+  `FunctionClauseError`, and because the child is `restart: :temporary` under a
+  `DynamicSupervisor`, it vanished without a log line, a failed test or a
+  non-zero exit. A one-line probe (`GenServer.start_link` in the probe workflow)
+  found it in seconds; three full suite runs had not.
 * The manifest stored `file` paths from the repository root while the validator
   runs in `opsm_ex/`, so all 60 entries failed to resolve, and one aspect name
   (`Compatibility`) is not in the 14. Both were caught by
@@ -124,7 +131,14 @@ The suite starts at 60 declared modules / ~850 tests:
   and the summary states the number rather than hiding it.
 * Lattice coverage is small on purpose: a package manager's suite is
   concentrated in Functionality and Security, and the report shows the empty
-  cells instead of implying breadth it does not have.
+  cells instead of implying breadth it does not have. Measured on the first run
+  in which the reporter actually wrote its report: **14 of 238 cells** (5.9%).
+  Every previous number was zero, and the zero was not evidence — it was the
+  absence of an instrument.
+
+`scripts/proven_summary.exs` now fails closed: with `OPSM_PROVEN_REPORT=1` set
+and no report on disk it exits 1 and explains why, instead of printing a
+lattice of zeroes. A missing instrument must never read as a clean suite.
 
 == 5. Adding a test
 
