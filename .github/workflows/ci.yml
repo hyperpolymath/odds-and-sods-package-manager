@@ -54,8 +54,8 @@ jobs:
       - name: opsm.toml [runtime] agrees with .tool-versions and .gitlab-ci.yml
         run: sh scripts/toolchain.sh check
       - name: Lockfiles are tracked
-        # Every directory with a Cargo.toml must have a committed Cargo.lock, and
-        # the glob is deliberate: a new crate cannot be added without one. The
+        # Every tracked Cargo.toml must have a committed Cargo.lock beside it:
+        # a new crate cannot be added anywhere without one. The
         # two NIF crates under opsm_ex/native/ are covered here even though one
         # of them is kept out of the build matrix below — a lock is about
         # reproducibility, and a crate that is quarantined today is un-quarantined
@@ -64,11 +64,11 @@ jobs:
           set -euo pipefail
           fail=0
           [ -f opsm_ex/mix.lock ] || { echo "::error::opsm_ex/mix.lock is missing"; fail=1; }
-          for d in services/*/ opsm_ex/native/*/ opsm-ui/tui/; do
-            [ -f "$d/Cargo.toml" ] || continue
-            git ls-files --error-unmatch "$d/Cargo.lock" >/dev/null 2>&1 \
+          while IFS= read -r -d '' manifest; do
+            d=$(dirname "$manifest")
+            git --literal-pathspecs ls-files --error-unmatch "$d/Cargo.lock" >/dev/null 2>&1 \
               || { echo "::error::$d has a Cargo.toml but no tracked Cargo.lock — reproducible builds need it"; fail=1; }
-          done
+          done < <(git ls-files -z -- 'Cargo.toml' '*/Cargo.toml')
           exit "$fail"
 
   # ---------------------------------------------------------------------------

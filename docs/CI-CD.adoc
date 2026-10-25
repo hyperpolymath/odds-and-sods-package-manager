@@ -62,7 +62,7 @@ Two consequences worth keeping:
   read as "28 green, nothing red" while being unmergeable.
 * *A caller cannot repair a callee.* The only remedy available from inside a
   consumer is to stop depending on it for the check that blocks every merge.
-  `secret-scanner.yml` therefore calls a local, byte-identical copy of the canon
+  `secret-scanner.yml` therefore calls a local copy of the canon
   (`secret-scanner-vendored.yml`), keeping the caller job id `scan` so the
   required context is still `scan / gitleaks`. The cost is drift from canon and
   is recorded in that file's header; the upstream defect is prompt #1 in
