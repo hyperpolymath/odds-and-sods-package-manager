@@ -124,7 +124,7 @@ jobs:
         run: |
           set -uo pipefail
           set +e
-          squabble chains . --follow 1 --json > squabble-chains.json 2> squabble-chains.err
+          squabble chains . --follow 2 --json > squabble-chains.json 2> squabble-chains.err
           rc=$?
           set -e
           echo "rc=$rc" >> "$GITHUB_OUTPUT"

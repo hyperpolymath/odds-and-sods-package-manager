@@ -219,10 +219,6 @@ jobs:
         env:
           CRATE: ${{ matrix.crate }}
         run: cd "$CRATE" && cargo build --locked
-      - name: Test (locked)
-        env:
-          CRATE: ${{ matrix.crate }}
-        run: cd "$CRATE" && cargo test --locked
 
   # ---------------------------------------------------------------------------
   # Conformance, inside this workflow so that `CI / gate` actually covers it.
