@@ -3,7 +3,7 @@
 #
 # Mirror to Git Forges — estate reusable wrapper.
 #
-# PIN: metadatastician/standards@8e48b1c… — see governance.yml.
+# PIN: hyperpolymath/standards@8e48b1c… — see governance.yml.
 #
 # `secrets: inherit` is REQUIRED here (unlike secret-scanner): each forge job is
 # gated on `vars.<FORGE>_MIRROR_ENABLED == 'true'` and reads that forge's SSH
@@ -22,5 +22,5 @@ permissions:
 
 jobs:
   mirror:
-    uses: metadatastician/standards/.github/workflows/mirror-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
+    uses: hyperpolymath/standards/.github/workflows/mirror-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
     secrets: inherit

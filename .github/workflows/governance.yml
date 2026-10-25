@@ -3,7 +3,20 @@
 #
 # Governance wrapper — calls the estate reusable.
 #
-# PIN: metadatastician/standards@8e48b1c… (2026-10-25).
+# PIN: hyperpolymath/standards@8e48b1c… (2026-10-25).
+#
+# The owner in the pin is hyperpolymath, not metadatastician, even though the
+# repository has been renamed and the API follows the redirect. A three-way
+# probe on 2026-10-25 established that GitHub's *workflow* resolver does not:
+#
+#   hyperpolymath/standards@8e48b1c      → the call loads
+#   metadatastician/standards@75bd599    → startup_failure, no job, no log
+#   hyperpolymath/standards@75bd599      → the call loads
+#
+# Only the owner name varied in that middle line. A startup_failure produces no
+# check run at all, so a renamed owner is indistinguishable from "this gate
+# does not exist yet" — and on this repository it made the only required check
+# on main unreachable. Pin the name GitHub resolves, not the one the API prints.
 #
 # The previous pin (84355587…, 2026-08-27) shipped a lockfile with version
 # v0.0.2 in which every dependency was keyed by a full-length commit SHA and
@@ -39,7 +52,7 @@ permissions:
 
 jobs:
   governance:
-    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
+    uses: hyperpolymath/standards/.github/workflows/governance-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
     # Fine-grained, read-only PAT. Optional: without it the workflow-staleness
     # and baseline jobs fall back to the built-in token and degrade loudly
     # rather than silently passing.
