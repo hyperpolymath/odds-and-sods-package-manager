@@ -15,7 +15,12 @@
 #      the failure text, which the Actions log API does not expose here. Round 4
 #      exists because the first two rounds found the reporter had never been
 #      started at all: ExUnit has no `:event_managers` option, and an unknown
-#      key in `ExUnit.start/1` is ignored without a word.
+#      key in `ExUnit.start/1` is ignored without a word. Round 5 found the
+#      second half of the same bug: ExUnit starts a formatter with
+#      `GenServer.start_link(module, opts)`, which calls `init(opts)` directly
+#      — it never calls the module's own `start_link/1`. Matching `init(:ok)`
+#      only meant every formatter start raised, and a `restart: :temporary`
+#      child of a DynamicSupervisor disappears without a log line.
 #   3. `Cargo.lock` for the two NIF crates under opsm_ex/native/ — neither had a
 #      committed lock (`.gitignore` ignored them), so `cargo build --locked`
 #      failed before compiling anything. Only cargo can mint a lock that matches

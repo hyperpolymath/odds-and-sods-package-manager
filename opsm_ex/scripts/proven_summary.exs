@@ -61,8 +61,25 @@ defmodule ProvenSummary do
         end
 
       {:error, _} ->
-        IO.puts(:stderr, "proven-summary: #{@report} not found; run with OPSM_PROVEN_REPORT=1")
-        %{}
+        # Fail closed when the reporter was supposed to run. Silence here is how
+        # a formatter that crashed at start-up went unnoticed: the summary said
+        # "not found", printed a lattice of zeroes, and exited 0 — which reads
+        # exactly like a suite with nothing worth reporting.
+        if System.get_env("OPSM_PROVEN_REPORT") == "1" do
+          IO.puts(:stderr, """
+          proven-summary: #{@report} is missing but OPSM_PROVEN_REPORT=1.
+
+          The reporter is an ExUnit formatter (test/support/proven_reporter.ex).
+          If it did not run, the lattice below is not evidence of anything.
+          Check that ExUnit.start/1 registers it through :formatters — ExUnit
+          has no :event_managers option, and an unknown key is ignored silently.
+          """)
+
+          System.halt(1)
+        else
+          IO.puts(:stderr, "proven-summary: #{@report} not found; run with OPSM_PROVEN_REPORT=1")
+          %{}
+        end
     end
   end
 

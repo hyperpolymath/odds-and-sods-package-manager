@@ -22,10 +22,17 @@ defmodule Opsm.ProvenReporter do
 
   @report "proven-report.json"
 
-  def start_link(_opts), do: GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(_opts), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
 
+  # ExUnit does NOT call start_link/1 on a formatter. It calls
+  # `GenServer.start_link(formatter, opts)` — the low-level starter — which goes
+  # straight to `init(opts)` with `opts` being the formatter's options (`[]`
+  # here). The first version of this file matched `init(:ok)` only, so every
+  # formatter start raised FunctionClauseError, `DynamicSupervisor` dropped the
+  # child (restart: :temporary), and ExUnit carried on without a word. The
+  # report was never written and nothing failed.
   @impl true
-  def init(:ok), do: {:ok, %{}}
+  def init(_opts), do: {:ok, %{}}
 
   @impl true
   def handle_cast({:test_finished, %ExUnit.Test{module: module, state: state, time: time}}, acc) do
