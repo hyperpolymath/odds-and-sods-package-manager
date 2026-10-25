@@ -133,7 +133,25 @@ jobs:
       - name: Install dependencies
         run: cd opsm_ex && mix deps.get
       - name: Run the suite with coverage
-        run: cd opsm_ex && mix test --cover
+        # The suite output is teed and, on failure, re-emitted as annotations.
+        # A repo owner reading the Actions UI does not need this; anything that
+        # reads check runs through the API does, because job logs live in blob
+        # storage that such clients often cannot reach. Annotations are part of
+        # the check run, so they survive that boundary.
+        run: |
+          cd opsm_ex
+          set +e
+          mix test --cover 2>&1 | tee /tmp/mix-test.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            grep -E '^[0-9]+ (doctest|test|property)' /tmp/mix-test.log \
+              | while IFS= read -r line; do echo "::error title=suite summary::${line}"; done
+            grep -A 12 -E '^[[:space:]]+[0-9]+\) test' /tmp/mix-test.log | head -80 \
+              | while IFS= read -r line; do echo "::error title=mix test::${line}"; done
+            grep -B2 -A6 'Coverage test failed' /tmp/mix-test.log \
+              | while IFS= read -r line; do echo "::error title=coverage::${line}"; done
+          fi
+          exit "$rc"
       - name: Validate the Proven-Tests manifest
         run: cd opsm_ex && mix run --no-start scripts/validate_proven.exs
       - name: Publish the Proven-Tests summary
