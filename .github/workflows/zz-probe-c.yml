@@ -1,15 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 # TEMPORARY probe — delete after reading the result.
 #
-# Which variable breaks a reusable call: the owner name (the repository was
-# renamed to metadatastician/standards) or the commit? A rejected run produces
-# no check run and no job, so the only observable is the workflow's own
-# conclusion. Three files, one variable each, compared against the pin that
-# another estate repository is known to start from.
+# old owner, old commit — the control
 name: probe-c
 on: push
 permissions:
   contents: read
 jobs:
   probe-c:
-    uses: hyperpolymath/standards@75bd5994470661a099df562d6d5ad2fe744dbd66/.github/workflows/secret-scanner-reusable.yml
+    uses: hyperpolymath/standards/.github/workflows/secret-scanner-reusable.yml@75bd5994470661a099df562d6d5ad2fe744dbd66
