@@ -20,6 +20,17 @@
 # (reusable workflow → actions → pins) and reports dead upstreams and pin skew
 # as blocking findings.
 #
+# The tool is installed from its signed release, not built from source. An
+# earlier version of this job ran `cargo install --git ... --rev <sha> --locked`,
+# which is a 3-5 minute cold build of a five-crate workspace on every runner,
+# and which fails opaquely whenever the upstream lockfile and manifests disagree
+# at the pinned commit. The release path is the one upstream documents for
+# consumers (`.github/actions/squabble/install.sh`): download the asset, check
+# its sha256, then require a GitHub build-provenance attestation that ties that
+# digest to this repository's release.yml, the v0.1.0 tag and the source commit
+# the tag was built from. A locator tag is not a trust anchor; the digest is,
+# and the attestation is what binds the digest to source.
+#
 # Exit contract (upstream):
 #   0 clean · 2 usage/tool failure · 4 at least one BLOCKING finding
 #       (a dependency cycle, or a dead upstream)
@@ -48,10 +59,19 @@ concurrency:
 
 permissions:
   actions: read
+  attestations: read
   contents: read
 
 env:
-  SQUABBLE_SHA: 14f853fde902ab2d7631070d87a9dc9122e01013
+  # Read from the v0.1.0 release itself, never copied from a tag name. The
+  # digest is the anchor; SQUABBLE_SOURCE_DIGEST is the commit the attestation
+  # must name as the build's source.
+  SQUABBLE_REPO: hyperpolymath/cicd-squabbler
+  SQUABBLE_TAG: v0.1.0
+  SQUABBLE_ASSET: squabble-x86_64-linux-musl
+  SQUABBLE_SHA256: 6cbeb4577d83ccf2dea3405a3afb0d34b7fee422af73f2113d413ea7edba026c
+  SQUABBLE_SOURCE_DIGEST: b854d17abc0dce296719a349ebe856ff945cf03e
+  SQUABBLE_SIGNER_WORKFLOW: hyperpolymath/cicd-squabbler/.github/workflows/release.yml
 
 jobs:
   chains:
@@ -62,29 +82,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: '1.97.0'
-
-      - name: Restore cargo cache
-        uses: actions/cache@v6.1.0
-        with:
-          path: |
-            ~/.cargo/bin
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: cargo-squabble-${{ runner.os }}-${{ env.SQUABBLE_SHA }}
-          restore-keys: cargo-squabble-${{ runner.os }}-
-
-      - name: Build squabble from the pinned commit
+      - name: Download the pinned release asset and verify its sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if [ ! -x "$HOME/.cargo/bin/squabble" ]; then
-            cargo install --git https://github.com/hyperpolymath/cicd-squabbler \
-              --rev "$SQUABBLE_SHA" --locked --root "$HOME/.cargo" squabble-cli
-          fi
-          "$HOME/.cargo/bin/squabble" --help | head -3
+          work="${RUNNER_TEMP}/squabble"
+          mkdir -p "${work}/dl" "${work}/bin"
+          gh release download "${SQUABBLE_TAG}" \
+            --repo "${SQUABBLE_REPO}" \
+            --pattern "${SQUABBLE_ASSET}" \
+            --dir "${work}/dl"
+          printf '%s  %s\n' "${SQUABBLE_SHA256}" "${work}/dl/${SQUABBLE_ASSET}" \
+            | sha256sum --check --strict
+
+      - name: Require a build-provenance attestation for that digest
+        # Provenance, not a checksum: a checksum proves the file did not change
+        # in transit, an attestation proves this repository's release workflow
+        # built it, from the tagged source commit, on a GitHub-hosted runner.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="${RUNNER_TEMP}/squabble"
+          gh attestation verify "${work}/dl/${SQUABBLE_ASSET}" \
+            --repo "${SQUABBLE_REPO}" \
+            --signer-workflow "${SQUABBLE_SIGNER_WORKFLOW}" \
+            --source-ref "refs/tags/${SQUABBLE_TAG}" \
+            --source-digest "${SQUABBLE_SOURCE_DIGEST}" \
+            --predicate-type "https://slsa.dev/provenance/v1" \
+            --deny-self-hosted-runners
+          install -m 0755 "${work}/dl/${SQUABBLE_ASSET}" "${work}/bin/squabble"
+          "${work}/bin/squabble" --version
+          echo "${work}/bin" >> "${GITHUB_PATH}"
 
       - name: Map the dependency chains
         id: chains
@@ -93,7 +123,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -uo pipefail
-          export PATH="$HOME/.cargo/bin:$PATH"
           set +e
           squabble chains . --follow 1 --json > squabble-chains.json 2> squabble-chains.err
           rc=$?
@@ -117,7 +146,7 @@ jobs:
           {
             echo "### CI/CD dependency chains (cicd-squabbler)"
             echo ""
-            echo "Pinned tool commit: \`$SQUABBLE_SHA\`"
+            echo "Tool: \`squabble\` ${SQUABBLE_TAG}, sha256 \`${SQUABBLE_SHA256:0:16}…\` (attestation verified)"
             echo ""
             if [ -s squabble-chains.json ]; then
               echo '```json'

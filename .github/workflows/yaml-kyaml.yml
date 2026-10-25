@@ -41,6 +41,18 @@ env:
   # Pinned to the version named in YAML-POLICY.adoc §0 (the estate workstation
   # build), so the report here matches the report there.
   YQ_VERSION: '4.53.3'
+  # sha256 of yq_linux_amd64 for v4.53.3, taken from the release's own asset
+  # digest (`gh api repos/mikefarah/yq/releases/tags/v4.53.3 --jq '.assets[]
+  # | select(.name=="yq_linux_amd64") | .digest'`) and cross-checked against the
+  # sha256 column of the release `checksums` asset.
+  #
+  # Deliberately NOT parsed out of `checksums` at run time. That asset is not a
+  # `sha256sum -c` list: yq publishes several hashes per file, in the order
+  # given by a second asset called `checksums_hashes_order`, and ships an
+  # `extract-checksum.sh` helper because of it. The first version of this job
+  # grepped for a `sha256sum`-style line, found none, and died with the grep's
+  # exit status — which is why this is a literal now.
+  YQ_SHA256: 'fa52a4e758c63d38299163fbdd1edfb4c4963247918bf9c1c5d31d84789eded4'
 
 jobs:
   parse:
@@ -51,15 +63,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
 
-      - name: Install yq (pinned, checksum-verified)
+      - name: Install yq (pinned by sha256)
         run: |
           set -euo pipefail
           base="https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}"
           curl -fsSLo /tmp/yq "${base}/yq_linux_amd64"
-          curl -fsSLo /tmp/yq.sha256 "${base}/checksums"
-          expected=$(grep -E '^[a-f0-9]{64}[[:space:]]+yq_linux_amd64$' /tmp/yq.sha256 | cut -d' ' -f1)
-          if [ -z "$expected" ]; then echo "::error::no checksum published for yq_linux_amd64"; exit 1; fi
-          echo "${expected}  /tmp/yq" | sha256sum --check --strict
+          printf '%s  %s\n' "${YQ_SHA256}" /tmp/yq | sha256sum --check --strict
           sudo install -m 0755 /tmp/yq /usr/local/bin/yq
           yq --version
 

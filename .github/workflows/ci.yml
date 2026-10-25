@@ -53,11 +53,17 @@ jobs:
       - name: opsm.toml [runtime] agrees with .tool-versions and .gitlab-ci.yml
         run: sh scripts/toolchain.sh check
       - name: Lockfiles are tracked
+        # Every directory with a Cargo.toml must have a committed Cargo.lock, and
+        # the glob is deliberate: a new crate cannot be added without one. The
+        # two NIF crates under opsm_ex/native/ are covered here even though one
+        # of them is kept out of the build matrix below — a lock is about
+        # reproducibility, and a crate that is quarantined today is un-quarantined
+        # by deleting a line, not by discovering it has no lock.
         run: |
           set -euo pipefail
           fail=0
           [ -f opsm_ex/mix.lock ] || { echo "::error::opsm_ex/mix.lock is missing"; fail=1; }
-          for d in services/*/ opsm_ex/native/opsm_pq_nif/ opsm-ui/tui/; do
+          for d in services/*/ opsm_ex/native/*/ opsm-ui/tui/; do
             [ -f "$d/Cargo.toml" ] || continue
             git ls-files --error-unmatch "$d/Cargo.lock" >/dev/null 2>&1 \
               || { echo "::error::$d has a Cargo.toml but no tracked Cargo.lock — reproducible builds need it"; fail=1; }
@@ -162,11 +168,12 @@ jobs:
           - opsm_ex/native/opsm_pq_nif
           - opsm-ui/tui
         # opsm_ex/native/quic_transport is QUARANTINED: it does not compile
-        # (its h3 0.0.6 / h3-quinn 0.0.7 predate quinn 0.11's private StreamId)
-        # and has no committed Cargo.lock. The Elixir side falls back to HTTP/2
-        # when the NIF is absent, so nothing depends on it. See the header of
-        # .gitlab-ci.yml; un-quarantine only after the dependency triple is
-        # migrated and a lock is committed.
+        # (its h3 0.0.6 / h3-quinn 0.0.7 predate quinn 0.11's private StreamId).
+        # The Elixir side falls back to HTTP/2 when the NIF is absent, so
+        # nothing depends on it. See the header of .gitlab-ci.yml;
+        # un-quarantine only after the dependency triple is migrated. Its lock
+        # *is* committed and gated (see toolchain → Lockfiles are tracked), so
+        # that the migration is the only thing standing in the way.
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
