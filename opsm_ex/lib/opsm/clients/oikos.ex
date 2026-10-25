@@ -93,7 +93,11 @@ defmodule Opsm.Clients.Oikos do
       fn {name, version, opts} ->
         {:ok, score} = analyze_package(oikos, name, version, opts)
         {"#{name}@#{version}", score}
-      end, max_concurrency: 5, timeout: 10_000, on_timeout: :kill_task)
+      end,
+      max_concurrency: 5,
+      timeout: 10_000,
+      on_timeout: :kill_task
+    )
     |> Enum.reduce(%{}, fn
       {:ok, {key, score}}, acc -> Map.put(acc, key, score)
       {:exit, _}, acc -> acc

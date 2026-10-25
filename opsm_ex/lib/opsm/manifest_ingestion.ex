@@ -107,7 +107,9 @@ defmodule Opsm.ManifestIngestion do
                "-C",
                Path.dirname(package_path),
                Path.basename(package_path)
-             ], stderr_to_stdout: true) do
+             ],
+             stderr_to_stdout: true
+           ) do
         {_, 0} ->
           Logger.info("Tarball created successfully: #{tarball_path}")
           {:ok, tarball_path}
