@@ -48,15 +48,6 @@ concurrency:
 permissions:
   contents: write
 
-env:
-  # Recon inputs. Both are source-only tools: no release asset exists to pin, so
-  # the pin is the commit the clone is made from and `git rev-parse HEAD` is
-  # recorded in the report to prove which one was actually analysed.
-  PONS_REPO: https://github.com/hyperpolymath/pons-asinorum
-  PONS_SHA: 51b8920f541782ceb9465ea3f0d33c96104fc1fb
-  PANIC_REPO: https://github.com/hyperpolymath/panic-attack
-  PANIC_SHA: b5530834a839734d1d181bfe6edb0d43d4233cf4
-
 jobs:
   bootstrap:
     name: Produce the toolchain artefacts
@@ -88,7 +79,6 @@ jobs:
           set +e
           set -uo pipefail
           out=.ci-bootstrap/report.txt
-          mkdir -p .ci-bootstrap/recon
           {
             echo "# CI bootstrap report"
             echo
@@ -136,46 +126,32 @@ jobs:
           run 'mix compile --warnings-as-errors' bash -lc 'cd opsm_ex && mix compile --warnings-as-errors'
 
           # 3. The suite, with the Proven-Tests reporter on, exactly as ci.yml
-          #    runs it. The last 500 lines hold the summary and every failure.
-          section 'mix test --cover (last 500 lines)'
-          ( cd opsm_ex && MIX_ENV=test OPSM_PROVEN_REPORT=1 mix test --cover 2>&1 | tail -500 ) >> "$out" 2>&1
-          printf '\n```\n' >> "$out"
+          #    runs it. The output is filtered rather than tail-ed: the suite
+          #    logs a 404 for every registry it probes, which buried the one
+          #    failure under 400 lines of warnings the first time.
+          section 'mix test --cover (filtered: warnings and coverage rows removed)'
+          ( cd opsm_ex && MIX_ENV=test OPSM_PROVEN_REPORT=1 mix test --cover > /tmp/mix-test.log 2>&1 )
+          echo "exit code: $?" >> "$out"
+          grep -v 'HTTP GET returned status' /tmp/mix-test.log | grep -vE '^\| ' | tail -200 >> "$out" 2>&1
+          close
+
+          # 3b. Did the reporter actually write its report? The first version of
+          #     proven_reporter.ex matched an ExUnit event shape that no longer
+          #     exists, so it wrote nothing and the summary said "not found".
+          run 'ls proven-report.json' bash -lc 'cd opsm_ex && ls -l proven-report.json'
+          run 'head proven-report.json' bash -lc 'cd opsm_ex && head -c 600 proven-report.json'
           run 'validate_proven.exs' bash -lc 'cd opsm_ex && mix run --no-start scripts/validate_proven.exs'
           run 'proven_summary.exs' bash -lc 'cd opsm_ex && mix run --no-start scripts/proven_summary.exs'
 
           # 4. Lockfiles for the two NIF crates, then the honest question: does
-          #    each crate build once it has a lock?
+          #    each crate build — and do its tests run — once it has a lock?
           for crate in opsm_pq_nif quic_transport; do
             d="opsm_ex/native/${crate}"
             [ -f "$d/Cargo.toml" ] || continue
             run "cargo generate-lockfile (${crate})" bash -lc "cd '$d' && cargo generate-lockfile"
-            run "cargo build --locked (${crate})" bash -lc "cd '$d' && cargo build --locked 2>&1 | tail -40"
+            run "cargo build --locked (${crate})" bash -lc "cd '$d' && cargo build --locked 2>&1 | tail -20"
+            run "cargo test --locked (${crate})" bash -lc "cd '$d' && cargo test --locked 2>&1 | tail -30"
           done
-
-          # 5. Recon: pons-asinorum (falsifier-first static analysis).
-          run 'clone pons-asinorum' git clone --depth 1 "${PONS_REPO}" /tmp/pons-src
-          run 'pons-asinorum HEAD' git -C /tmp/pons-src rev-parse HEAD
-          run 'cargo build --release --locked (pons-asinorum)' \
-            bash -lc 'cd /tmp/pons-src && cargo build --release --locked 2>&1 | tail -40'
-          section 'pons scan . --format json --no-speculative'
-          /tmp/pons-src/target/release/pons scan . --format json --no-speculative \
-            > .ci-bootstrap/recon/pons-scan.json 2> .ci-bootstrap/recon/pons-scan.err
-          echo "exit code: $?" >> "$out"; close
-          run 'pons catalogue' bash -lc '/tmp/pons-src/target/release/pons catalogue > .ci-bootstrap/recon/pons-catalogue.json'
-          run 'pons doctor' bash -lc '/tmp/pons-src/target/release/pons doctor'
-          wc -c .ci-bootstrap/recon/pons-scan.json .ci-bootstrap/recon/pons-catalogue.json >> "$out" 2>&1
-
-          # 6. Recon: panic-attack (assail = static analysis of a source tree).
-          run 'clone panic-attack' git clone --depth 1 "${PANIC_REPO}" /tmp/panic-src
-          run 'panic-attack HEAD' git -C /tmp/panic-src rev-parse HEAD
-          run 'cargo build --release --locked (panic-attack)' \
-            bash -lc 'cd /tmp/panic-src && cargo build --release --locked 2>&1 | tail -40'
-          section 'panic-attack assail . --headless'
-          /tmp/panic-src/target/release/panic-attack assail . --output .ci-bootstrap/recon/panic-assail.json --headless \
-            > .ci-bootstrap/recon/panic-assail.log 2>&1
-          echo "exit code: $?" >> "$out"; close
-          run 'panic-attack --version' /tmp/panic-src/target/release/panic-attack --version
-          wc -c .ci-bootstrap/recon/panic-assail.json .ci-bootstrap/recon/panic-assail.log >> "$out" 2>&1
 
           # 7. What changed, then commit it (in the next step, always()).
           section 'git status after the run'

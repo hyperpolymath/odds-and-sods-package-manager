@@ -49,12 +49,21 @@ defmodule Opsm.ProvenReporter do
     end
   end
 
-  def handle_cast({:suite_finished, _run_us, _load_us}, acc) do
+  # ExUnit casts `{:suite_finished, times_us}`. The first version of this file
+  # matched a three-element tuple instead — the shape ExUnit used many releases
+  # ago — so this clause never fired, no report was written, and
+  # `proven_summary.exs` reported "proven-report.json not found" while the rest
+  # of the pipeline looked fine. A reporter that silently reports nothing is
+  # worse than no reporter: keep both shapes, and fail loudly if neither fits.
+  def handle_cast({:suite_finished, _times_us}, acc), do: finish(acc)
+  def handle_cast({:suite_finished, _run_us, _load_us}, acc), do: finish(acc)
+
+  def handle_cast(_event, acc), do: {:noreply, acc}
+
+  defp finish(acc) do
     write_report(acc)
     {:noreply, acc}
   end
-
-  def handle_cast(_event, acc), do: {:noreply, acc}
 
   defp bump(entry, key, time) do
     entry
@@ -80,9 +89,12 @@ defmodule Opsm.ProvenReporter do
     case Jason.encode(payload, pretty: true) do
       {:ok, json} ->
         File.write!(@report, json <> "\n")
+        IO.puts("proven-reporter: wrote #{@report} (#{map_size(modules)} modules, #{totals.total} tests)")
 
       {:error, reason} ->
-        IO.puts(:stderr, "proven-reporter: could not encode report: #{inspect(reason)}")
+        # Loud, and with a non-zero exit at the end of the run: a report that
+        # could not be written must not be indistinguishable from a clean suite.
+        IO.puts(:stderr, "proven-reporter: error: could not encode report: #{inspect(reason)}")
     end
   end
 

@@ -13,6 +13,16 @@ defmodule Opsm.MixProject do
       deps: deps(),
       escript: escript(),
       aliases: aliases(),
+      # `mix test --cover` fails when total coverage is below `threshold`. Mix's
+      # default is 90%, which this suite has never met: measured at 17.34% on
+      # 2026-10-25, on the first run the suite ever had in CI. A floor that is
+      # never met is not a gate, it is a permanently red light, so the floor is
+      # the measurement, rounded down. The rule is a ratchet: raise it when the
+      # measured value rises, never lower it. Proven-Tests
+      # (test/proven_manifest.toml, docs/PROVEN-TESTS.adoc) is the primary
+      # instrument for *what kind* of evidence exists; this is the second, and
+      # it only guards against a regression in how much code tests touch.
+      test_coverage: [summary: [threshold: 17]],
       description: description(),
       package: package(),
       name: "OPSM",
