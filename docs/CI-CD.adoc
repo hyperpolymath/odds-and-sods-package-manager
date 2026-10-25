@@ -1,0 +1,288 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= CI/CD Architecture
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: preamble
+:toclevels: 3
+
+This document describes every automated check that runs on this repository,
+what it would catch, and how to run it locally. It exists because the
+repository spent months with a CI that *looked* comprehensive and gated
+nothing: sixteen workflows, all red, and nobody able to say why.
+
+== 0. The failure that made this document necessary
+
+Every estate gate — Governance, Hypatia, Secret Scanner, OSSF Scorecard —
+failed at step 1, `Set up job`, with
+
+----
+Unable to resolve action `actions/checkout@3d3c42e5…`:
+invalid lockfile pin. Run `gh actions-lock` to update the lockfile
+----
+
+The message is about the *called* workflow's lockfile, not ours. A reusable
+workflow is covered by the lockfile of the repository that defines it. We
+pinned `metadatastician/standards` (still reachable as `hyperpolymath/standards`
+by redirect) at `84355587…`, whose `actions.lock` is format `v0.0.2` and records
+every dependency with the bare commit SHA as its own `ref`. GitHub's workflow
+dependency lockfile enforcement rejects that shape.
+
+That diagnosis was correct about the mechanism and wrong about the fix. Moving
+to `8e48b1c` (lockfile `v0.0.3`, tag in `ref`) made the *old* error go away and
+replaced it with a worse one: `startup_failure`, zero jobs, no log, no check
+run. Measured on 2026-10-25, one variable per run:
+
+[cols="3,2,2",options="header"]
+|===
+| Call | Result | Jobs
+
+| `metadatastician/standards@8e48b1c` (HEAD)
+| `startup_failure`
+| 0
+
+| `hyperpolymath/standards@8e48b1c`
+| `failure`
+| 0
+
+| `metadatastician/standards@cf8f912`
+| governance, hypatia, secret-scanner: `startup_failure`; scorecard, mirror: start
+| 0 / 0 / 0 / 1 / 7
+|===
+
+So it is neither the owner spelling nor the commit: at one pin, two reusables
+start and three do not. The same three are dead in
+`hyperpolymath/cicd-squabbler` and `hyperpolymath/panic-attack`, which means
+this is an estate defect, not a defect of this repository.
+
+Two consequences worth keeping:
+
+* *A rejected run produces no check run at all.* `gh pr checks` shows nothing,
+  the annotations endpoint 404s, and the only observable is
+  `gh run list --json conclusion`. The only required check on `main` was in
+  precisely this state for the whole of this branch's life, so the pull request
+  read as "28 green, nothing red" while being unmergeable.
+* *A caller cannot repair a callee.* The only remedy available from inside a
+  consumer is to stop depending on it for the check that blocks every merge.
+  `secret-scanner.yml` therefore calls a local copy of the canon
+  (`secret-scanner-vendored.yml`), keeping the caller job id `scan` so the
+  required context is still `scan / gitleaks`. The cost is drift from canon and
+  is recorded in that file's header; the upstream defect is prompt #1 in
+  `docs/CROSS-REPO-PROMPTS.adoc`.
+
+The second failure this document records is quieter and worse: `e2e.yml` had
+two Elixir jobs reading `.tool-versions` with `version-type: strict`, and that
+file is generated and was never committed. Both jobs died at step 3. The suite
+of ~850 tests has therefore never run in CI on this repository.
+
+== 0.1 Four more failures, and why they needed a real run
+
+Moving the pin made the estate gates start, which exposed the failures that
+were behind them. All four were in this repository's own configuration, and
+none of them could be seen from a workflow file alone.
+
+yq checksum::
+`yaml-kyaml.yml` downloaded `yq_linux_amd64` and verified it against the
+release's `checksums` asset, with a `grep` for a `sha256sum -c` style line.
+yq does not publish one. Its `checksums` file carries several hashes per file,
+in the order given by a second asset called `checksums_hashes_order`, and the
+release ships `extract-checksum.sh` because of it. The `grep` matched nothing,
+and under `set -euo pipefail` its status killed the step — no message, because
+the `if [ -z ... ]` guard came after. The digest is now a literal in
+`env: YQ_SHA256`, read from the release asset's own `digest` field:
++
+----
+gh api repos/mikefarah/yq/releases/tags/v4.53.3 \
+  --jq '.assets[] | select(.name=="yq_linux_amd64") | .digest'
+----
++
+A digest in the workflow is a pin. A `grep` over someone else's format is a
+guess about their release process.
+
+squabble from source::
+`cicd-squabbler.yml` installed the tool with `cargo install --git … --rev …
+--locked`. That is a five-crate workspace built from cold on every runner, and
+it fails identically and opaquely whether the commit is unreachable, the
+upstream lock disagrees with its manifests, or the network hiccups. The tool
+publishes a signed release, and its own consumer action pins that release by
+digest *and* requires a SLSA build-provenance attestation. The job does the
+same three things in the same order: download, check sha256, require an
+attestation naming `release.yml`, the tag and the source commit — then run it.
+The tag locates the artefact; the attestation is what makes it trustworthy.
+
+A `.gitignore` that made a gate impossible::
+`Toolchain pins → Lockfiles are tracked` failed on both NIF crates. The cause
+was line 48 of `.gitignore`: `opsm_ex/native/*/Cargo.lock`. `cargo build
+--locked` could never have worked, and `mix test` built whatever the resolver
+picked that day. The rule is gone; the gate now globs `opsm_ex/native/*/` so a
+new crate cannot arrive without a lock either.
+
+The formatter, the coverage floor, and a reporter that reported nothing::
+`Format + strict compile` failed on its first ever run: this repository had
+never been format-checked. Three files needed changes, and the change is the
+formatter's, not a human's. Two further defects surfaced only once the suite
+ran for the first time:
++
+* `proven_reporter.ex` was registered with `ExUnit.start(event_managers: …)`.
+  ExUnit has no such option — `:event_managers` is the name of its internal
+  module, and the public option is `:formatters`. An unknown key in
+  `ExUnit.start/1` is ignored without a word, so the reporter never started,
+  no `proven-report.json` was written, and `proven_summary.exs` printed
+  "not found" while exiting 0. It also handled `{:suite_finished, run_us,
+  load_us}`; ExUnit casts `{:suite_finished, times_us}`.
+* `mix test --cover` failed on Mix's default 90% threshold against a measured
+  17.34%. A floor that has never been met is not a gate, it is a permanently
+  red light. `mix.exs` now states the measured floor and the ratchet rule in
+  the same place: raise it when the measurement rises, never lower it.
+
+Known debt, recorded rather than hidden::
+The suite still performs roughly four hundred live `raw.githubusercontent.com`
+requests per run, because tests that reach the Hyperpolymer Forge registry walk
+a cold index (`HyperpPolymathForge.ensure_index/0` → `refresh_org_repos/0`) and
+most of them are not tagged `:external_api`. The first-ever run had one failure
+that did not reproduce on the next two runs; a suite that talks to the network
+is the most likely reason. Tagging those tests correctly is the next piece of
+work, not a silent `--exclude`.
+
+== 1. The pipeline at a glance
+
+[cols="3,2,6",options="header"]
+|===
+| Workflow | Trigger | What it actually decides
+
+| `ci.yml`
+| push, PR
+| Toolchain pins, formatter, strict compile, the whole ExUnit suite, the
+  Proven-Tests report, and a locked build of every first-party Rust crate.
+  `CI / gate` is the single status a ruleset should require.
+
+| `json-ijson-jcs.yml`
+| push, PR
+| Every `*.json` is I-JSON + JCS canonical and every `*.jsonl` is one canonical
+  record per line (JSON-POLICY J-1/J-2). Blocks.
+
+| `yaml-kyaml.yml`
+| push, PR (YAML paths)
+| Every tracked YAML parses (blocks); KYAML conformance is reported, not
+  enforced — YAML-POLICY Y-3 is sequenced and its scope is undecided.
+
+| `cicd-squabbler.yml`
+| PR (workflow paths), weekly
+| `squabble chains`: which repositories our CI depends on, at which pin, and
+  whether any of them is dead or cyclic. Exit 4 blocks; a tool/network failure
+  is loud but is *not* reported as a verdict.
+
+| `governance.yml`
+| push, PR
+| Estate reusable: workflow lint, licence consistency, trusted-base, docs,
+  package policy, well-known, language policy, ratchets.
+
+| `secret-scanner.yml`
+| push, PR
+| Estate reusable: gitleaks + Rust + shell secret scans. `scan / gitleaks` is
+  the one *required* status check on `main`.
+
+| `hypatia-scan.yml`
+| push, PR, weekly
+| Estate reusable: Hypatia rules, plus `panic-attack` (stress/logic signatures)
+  and `pons-asinorum` (wasted work, self-contradiction, missing escape hatches),
+  both built from source at pinned commits. Uploads SARIF.
+
+| `scorecard.yml`
+| daily
+| OSSF Scorecard via the estate reusable.
+
+| `dogfood-gate.yml`
+| push, PR
+| A2ML/DEED and K9 validation of this repository's own manifests.
+
+| `echidna-validation.yml`
+| push, PR, weekly
+| Unsafe-code and dangerous-pattern audit over the Rust trees.
+
+| `e2e.yml`, `nif-build.yml`, `trust-pipeline-e2e.yml`
+| paths / manual
+| The suites that need something CI cannot assume: the full install pipeline,
+  the NIF, and the live trust services.
+|===
+
+== 2. Tiers, and why "advisory" is written down
+
+The estate's recurring CI failure is a rule with no tool behind it. The second
+is an *advisory* rule that everyone reads as a gate. Every check here is
+therefore one of:
+
+*Blocking*:: a failure stops the merge. It is either a real defect or the check
+  itself is broken — investigate, do not silence.
+*Report-only, by policy*:: KYAML drift (Y-3 is sequenced; enforcing an
+  undecided scope would be inventing policy) and JSON in any repository that
+  has not finished conversion. This repository has finished, so JSON blocks.
+*Advisory, temporarily*:: nothing. There is no "we will fix it later" lane.
+
+If you add `continue-on-error: true`, say why in a comment on that step and
+link the issue that removes it.
+
+== 3. The lockfile rules you must not break
+
+`.github/workflows/actions.lock` is machine-generated by `gh actions-lock`. It
+is enforced by GitHub at job start, in the repository that defines the
+workflow.
+
+* Every `uses:` in this repository needs a `workflows` list entry and a
+  `dependencies` entry.
+* The dependency key is the *repository*, not the action path:
+  `github/codeql-action@v4.39.1` covers `github/codeql-action/init@v4.39.1`.
+* The `ref` must be the tag or branch a human can read. A bare SHA as its own
+  `ref` is the defect described in §0.
+* Job-level reusable workflow calls (`uses: owner/repo/.github/workflows/x.yml@ref`)
+  are **not** locked — that lock lives upstream. Our wrappers still pin a full
+  SHA for reproducibility, and `cicd-squabbler.yml` reports pin skew.
+* After changing any `uses:`, run `gh actions-lock` and commit both halves.
+  A bump without the lockfile makes every job fail with no log and no
+  annotation, which is the single most expensive mistake available here.
+
+== 4. Running the gates locally
+
+[source,sh]
+----
+just ci            # everything below, in order
+just ci-fast       # the cheap half: pins, formatter, JSON, YAML
+
+just toolchain-check   # opsm.toml [runtime] vs .tool-versions vs .gitlab-ci.yml
+just fmt-check         # mix format --check-formatted
+just lint              # mix compile --warnings-as-errors
+just test              # mix test
+just proven-check      # validate test/proven_manifest.toml against the suite
+just proven-report     # the suite + the coverage lattice
+just json-check        # report-only; `just json-enforce` to block
+just yaml-check        # parse (blocks) + KYAML drift (report-only)
+just squabble-chains   # needs `squabble` on PATH
+----
+
+Tools the gates expect: `ijson-jcs` (cargo install from
+hyperpolymath/ijson-jcs), `yq` 4.53.3 (mikefarah), `squabble` (the attested
+release from hyperpolymath/cicd-squabbler — `gh release download v0.1.0
+-R hyperpolymath/cicd-squabbler --pattern squabble-x86_64-linux-musl`; without
+`-R` it looks for the asset in whatever repository you are standing in), `mix`/`elixir` per `.tool-versions`,
+`cargo` 1.97.0. CI installs each of these itself; nothing is assumed to be on
+the runner image.
+
+== 5. What this repository does *not* gate, and why
+
+* *Elixir code in `opsm-ui/`* — the directory is a vendored copy of a separate
+  UI specification repository. Its nested `.github/` and `.gitlab-ci.yml` were
+  removed: GitHub only reads workflows from the repository root, so those files
+  could never run, and they pinned a standards commit that had already broken.
+* *`opsm_ex/native/quic_transport`* — quarantined upstream of this document,
+  and re-verified on 2026-10-25 with a committed `Cargo.lock`: `cargo build
+  --locked` still fails with E0616, `field 0 of struct quinn::StreamId is
+  private`, from `h3-quinn` 0.0.7 against `quinn` 0.11. The Elixir side falls
+  back to HTTP/2 when the NIF is absent, so nothing depends on it. It is
+  excluded from the Rust matrix and from `.gitlab-ci.yml`'s `RUST_CRATE_DIRS`,
+  but *not* from the lockfile gate: its lock is committed, so the only thing
+  standing between it and a green build is the h3/h3-quinn/quinn triple.
+* *Coverage percentage* — a floor of **17%** is enforced by
+  `opsm_ex/mix.exs` (`test_coverage: [summary: [threshold: 17]]`), which is
+  Mix's own `--cover` check. The number is the first CI measurement (17.34%)
+  rounded down, not a target. It is a ratchet: raise it when the measurement
+  rises, never lower it to make a build pass. What it does *not* do is say
+  anything about the kind of evidence behind a test — that is
+  `docs/PROVEN-TESTS.adoc`, and the two are deliberately separate instruments.

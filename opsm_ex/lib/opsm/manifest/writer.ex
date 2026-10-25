@@ -423,7 +423,10 @@ defmodule Opsm.Manifest.Writer do
         {name,
          if(
            String.starts_with?(version, "^") or String.starts_with?(version, "~") or
-             String.starts_with?(version, ">"), do: version, else: "^#{version}")}
+             String.starts_with?(version, ">"),
+           do: version,
+           else: "^#{version}"
+         )}
 
       {name, version} ->
         {name, "^#{version}"}

@@ -1,0 +1,315 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Cross-repo prompts: seven changes that would unblock or strengthen this repository
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: left
+:toclevels: 3
+
+Each section below is a self-contained prompt. Paste it into an agent working
+in the named repository; nothing else from this document is needed. They are
+ordered by how much they block *this* repository: 1 and 2 are the reason two
+gates cannot be made green from here at all, 3–7 are the reason a gate that
+does run cannot yet run to its full strength.
+
+Every prompt was written from an observed failure on
+`hyperpolymath/odds-and-sods-package-manager` on 2026-10-25, and each names
+that observation, because "please improve X" is not actionable and "X failed
+with this exact message" is.
+
+== 1. `standards` — three reusables cannot load for any consumer
+
+[source,text]
+----
+Context: three of your five reusable workflows cannot be called by a consumer
+repository at all. Measured on hyperpolymath/odds-and-sods-package-manager on
+2026-10-25, one variable per workflow:
+
+    metadatastician/standards@8e48b1c (HEAD)  startup_failure, zero jobs
+    hyperpolymath/standards@8e48b1c (HEAD)    failure, zero jobs
+    metadatastician/standards@cf8f912         governance   startup_failure
+                                              hypatia-scan startup_failure
+                                              secret-scanner startup_failure
+                                              scorecard     starts (1 job)
+                                              mirror        starts (7 jobs)
+
+The same three are dead in hyperpolymath/cicd-squabbler and
+hyperpolymath/panic-attack, on both owner spellings and at both commits. So this
+is not a caller misconfiguration and not a lockfile format issue any more.
+
+Why it is urgent: `scan / gitleaks` is the ONLY required status check on main in
+several consumer repositories. A refused call produces no check run, so those
+repositories are permanently unmergeable, and the PR page shows no red check to
+explain why. panic-attack and odds-and-sods-package-manager have both vendored
+their own copies of secret-scanner-reusable.yml to unblock merges. That is drift
+that will never be reconciled unless the reusable loads again.
+
+What to change:
+1. Find out why the three fail to load. Start with the jobs' `permissions` and
+   any nested `uses:` — a startup_failure from a reusable that a sibling repo
+   loads at the same SHA is usually a nested call or an action the callee's own
+   lockfile cannot resolve.
+2. Add a self-test workflow IN standards that calls each reusable exactly as a
+   consumer does (`uses: metadatastician/standards/.github/workflows/X@<sha>`,
+   caller job named `scan`, `permissions: contents: read`) and fails loudly if
+   the run yields zero jobs. Zero-jobs is invisible to every check-run API; only
+   `gh run list --json conclusion` sees it. This is the guard that would have
+   caught it.
+3. Keep the v0.0.2 → v0.0.3 lockfile guidance, but note in the README that a
+   valid lockfile is necessary and not sufficient: a reusable can still be
+   refused for calls the lock does not cover.
+4. Publish, for each reusable, the exact caller shape that is known to start,
+   as a copy-pasteable block, and the owner spelling that resolves. Consumers
+   are currently guessing, and each guess costs a merge-blocking cycle.
+
+Acceptance criteria:
+* A consumer pinned at a tagged release of standards can call governance,
+  hypatia-scan, secret-scanner, scorecard and mirror and get at least one job in
+  each.
+* The self-test above runs on every push to standards and fails on zero jobs.
+* The consumer README names one canonical pin (owner + tag) per reusable.
+----
+
+== 2. `hyperpolymath/cicd-squabbler` — a tag consumers can pin
+
+[source,text]
+----
+Context: this repository wants to run `squabble chains` in CI. Your release
+v0.1.0 is signed and attested, and its consumer action
+(.github/actions/squabble) installs the binary by sha256 + SLSA attestation —
+that part is excellent and is now used verbatim.
+
+Two gaps make the action unpinnable in practice:
+
+1. The tag v0.1.0 predates .github/actions/squabble (added in 651ec38, PR #128),
+   so `uses: hyperpolymath/cicd-squabbler/.github/actions/squabble@v0.1.0` does
+   not resolve. The only working pin is a 40-hex commit SHA, and the estate's
+   actions.lock format (v0.0.3) stores a human-readable `ref` next to the
+   commit — a SHA in the `ref` position is exactly the shape that the standards
+   validator rejects. Consumers are therefore stuck between two rules.
+2. `cargo install --git https://github.com/hyperpolymath/cicd-squabbler --rev
+   <sha> --locked squabble-cli` fails opaquely on a cold runner (five-crate
+   workspace; the failure is identical whether the commit is unreachable, the
+   lockfile disagrees with a manifest, or the network blips). That was the
+   previous install path in this repository and it cost two CI cycles to
+   diagnose without logs.
+
+What to change:
+1. Cut a release (v0.1.1 or v0.2.0) that contains .github/actions/squabble, so
+   the tag, the release asset and the action are one coherent pin.
+2. Add a `docs/CONSUMERS.adoc` that states the canonical pin: the tag, the
+   asset name, the sha256, the attestation predicate, and the two-line install.
+3. Publish the `chains` JSON schema version and its exit-code contract
+   (0 clean / 2 usage·tool / 4 blocking) in that same document, and make
+   `--json` output stable across patch releases.
+
+Acceptance criteria:
+* `uses: hyperpolymath/cicd-squabbler/.github/actions/squabble@vX.Y.Z` resolves
+  and the tag's install.sh pins that same release's asset digest.
+* A consumer can pin the action by tag and record tag + commit in an
+  actions.lock v0.0.3 entry.
+* `squabble chains --json` output is covered by a schema file in the repo, and
+  a test fails if a field is removed.
+
+Constraints: keep the digest-and-attestation install path exactly as it is; it
+is the strongest part of this repository and the model the rest of the estate
+should copy.
+----
+
+== 3. `hyperpolymath/proven-tests-and-benches` — a runnable artefact
+
+[source,text]
+----
+Context: this repository has adopted the Proven-Tests classification for its
+Elixir suite (60 test modules, 17×14 lattice, three tiers) because the idea is
+right: a warrant is a value, not a label, and coverage is derived from tests
+that ran and passed. Adoption had to be hand-rolled: an ExUnit formatter that
+records per-module pass/fail, a TOML manifest of (module, category, aspect,
+tier), and a validator written in Elixir that re-states your enumerations.
+
+That is four re-implementations of your types, in a language you do not ship,
+and it is a drift risk rather than an integration. Three concrete problems
+were hit while doing it:
+
+1. Nothing in the repository is runnable by a consumer. The framework is
+   Idris2 source and proofs; there is no CLI, no schema file, and no release
+   asset. A consumer cannot ask "is this manifest valid" without writing their
+   own validator.
+2. There is no machine-readable schema for the manifest or for the report, so
+   every consumer invents one. Ours is TOML; another repo's will be YAML.
+3. The README notes that the estate standard defines 16 categories and that the
+   17th (TypeSafeTest) is a local extension, unratified (DEBT S-4). Consumers
+   cannot pin an enumeration that is documented as being in flux.
+
+What to change:
+1. Ship `proven-manifest.schema.json` and `proven-report.schema.json` (JSON
+   Schema 2020-12), with the categories and aspects as enums, and a
+   `proven validate <manifest> <report>` CLI — escript, single static binary,
+   or even a shell wrapper over a schema validator. The CLI matters more than
+   the language.
+2. Add "not applicable" as a fourth verdict, distinct from "unproven". A CLI
+   tool has no Accessibility cells; forcing them to read as unproven makes the
+   report dishonest in the other direction.
+3. Publish a reference reporter interface: the exact event stream a consumer
+   must observe (test started/finished with module + state, suite finished) and
+   the JSON shape it must emit. Provide an ExUnit example, since that is the
+   estate's largest test runner.
+4. Resolve the 16-vs-17 category question, or state the policy: "17 is the
+   norm; TypeSafeTest is reserved; validators must accept exactly 17".
+
+Acceptance criteria:
+* A consumer with no Idris2 toolchain can validate a manifest and produce a
+  lattice report from a JSON file of test results.
+* The enums live in one schema file, and the Idris2 types are checked against
+  it in this repository's CI.
+* "not applicable" cells are not counted as unproven.
+
+Constraints: do not weaken the Actually-Proven rule. A citation in a manifest
+is not a proof; if a consumer cannot produce a typechecked ladder, the tier
+stays Provisionally-Proven. Say that in the schema description.
+----
+
+== 4. `hyperpolymath/ijson-jcs` — a binary and a line-oriented mode
+
+[source,text]
+----
+Context: this repository enforces I-JSON (RFC 7493) + JCS (RFC 8785) on every
+tracked .json file, and the gate works: it rewrote 16 files to canonical form
+on first run. Three things were missing for a clean integration:
+
+1. No prebuilt binary or action. CI runs `cargo install --git … --rev …`, which
+   is a multi-minute build per run and fails opaquely when the pinned commit
+   cannot be fetched. A release asset (like cicd-squabbler ships) plus a
+   composite action would make this a one-line gate.
+2. No JSON Lines mode. `.hypatia/activity.jsonl` and any append-only log need
+   one canonical JSON value per line — canonicalising the file as a single JSON
+   document fails, and so does pretty-printing. The workaround here was a
+   fifteen-line Python canonicaliser applied line by line. `--jsonl` (and
+   `--jsonl --check`) would remove it.
+3. No documented exit-code contract. The gate needs to distinguish "a file is
+   not canonical" (blocking) from "an int exceeds 2^53-1, so JCS is not
+   defined" (a different, louder failure) and from "the tool broke".
+
+What to change:
+* Publish release binaries per platform with sha256 checksums and a build
+  provenance attestation, plus `.github/actions/ijson-jcs` that installs and
+  runs it (the cicd-squabbler action is a good model).
+* Add `--jsonl` to `check`, `fix` and `canon`.
+* Document exit codes: 0 canonical, 1 non-canonical (or fixed), 2 tool/usage
+  error, 3 input outside RFC 8785's domain (integers not exactly representable
+  as an IEEE 754 double, lone surrogates, duplicate keys).
+  **Finite floats are not an error**: RFC 8785 canonicalises them, and `4.5` is
+  valid input. Reserving 3 for floats would reject conforming data.
+  Non-finite values (`NaN`, `Infinity`) are a different matter and belong in 3 —
+  they have no JSON representation at all.
+* Ship a `json-policy.adoc` snippet that other repos can paste, including the
+  rule that pretty-printing is a *rendering* and never the stored form.
+
+Acceptance criteria: a consumer can add the action to a workflow with a tag
+pin, run `--jsonl --check`, and tell 1 from 3 from 2 without reading stdout.
+----
+
+== 5. `hyperpolymath/pons-asinorum` — an Elixir adapter, and binaries
+
+[source,text]
+----
+Context: this repository ran `pons scan . --format json --no-speculative` at
+commit 51b8920f. It exited 0 with 0 findings, and the report shows why that
+number is worthless here:
+
+    coverage_status: partial
+    inventory 4685 → 11 analysed · 449 unsupported (no adapter) · 4225 excluded
+    elixir: 692 entries → 423 excluded by policy · 269 no adapter · 0 analysed
+
+The repository is 692 Elixir files. pons analysed 10 Rust files and 1 Python
+file. A "clean" result over 0.2% of the tree is the failure mode this tool is
+supposed to prevent.
+
+What to change:
+1. An Elixir adapter. The rules that matter here are visible without a full
+   semantic model: `System.cmd` with a string vs an argv list, `String.to_atom`
+   on untrusted input, `Code.eval_*`, `:erlang.binary_to_term` on untrusted
+   data, unhandled `:error` tuples, `Task.await` without a timeout, and
+   `Application.get_env` read at module load.
+2. Release binaries with sha256 + attestation (the estate has a working pattern
+   in cicd-squabbler). Building from source at a pinned commit is acceptable
+   for a one-off recon and unacceptable for a gate.
+3. Make the CI posture explicit in the README: `--fail-on-skips` is the only
+   honest flag until every language a repo contains has an adapter, because
+   exit 0 over a partial inventory reads as "clean". Consider making
+   `coverage_status: partial` exit non-zero by default when `--fail-on-skips`
+   is not passed, or print a one-line warning that says the scan cannot see the
+   repository's largest language.
+4. Publish the `--format sarif` mapping for GitHub code scanning, including
+   the evidence classes, since SPECULATIVE findings must never gate a build.
+
+Acceptance criteria: scanning an Elixir repository of ~700 files reports at
+least the file inventory with `analysed > 0` for Elixir, and a repository whose
+main language has no adapter cannot exit 0 silently.
+----
+
+== 6. `hyperpolymath/panic-attack` — release assets and a CI contract
+
+[source,text]
+----
+Context: v1.0.1 has zero release assets, so every consumer must build from
+source. That is fine for recon (this repository did exactly that, at commit
+b5530834, and the result was good: 77 files, 65 weak points, and a
+MutationGap census that independently corroborated another instrument's
+findings) — and it is not fine for CI.
+
+What to change:
+1. Publish release binaries with sha256 + build-provenance attestation, plus a
+   composite action that installs and runs them.
+2. Document the `assail` contract for CI: exit codes, whether a non-zero exit
+   means "findings" or "tool failure", and the stability of the report schema
+   (`schema_version` 2.5 today). A consumer needs to know whether a new
+   category can appear without warning.
+3. Add a `--baseline FILE` / `--fail-on-new` mode. Heuristic scanners are only
+   usable as gates when a repository can freeze its existing findings and fail
+   on regressions; without it, the first run is a wall of 65 findings and the
+   gate gets switched off.
+4. Say plainly, in the README, which categories are heuristics and which are
+   conclusions. `CommandInjection` on a `System.cmd/3` call with an argv list
+   is a reminder, not a finding; `PanicPath` counting `unwrap` in a NIF is a
+   real robustness signal.
+
+Acceptance criteria: a consumer can pin a tag, install in seconds, run
+`assail`, and gate on new findings only.
+----
+
+== 7. `hyperpolymath/hypatia` — canonical activity records, fail-closed scanning
+
+[source,text]
+----
+Context: this repository enforces JCS on every tracked JSON file and found that
+`.hypatia/activity.jsonl` was not canonical: it had to be rewritten line by
+line. It is the only machine-written artefact in the repository that arrives
+non-canonical, which means every consumer that gates on canonical JSON has to
+special-case it.
+
+What to change:
+1. Write activity records in canonical JCS form, one value per line. Document
+   the format in `docs/ACTIVITY-FORMAT.adoc` — **not** as a comment header in
+   the file. JSON Lines has no comment syntax, and a `#` or `//` line at the top
+   makes the first line not a JSON value, so every strict reader (including the
+   gate this prompt is asking to be able to run) rejects the file. State whether
+   key order is significant (it is not, under JCS) and whether the file is
+   append-only.
+2. Publish a JSON Schema for an activity record and for `last-visit.json`.
+3. Make the scan gate fail closed: if hypatia cannot inspect a repository, the
+   check must not report success. A scanner that could not look has not looked.
+
+Acceptance criteria: a consumer can add `.hypatia/activity.jsonl` to a JCS
+check with no exclusions, and the scanner's absence is visible as a failure
+rather than a green tick.
+----
+
+== Ordering advice
+
+If only one of these can be done this week, do **1**: it is the reason every
+consumer of the estate reusables is red, and it is a validator and a lockfile
+entry rather than a feature. Do **2** second, because it is a release and a
+document, and it removes the "pin a tag or pin a commit, but not both" trap for
+every repository that wants `squabble` in CI.
+
+3–7 are the difference between a gate that runs and a gate that is worth
+trusting. None of them blocks this repository from merging.

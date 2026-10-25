@@ -1,0 +1,165 @@
+# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# CI/CD dependency chains — hyperpolymath/cicd-squabbler.
+#
+# `squabble chains` answers a question no other gate here can: which other
+# repositories does this repository's CI depend on, at which pin, and is any of
+# them dead? A deleted or renamed action/reusable produces NO check run, so the
+# board reads green while the gate never ran.
+#
+# That is not hypothetical here. On 2026-10-25 every estate gate in this
+# repository died at "Set up job" with
+#
+#     Unable to resolve action `actions/checkout@3d3c42e5…`:
+#     invalid lockfile pin. Run `gh actions-lock` to update the lockfile
+#
+# because `metadatastician/standards` — renamed from `hyperpolymath/standards`
+# — was pinned at a commit whose own actions.lock (v0.0.2) recorded a bare SHA
+# as the `ref` of every dependency. `squabble chains` walks exactly those edges
+# (reusable workflow → actions → pins) and reports dead upstreams and pin skew
+# as blocking findings.
+#
+# The tool is installed from its signed release, not built from source. An
+# earlier version of this job ran `cargo install --git ... --rev <sha> --locked`,
+# which is a 3-5 minute cold build of a five-crate workspace on every runner,
+# and which fails opaquely whenever the upstream lockfile and manifests disagree
+# at the pinned commit. The release path is the one upstream documents for
+# consumers (`.github/actions/squabble/install.sh`): download the asset, check
+# its sha256, then require a GitHub build-provenance attestation that ties that
+# digest to this repository's release.yml, the v0.1.0 tag and the source commit
+# the tag was built from. A locator tag is not a trust anchor; the digest is,
+# and the attestation is what binds the digest to source.
+#
+# Exit contract (upstream):
+#   0 clean · 2 usage/tool failure · 4 at least one BLOCKING finding
+#       (a dependency cycle, or a dead upstream)
+# Only a verdict fails this job. A tool or network failure is loud but not a
+# gate verdict, because a scanner that could not look has not looked — and must
+# not be recorded as either pass or fail.
+name: CI/CD Dependency Chains
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/**'
+      - 'opsm.toml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  schedule:
+    - cron: '0 5 * * 1'   # weekly, before the Monday review
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  attestations: read
+  contents: read
+
+env:
+  # Read from the v0.1.0 release itself, never copied from a tag name. The
+  # digest is the anchor; SQUABBLE_SOURCE_DIGEST is the commit the attestation
+  # must name as the build's source.
+  SQUABBLE_REPO: hyperpolymath/cicd-squabbler
+  SQUABBLE_TAG: v0.1.0
+  SQUABBLE_ASSET: squabble-x86_64-linux-musl
+  SQUABBLE_SHA256: 6cbeb4577d83ccf2dea3405a3afb0d34b7fee422af73f2113d413ea7edba026c
+  SQUABBLE_SOURCE_DIGEST: b854d17abc0dce296719a349ebe856ff945cf03e
+  SQUABBLE_SIGNER_WORKFLOW: hyperpolymath/cicd-squabbler/.github/workflows/release.yml
+
+jobs:
+  chains:
+    name: squabble chains
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Download the pinned release asset and verify its sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="${RUNNER_TEMP}/squabble"
+          mkdir -p "${work}/dl" "${work}/bin"
+          gh release download "${SQUABBLE_TAG}" \
+            --repo "${SQUABBLE_REPO}" \
+            --pattern "${SQUABBLE_ASSET}" \
+            --dir "${work}/dl"
+          printf '%s  %s\n' "${SQUABBLE_SHA256}" "${work}/dl/${SQUABBLE_ASSET}" \
+            | sha256sum --check --strict
+
+      - name: Require a build-provenance attestation for that digest
+        # Provenance, not a checksum: a checksum proves the file did not change
+        # in transit, an attestation proves this repository's release workflow
+        # built it, from the tagged source commit, on a GitHub-hosted runner.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="${RUNNER_TEMP}/squabble"
+          gh attestation verify "${work}/dl/${SQUABBLE_ASSET}" \
+            --repo "${SQUABBLE_REPO}" \
+            --signer-workflow "${SQUABBLE_SIGNER_WORKFLOW}" \
+            --source-ref "refs/tags/${SQUABBLE_TAG}" \
+            --source-digest "${SQUABBLE_SOURCE_DIGEST}" \
+            --predicate-type "https://slsa.dev/provenance/v1" \
+            --deny-self-hosted-runners
+          install -m 0755 "${work}/dl/${SQUABBLE_ASSET}" "${work}/bin/squabble"
+          "${work}/bin/squabble" --version
+          echo "${work}/bin" >> "${GITHUB_PATH}"
+
+      - name: Map the dependency chains
+        id: chains
+        env:
+          # GraphQL reads for `--follow`. Read-only.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          set +e
+          squabble chains . --follow 2 --json > squabble-chains.json 2> squabble-chains.err
+          rc=$?
+          set -e
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+
+          case "$rc" in
+            0) echo "squabble chains: no blocking finding" ;;
+            4) echo "::error::squabble chains: BLOCKING finding (cycle or dead upstream) — see summary" ;;
+            2) echo "::warning::squabble chains exited 2 (usage/tool/network). Not a gate verdict; not a pass either." ;;
+            *) echo "::warning::squabble chains exited $rc" ;;
+          esac
+
+          if [ -s squabble-chains.err ]; then
+            echo "--- stderr ---"; head -40 squabble-chains.err
+          fi
+
+      - name: Publish the summary
+        if: always()
+        run: |
+          {
+            echo "### CI/CD dependency chains (cicd-squabbler)"
+            echo ""
+            echo "Tool: \`squabble\` ${SQUABBLE_TAG}, sha256 \`${SQUABBLE_SHA256:0:16}…\` (attestation verified)"
+            echo ""
+            if [ -s squabble-chains.json ]; then
+              echo '```json'
+              head -c 20000 squabble-chains.json
+              echo '```'
+            else
+              echo "_No report produced — see the step log._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail only on a blocking verdict
+        if: steps.chains.outputs.rc == '4'
+        run: |
+          echo "::error::squabble chains found a blocking dependency defect."
+          echo "A cycle or a dead upstream means a required gate may never run."
+          exit 4

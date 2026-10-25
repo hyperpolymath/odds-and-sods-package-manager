@@ -1,10 +1,1 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OPSM Status Response",
-  "type": "object",
-  "required": ["registry_hub", "federation"],
-  "properties": {
-    "registry_hub": { "type": "string" },
-    "federation": { "type": "string" }
-  }
-}
+{"$schema":"https://json-schema.org/draft/2020-12/schema","properties":{"federation":{"type":"string"},"registry_hub":{"type":"string"}},"required":["registry_hub","federation"],"title":"OPSM Status Response","type":"object"}

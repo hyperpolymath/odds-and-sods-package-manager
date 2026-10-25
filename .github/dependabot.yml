@@ -1,10 +1,24 @@
 # SPDX-License-Identifier: MPL-2.0
-# Dependabot configuration for RSR-compliant repositories
-# Covers common ecosystems - remove unused ones for your project
-
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Dependabot — one entry per ecosystem that actually exists in this repository.
+#
+# The previous file declared npm, pip and nix ecosystems that have no manifest
+# here (the repository is Elixir + Rust + Zig; TypeScript and npm were removed
+# estate-wide in #94, and there is no flake.nix). Those entries produced nothing
+# but noise, and a Dependabot config that describes a repository that no longer
+# exists is a quiet way to stop reviewing dependency updates.
+#
+# `mix` pointed at "/" too, where there is no mix.exs — the project lives in
+# opsm_ex/.
+#
+# github-actions updates MUST keep .github/workflows/actions.lock in step with
+# the workflow files: GitHub enforces the lockfile at job start, and a bump that
+# moves a `uses:` without moving its lockfile entry makes every job fail at
+# "Set up job" with "invalid lockfile pin" — no log, no annotation. Dependabot
+# does update the lockfile; review both halves in the same PR.
 version: 2
 updates:
-  # GitHub Actions - always include
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -13,36 +27,44 @@ updates:
       actions:
         patterns:
           - "*"
+    commit-message:
+      prefix: "chore(ci)"
 
-  # Rust/Cargo
-  - package-ecosystem: "cargo"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
-
-  # Elixir/Mix
   - package-ecosystem: "mix"
-    directory: "/"
+    directory: "/opsm_ex"
     schedule:
       interval: "weekly"
+    groups:
+      mix:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(deps)"
 
-  # Node.js/npm
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: "cargo"
+    directories:
+      - "/services/checky-monkey"
+      - "/services/oikos"
+      - "/services/palimpsest-license"
+      - "/services/selur"
+      - "/services/svalinn"
+      - "/services/vordr"
+      - "/opsm-ui/tui"
+      # The PQ NIF is in ci.yml's Rust matrix and in .gitlab-ci.yml's
+      # RUST_CRATE_DIRS, so it is actively built; leaving it out of this list
+      # meant its Rustler and post-quantum dependencies were the only ones in
+      # the repository with no scheduled updates.
+      - "/opsm_ex/native/opsm_pq_nif"
     schedule:
       interval: "weekly"
-
-  # Python/pip
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # Nix flakes
-  - package-ecosystem: "nix"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+    groups:
+      cargo:
+        patterns:
+          - "*"
+    # No blanket `semver-patch` ignore. It cannot tell a transitive crate from a
+    # direct one, so it suppressed security-relevant patch releases of the
+    # crates this repository actually depends on. Noise is the lesser problem;
+    # `groups:` above already collapses the batch into one pull request.
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"

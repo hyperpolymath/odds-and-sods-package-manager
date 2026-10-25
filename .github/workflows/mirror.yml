@@ -1,17 +1,38 @@
-# This workflow is managed by gh actions-lock.
 # SPDX-License-Identifier: MPL-2.0
-# This workflow is managed by gh actions-lock.
-# This workflow is managed by gh actions-lock.
-# // Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+# Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+#
+# Mirror to Git Forges — estate reusable wrapper.
+#
+# PIN: hyperpolymath/standards@8e48b1c… — see governance.yml.
+#
+# `secrets: inherit` is REQUIRED here (unlike secret-scanner): each forge job is
+# gated on `vars.<FORGE>_MIRROR_ENABLED == 'true'` and reads that forge's SSH
+# key from the caller's secrets. Without inherit, `${{ secrets.X }}` inside the
+# reusable evaluates to empty and the job fails only on the forges you enabled.
 name: Mirror to Git Forges
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   actions: read
   contents: read
+
 jobs:
   mirror:
-    uses: hyperpolymath/standards/.github/workflows/mirror-reusable.yml@84355587cb2a1f86e6882de83514a32db2646e7a
-    secrets: inherit
+    uses: metadatastician/standards/.github/workflows/mirror-reusable.yml@cf8f91219d80da55cf8cbbfcd587d00c2d8798ed
+    # Explicit mapping, not `secrets: inherit`. The reusable declares exactly
+    # these seven; `inherit` forwarded every repository and organisation secret
+    # this repository can see to a workflow that reads none of them (CWE-250).
+    # A missing secret here is `""`, and the reusable already skips a forge whose
+    # key is absent — so this narrows the grant without silently dropping a mirror.
+    secrets:
+      GITLAB_SSH_KEY: ${{ secrets.GITLAB_SSH_KEY }}
+      BITBUCKET_SSH_KEY: ${{ secrets.BITBUCKET_SSH_KEY }}
+      CODEBERG_SSH_KEY: ${{ secrets.CODEBERG_SSH_KEY }}
+      SOURCEHUT_SSH_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
+      DISROOT_SSH_KEY: ${{ secrets.DISROOT_SSH_KEY }}
+      GITEA_SSH_KEY: ${{ secrets.GITEA_SSH_KEY }}
+      RADICLE_KEY: ${{ secrets.RADICLE_KEY }}

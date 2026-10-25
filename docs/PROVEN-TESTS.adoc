@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Proven-Tests: typed provenance for this repository's suite
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: preamble
+
+This repository adopts the testing framework from
+`hyperpolymath/proven-tests-and-benches`. That framework is written in Idris2
+and its strongest guarantee — an `Actually-Proven` classification *requires* a
+non-empty ladder of typechecked proof terms — cannot be reproduced by Elixir.
+What can be reproduced is the part that changes behaviour:
+
+. *A test's warrant is a first-class value.* Every module declares its
+  provenance tier, and the tier is a claim about evidence, not enthusiasm.
+. *Coverage is derived from tests that ran and passed*, never from a
+  declaration. A manifest can claim a cell; only an executed run earns it.
+
+== 1. The taxonomy
+
+Seventeen categories × fourteen aspects, as enumerated in
+`ProvenTests/Types.idr` upstream:
+
+[cols="1,1", options="header"]
+|===
+| Categories (17) | Aspects (14)
+
+| UnitTest, PointToPoint, EndToEnd, BuildTest, ExecutionRuntime, ReflexiveTest,
+  LifecycleTest, SmokeTest, PropertyBasedTest, MutationTest, FuzzTest,
+  ContractInvariantTest, RegressionTest, ChaosResilienceTest,
+  CompatibilityTest, ProofRegressionTest, TypeSafeTest
+| Dependability, Security, Usability, Interoperability, Safety, Performance,
+  Functionality, Versability, Accessibility, Maintainability, Privacy,
+  Observability, Reproducibility, Portability
+|===
+
+The enumerations are duplicated in `opsm_ex/scripts/validate_proven.exs`, and
+`[taxonomy] categories = 17, aspects = 14` is asserted there. Upstream records
+that appending a constructor to the Idris enum leaves the build green because
+the "all categories" list is a list literal; here the duplicated count plus the
+enum check makes an upstream addition fail loudly instead of silently
+mis-bucketing a test.
+
+== 2. The tiers
+
+[cols="2,4", options="header"]
+|===
+| Tier | Meaning here
+
+| `actually_proven`
+| A total, machine-checked proof exists. Requires a `proof` citation in the
+  manifest; the validator rejects the claim without one. *Currently: 0.* This
+  suite is Elixir; there are no proof terms to cite, and claiming otherwise
+  would be the exact dishonesty the framework exists to prevent.
+
+| `provisionally_proven`
+| The framework and assertions are sound and the property is exercised over
+  generated inputs (`use ExUnitProperties` / StreamData). Sampling is not proof.
+
+| `unproven`
+| A hand-written example: one input, one output. Valuable, and honestly
+  labelled. This is the default, deliberately.
+|===
+
+== 3. The moving parts
+
+[cols="3,6", options="header"]
+|===
+| File | Role
+
+| `opsm_ex/test/proven_manifest.toml`
+| One `[[test]]` entry per module: `module`, `file`, `category`, `aspect`,
+  `tier`, and `proof` when the tier demands it.
+
+| `opsm_ex/test/support/proven_reporter.ex`
+| An ExUnit **formatter** (`:formatters`, not `:event_managers` — ExUnit has no
+  such option and ignores it silently). Records, per module, how many tests
+  passed, failed, were skipped, or were excluded, and writes `proven-report.json` at
+  `:suite_finished`. Excluded tests are dropped entirely — a filtered test must
+  not enter the denominator.
+
+| `opsm_ex/scripts/validate_proven.exs`
+| Fails when a test module on disk is undeclared, a declaration is stale, an
+  enum value is unknown, or `actually_proven` has no citation.
+
+| `opsm_ex/scripts/proven_summary.exs`
+| Joins manifest to report. A cell counts as covered only when a module at
+  those coordinates ran at least one test and none failed.
+
+| `.github/workflows/ci.yml` (`test` job)
+| Runs the suite with `OPSM_PROVEN_REPORT=1`, then the validator, then the
+  summary into the job summary.
+|===
+
+The reporter is off by default: `mix test` on a developer machine writes
+nothing and behaves exactly as before.
+
+== 4. What the first report says
+
+=== What the first run taught us
+
+Three claims in the first version of this harness were wrong, and the suite
+running for the first time is what found them. They are recorded here because
+each is a way this instrument can lie:
+
+* The reporter was registered with `ExUnit.start(event_managers: …)`. ExUnit
+  has no such option; an unknown key is ignored without a warning, so the
+  reporter never started and no report was written. A missing report is not an
+  error anywhere downstream unless something checks for it — `proven_summary.exs`
+  printed "not found" and exited 0. It now announces the file it wrote.
+* It matched `{:suite_finished, run_us, load_us}`. ExUnit casts
+  `{:suite_finished, times_us}`.
+* `init/1` matched `:ok`. ExUnit starts a formatter with the *low-level*
+  `GenServer.start_link(module, opts)`, which calls `init(opts)` directly and
+  never calls the module's own `start_link/1` — so every formatter start raised
+  `FunctionClauseError`, and because the child is `restart: :temporary` under a
+  `DynamicSupervisor`, it vanished without a log line, a failed test or a
+  non-zero exit. A one-line probe (`GenServer.start_link` in the probe workflow)
+  found it in seconds; three full suite runs had not.
+* The manifest stored `file` paths from the repository root while the validator
+  runs in `opsm_ex/`, so all 60 entries failed to resolve, and one aspect name
+  (`Compatibility`) is not in the 14. Both were caught by
+  `scripts/validate_proven.exs` on the first run that reached it.
+
+The lesson is the framework's own: a claim about evidence has to be *executed*
+to be a claim. A manifest that has never been validated is a wish.
+
+The suite starts at 60 declared modules / ~850 tests:
+
+* 54 modules `unproven`, 6 `provisionally_proven` (the StreamData property
+  suites), 0 `actually_proven`.
+* 17 tests carry `@tag :skip` — they are counted as skipped, not as covered,
+  and the summary states the number rather than hiding it.
+* Lattice coverage is small on purpose: a package manager's suite is
+  concentrated in Functionality and Security, and the report shows the empty
+  cells instead of implying breadth it does not have. Measured on the first run
+  in which the reporter actually wrote its report: **14 of 238 cells** (5.9%).
+  Every previous number was zero, and the zero was not evidence — it was the
+  absence of an instrument.
+
+`scripts/proven_summary.exs` now fails closed: with `OPSM_PROVEN_REPORT=1` set
+and no report on disk it exits 1 and explains why, instead of printing a
+lattice of zeroes. A missing instrument must never read as a clean suite.
+
+== 5. Adding a test
+
+. Write the test.
+. Add a `[[test]]` entry with its coordinates and an honest tier.
+. `just proven-check` — a new module without an entry fails the build.
+. If the test is property-based, say so with `use ExUnitProperties` so the
+  reviewer can see why the tier is `provisionally_proven`.
+
+Do not promote a tier to make the summary look better. The report exists to
+make the claim visible, and a claim without evidence is the thing it was built
+to catch.

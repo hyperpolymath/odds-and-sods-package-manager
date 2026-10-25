@@ -4,8 +4,14 @@
 #
 # Toolchain images (elixir/rust) are pinned to the canonical versions in
 # opsm.toml [runtime] — drift is gated by `just toolchain-check`.
-# Scanner images (trivy/semgrep/trufflehog) deliberately float: their
-# detection databases need to stay fresh, so pinning them is worse.
+#
+# Scanner images are pinned by VERSION, in the variables block below, and not
+# by the tag `latest`. The earlier note here said scanner images "deliberately
+# float: their detection databases need to stay fresh, so pinning them is
+# worse" — that rationale does not hold: Trivy and Semgrep download their rules
+# and vulnerability databases at run time, so the image version has no bearing
+# on database freshness, while `latest` means an upstream compromise or a bad
+# release executes in CI with a token. Bump the two variables deliberately.
 #
 # There is no root mix.exs or Cargo.toml — mix.exs lives in opsm_ex/, and
 # the estate's Rust code is nine independent first-party crates (the
@@ -33,6 +39,9 @@ stages:
   - test
   - build
 variables:
+  # Scanner images — pinned by version. See the header note.
+  TRIVY_IMAGE: "aquasec/trivy:0.58.1"
+  SEMGREP_IMAGE: "semgrep/semgrep:1.95.0"
   CARGO_HOME: ${CI_PROJECT_DIR}/.cargo
   # First-party Rust crates only — opsm_ex/deps/** is vendored (Mix deps
   # cache), never linted/audited/built as our own code.
@@ -58,14 +67,14 @@ cache:
 # ==================
 trivy:
   stage: security
-  image: aquasec/trivy:latest
+  image: $TRIVY_IMAGE
   script:
     - trivy fs --exit-code 0 --severity HIGH,CRITICAL --format table .
     - trivy fs --exit-code 1 --severity CRITICAL .
   allow_failure: false
 semgrep:
   stage: security
-  image: returntocorp/semgrep
+  image: $SEMGREP_IMAGE
   script:
     - semgrep --config auto --error .
   allow_failure: true

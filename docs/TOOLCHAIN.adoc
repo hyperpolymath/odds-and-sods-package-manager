@@ -160,9 +160,9 @@ documented path.
 * *GitLab CI* (`.gitlab-ci.yml`) pins `elixir:1.19.5-otp-28` and `rust:1.97`
   images (tags verified to exist on Docker Hub). `just toolchain-check` fails
   if these drift from `opsm.toml`.
-* *Scanner images* (trivy, semgrep, trufflehog) deliberately float: their
-  value is fresh detection databases; pinning them trades real security for
-  cosmetic reproducibility.
+* *Scanner images* in `.gitlab-ci.yml` are version-pinned via `TRIVY_IMAGE`
+  (Trivy 0.58.1) and `SEMGREP_IMAGE` (Semgrep 1.95.0) and should be bumped
+  deliberately. Detection rules and vulnerability databases update at runtime.
 
 == History
 

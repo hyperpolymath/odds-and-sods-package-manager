@@ -45,7 +45,13 @@ erl_crash.dump
 /logs/
 
 # NIF build artifacts
-opsm_ex/native/*/Cargo.lock
+#
+# opsm_ex/native/*/Cargo.lock was ignored here until 2026-10-25, which is why
+# neither NIF crate had a committed lock: `cargo build --locked` could not have
+# worked, and `mix test` built whatever the resolver happened to pick that day.
+# A Cargo.lock belongs to a binary or a NIF crate, not to a library that is
+# consumed by version range. These are NIFs. They are committed now, and
+# `Toolchain pins → Lockfiles are tracked` fails if one disappears again.
 opsm_ex/priv/native/
 
 # OS & Editor

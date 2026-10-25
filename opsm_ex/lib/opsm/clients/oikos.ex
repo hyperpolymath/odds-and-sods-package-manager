@@ -83,9 +83,17 @@ defmodule Opsm.Clients.Oikos do
   end
 
   @doc """
-  Batch analyze multiple packages for sustainability.
+  Analyse multiple packages for sustainability, with up to five concurrent analyses.
 
-  Returns a map of `"name@version" => score`.
+  Each package is a `{name, version, opts}` tuple; `opts` is passed to
+  `analyze_package/4`, including `:repository_url` and the `:forth` ecosystem.
+  Repository analysis errors fall back to heuristic scores.
+
+  Returns a map of `"name@version" => score`, or an empty map for no packages.
+  Later successful entries overwrite earlier scores for the same key.
+  Tasks exceeding 10 seconds are killed and omitted. Other task failures can
+  terminate the caller through task links unless the caller traps exits;
+  trapped exits are also omitted.
   """
   def analyze_packages(%__MODULE__{} = oikos, packages) do
     packages
@@ -93,7 +101,11 @@ defmodule Opsm.Clients.Oikos do
       fn {name, version, opts} ->
         {:ok, score} = analyze_package(oikos, name, version, opts)
         {"#{name}@#{version}", score}
-      end, max_concurrency: 5, timeout: 10_000, on_timeout: :kill_task)
+      end,
+      max_concurrency: 5,
+      timeout: 10_000,
+      on_timeout: :kill_task
+    )
     |> Enum.reduce(%{}, fn
       {:ok, {key, score}}, acc -> Map.put(acc, key, score)
       {:exit, _}, acc -> acc

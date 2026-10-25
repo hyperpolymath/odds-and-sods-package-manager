@@ -1,0 +1,448 @@
+# SPDX-License-Identifier: MPL-2.0
+# Proven-Tests manifest — coordinates for every ExUnit module in opsm_ex/test.
+#
+# Framework: hyperpolymath/proven-tests-and-benches. A test's *warrant* is a
+# first-class value, not a label:
+#
+#   actually_proven      a total, machine-checked proof exists (`proof` REQUIRED)
+#   provisionally_proven framework/assertions are sound and the property is
+#                        exercised over generated inputs (StreamData), not proofs
+#   unproven             a hand-written example: one input, one output
+#
+# Honesty rule: an example-based test is `unproven`, however valuable it is.
+# Do not promote a tier to make a report look better — the tier is a claim
+# about evidence, and the report exists to make that claim visible.
+#
+# `file` is relative to this Mix project root (opsm_ex/), which is the
+# working directory `scripts/validate_proven.exs` runs in. Writing the
+# path from the repository root instead made all 60 entries fail to
+# resolve — a path is part of the claim, so the validator checks it.
+#
+# Category/aspect enumerations are pinned to ProvenTests.Types (17 x 14).
+# Adding a category upstream requires a change here too; scripts/validate_proven.exs
+# fails on an unknown name.
+
+[taxonomy]
+name = "proven-tests-and-benches"
+categories = 17
+aspects = 14
+
+[[test]]
+module = "Opsm.Aspect.ConcurrencyTest"
+file = "test/aspect/concurrency_test.exs"
+category = "ContractInvariantTest"
+aspect = "Dependability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Aspect.SecurityTest"
+file = "test/aspect/security_test.exs"
+category = "ContractInvariantTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.ConfigTest"
+file = "test/opsm/config_test.exs"
+category = "UnitTest"
+aspect = "Maintainability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.ApiKeyStorageTest"
+file = "test/opsm/crypto/api_key_storage_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.HashTest"
+file = "test/opsm/crypto/hash_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.HybridSignaturesTest"
+file = "test/opsm/crypto/hybrid_signatures_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.PasswordTest"
+file = "test/opsm/crypto/password_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.PostQuantumTest"
+file = "test/opsm/crypto/post_quantum_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.RNGTest"
+file = "test/opsm/crypto/rng_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Crypto.SymmetricTest"
+file = "test/opsm/crypto/symmetric_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.E2E.PqSignVerifyE2ETest"
+file = "test/e2e/pq_sign_verify_e2e_test.exs"
+category = "EndToEnd"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.E2E.RegistryE2ETest"
+file = "test/e2e/registry_e2e_test.exs"
+category = "EndToEnd"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Federation.DepMapperTest"
+file = "test/opsm/federation/dep_mapper_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Federation.SystemQueryTest"
+file = "test/opsm/federation/system_query_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.FuzzHarnessTest"
+file = "test/opsm/fuzz_harness_test.exs"
+category = "FuzzTest"
+aspect = "Interoperability"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Git.BuildDetectorTest"
+file = "test/opsm/git/build_detector_test.exs"
+category = "BuildTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Git.BuilderTest"
+file = "test/opsm/git/builder_test.exs"
+category = "BuildTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Git.CloneTest"
+file = "test/opsm/git/clone_test.exs"
+category = "BuildTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Git.PipelineTest"
+file = "test/opsm/git/pipeline_test.exs"
+category = "BuildTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Har.WebScraperTest"
+file = "test/opsm/har/web_scraper_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.ImpPropertyTest"
+file = "test/opsm/imp_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Interoperability"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Integration.E2ETest"
+file = "test/integration/e2e_test.exs"
+category = "PointToPoint"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.FederationManifestRoundtripTest"
+file = "test/opsm/integration/federation_manifest_roundtrip_test.exs"
+category = "PointToPoint"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.GitPipelineTest"
+file = "test/integration/git_pipeline_test.exs"
+category = "PointToPoint"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.ManifestRoundtripTest"
+file = "test/integration/manifest_roundtrip_test.exs"
+category = "PointToPoint"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.PipelineTest"
+file = "test/integration/pipeline_test.exs"
+category = "PointToPoint"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.PqTrustPipelineTest"
+file = "test/opsm/integration/pq_trust_pipeline_test.exs"
+category = "PointToPoint"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.SlsaPipelineTest"
+file = "test/opsm/integration/slsa_pipeline_test.exs"
+category = "PointToPoint"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.TrustPipelineLiveE2ETest"
+file = "test/integration/trust_pipeline_live_e2e_test.exs"
+category = "EndToEnd"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Integration.TrustPipelineTest"
+file = "test/integration/trust_pipeline_test.exs"
+category = "PointToPoint"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Live.GithubAttestationLiveTest"
+file = "test/opsm/live/github_attestation_live_test.exs"
+category = "EndToEnd"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.LockfileTest"
+file = "test/opsm/lockfile_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.MaintenanceTest"
+file = "test/opsm/maintenance_test.exs"
+category = "UnitTest"
+aspect = "Dependability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Manifest.OpsmTomlTest"
+file = "test/opsm/manifest/opsm_toml_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Manifest.WriterTest"
+file = "test/opsm/manifest/writer_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Network.Ipv6Test"
+file = "test/opsm/network/ipv6_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Package.TransactionTest"
+file = "test/opsm/package/transaction_test.exs"
+category = "UnitTest"
+aspect = "Dependability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.ProgressTest"
+file = "test/opsm/progress_test.exs"
+category = "UnitTest"
+aspect = "Dependability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Property.LockfilePropertyTest"
+file = "test/property/lockfile_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Interoperability"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Registries.EclexiaTest"
+file = "test/opsm/registries/eclexia_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Registries.HyperpPolymathForgeTest"
+file = "test/opsm/registries/hyperpolymath_forge_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Registries.LanguageAdaptersTest"
+file = "test/opsm/registries/language_adapters_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.RegistryGatewayTest"
+file = "test/opsm/registry_gateway_test.exs"
+category = "UnitTest"
+aspect = "Interoperability"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Runtime.IntegrationTest"
+file = "test/opsm/runtime/integration_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Runtime.ManagerTest"
+file = "test/opsm/runtime/manager_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Runtime.SourceBuilderTest"
+file = "test/opsm/runtime/source_builder_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Runtime.UrlHandlerTest"
+file = "test/opsm/runtime/url_handler_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Security.SecurityTest"
+file = "test/opsm/security/security_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Slsa.GithubAttestationTest"
+file = "test/opsm/slsa/github_attestation_test.exs"
+category = "UnitTest"
+aspect = "Security"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Storage.StorageTest"
+file = "test/opsm/storage/storage_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Transport.ProtocolTest"
+file = "test/opsm/transport/protocol_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Transport.QuicTest"
+file = "test/opsm/transport/quic_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.ValidationTest"
+file = "test/opsm/validation_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Verified.JsonPropertyTest"
+file = "test/opsm/verified/json_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Interoperability"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Verified.ResultPropertyTest"
+file = "test/opsm/verified/result_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Functionality"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Verified.UrlPropertyTest"
+file = "test/opsm/verified/url_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Functionality"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.VerifiedTest"
+file = "test/opsm/verified_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.VersionConstraintTest"
+file = "test/opsm/version_constraint_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "Opsm.Wiring.AuditTest"
+file = "test/opsm/wiring/audit_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"
+
+[[test]]
+module = "OpsmTest"
+file = "test/opsm_test.exs"
+category = "UnitTest"
+aspect = "Functionality"
+tier = "unproven"

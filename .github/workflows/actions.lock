@@ -12,6 +12,13 @@ workflows:
         - 'actions/deploy-pages@v5.0.1'
         - 'actions/upload-pages-artifact@v5.0.0'
         - 'haskell-actions/setup@v2.12.0'
+    '.github/workflows/ci.yml':
+        - 'actions/cache@v6.1.0'
+        - 'actions/checkout@v7.0.1'
+        - 'dtolnay/rust-toolchain@v1'
+        - 'erlef/setup-beam@v1.24.1'
+    '.github/workflows/cicd-squabbler.yml':
+        - 'actions/checkout@v7.0.1'
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
         - 'github/codeql-action@v4.39.1'
@@ -38,6 +45,10 @@ workflows:
     '.github/workflows/label-triage.yml': []
     '.github/workflows/labels.yml': []
     '.github/workflows/mirror.yml': []
+    '.github/workflows/json-ijson-jcs.yml':
+        - 'actions/cache@v6.1.0'
+        - 'actions/checkout@v7.0.1'
+        - 'dtolnay/rust-toolchain@v1'
     '.github/workflows/nif-build.yml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
@@ -52,6 +63,8 @@ workflows:
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
         - 'erlef/setup-beam@v1.24.1'
+    '.github/workflows/yaml-kyaml.yml':
+        - 'actions/checkout@v7.0.1'
 dependencies:
     'actions/cache@v6.1.0':
         ref: 'v6.1.0'

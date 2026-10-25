@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 # Stress test: fetch real packages from all 10 registries
-# Run: mix run test/stress_test.exs
+# Run: cd opsm_ex && mix run scripts/stress_test.exs
 
 alias Opsm.Registries.Registry
 
@@ -183,9 +183,12 @@ if errors != [] do
   end
 end
 
-# Exit with appropriate code
+# Exit with appropriate code. The comment was here before the exit code was:
+# `just stress` used to print the warning and return 0, so a total failure of
+# the network soak was indistinguishable from a clean run to any caller.
 if results.error > 0 do
-  IO.puts("\n⚠ #{results.error} package(s) failed to resolve")
+  IO.puts(:stderr, "\n⚠ #{results.error} package(s) failed to resolve")
+  System.halt(1)
 else
   IO.puts("\n✓ All #{results.total} packages resolved successfully!")
 end
