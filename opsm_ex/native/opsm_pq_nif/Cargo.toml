@@ -14,7 +14,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-rustler = "0.35"
+rustler = "0.39"
 pqcrypto-dilithium = "0.5"
 pqcrypto-sphincsplus = "0.7"
 pqcrypto-kyber = "0.8"
