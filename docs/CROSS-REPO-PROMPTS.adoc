@@ -15,52 +15,57 @@ Every prompt was written from an observed failure on
 that observation, because "please improve X" is not actionable and "X failed
 with this exact message" is.
 
-== 1. `metadatastician/standards` — the lockfile format breaks every consumer
+== 1. `standards` — three reusables cannot load for any consumer
 
 [source,text]
 ----
-Context: consumer repos that call your reusable workflows are dying at "Set up
-job" with:
+Context: three of your five reusable workflows cannot be called by a consumer
+repository at all. Measured on hyperpolymath/odds-and-sods-package-manager on
+2026-10-25, one variable per workflow:
 
-    Unable to resolve action `actions/checkout@3d3c42e5…`:
-    invalid lockfile pin. Run `gh actions-lock` to update the lockfile
+    metadatastician/standards@8e48b1c (HEAD)  startup_failure, zero jobs
+    hyperpolymath/standards@8e48b1c (HEAD)    failure, zero jobs
+    metadatastician/standards@cf8f912         governance   startup_failure
+                                              hypatia-scan startup_failure
+                                              secret-scanner startup_failure
+                                              scorecard     starts (1 job)
+                                              mirror        starts (7 jobs)
 
-This happens because a reusable workflow is covered by the actions.lock of the
-repository that DEFINES it. Callers pinned metadatastician/standards at
-84355587, whose actions.lock is format v0.0.2 and records a bare commit SHA as
-the `ref` of every dependency. The v0.0.3 validator rejects that shape, so
-every job of every consumer dies before it starts, with no log and no
-annotation.
+The same three are dead in hyperpolymath/cicd-squabbler and
+hyperpolymath/panic-attack, on both owner spellings and at both commits. So this
+is not a caller misconfiguration and not a lockfile format issue any more.
 
-Separately, at current main the lockfile has no entry at all for
-`github/codeql-action/upload-sarif@b96794f015…`, which hypatia-scan-reusable.yml
-and scorecard-reusable.yml both call. Those two reusables therefore cannot
-resolve, for every consumer, today.
+Why it is urgent: `scan / gitleaks` is the ONLY required status check on main in
+several consumer repositories. A refused call produces no check run, so those
+repositories are permanently unmergeable, and the PR page shows no red check to
+explain why. panic-attack and odds-and-sods-package-manager have both vendored
+their own copies of secret-scanner-reusable.yml to unblock merges. That is drift
+that will never be reconciled unless the reusable loads again.
 
 What to change:
-1. Make the v0.0.2 → v0.0.3 migration non-fatal. Either keep accepting
-   `ref == commit` in the validator (it is unambiguous), or ship a one-shot
-   migration tool and a deprecation window with a date. Silently rejecting a
-   shape that your own releases produced is the worst of the three options.
-2. Add the missing `github/codeql-action/upload-sarif` entry to actions.lock,
-   and add a CI job in this repo that asserts every `uses:` in every
-   `.github/workflows/*.yml` that is reached by a reusable has a lockfile entry
-   with a non-SHA `ref`. That job would have caught this before consumers did.
-3. Document, in the reusable's README and in the error text if possible, that
-   the lockfile consulted is the DEFINING repository's, and that pinning a
-   reusable at a commit which predates a lockfile fix does not pick up the fix.
+1. Find out why the three fail to load. Start with the jobs' `permissions` and
+   any nested `uses:` — a startup_failure from a reusable that a sibling repo
+   loads at the same SHA is usually a nested call or an action the callee's own
+   lockfile cannot resolve.
+2. Add a self-test workflow IN standards that calls each reusable exactly as a
+   consumer does (`uses: metadatastician/standards/.github/workflows/X@<sha>`,
+   caller job named `scan`, `permissions: contents: read`) and fails loudly if
+   the run yields zero jobs. Zero-jobs is invisible to every check-run API; only
+   `gh run list --json conclusion` sees it. This is the guard that would have
+   caught it.
+3. Keep the v0.0.2 → v0.0.3 lockfile guidance, but note in the README that a
+   valid lockfile is necessary and not sufficient: a reusable can still be
+   refused for calls the lock does not cover.
+4. Publish, for each reusable, the exact caller shape that is known to start,
+   as a copy-pasteable block, and the owner spelling that resolves. Consumers
+   are currently guessing, and each guess costs a merge-blocking cycle.
 
 Acceptance criteria:
-* A consumer pinned at current main can call governance-reusable.yml,
-  hypatia-scan-reusable.yml, secret-scanner-reusable.yml,
-  scorecard-reusable.yml and mirror-reusable.yml and get past "Set up job".
-* `gh actions-lock --verify` (or a new check job) fails locally when a `uses:`
-  in a reusable has no matching dependency entry.
-* The migration policy from v0.0.2 is written down with a date.
-
-Constraints: do not loosen the rule that a `ref` should be human-readable
-where the upstream publishes tags; a bare SHA is a legitimate *pin* but it is
-not a *ref*, and the format conflates them.
+* A consumer pinned at a tagged release of standards can call governance,
+  hypatia-scan, secret-scanner, scorecard and mirror and get at least one job in
+  each.
+* The self-test above runs on every push to standards and fails on zero jobs.
+* The consumer README names one canonical pin (owner + tag) per reusable.
 ----
 
 == 2. `hyperpolymath/cicd-squabbler` — a tag consumers can pin

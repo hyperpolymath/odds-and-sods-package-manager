@@ -26,10 +26,47 @@ by redirect) at `84355587…`, whose `actions.lock` is format `v0.0.2` and recor
 every dependency with the bare commit SHA as its own `ref`. GitHub's workflow
 dependency lockfile enforcement rejects that shape.
 
-Fix: pin `8e48b1caade08a552646adeab66558ac43b4360d`, whose lockfile is `v0.0.3`
-and records the human-readable tag in `ref`. There is nothing a caller can do
-about this class of failure except move the pin, so *when an estate reusable
-fails at `Set up job`, check that repository's `actions.lock` first.*
+That diagnosis was correct about the mechanism and wrong about the fix. Moving
+to `8e48b1c` (lockfile `v0.0.3`, tag in `ref`) made the *old* error go away and
+replaced it with a worse one: `startup_failure`, zero jobs, no log, no check
+run. Measured on 2026-10-25, one variable per run:
+
+[cols="3,2,2",options="header"]
+|===
+| Call | Result | Jobs
+
+| `metadatastician/standards@8e48b1c` (HEAD)
+| `startup_failure`
+| 0
+
+| `hyperpolymath/standards@8e48b1c`
+| `failure`
+| 0
+
+| `metadatastician/standards@cf8f912`
+| governance, hypatia, secret-scanner: `startup_failure`; scorecard, mirror: start
+| 0 / 0 / 0 / 1 / 7
+|===
+
+So it is neither the owner spelling nor the commit: at one pin, two reusables
+start and three do not. The same three are dead in
+`hyperpolymath/cicd-squabbler` and `hyperpolymath/panic-attack`, which means
+this is an estate defect, not a defect of this repository.
+
+Two consequences worth keeping:
+
+* *A rejected run produces no check run at all.* `gh pr checks` shows nothing,
+  the annotations endpoint 404s, and the only observable is
+  `gh run list --json conclusion`. The only required check on `main` was in
+  precisely this state for the whole of this branch's life, so the pull request
+  read as "28 green, nothing red" while being unmergeable.
+* *A caller cannot repair a callee.* The only remedy available from inside a
+  consumer is to stop depending on it for the check that blocks every merge.
+  `secret-scanner.yml` therefore calls a local, byte-identical copy of the canon
+  (`secret-scanner-vendored.yml`), keeping the caller job id `scan` so the
+  required context is still `scan / gitleaks`. The cost is drift from canon and
+  is recorded in that file's header; the upstream defect is prompt #1 in
+  `docs/CROSS-REPO-PROMPTS.adoc`.
 
 The second failure this document records is quieter and worse: `e2e.yml` had
 two Elixir jobs reading `.tool-versions` with `version-type: strict`, and that
