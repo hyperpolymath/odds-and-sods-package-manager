@@ -52,7 +52,7 @@ permissions:
 
 jobs:
   governance:
-    uses: hyperpolymath/standards/.github/workflows/governance-reusable.yml@8e48b1caade08a552646adeab66558ac43b4360d
+    uses: metadatastician/standards/.github/workflows/governance-reusable.yml@cf8f91219d80da55cf8cbbfcd587d00c2d8798ed
     # Fine-grained, read-only PAT. Optional: without it the workflow-staleness
     # and baseline jobs fall back to the built-in token and degrade loudly
     # rather than silently passing.
