@@ -12,7 +12,10 @@
 #      (new in this branch) adds the check and it fails. The drift is
 #      pre-existing and repo-wide; only the pinned formatter can remove it.
 #   2. `mix test` — the ~850-test suite had never run in CI. This job captures
-#      the failure text, which the Actions log API does not expose here.
+#      the failure text, which the Actions log API does not expose here. Round 4
+#      exists because the first two rounds found the reporter had never been
+#      started at all: ExUnit has no `:event_managers` option, and an unknown
+#      key in `ExUnit.start/1` is ignored without a word.
 #   3. `Cargo.lock` for the two NIF crates under opsm_ex/native/ — neither had a
 #      committed lock (`.gitignore` ignored them), so `cargo build --locked`
 #      failed before compiling anything. Only cargo can mint a lock that matches
