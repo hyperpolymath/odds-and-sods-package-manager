@@ -19,6 +19,19 @@ defmodule ProvenSummary do
   @report "proven-report.json"
   @out "proven-summary.md"
 
+  @doc """
+  Write `proven-summary.md` from `test/proven_manifest.toml` and `proven-report.json`
+  in the current working directory, print a summary and return `:ok`.
+
+  A category/aspect cell is covered when at least one declared module in it has
+  a passing test and no failures. Unreadable reports supply no execution counts,
+  unless `OPSM_PROVEN_REPORT=1`, when they halt the VM with status 1. Invalid JSON
+  also supplies no counts, regardless of that setting.
+
+  Raise `File.Error` if the manifest cannot be read or the summary cannot be
+  written, and `RuntimeError` if the manifest cannot be decoded with test entries.
+  Halt the VM with status 1 if taxonomy cardinalities are missing or not integers.
+  """
   def main do
     manifest = entries()
     report = report()

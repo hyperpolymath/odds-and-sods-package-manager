@@ -37,6 +37,18 @@ defmodule ValidateProven do
 
   @tiers ~w(actually_proven provisionally_proven unproven)
 
+  @doc """
+  Validate `test/proven_manifest.toml` against test modules in the current
+  working directory without running the tests.
+
+  Check declarations against modules found in `test/**/*_test.exs`, taxonomy
+  values and cardinalities, proof citations, duplicate declarations and file
+  existence. Print module and tier counts and return `:ok` on success.
+
+  Halt the VM with status 1 if the manifest is unreadable, invalid TOML, lacks
+  a test-entry list or fails validation. File read errors while scanning test
+  sources or rereading the taxonomy propagate as `File.Error`.
+  """
   def main do
     manifest = manifest_entries()
     on_disk = test_modules()

@@ -3,6 +3,9 @@
 defmodule Opsm.MixProject do
   use Mix.Project
 
+  @doc """
+  Return the Mix project configuration, including a 17% minimum total test coverage.
+  """
   def project do
     [
       app: :opsm,
