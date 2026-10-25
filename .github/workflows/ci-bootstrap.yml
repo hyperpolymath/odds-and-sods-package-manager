@@ -146,6 +146,25 @@ jobs:
           run 'validate_proven.exs' bash -lc 'cd opsm_ex && mix run --no-start scripts/validate_proven.exs'
           run 'proven_summary.exs' bash -lc 'cd opsm_ex && mix run --no-start scripts/proven_summary.exs'
 
+          # 3c. Why does the reporter still not write? Test the module
+          #     directly, then run one file with it registered as a formatter and
+          #     keep the unfiltered tail.
+          run 'probe: start the reporter and cast the two events' bash -lc "cd opsm_ex && MIX_ENV=test mix run --no-start -e '
+            Code.require_file(\"test/support/proven_reporter.ex\")
+            IO.inspect(Code.ensure_loaded?(Opsm.ProvenReporter), label: \"loaded\")
+            case GenServer.start_link(Opsm.ProvenReporter, []) do
+              {:ok, pid} ->
+                GenServer.cast(pid, {:suite_started, []})
+                GenServer.cast(pid, {:suite_finished, {1000, 2000}})
+                Process.sleep(200)
+                IO.inspect(File.exists?(\"proven-report.json\"), label: \"report written\")
+              other -> IO.inspect(other, label: \"start_link\")
+            end'"
+          section 'single test file with the reporter as a formatter (unfiltered, last 60 lines)'
+          ( cd opsm_ex && MIX_ENV=test OPSM_PROVEN_REPORT=1 mix test test/opsm/version_constraint_test.exs --trace 2>&1 | tail -60 ) >> "$out" 2>&1
+          close
+          run 'ls proven-report.json (single file)' bash -lc 'cd opsm_ex && ls -l proven-report.json'
+
           # 4. Lockfiles for the two NIF crates, then the honest question: does
           #    each crate build — and do its tests run — once it has a lock?
           for crate in opsm_pq_nif quic_transport; do

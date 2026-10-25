@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Recon: pons-asinorum and panic-attack, 2026-10-25
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc: preamble
+:toclevels: 3
+
+This is the record of a static-analysis pass over this repository with the two
+estate analysers. Both are source-only: neither publishes a binary, so both
+were built from source on a GitHub runner, pinned to a commit, and the raw
+output was committed next to this file.
+
+The point of the exercise was not to collect findings. It was to find out
+whether these two tools can see this repository at all — and one of them
+cannot.
+
+== 1. What ran
+
+[cols="1,2,3",options="header"]
+|===
+| Tool | Pin | Command
+
+| `pons-asinorum` 0.1.0
+| commit `51b8920f541782ceb9465ea3f0d33c96104fc1fb`
+| `pons scan . --format json --no-speculative`
+
+| `panic-attack` 2.5.5
+| commit `b5530834a839734d1d181bfe6edb0d43d4233cf4`
+| `panic-attack assail . --output … --headless`
+|===
+
+Both were built with `cargo build --release --locked` at those commits, on
+`ubuntu-latest`, and both built cleanly. Outputs:
+
+* `docs/recon/2026-10-25/pons-summary.json` — every count the tool reported,
+  the file inventory by outcome and language, and the list of files it
+  actually parsed. The full 3.9 MB report is not committed; the command above
+  regenerates it.
+* `docs/recon/2026-10-25/panic-attack-assail.json` — statistics, non-mutation
+  weak points, and the ten largest files.
+* `docs/recon/2026-10-25/panic-attack-mutation-gaps.txt` — the 51 files
+  panic-attack says have no property-based tests.
+
+== 2. pons-asinorum: the honest result is "it cannot see this repository"
+
+`pons scan .` exited **0** with **0 findings**. That number is worthless, and
+the tool says so itself if you read the report:
+
+----
+coverage_status: partial
+inventory: 4685 entries → 11 analysed · 449 unsupported · 4225 excluded by policy
+languages:   elixir 692 entries → 423 excluded by policy · 269 no adapter · 0 analysed
+analysed:    10 Rust files, 1 Python file
+----
+
+pons has adapters for Rust and Python. It has **no Elixir adapter**, and this
+repository is 692 Elixir files. So:
+
+* The 0 is a statement about a tenth of the Rust, not about the repository.
+* `--fail-on-skips` would have exited 2, which is the correct CI posture for
+  this tool today: an analyser that could not look has not looked, and must
+  not be recorded as either a pass or a failure.
+* This is not a defect in pons. It is a gap in what pons can be pointed at,
+  and it is the subject of one of the upstream prompts in
+  `docs/CROSS-REPO-PROMPTS.adoc`.
+
+**Decision:** pons is not wired as a gate. A gate whose blind spot is the
+repository's main language is worse than no gate, because it produces a green
+tick with nothing behind it.
+
+== 3. panic-attack: it can see Elixir, and it agrees with us
+
+`panic-attack assail .` analysed **77 files / 71,605 lines** of Elixir and Rust,
+recognised the `OTP` and `WebServer` frameworks, and produced 65 weak points.
+
+[cols="2,1,4",options="header"]
+|===
+| Category | Count | Verdict
+
+| MutationGap | 51 | *True*, and independently confirms the Proven-Tests census
+| InsecureProtocol | 6 | False positive: `http://` test fixtures and input strings
+| CommandInjection | 5 | Mostly false positive; see §3.2
+| PanicPath | 2 | True: `unwrap`/`expect` counts in the two NIF crates
+| HardcodedSecret | 1 | False positive: a literal in a test fixture
+|===
+
+=== 3.1 The corroboration worth having
+
+panic-attack's 51 `MutationGap` findings are files that use `ExUnit.Case`
+without `ExUnitProperties`/StreamData. The Proven-Tests manifest, built
+independently from the suite itself, says **54 unproven / 6 provisionally
+proven / 0 actually proven** out of 60 modules. Two instruments, built by
+different people for different purposes, agree on the shape of the gap: the
+suite is broad, example-based, and has almost no property-based evidence.
+
+That is the single most useful result of this pass, and it is the reason the
+Proven-Tests tier is displayed next to every module in
+`docs/PROVEN-TESTS.adoc` rather than summarised as a percentage.
+
+=== 3.2 Command execution: checked, not assumed
+
+panic-attack flags every `System.cmd/3` call as `CommandInjection`. There are
+five such files, and a manual read of every call site found **no shell
+interpolation**: each passes an argv list (`System.cmd(runtime, ["build", …])`),
+never a string through a shell. That is the mitigation, and `Opsm.SafeExec`
+exists for the cases where a caller cannot be trusted.
+
+Verdict: a heuristic doing its job, not a defect. It stays on the list so that
+the next person to add a call site knows the rule: *argv list, never a shell
+string*.
+
+=== 3.3 The two findings worth acting on
+
+* **`PanicPath` in the NIFs** — 11 `unwrap`/`expect` calls in
+  `opsm_ex/native/opsm_pq_nif/src/lib.rs` and 12 in
+  `opsm_ex/native/quic_transport/src/lib.rs`. A panic inside a NIF is not a
+  Rust error, it is a VM abort. Tracked as a follow-up; both crates now have
+  committed `Cargo.lock` files, which is a prerequisite for touching them
+  safely.
+* **`HardcodedSecret`** — `opsm_ex/test/opsm/crypto/api_key_storage_test.exs`
+  contains `"super-secret-key"` and friends. Synthetic, and GitGuardian agrees.
+  No action.
+
+== 4. What this pass did *not* establish
+
+* Nothing about the Elixir code, from pons.
+* Nothing about runtime behaviour: `panic-attack`'s dynamic `attack`/`assault`
+  subcommands were not run, because there is no long-lived service in this
+  repository's CI to attack. `assail` is static.
+* Nothing about the workflows or the YAML: no adapter in either tool reads
+  them. That is what `squabble chains`, `yq` and the lockfile gates are for.
+
+== 5. Reproducing it
+
+[source,sh]
+----
+# pons-asinorum
+git clone --depth 1 https://github.com/hyperpolymath/pons-asinorum /tmp/pons-src
+git -C /tmp/pons-src rev-parse HEAD    # expect 51b8920f…
+cd /tmp/pons-src && cargo build --release --locked
+cd - && /tmp/pons-src/target/release/pons scan . --format json --no-speculative \
+  > pons-scan.json 2> pons-scan.err
+
+# panic-attack
+git clone --depth 1 https://github.com/hyperpolymath/panic-attack /tmp/panic-src
+git -C /tmp/panic-src rev-parse HEAD   # expect b5530834…
+cd /tmp/panic-src && cargo build --release --locked
+cd - && /tmp/panic-src/target/release/panic-attack assail . \
+  --output panic-assail.json --headless
+----
+
+Both builds take a few minutes each and need a Rust toolchain and crates.io;
+neither is available in every environment, which is precisely why the outputs
+are committed.

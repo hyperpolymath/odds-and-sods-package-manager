@@ -36,6 +36,75 @@ two Elixir jobs reading `.tool-versions` with `version-type: strict`, and that
 file is generated and was never committed. Both jobs died at step 3. The suite
 of ~850 tests has therefore never run in CI on this repository.
 
+== 0.1 Four more failures, and why they needed a real run
+
+Moving the pin made the estate gates start, which exposed the failures that
+were behind them. All four were in this repository's own configuration, and
+none of them could be seen from a workflow file alone.
+
+yq checksum::
+`yaml-kyaml.yml` downloaded `yq_linux_amd64` and verified it against the
+release's `checksums` asset, with a `grep` for a `sha256sum -c` style line.
+yq does not publish one. Its `checksums` file carries several hashes per file,
+in the order given by a second asset called `checksums_hashes_order`, and the
+release ships `extract-checksum.sh` because of it. The `grep` matched nothing,
+and under `set -euo pipefail` its status killed the step — no message, because
+the `if [ -z ... ]` guard came after. The digest is now a literal in
+`env: YQ_SHA256`, read from the release asset's own `digest` field:
++
+----
+gh api repos/mikefarah/yq/releases/tags/v4.53.3 \
+  --jq '.assets[] | select(.name=="yq_linux_amd64") | .digest'
+----
++
+A digest in the workflow is a pin. A `grep` over someone else's format is a
+guess about their release process.
+
+squabble from source::
+`cicd-squabbler.yml` installed the tool with `cargo install --git … --rev …
+--locked`. That is a five-crate workspace built from cold on every runner, and
+it fails identically and opaquely whether the commit is unreachable, the
+upstream lock disagrees with its manifests, or the network hiccups. The tool
+publishes a signed release, and its own consumer action pins that release by
+digest *and* requires a SLSA build-provenance attestation. The job does the
+same three things in the same order: download, check sha256, require an
+attestation naming `release.yml`, the tag and the source commit — then run it.
+The tag locates the artefact; the attestation is what makes it trustworthy.
+
+A `.gitignore` that made a gate impossible::
+`Toolchain pins → Lockfiles are tracked` failed on both NIF crates. The cause
+was line 48 of `.gitignore`: `opsm_ex/native/*/Cargo.lock`. `cargo build
+--locked` could never have worked, and `mix test` built whatever the resolver
+picked that day. The rule is gone; the gate now globs `opsm_ex/native/*/` so a
+new crate cannot arrive without a lock either.
+
+The formatter, the coverage floor, and a reporter that reported nothing::
+`Format + strict compile` failed on its first ever run: this repository had
+never been format-checked. Three files needed changes, and the change is the
+formatter's, not a human's. Two further defects surfaced only once the suite
+ran for the first time:
++
+* `proven_reporter.ex` was registered with `ExUnit.start(event_managers: …)`.
+  ExUnit has no such option — `:event_managers` is the name of its internal
+  module, and the public option is `:formatters`. An unknown key in
+  `ExUnit.start/1` is ignored without a word, so the reporter never started,
+  no `proven-report.json` was written, and `proven_summary.exs` printed
+  "not found" while exiting 0. It also handled `{:suite_finished, run_us,
+  load_us}`; ExUnit casts `{:suite_finished, times_us}`.
+* `mix test --cover` failed on Mix's default 90% threshold against a measured
+  17.34%. A floor that has never been met is not a gate, it is a permanently
+  red light. `mix.exs` now states the measured floor and the ratchet rule in
+  the same place: raise it when the measurement rises, never lower it.
+
+Known debt, recorded rather than hidden::
+The suite still performs roughly four hundred live `raw.githubusercontent.com`
+requests per run, because tests that reach the Hyperpolymer Forge registry walk
+a cold index (`HyperpPolymathForge.ensure_index/0` → `refresh_org_repos/0`) and
+most of them are not tagged `:external_api`. The first-ever run had one failure
+that did not reproduce on the next two runs; a suite that talks to the network
+is the most likely reason. Tagging those tests correctly is the next piece of
+work, not a silent `--exclude`.
+
 == 1. The pipeline at a glance
 
 [cols="3,2,6",options="header"]
@@ -152,8 +221,11 @@ just squabble-chains   # needs `squabble` on PATH
 ----
 
 Tools the gates expect: `ijson-jcs` (cargo install from
-hyperpolymath/ijson-jcs), `yq` ≥ 4.45 (mikefarah), `squabble` (cargo install
-from hyperpolymath/cicd-squabbler), `mix`/`elixir` per `.tool-versions`.
+hyperpolymath/ijson-jcs), `yq` 4.53.3 (mikefarah), `squabble` (the attested
+release from hyperpolymath/cicd-squabbler — `gh release download v0.1.0
+--pattern squabble-x86_64-linux-musl`), `mix`/`elixir` per `.tool-versions`,
+`cargo` 1.97.0. CI installs each of these itself; nothing is assumed to be on
+the runner image.
 
 == 5. What this repository does *not* gate, and why
 
@@ -161,11 +233,14 @@ from hyperpolymath/cicd-squabbler), `mix`/`elixir` per `.tool-versions`.
   UI specification repository. Its nested `.github/` and `.gitlab-ci.yml` were
   removed: GitHub only reads workflows from the repository root, so those files
   could never run, and they pinned a standards commit that had already broken.
-* *`opsm_ex/native/quic_transport`* — quarantined upstream of this document.
-  It does not compile (h3 0.0.6 / h3-quinn 0.0.7 predate quinn 0.11's private
-  `StreamId`), has no committed `Cargo.lock`, and the Elixir side falls back to
-  HTTP/2 when the NIF is absent. It is excluded from the Rust matrix; see the
-  header of `.gitlab-ci.yml` for the conditions for un-quarantining it.
+* *`opsm_ex/native/quic_transport`* — quarantined upstream of this document,
+  and re-verified on 2026-10-25 with a committed `Cargo.lock`: `cargo build
+  --locked` still fails with E0616, `field 0 of struct quinn::StreamId is
+  private`, from `h3-quinn` 0.0.7 against `quinn` 0.11. The Elixir side falls
+  back to HTTP/2 when the NIF is absent, so nothing depends on it. It is
+  excluded from the Rust matrix and from `.gitlab-ci.yml`'s `RUST_CRATE_DIRS`,
+  but *not* from the lockfile gate: its lock is committed, so the only thing
+  standing between it and a green build is the h3/h3-quinn/quinn triple.
 * *Coverage percentage* — `mix test --cover` runs and reports, but no threshold
   is enforced. A threshold on a suite that has never executed in CI would be a
   guess, and a guess that fails is indistinguishable from a defect.

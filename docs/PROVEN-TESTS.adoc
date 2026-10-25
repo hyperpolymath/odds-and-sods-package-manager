@@ -71,8 +71,9 @@ mis-bucketing a test.
   `tier`, and `proof` when the tier demands it.
 
 | `opsm_ex/test/support/proven_reporter.ex`
-| An ExUnit event manager. Records, per module, how many tests passed, failed,
-  were skipped, or were excluded, and writes `proven-report.json` at
+| An ExUnit **formatter** (`:formatters`, not `:event_managers` — ExUnit has no
+  such option and ignores it silently). Records, per module, how many tests
+  passed, failed, were skipped, or were excluded, and writes `proven-report.json` at
   `:suite_finished`. Excluded tests are dropped entirely — a filtered test must
   not enter the denominator.
 
@@ -93,6 +94,27 @@ The reporter is off by default: `mix test` on a developer machine writes
 nothing and behaves exactly as before.
 
 == 4. What the first report says
+
+=== What the first run taught us
+
+Three claims in the first version of this harness were wrong, and the suite
+running for the first time is what found them. They are recorded here because
+each is a way this instrument can lie:
+
+* The reporter was registered with `ExUnit.start(event_managers: …)`. ExUnit
+  has no such option; an unknown key is ignored without a warning, so the
+  reporter never started and no report was written. A missing report is not an
+  error anywhere downstream unless something checks for it — `proven_summary.exs`
+  printed "not found" and exited 0. It now announces the file it wrote.
+* It matched `{:suite_finished, run_us, load_us}`. ExUnit casts
+  `{:suite_finished, times_us}`.
+* The manifest stored `file` paths from the repository root while the validator
+  runs in `opsm_ex/`, so all 60 entries failed to resolve, and one aspect name
+  (`Compatibility`) is not in the 14. Both were caught by
+  `scripts/validate_proven.exs` on the first run that reached it.
+
+The lesson is the framework's own: a claim about evidence has to be *executed*
+to be a claim. A manifest that has never been validated is a wish.
 
 The suite starts at 60 declared modules / ~850 tests:
 
