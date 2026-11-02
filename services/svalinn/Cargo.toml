@@ -12,7 +12,7 @@ description = "Vulnerability scanning service integrating Trivy and Grype for OP
 axum = "0.8"
 tokio = { version = "1.0", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["trace", "cors"] }
+tower-http = { version = "0.7", features = ["trace", "cors"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
