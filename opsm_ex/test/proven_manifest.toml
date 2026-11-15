@@ -446,3 +446,10 @@ file = "test/opsm_test.exs"
 category = "UnitTest"
 aspect = "Functionality"
 tier = "unproven"
+
+[[test]]
+module = "Opsm.Package.FinalizerTest"
+file = "test/opsm/package/finalizer_test.exs"
+category = "RegressionTest"
+aspect = "Dependability"
+tier = "unproven"
