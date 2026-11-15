@@ -156,10 +156,9 @@ defmodule Opsm.Package.Installer do
   end
 
   # F1: Sequential install with rollback on failure
-  defp install_with_rollback([], resolution, _scope, _dry_run, _installed) do
-    # All packages installed successfully
-    update_lockfile_with_resolution(Map.values(resolution))
-    {:ok, :all_installed}
+  defp install_with_rollback([], resolution, _scope, dry_run, _installed) do
+    # A successful dry-run must never write opsm.lock.
+    Opsm.Package.Finalizer.finish(resolution, dry_run, &update_lockfile_with_resolution/1)
   end
 
   defp install_with_rollback([{version, package} | rest], resolution, scope, dry_run, installed) do
