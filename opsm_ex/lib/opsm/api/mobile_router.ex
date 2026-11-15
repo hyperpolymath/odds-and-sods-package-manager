@@ -10,8 +10,6 @@ defmodule Opsm.Api.MobileRouter do
 
   use Plug.Router
 
-  alias Opsm.Package.Installer
-
   plug(Plug.Logger)
 
   plug(Plug.Parsers,
@@ -44,7 +42,7 @@ defmodule Opsm.Api.MobileRouter do
         search: "unavailable",
         package_info: "unavailable",
         install: "unavailable",
-        installed: "available_read_only",
+        installed: "unavailable",
         audit_lockfile: "unavailable"
       }
     })
@@ -70,10 +68,10 @@ defmodule Opsm.Api.MobileRouter do
   end
 
   get "/api/packages/installed" do
-    # Read existing state rather than fabricate installed packages. This
-    # exposes only the local installer's current read model, not a durable
-    # VeriSimDB snapshot or independently verified installation receipts.
-    send_json(conn, 200, Installer.list_installed())
+    # The local installed-state reader suppresses persistence read errors.
+    # Keep this unavailable until a typed, authorized core reader can
+    # distinguish an empty state from a corrupted or inaccessible one.
+    unavailable(conn, "installed")
   end
 
   post "/api/audit/lockfile" do
