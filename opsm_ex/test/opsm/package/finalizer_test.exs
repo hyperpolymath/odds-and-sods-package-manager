@@ -53,6 +53,27 @@ defmodule Opsm.Package.FinalizerTest do
     refute_received {:persist, _}
   end
 
+  test "applied install reports a real lockfile write error" do
+    dir = Path.join(System.tmp_dir!(), "opsm-finalizer-write-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(dir)
+
+    try do
+      # Writing a regular file to a directory path must fail on all supported
+      # platforms without relying on a root-only read-only permission check.
+      persist = fn _packages ->
+        case Opsm.Lockfile.write(Opsm.Lockfile.new(), dir) do
+          {:ok, _path} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+      end
+
+      assert {:error, {:lockfile_persistence_failed, _reason}} =
+               Finalizer.finish(%{}, false, persist)
+    after
+      File.rm_rf!(dir)
+    end
+  end
+
   test "applied install reports a lockfile persistence error" do
     persist = fn _packages -> {:error, :eacces} end
 
