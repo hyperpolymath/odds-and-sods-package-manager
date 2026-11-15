@@ -2,10 +2,15 @@
 # Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Api.MobileRouter do
   @moduledoc """
-  REST API endpoints for OPSM mobile application.
+  Loopback mobile API for the implemented subset of OPSM.
+
+  Incomplete endpoints must return 501 instead of claiming that a package
+  was installed, found in a registry, or successfully audited.
   """
 
   use Plug.Router
+
+  alias Opsm.Package.Installer
 
   plug(Plug.Logger)
 
@@ -18,113 +23,73 @@ defmodule Opsm.Api.MobileRouter do
   plug(:dispatch)
 
   get "/api/health" do
+    version =
+      case Application.spec(:opsm, :vsn) do
+        nil -> "unknown"
+        vsn -> to_string(vsn)
+      end
+
     send_json(conn, 200, %{
       status: "healthy",
-      version: "1.0.1",
-      service: "opsm-api"
+      version: version,
+      service: "opsm-mobile-api",
+      capability_discovery: "/api/capabilities"
+    })
+  end
+
+  get "/api/capabilities" do
+    send_json(conn, 200, %{
+      protocol_version: "1",
+      operations: %{
+        search: "unavailable",
+        package_info: "unavailable",
+        install: "unavailable",
+        installed: "available_read_only",
+        audit_lockfile: "unavailable"
+      }
     })
   end
 
   get "/api/packages/search" do
-    query = conn.query_params["q"] || ""
-    registry = conn.query_params["registry"]
-
-    # Mock search results for testing
-    packages =
-      [
-        %{
-          name: "react",
-          version: "18.2.0",
-          registry: "npm",
-          description: "A JavaScript library for building user interfaces"
-        },
-        %{
-          name: "vue",
-          version: "3.3.4",
-          registry: "npm",
-          description: "Progressive JavaScript Framework"
-        },
-        %{
-          name: "axum",
-          version: "0.7.3",
-          registry: "crates",
-          description: "Web framework for Rust"
-        }
-      ]
-      |> Enum.filter(fn pkg ->
-        String.contains?(String.downcase(pkg.name), String.downcase(query))
-      end)
-      |> Enum.filter(fn pkg ->
-        is_nil(registry) || pkg.registry == registry
-      end)
-
-    send_json(conn, 200, %{
-      packages: packages,
-      total: length(packages)
-    })
+    unavailable(conn, "search")
   end
 
   get "/api/packages/:name/:version" do
-    send_json(conn, 200, %{
-      name: name,
-      version: version,
-      registry: "npm",
-      description: "Package information for #{name}@#{version}",
-      dependencies: %{},
-      metadata: %{
-        license: "MIT",
-        homepage: "https://example.com"
-      }
+    send_json(conn, 501, %{
+      error: "not_implemented",
+      operation: "package_info",
+      status: "unavailable",
+      requested: %{name: name, version: version}
     })
   end
 
+  # Installing packages requires a real core bridge and caller authorization.
+  # Until those are implemented, the route must not indicate success.
   post "/api/packages/install" do
-    payload = conn.body_params
-
-    send_json(conn, 200, %{
-      success: true,
-      message: "Installed #{payload["name"]}@#{payload["version"]} from #{payload["registry"]}"
-    })
+    unavailable(conn, "install")
   end
 
   get "/api/packages/installed" do
-    # Mock installed packages
-    packages = [
-      %{
-        name: "lodash",
-        version: "4.17.21",
-        registry: "npm",
-        description: "Lodash modular utilities"
-      },
-      %{
-        name: "axios",
-        version: "1.6.0",
-        registry: "npm",
-        description: "Promise based HTTP client"
-      }
-    ]
-
-    send_json(conn, 200, packages)
+    # Read existing state rather than fabricate installed packages. This
+    # exposes only the local installer's current read model, not a durable
+    # VeriSimDB snapshot or independently verified installation receipts.
+    send_json(conn, 200, Installer.list_installed())
   end
 
   post "/api/audit/lockfile" do
-    _payload = conn.body_params
-
-    send_json(conn, 200, %{
-      issues: [
-        %{
-          severity: "medium",
-          package: "lodash",
-          description: "Prototype pollution vulnerability"
-        }
-      ],
-      sustainability_score: 85.5,
-      security_score: 72.3
-    })
+    unavailable(conn, "audit_lockfile")
   end
 
   match _ do
-    send_json(conn, 404, %{error: "not found"})
+    send_json(conn, 404, %{error: "not_found"})
+  end
+
+  defp unavailable(conn, operation) do
+    send_json(conn, 501, %{
+      error: "not_implemented",
+      operation: operation,
+      status: "unavailable"
+    })
   end
 
   defp send_json(conn, status, data) do
@@ -132,6 +97,8 @@ defmodule Opsm.Api.MobileRouter do
 
     conn
     |> Plug.Conn.put_resp_content_type("application/json")
+    |> Plug.Conn.put_resp_header("cache-control", "no-store")
+    |> Plug.Conn.put_resp_header("x-content-type-options", "nosniff")
     |> Plug.Conn.send_resp(status, body)
   end
 end
