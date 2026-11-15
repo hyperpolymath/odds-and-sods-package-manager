@@ -54,7 +54,11 @@ defmodule Opsm.Package.FinalizerTest do
   end
 
   test "applied install reports a real lockfile write error" do
-    dir = Path.join(System.tmp_dir!(), "opsm-finalizer-write-#{System.unique_integer([:positive])}")
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "opsm-finalizer-write-#{System.unique_integer([:positive])}"
+      )
     File.mkdir_p!(dir)
 
     try do
