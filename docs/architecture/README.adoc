@@ -1,0 +1,159 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= OPSM interface and subsystem baseline
+:revdate: 2026-11-15
+:toc:
+
+== Status and scope
+
+Read-only architectural baseline captured against main commit
+`283ea89dca4e578a9e26a693cc9e19d4d90eee82` on 2026-11-15.
+This is an evidence inventory, not a readiness certificate. The companion
+link:interfaces.jsonl[JSONL inventory] is a machine-readable representation.
+The proposed common operation contract is in
+link:OPERATION-CONTRACT-v0.adoc[OPERATION-CONTRACT-v0.adoc].
+
+This inventory follows link:../brief/00-MASTER-BRIEF.adoc[the master brief]
+and link:../brief/03-V1-SCOPE.adoc[v1 scope]: package management is the
+public centre; general remote-fleet and enterprise provisioning are deferred.
+Do not conflate a file's presence, a successful Rust build, a working
+integration test, or a formal proof.
+
+Classification:
+
+* `implemented-unverified`: substantive code exists; end-to-end claim not yet substantiated.
+* `partial`: a usable route exists but contract, persistence or enforcement is incomplete.
+* `scaffold`: declarations or shells exist without a demonstrated backing implementation.
+* `placeholder`: route can return synthetic or success-shaped results without doing the work.
+* `planned`: the integration is expressed in the design, not found in the runtime path.
+* `blocked`: required execution evidence is blocked by a known failure.
+
+== Observed systems and ownership seams
+
+[cols="2,2,2,4",options="header"]
+|===
+| System | Source of implementation | Observed state | Critical seam
+
+| CLI / command orchestration
+| `opsm_ex/lib/opsm/cli.ex`; `src/opsm.zig`; `runtime/opsm-runtime`
+| partial
+| Multiple execution/dispatch entry points; Zig CLI delegates through a hard-coded checkout path; select one public route and version the protocol.
+
+| Resolver, dependency model, lockfile
+| `opsm_ex/lib/opsm/resolver.ex`; `lockfile.ex`; `package/installer.ex`
+| implemented-unverified
+| Compiler/test run is blocked; package installation dry-run can reach lockfile write (fix in separate PR).
+
+| Registry federation
+| `opsm_ex/lib/opsm/registries/registry.ex`, 114 `registries/*.ex` source files
+| partial
+| Adapter presence does not imply live registry support, publish capability or identical TOML parsing.
+
+| Install / rollback
+| `opsm_ex/lib/opsm/package/transaction.ex`; `maintenance.ex`
+| partial
+| In-process rollback is not equivalent to crash-safe reversible state mutation; no JanusKey proof.
+
+| Trust/publish/audit
+| `opsm_ex/lib/opsm/trust/pipeline.ex`; `wiring.ex`; `clients/*`
+| partial
+| Some trust failures degrade to warnings; strict policy decision semantics must be explicit.
+
+| Local plan/apply REST
+| `opsm_ex/lib/opsm/api/{server,router}.ex`
+| partial
+| Documented localhost:4466 router is separate from the default application supervision tree; apply authorization needs evidence.
+
+| Registry publication gateway
+| `opsm_ex/lib/opsm/registry_gateway/{router,store}.ex`
+| partial
+| localhost:4050 under OTP supervisor; publication currently uses process-memory Agent store, not durable published state.
+
+| Mobile API and application
+| `opsm_ex/lib/opsm/api/mobile_router.ex`; `opsm_mobile/api/*`; `opsm_mobile/src/*`
+| placeholder
+| OTP port 4051 currently advertises simulated search/install/audit data; separate real controller is not the supervised router; UI Affine modules contain TODOs.
+
+| Rust TUI
+| `opsm-ui/tui/src/{main,lib}.rs`
+| partial
+| Rust build succeeded on main, but CLI JSON/operation semantics and real end-to-end commands need contract tests.
+
+| GraphQL and gRPC
+| `src/api/graphql/schema.graphql`; `src/api/proto/opsm.proto`
+| scaffold
+| Schema declarations only; do not advertise endpoints as live.
+
+| Runtime version manager
+| `opsm_ex/lib/opsm/runtime/*`; `runtime/core/*.ncl`; `runtime/shim/*`
+| partial
+| Nickel plugin catalog and managers exist; reconcile shell, Zig and Elixir implementations, compatibility and source verification.
+
+| Cryptographic/typed ABI
+| `src/abi/{Foreign.idr,Types.idr,Layout.idr,ffi.zig}`; `opsm_ex/native/*`
+| scaffold
+| Zig FFI has success-shaped no-op operations. Formal obligations and runtime NIF assurance are separate claims.
+
+| Persistence and audit
+| `opsm_ex/lib/opsm/storage/*`; `verisimdb.ex`
+| partial
+| VeriSimDB event API exists but drops records when unavailable; master brief calls for canonical state and recovery.
+
+| Container/security services
+| `services/{checky-monkey,oikos,palimpsest-license,svalinn,selur,vordr}`
+| partial
+| Rust services build in CI; cross-service transaction and policy-enforcement receipts still need testing.
+
+| JanusKey
+| `docs/brief/{02-ARCHITECTURE,05-TRUST-REVERSIBILITY}.adoc`
+| planned
+| Versioned reversible mutation kernel, checkpoints and compensations not established in live install path.
+
+| Panic Attack
+| `docs/brief/02-ARCHITECTURE.adoc`; `docs/recon/2026-10-25/*`
+| planned
+| On-download/on-run analysis needs a typed request/response and enforcing caller.
+
+| PanLL, external frontends
+| `runtime/panel-harness/*`, `opsm-ui/*`
+| partial
+| Existing UI plans and harness require stable capability discovery and operation-status contract.
+
+| Estate maintenance
+| GitHub issue #100
+| planned
+| General fleet-wide mutation is outside core v1; model bounded integration instead.
+|===
+
+== Reproducible evidence and blockers
+
+* Main commit: `283ea89dca4e578a9e26a693cc9e19d4d90eee82`.
+* Required CI: lint/test/gate fail; `proven_nif` cannot link `-lproven`.
+  See issue https://github.com/hyperpolymath/odds-and-sods-package-manager/issues/135[#135]
+  and workflow https://github.com/hyperpolymath/odds-and-sods-package-manager/actions/runs/42931844071[CI run].
+* Rust services and TUI build jobs succeeded on that main commit; this
+  is not proof of end-to-end service connectivity.
+* `mix.exs` declares version `2.0.0`; Zig CLI reports `1.2.0`;
+  mobile health endpoint reports `1.0.1`. Define product, protocol
+  and component version fields distinctly.
+* The master brief refers to `a2ml / k9` as canonical; current estate
+  metadata policy and generated DEED manifests should be reconciled by
+  standards owners before selecting a new canonical storage format.
+
+== Dependency order and acceptance
+
+. P0: restore authentic `libproven` linkage; run actual Elixir tests.
+. P0: repair dry-run lockfile mutation, fake-success API responses,
+  missing authorization and policy-aware trust enforcement in separate PRs.
+. P1: freeze a versioned operation/capability/decision/result contract;
+  each adapter advertises supported actions and failure semantics.
+. P1: model durable state, idempotency, evidence, checkpoints and
+  recovery across VeriSim/JanusKey boundaries; test failure injection.
+. P1: unify the real CLI/API/TUI and mobile routes; maintain an explicit
+  `unavailable` result for unsupplied functionality.
+. P2: complete planned protocols (GraphQL/gRPC) only for demonstrated
+  consumers; leave remote-fleet scope separately governed.
+
+An interface counts as implemented only with a tested producer and
+consumer, documented authorization, error handling, versioning,
+observability, security policy, and evidence on the latest commit.
+An architecture document alone cannot satisfy this gate.
