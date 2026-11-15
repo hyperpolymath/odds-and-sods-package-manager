@@ -14,9 +14,10 @@ defmodule Opsm.Package.FinalizerPropertyTest do
 
   property "dry-run never invokes persistence over arbitrary resolved maps" do
     check all(
-            names <- list_of(string(:alphanumeric, min_length: 1, max_length: 12),
-              max_length: 15
-            ),
+            names <-
+              list_of(string(:alphanumeric, min_length: 1, max_length: 12),
+                max_length: 15
+              ),
             max_runs: 1_000
           ) do
       resolved =
@@ -39,9 +40,10 @@ defmodule Opsm.Package.FinalizerPropertyTest do
 
   property "applied install passes every resolved entry to persistence exactly once" do
     check all(
-            names <- list_of(string(:alphanumeric, min_length: 1, max_length: 12),
-              max_length: 15
-            ),
+            names <-
+              list_of(string(:alphanumeric, min_length: 1, max_length: 12),
+                max_length: 15
+              ),
             max_runs: 1_000
           ) do
       resolved =
