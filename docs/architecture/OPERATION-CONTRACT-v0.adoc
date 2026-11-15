@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= OPSM canonical operation contract — design draft v0
+:revdate: 2026-11-15
+:toc:
+
+IMPORTANT: This is a *proposed* normative target for review, not an
+assertion that existing code implements these fields or guarantees. It
+does not authorize making changes on other repositories, hosts or systems.
+
+== Purpose
+
+The master brief requires many ways in, one model underneath. CLI, TUI,
+REST, mobile, PanLL and eventual GraphQL/gRPC must expose the same logical
+operation and failure states. Elixir/OTP remains the currently
+implemented package-manager orchestrator unless a separately approved
+ADR changes ownership.
+
+== Lifecycle
+
+A request must be distinguishable from a plan, a plan from policy
+authorization, and authorization from application.
+
+----
+discovered -> planned -> evaluated -> authorized -> applying
+                                         |             |
+                                         |             +--> applied
+                                         |             +--> failed
+                                         |                    |
+                                         |               compensating
+                                         |                    |
+                                         |             +--> compensated
+                                         |             +--> recovery_required
+                                         +--> rejected
+----
+
+* Planning is non-mutating to installed packages, lockfiles, services,
+  secrets, and target configuration. Explicitly labelled, non-authoritative
+  telemetry about a plan may be recorded, but not presented as application.
+* An apply requires an immutable, content-addressed plan identifier,
+  identity/capability authorization, policy decision, target identity,
+  and idempotency key; a successful plan is NOT proof of execution.
+* Every success response must identify actual recorded effects.
+* Unknown, timed-out, declined, unsupported or unavailable is never
+  translated into verified/applied.
+* Where effects are not reversible, a compensating action must be
+  distinguished from mathematically guaranteed reversal.
+* Failure between applied changes and audit persistence must be
+  recoverable/reconcilable; do not silently discard essential receipts.
+
+== Proposed envelope (not yet implemented)
+
+[cols="1,4",options="header"]
+|===
+| Field | Semantics
+| `protocol_version` | Contract version; incompatible major versions reject.
+| `operation_id` | Stable identity across retries.
+| `kind` | e.g. install, remove, configure, prepare_target, enable_service, export.
+| `source` | Canonical package/source identity, registry and unambiguous version.
+| `target` | Local/container/media/device/narrow-cloud target identity plus architecture.
+| `mode` | Lifecycle and execution mode from `docs/brief/04-DATA-MODEL.adoc`.
+| `action_plan` | Normalized bounded actions with plan digest, resource changes and preconditions.
+| `capabilities` | Advertised supported operations and backend availability.
+| `trust_decision` | verified, rejected, unknown or unavailable, with reasons and evidence refs.
+| `approval` | Authorizing identity, allowed target, scope, expiry and immutable plan digest.
+| `reversibility` | rollback plan, checkpoint/compensation support and known irreversible effects.
+| `status` | One lifecycle state, never an inferred success flag.
+| `receipt` | Immutable record of attempted/committed effects, evidence, timestamps and failures.
+| `idempotency_key` | Scoped to caller/target/operation; retries cannot duplicate effects.
+|===
+
+== Proposed adapter capability discovery
+
+Every registry, system port, toolchain plugin and trust provider should
+declare at least:
+
+* Stable adapter ID, interface version and implementation version.
+* Supported actions: search, read_metadata, resolve, fetch, verify,
+  install, remove, publish, query_status, revert, as applicable.
+* Authentication and required privileges, without exposing credentials.
+* Supported target families, host platforms, formats, architectures and
+  lifecycle modes.
+* Security preconditions, trust-policy applicability and irreversible effects.
+* Error classes: invalid_request, forbidden, unavailable, unsupported,
+  timeout, policy_rejected, unverified, conflict, partial_effects,
+  recovery_required.
+* Execution receipt and health-check fixtures.
+
+An unimplemented action must return `unsupported` or `unavailable`,
+not a fabricated response. Discovery should not require or initiate
+privileged modification.
+
+== Boundary ownership and fail-safe requirements
+
+* Resolver/installer: computes a bounded plan; installation cannot bypass
+  an evaluated policy decision. A strict policy must not convert an
+  unreachable trust service into acceptance.
+* Registry adapters: normalize metadata to one model, preserve upstream
+  provenance and use a consistent parser; do not equate source adapter
+  count with supported real installations.
+* Local API: bind to loopback by default; mutations require caller
+  authorization and protections against cross-origin/CSRF-style abuse.
+  A loopback address alone is not an authorization model.
+* VeriSim: primary state store is the design goal. While local files and
+  external storage coexist, use stable IDs, write-ahead reconciliation
+  and explicit read/write consistency guarantees.
+* JanusKey: define `prepare/commit/compensate/recover` or equivalent;
+  prove exactly which mutations are reversible, and mark external effects
+  that are not.
+* Panic Attack: normalize download/run assessments into policy evidence;
+  distinguish refusal, timeout, absence and a clean result.
+* TUI/mobile/PanLL: render actual capability/status; never treat a
+  simulated action as installed or verified.
+* Idris2/Zig/Rust: specify ABI ownership, lifetime, failure and
+  state transition contracts; compile success is not a correctness proof.
+
+== Minimum contract-test sequence
+
+. Query capabilities (including unavailable and unknown backends).
+. Plan without modifying persistent installed-state/lockfiles/services.
+. Refuse mismatched plan digest, unauthorized caller and unsupported target.
+. Reject under strict trust policy when required verification is unavailable.
+. Apply a small, known-safe fixture and receive an actual-effect receipt.
+. Repeat same idempotency key and verify no duplicate effects.
+. Inject download, filesystem, lockfile, service and audit-store failures.
+. Reconcile persisted state and produce a compensation or
+  recovery-required receipt with exact affected resources.
+. Exercise the same fixture through CLI, REST and TUI/mobile adapters.
+. Require truthful version and capability reporting for stub transports.
+
+== Decisions required before implementation
+
+. Which operations are mandatory for the first v1 scaffold?
+. Formal approval/authorization strategy for local mutating endpoints.
+. Versioned mapping between deprecated A2ML forms, DEED/K9, Nickel and
+  `opsm.toml`; do not silently change the estate-wide standard.
+. Persistent state consistency when VeriSimDB is offline.
+. JanusKey capability and integration boundaries.
+. Which external tool is responsible for fleet orchestration beyond v1?
+
+Until agreed, these are proposed interfaces, not validated contracts.
