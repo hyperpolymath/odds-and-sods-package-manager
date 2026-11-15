@@ -1,0 +1,138 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= OPSM assurance parity inventory — 2026-11-15
+:toc:
+:toclevels: 3
+
+== Evidence boundary
+
+This document inventories the repository at main
+`970e8eeaa48fb9568ac178fe076b0794fa41b2de`, with corrective
+test-manifest edits on `assurance/opsm-proven-parity-20261115`.
+It does *not* certify the repository as passing. A declaration is not
+an execution receipt. GitHub required checks are presently red because
+the Elixir Proven NIF cannot link genuine `libproven` (OPSM #135 and
+proven #235), so there is no contemporary complete test run supporting
+a percentage of executed coverage.
+
+Authoritative dependencies:
+
+* `metadatastician/standards/3-practice/testing-and-benchmarking/TESTING-TAXONOMY.adoc`
+  — canonical 17 categories × 14 aspects, applicability and N/A doctrine.
+* `hyperpolymath/proven-tests-and-benches` — reusable tests and executed
+  evidence contracts, including the downstream schema-version-2 fixtures.
+* `hyperpolymath/proven-cicd-and-workflows` — reusable CI components,
+  their enforcement classes, and the currently *shadow-only* coverage collector.
+* `metadatastician/standards/docs/PIPELINE-AND-HOOKS-SUMMARY.adoc`
+  — practical workflow and local hook inventory, with candid limitations.
+
+== Current manifest — declarations, not passing execution
+
+The branch registers 62 ExUnit test modules against a 238-cell taxonomy.
+The additional two declarations relative to main are the previously
+unregistered installer finalizer regression module and four adversarial
+source-binding tests (in a single ExUnit module). This number describes
+manifest records only, not tests that ran, statements proved or coverage
+percentage. At the previous measured, executed report OPSM recorded 14
+of 238 cells; that historical number cannot be treated as current.
+
+[cols="3,1,4",options="header"]
+|===
+| Test category | Declared modules | Status of remaining obligation
+| UnitTest | 36 | Need public-API and error-branch denominator
+| PointToPoint | 8 | Need every significant typed boundary and failure mode
+| EndToEnd | 4 | Live services, real installs and release candidate paths must run
+| BuildTest | 4 | Separate Elixir and supported platform/toolchain builds
+| PropertyBasedTest | 5 | Require substantive invariants and reproducible seeds; generated samples are not mathematical proofs
+| ContractInvariantTest | 3 | Include manifest source binding; add K9, DEED and operation contracts
+| FuzzTest | 1 | Confirm generated adversarial cases actually execute; not proof of a coverage-guided fuzzer
+| RegressionTest | 1 | Every fixed defect needs a named, executing regression
+| ExecutionRuntime | 0 | Gap: OTP supervision, NIF load, runtime crash/restart
+| ReflexiveTest | 0 | Gap: self-diagnostics and failure-detection controls
+| LifecycleTest | 0 | Gap: atomic installs, rollback and cleanup states
+| SmokeTest | 0 | Gap: startup, CLI and health endpoints with failure injection
+| MutationTest | 0 | Gap: establish mutation score with killed-mutant fixtures
+| ChaosResilienceTest | 0 | Gap: unreachable trust services, partial writes, power loss, DB/event outages
+| CompatibilityTest | 0 | Gap: lockfile migration, registry protocol and versioned API
+| ProofRegressionTest | 0 | Gap: verify every actual type/proof artifact under its real toolchain
+| TypeSafeTest | 0 | Gap: compiler-rejected ill-typed examples with expected diagnostic
+|===
+
+The six aspects currently declared are Functionality (21 modules),
+Interoperability (18), Security (16), Dependability (5),
+Maintainability (1), and Reproducibility (1).
+No test *manifest* declarations currently cover Usability, Safety,
+Performance, Versability, Accessibility, Privacy, Observability, or
+Portability. These are gaps in evidence claims, not automatically N/A.
+All 62 declared modules are either `unproven` (56) or
+`provisionally_proven` (6); **zero** claim `actually_proven`.
+
+== Workflow-parity migration ledger
+
+The 23 existing workflow YAML files must not be removed as a block.
+Their triggers and security semantics differ, and startup-failed
+reusable workflows have historically generated zero-job false comfort.
+
+[cols="2,3,3",options="header"]
+|===
+| Current OPSM workflows | Candidate reusable/canonical source | Migration acceptance
+| `ci.yml` | Proven CI language gates; standards `elixir-ci-reusable`, `rust-ci-reusable`; proven-lock gate | Retain the existing `CI / gate` context until pin-safe equivalent covers strict compile, all tests, real NIF and Rust crates, execution evidence, toolchain and conformance
+| `e2e.yml`, `trust-pipeline-e2e.yml`, `nif-build.yml` | Proven Tests execution-truth, P2P/E2E/lifecycle contracts | No offline mocked success; live identities, genuine compiled NIF, failure receipts and bounded service dependencies
+| `dogfood-gate.yml` | standards K9/DEED governance and proof runner | Replace floating `validate-action@main` references with audited immutable pins and lock closure; substantive verdict mandatory
+| `secret-scanner.yml`, `secret-scanner-vendored.yml` | proven-cicd secret scanner and standards secret-scanner reusable | Keep `scan / gitleaks` exact required context, prove no startup-failure and no skipped security scan, then remove vendored drift
+| `governance.yml`, `codeql.yml`, `scorecard.yml`, `hypatia-scan.yml`, `echidna-validation.yml` | standards reusables / proven-cicd assurance | Confirm true check identity, PR trigger, required report and downstream activation before switching
+| `json-ijson-jcs.yml`, `yaml-kyaml.yml` | standards canonical format gates | Preserve real strict I-JSON/JCS and KYAML parsing on the supported file denominator
+| `cicd-squabbler.yml`, `gitbot-fleet.yml` | proven-cicd dependency-chain/observatory capabilities | Preserve findings, receipts, rejected/skipped distinction and reports; do not count bot discovery as passing tests
+| `mirror.yml`, `instant-sync.yml`, `push-email-notify.yml` | standards mirror/backup and notifications | Keep independent write permissions and secret scopes; not part of code-correctness gate
+| `label-triage.yml`, `labels.yml` | standards governance/triage | Preserve event triggers, rights and expected label state
+| `boj-build.yml`, `casket-pages.yml` | standards provisioning/Pages | Keep artifact publication separate from pull-request test assurance
+|===
+
+== Hook inventory / missing adoption
+
+`metadatastician/standards/.githooks/` has pre-commit, pre-push,
+commit-msg, post-checkout, post-merge, pre-rebase, and specific K9,
+SPDX, SHA-pin, actions-lock, permissions, CodeQL and bot-directives
+validators. OPSM currently has `runtime/core/lefthook.ncl` but no
+matching root `.githooks/` inventory on main.
+
+This is an **integration gap**, not permission to copy scripts
+unexamined. Shared validators must be pinned, tested with positive
+and intentionally defective fixtures, and adapted to OPSM's Elixir,
+Rust, Zig, Nickel and Idris source roots. A local hook cannot replace
+PR CI: contributors can disable hooks, while CI must fail closed.
+
+== Replacement gates — required proof before retiring any workflow
+
+. Enumerate source files and check targets; ensure no area disappears
+  from the measured denominator.
+. Show the candidate gate starts and completes on a real PR, not merely
+  that GitHub created a workflow run.
+. Assert a passing fixture and a deliberately broken fixture for each
+  substantive gate; zero jobs, missing tooling and missing reports fail
+  closed or are explicitly non-enforcing.
+. Pin all actions and reusable workflows to audited immutable sources,
+  with valid lockfile closure; keep least-privilege token scopes.
+. Record current-commit execution and reporting receipts. A property
+  sample is provisional; a checked Idris2 theorem is proof only of its
+  precise statement.
+. Keep CI and security check contexts required by GitHub rulesets
+  throughout migration. Do not merge failing changes or bypass the
+  ruleset to obtain a green dashboard.
+. Resolve all substantive app reviews and review threads before
+  declaring a migration complete.
+
+== Immediate corrective sequence
+
+. Restore verified `libproven` linking and runtime tests (OPSM #135,
+  proven #235) before using OPSM's Elixir test reports as evidence.
+. Run and validate the manifest including the new finalizer and
+  source-binding tests; reject incorrect module-to-file evidence.
+. Add target-aware lifecycle, trust-fail-closed, authenticated API and
+  fault-injection tests to the shared Proven-Tests interfaces first,
+  then instantiate them in OPSM.
+. Shadow-run a pinned proven-cicd candidate against each legacy
+  workflow. Diff substantive findings and missing/unavailable
+  receipts; never delete the old lane in the same unverified step.
+. Add enforceable native coverage measurements and raise the current
+  17% OPSM floor only on real passing measurements. The GitHub 80%
+  code-coverage ruleset requires an actual compatible coverage source.
