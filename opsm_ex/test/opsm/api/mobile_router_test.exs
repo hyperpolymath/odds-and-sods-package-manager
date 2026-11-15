@@ -5,14 +5,13 @@ defmodule Opsm.Api.MobileRouterTest do
   import Plug.Test
 
   alias Opsm.Api.MobileRouter
-  alias Opsm.Package.Installer
 
   test "capabilities identify the implemented read-only subset" do
     response = request(:get, "/api/capabilities")
     assert response.status == 200
 
     operations = Jason.decode!(response.resp_body)["operations"]
-    assert operations["installed"] == "available_read_only"
+    assert operations["installed"] == "unavailable"
     assert operations["install"] == "unavailable"
     assert operations["search"] == "unavailable"
     assert operations["package_info"] == "unavailable"
@@ -47,10 +46,10 @@ defmodule Opsm.Api.MobileRouterTest do
     assert result["requested"] == %{"name" => "react", "version" => "18.2.0"}
   end
 
-  test "installed packages reflect the real local installed-state reader" do
+  test "installed endpoint cannot claim an empty database on read failure" do
     response = request(:get, "/api/packages/installed")
-    assert response.status == 200
-    assert Jason.decode!(response.resp_body) == Installer.list_installed()
+    assert response.status == 501
+    assert Jason.decode!(response.resp_body)["operation"] == "installed"
   end
 
   test "audit endpoint must not invent vulnerability scores" do
