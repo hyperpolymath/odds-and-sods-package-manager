@@ -59,6 +59,7 @@ defmodule Opsm.Package.FinalizerTest do
         System.tmp_dir!(),
         "opsm-finalizer-write-#{System.unique_integer([:positive])}"
       )
+
     File.mkdir_p!(dir)
 
     try do
