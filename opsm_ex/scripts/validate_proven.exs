@@ -212,30 +212,10 @@ defmodule ValidateProven do
       |> Enum.reject(fn e -> is_binary(e["file"]) and File.regular?(e["file"]) end)
       |> Enum.map(fn e -> "#{e["module"]}: file #{inspect(e["file"])} does not exist" end)
 
-    # Existing files alone are insufficient evidence: the manifest must point
-    # to the source file which actually defines its claimed ExUnit module.
-    # Otherwise a test can be moved, excluded, or replaced while its stale
-    # category/aspect claim continues to look legitimate.
-    on_disk =
-      test_modules()
-      |> Map.new(fn %{module: module, file: file} -> {module, file} end)
+    binding_errors =
+      Opsm.Proven.ManifestBinding.violations(manifest, test_modules())
 
-    mismatched_file =
-      manifest
-      |> Enum.flat_map(fn e ->
-        module = e["module"]
-        declared_file = e["file"]
-
-        case Map.fetch(on_disk, module) do
-          {:ok, actual_file} when actual_file != declared_file ->
-            ["#{module}: manifest names #{inspect(declared_file)}, actual module is in #{inspect(actual_file)}"]
-
-          _ ->
-            []
-        end
-      end)
-
-    duplicates ++ missing_file ++ mismatched_file
+    duplicates ++ missing_file ++ binding_errors
   end
 
   defp report_tiers(manifest) do
