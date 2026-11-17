@@ -280,6 +280,13 @@ aspect = "Interoperability"
 tier = "unproven"
 
 [[test]]
+module = "Opsm.Package.FinalizerTest"
+file = "test/opsm/package/finalizer_test.exs"
+category = "UnitTest"
+aspect = "Dependability"
+tier = "unproven"
+
+[[test]]
 module = "Opsm.Package.TransactionTest"
 file = "test/opsm/package/transaction_test.exs"
 category = "UnitTest"
@@ -298,6 +305,13 @@ module = "Opsm.Property.LockfilePropertyTest"
 file = "test/property/lockfile_property_test.exs"
 category = "PropertyBasedTest"
 aspect = "Interoperability"
+tier = "provisionally_proven"
+
+[[test]]
+module = "Opsm.Property.TopoSortPropertyTest"
+file = "test/property/topo_sort_property_test.exs"
+category = "PropertyBasedTest"
+aspect = "Dependability"
 tier = "provisionally_proven"
 
 [[test]]
