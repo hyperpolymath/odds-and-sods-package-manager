@@ -6,6 +6,7 @@ defmodule Opsm.Package.FinalizerTest do
 
   test "dry-run does not invoke the lockfile writer" do
     parent = self()
+
     persist = fn _packages ->
       send(parent, :lockfile_written)
       :ok
