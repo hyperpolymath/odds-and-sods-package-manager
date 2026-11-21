@@ -209,10 +209,13 @@ defmodule ValidateProven do
 
     missing_file =
       manifest
-      |> Enum.reject(fn e -> is_binary(e["file"]) and File.exists?(e["file"]) end)
+      |> Enum.reject(fn e -> is_binary(e["file"]) and File.regular?(e["file"]) end)
       |> Enum.map(fn e -> "#{e["module"]}: file #{inspect(e["file"])} does not exist" end)
 
-    duplicates ++ missing_file
+    binding_errors =
+      Opsm.Proven.ManifestBinding.violations(manifest, test_modules())
+
+    duplicates ++ missing_file ++ binding_errors
   end
 
   defp report_tiers(manifest) do
