@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Mobile API scaffold: truthful capability discovery
+:revdate: 2026-11-15
+
+== Status
+
+The OTP-supervised `Opsm.Api.MobileRouter` on loopback port 4051
+formerly returned hard-coded package search hits, package metadata,
+installed-package data, an invented audit score, and a success-shaped
+response for every installation request.
+
+This branch removes those synthetic success claims. It deliberately
+does **not** claim a working mobile package-management backend. The
+separate `opsm_mobile/api/package_controller.ex` and
+`opsm_mobile/api/router.ex` are currently outside the Elixir Mix
+application's source compilation path and need a supported integration
+and authorization design before enabling them.
+
+== Current HTTP contract
+
+[cols="2,2,3",options="header"]
+|===
+| Route | Result | Meaning
+| GET `/api/health` | 200 | Process-level health only; version from OTP application spec, not a fabricated app version
+| GET `/api/capabilities` | 200 | Returns protocol v1 and explicit unavailable operations
+| GET `/api/packages/search` | 501 | Search is not wired into the supervised router
+| GET `/api/packages/:name/:version` | 501 | No fake version, license, homepage or metadata
+| POST `/api/packages/install` | 501 | No installed/success response without real, authorized installer
+| GET `/api/packages/installed` | 501 | No mock installed packages; local file reader currently conflates missing/corrupt/unreadable databases
+| POST `/api/audit/lockfile` | 501 | No synthetic vulnerability findings or sustainability scores
+| Unknown route | 404 | Not found
+|===
+
+The mobile API remains bound to localhost by the application supervisor.
+Localhost is **not** an authorization boundary. All JSON responses
+include no-store and nosniff headers, but these do not substitute for
+authenticating/authorizing calls.
+
+== Integration work before capabilities can change to available
+
+. Consolidate the supervised router and dormant mobile
+  `PackageController` into the compiled package-manager application;
+  remove ambiguous alternate router ownership.
+. Define authenticated mutation scope and anti-CSRF/origin control
+  for the locally exposed API. Do not enable install/apply before this.
+. Introduce a typed status/persistence result for installed packages:
+  `{:ok, []}` must not be returned for database corruption or
+  permission failures.
+. Route real searches and package information through the registry
+  dispatcher, with provenance and timeouts; no offline hard-coded
+  package metadata as live responses.
+. Route audit through the actual trust and policy pipeline, preserving
+  unsupported/unknown/timeout/rejected statuses rather than scores
+  invented for demonstrations.
+. Version the envelope and test operation semantics across CLI,
+  REST, TUI and PanLL. Explicitly separate `planned` and
+  `applied` receipts.
+. Exercise failing, unavailable and successful paths under real
+  integration tests, then require green `CI / gate` and completed
+  review on the latest commit.
+
+This is a *corrective honesty scaffold*, not a completion of mobile
+functionality or a claim of endpoint security.
