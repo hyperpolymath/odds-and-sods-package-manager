@@ -23,6 +23,7 @@ defmodule Opsm.Api.MobileRouterTest do
     response = request(:post, "/api/packages/install", payload)
 
     assert response.status == 501
+
     assert Jason.decode!(response.resp_body) == %{
              "error" => "not_implemented",
              "operation" => "install",
@@ -34,6 +35,7 @@ defmodule Opsm.Api.MobileRouterTest do
     response = request(:get, "/api/packages/search?q=react")
 
     assert response.status == 501
+
     assert Jason.decode!(response.resp_body)["operation"] == "search"
   end
 
@@ -49,12 +51,14 @@ defmodule Opsm.Api.MobileRouterTest do
   test "installed endpoint cannot claim an empty database on read failure" do
     response = request(:get, "/api/packages/installed")
     assert response.status == 501
+
     assert Jason.decode!(response.resp_body)["operation"] == "installed"
   end
 
   test "audit endpoint must not invent vulnerability scores" do
     response = request(:post, "/api/audit/lockfile", "{}")
     assert response.status == 501
+
     assert Jason.decode!(response.resp_body)["operation"] == "audit_lockfile"
   end
 
