@@ -462,13 +462,6 @@ aspect = "Functionality"
 tier = "unproven"
 
 [[test]]
-module = "Opsm.Package.FinalizerTest"
-file = "test/opsm/package/finalizer_test.exs"
-category = "RegressionTest"
-aspect = "Safety"
-tier = "unproven"
-
-[[test]]
 module = "Opsm.Package.FinalizerPropertyTest"
 file = "test/opsm/package/finalizer_property_test.exs"
 category = "PropertyBasedTest"
