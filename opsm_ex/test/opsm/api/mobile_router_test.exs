@@ -76,6 +76,7 @@ defmodule Opsm.Api.MobileRouterTest do
 
     assert Plug.Conn.get_resp_header(response, "cache-control") == ["no-store"]
     assert Plug.Conn.get_resp_header(response, "x-content-type-options") == ["nosniff"]
+
     assert Plug.Conn.get_resp_header(response, "content-type") == [
              "application/json; charset=utf-8"
            ]
