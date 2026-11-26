@@ -45,6 +45,10 @@ defmodule Opsm.Har.WebScraperTest do
       end
     end
 
+    # Walks every repo host with real HTTP (10s timeout x retries per host), so
+    # it belongs with the other network-dependent tests: excluded by default
+    # (see test_helper.exs) and run with `mix test --include external_api`.
+    @tag :external_api
     test "builds task with all required fields" do
       task = %{
         "task_id" => "test-003",
