@@ -20,11 +20,10 @@
 # grow.
 #
 # Inventory taken 2026-08-06 across all 424 estate repositories.
-# Files covered: 5 rescript, 1 python
+# Files covered: 5 rescript
 
 cicd_rules/banned_language_file:opsm_mobile/src/App.res
 cicd_rules/banned_language_file:opsm_mobile/src/OpsmCommands.res
 cicd_rules/banned_language_file:opsm_mobile/src/Route.res
 cicd_rules/banned_language_file:opsm_mobile/src/RuntimeBridge.res
 cicd_rules/banned_language_file:opsm_mobile/src/TauriFFI.res
-cicd_rules/banned_language_file:scripts/mise_to_a2ml.py
