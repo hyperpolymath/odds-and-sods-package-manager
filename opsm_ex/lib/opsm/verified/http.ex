@@ -122,6 +122,9 @@ defmodule Opsm.Verified.Http do
   # Internal HTTP Operations (using Req)
   # =============================================================================
 
+  # `config :opsm, :http_req_options` is merged last into every GET, so tests
+  # can route requests through `plug: {Req.Test, name}` and run offline.
+  # Unset in dev/prod.
   defp do_get(url, opts) do
     # :receive_timeout is Req's actual option name — callers pass it
     # throughout the codebase, so read that key, not a nonexistent :timeout.
@@ -135,6 +138,7 @@ defmodule Opsm.Verified.Http do
     req_opts =
       [receive_timeout: timeout, retry: :transient, max_retries: retry_count, headers: headers]
       |> maybe_put_into(opts)
+      |> Keyword.merge(Application.get_env(:opsm, :http_req_options, []))
 
     try do
       result = Req.get(url, req_opts)

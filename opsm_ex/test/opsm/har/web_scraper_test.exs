@@ -1,11 +1,21 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 defmodule Opsm.Har.WebScraperTest do
-  use ExUnit.Case, async: true
+  # Not async: routes HTTP through the global :http_req_options app env.
+  use ExUnit.Case, async: false
 
   alias Opsm.Har.WebScraper
 
   describe "process_task/1" do
+    # Answer every HTTP request with an offline 404 stub so the strategy chain
+    # runs without touching the network.
+    setup do
+      Application.put_env(:opsm, :http_req_options, plug: {Req.Test, __MODULE__})
+      on_exit(fn -> Application.delete_env(:opsm, :http_req_options) end)
+      Req.Test.stub(__MODULE__, fn conn -> Plug.Conn.send_resp(conn, 404, "") end)
+      :ok
+    end
+
     test "returns error for empty package name" do
       task = %{
         "task_id" => "test-001",
@@ -45,10 +55,6 @@ defmodule Opsm.Har.WebScraperTest do
       end
     end
 
-    # Walks every repo host with real HTTP (10s timeout x retries per host), so
-    # it belongs with the other network-dependent tests: excluded by default
-    # (see test_helper.exs) and run with `mix test --include external_api`.
-    @tag :external_api
     test "builds task with all required fields" do
       task = %{
         "task_id" => "test-003",
@@ -61,8 +67,9 @@ defmodule Opsm.Har.WebScraperTest do
       }
 
       result = WebScraper.process_task(task)
-      # Should return error for truly nonexistent package
-      assert match?({:error, _}, result) or match?({:ok, _}, result)
+      # Nothing is found anywhere, so the scraper reports the package as not found
+      assert {:error, message} = result
+      assert message =~ "nonexistent-pkg-zzz"
     end
   end
 
