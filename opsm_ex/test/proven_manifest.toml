@@ -462,13 +462,6 @@ aspect = "Functionality"
 tier = "unproven"
 
 [[test]]
-module = "Opsm.Package.FinalizerTest"
-file = "test/opsm/package/finalizer_test.exs"
-category = "RegressionTest"
-aspect = "Dependability"
-tier = "unproven"
-
-[[test]]
 module = "Opsm.Proven.ManifestBindingTest"
 file = "test/opsm/proven/manifest_binding_test.exs"
 category = "ContractInvariantTest"
