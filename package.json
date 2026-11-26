@@ -1,0 +1,7 @@
+{
+  "name": "odds-and-sods-package-manager",
+  "private": true,
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}
