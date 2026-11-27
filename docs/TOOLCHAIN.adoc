@@ -76,13 +76,6 @@ versions. Any drift is a hard failure.
 |`Justfile` build recipes (estate standard, replaces Make)
 |community asdf plugin / mise core
 
-|deno
-|2.6.10
-|JS runtime for `opsm_mobile/` (its own `deno.json` + ReScript UI). The
- root-tree ReScript CLI it used to build was removed — the Elixir escript
- (`Opsm.CLI`) is now the CLI.
-|estate plugin: https://github.com/hyperpolymath/asdf-tool-plugins[`asdf-deno-plugin`]
-
 |nickel
 |1.16.0
 |`runtime/` version-management contracts and URL handlers (`**/*.ncl`) —

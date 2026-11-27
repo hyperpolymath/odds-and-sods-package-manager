@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MPL-2.0
+# package.json is JCS-canonical (LANGUAGE-POLICY §1.4); Prettier must not reformat it.
+package.json
+# just json-enforce (CI conformance gate) requires every JSON file to stay JCS-canonical.
+*.json
