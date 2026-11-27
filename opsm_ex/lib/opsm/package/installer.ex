@@ -349,7 +349,7 @@ defmodule Opsm.Package.Installer do
       {:error, reason} ->
         IO.puts("")
         IO.puts("⚠ Failed to update lockfile: #{reason}")
-        :ok
+        {:error, reason}
     end
   end
 
