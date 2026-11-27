@@ -460,3 +460,10 @@ file = "test/opsm_test.exs"
 category = "UnitTest"
 aspect = "Functionality"
 tier = "unproven"
+
+[[test]]
+module = "Opsm.Proven.ManifestBindingTest"
+file = "test/opsm/proven/manifest_binding_test.exs"
+category = "ContractInvariantTest"
+aspect = "Reproducibility"
+tier = "unproven"
