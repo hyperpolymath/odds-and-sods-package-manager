@@ -460,3 +460,10 @@ file = "test/opsm_test.exs"
 category = "UnitTest"
 aspect = "Functionality"
 tier = "unproven"
+
+[[test]]
+module = "Opsm.Api.MobileRouterTest"
+file = "test/opsm/api/mobile_router_test.exs"
+category = "ContractInvariantTest"
+aspect = "Security"
+tier = "unproven"
