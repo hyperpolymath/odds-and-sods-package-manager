@@ -2,3 +2,5 @@
 # Prettier must not reformat them.
 package.json
 pnpm-lock.yaml
+# just json-enforce (CI conformance gate) requires every JSON file to stay JCS-canonical.
+*.json
