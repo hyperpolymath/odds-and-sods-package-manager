@@ -1,1 +1,8 @@
-{"devDependencies":{"prettier":"3.10.1"},"license":"MPL-2.0","name":"odds-and-sods-package-manager","private":true}
+{
+  "devDependencies": {
+    "prettier": "3.10.1"
+  },
+  "license": "MPL-2.0",
+  "name": "odds-and-sods-package-manager",
+  "private": true
+}
